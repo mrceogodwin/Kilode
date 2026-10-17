@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Kilode",
+    "slug": "kilode-premium",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F6F8FB"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ng.kilode.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1877F2"
+      },
+      "package": "ng.kilode.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-haptics"
+    ]
+  }
+}
