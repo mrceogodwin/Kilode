@@ -1,31 +1,12 @@
 {
   "expo": {
     "name": "Kilode",
-    "slug": "kilode-premium",
+    "slug": "kilode",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F6F8FB"
-    },
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "ng.kilode.app",
-      "buildNumber": "1"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1877F2"
-      },
-      "package": "ng.kilode.app"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    }
+    "platforms": ["ios", "android"],
+    "ios": { "supportsTablet": false, "bundleIdentifier": "ng.kilode.app" },
+    "android": { "package": "ng.kilode.app" }
   }
 }

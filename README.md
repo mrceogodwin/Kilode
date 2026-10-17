@@ -1,25 +1,8 @@
-# Kilode Premium
+# Kilode
 
-Nigerian community OS — **React Native (iOS first)** + premium web reference.
+Premium rebuild. Same desks as Kilode v2. New blue and white UI.
 
-## Design
-- Primary `#1877F2` · cards `#FFFFFF` · bg `#F6F8FB` · border `#E7ECF2`
-- Header: `kilode` + LIVE · Search · bell · K
-- Dock: Home · Socials · **+** · Activity · My Space
+- `App.tsx` is the Expo React Native app. Run `npm install` then `npx expo start`.
+- `index.html` is the approved premium web shell for Vercel project `kilodenew`.
 
-## iOS (Expo)
-```bash
-npm install
-npx expo start
-# press i for iOS simulator / Expo Go
-```
-
-## Web (Vercel Kilodenew)
-`index.html` = full premium interactive reference (same blue/white design).
-Deployed as static site on **kilodenew**.
-
-## Desks
-Home · Socials · Chat · Music · Cinema · Jobs · Market · Rent · Events · Spaces · Ads · Teams · Activity · My Space · Staff
-
-Repo: https://github.com/mrceogodwin/Kilode  
-Old live (data): kilode-nine.vercel.app
+Design tokens: blue `#1877F2`, page `#F6F8FB`, cards `#FFFFFF`, border `#E7ECF2`. Dock: Home, Socials, +, Activity, My Space.
