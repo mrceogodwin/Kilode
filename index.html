@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>Kilode Premium</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#1877F2;--bg:#F6F8FB;--white:#fff;--border:#E7ECF2;--black:#111827;--gray:#64748B;--gray2:#94A3B8;--green-bg:#ECFDF3;--green-border:#ABEFC6;--green:#067647;--soft:#EFF6FF}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;background:#E9EEF3;min-height:100vh;display:flex;justify-content:center;padding:12px}
+.phone{width:390px;max-width:100%;height:844px;max-height:95vh;background:var(--bg);border-radius:40px;border:8px solid #111;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 25px 50px rgba(0,0,0,.25)}
+.header{height:56px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0}
+.logo{font-size:20px;font-weight:800;color:var(--blue);letter-spacing:-.5px}
+.live{display:flex;align-items:center;gap:4px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:999px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--green)}
+.dot{width:6px;height:6px;border-radius:3px;background:var(--green)}
+.search{background:var(--bg);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--gray);max-width:140px}
+.avatar{width:28px;height:28px;border-radius:14px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.main{flex:1;overflow-y:auto;padding-bottom:88px;-webkit-overflow-scrolling:touch}
+.main::-webkit-scrollbar{display:none}
+.greet{padding:12px 16px}
+.greet h1{font-size:22px;font-weight:800;color:var(--black)}
+.greet p{font-size:13px;color:var(--gray);margin-top:4px}
+.pills{display:flex;gap:8px;padding:0 12px 8px;overflow-x:auto}
+.pill{background:var(--white);border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer}
+.pill.on{background:var(--black);color:#fff}
+.card{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:16px;margin:10px 12px}
+.empty{text-align:center;padding:16px 0}
+.empty-icon{width:40px;height:40px;border-radius:20px;background:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:20px}
+.btn{background:var(--blue);color:#fff;border:none;border-radius:999px;padding:10px 20px;font-weight:700;font-size:13px;cursor:pointer;margin-top:14px}
+.btn-black{background:var(--black);color:#fff;border:none;border-radius:999px;padding:8px 16px;font-weight:700;font-size:12px;cursor:pointer}
+.room{display:flex;align-items:center;gap:12px}
+.room-av{width:36px;height:36px;border-radius:18px;background:var(--black);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+.feat{font-size:10px;font-weight:700;color:var(--blue);background:var(--soft);display:inline-block;padding:3px 8px;border-radius:999px}
+.ad{background:#F8FAFC;border-style:dashed}
+.desks{display:flex;gap:10px;padding:8px 12px;overflow-x:auto}
+.desk{width:72px;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:12px;text-align:center;flex-shrink:0;cursor:pointer}
+.desk span{font-size:22px;display:block}
+.desk b{font-size:11px;display:block;margin-top:4px}
+.dock{height:72px;background:var(--white);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;padding-bottom:8px;flex-shrink:0;position:absolute;bottom:0;left:0;right:0}
+.dock-btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:56px;color:var(--gray2);font-size:10px;cursor:pointer;background:none;border:none}
+.dock-btn.on{color:var(--blue);font-weight:700}
+.dock-icon{font-size:20px}
+.plus{width:56px;height:56px;border-radius:28px;background:var(--blue);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;margin-top:-16px;box-shadow:0 4px 12px rgba(0,0,0,.2);border:none;cursor:pointer}
+.toast{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:var(--black);color:#fff;border-radius:999px;padding:8px 16px;font-size:12px;font-weight:700;z-index:60;display:none}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:50;display:none;align-items:flex-end}
+.sheet{background:#fff;border-radius:28px 28px 0 0;padding:20px;width:100%}
+.sheet h3{font-size:16px;font-weight:800;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.opt{border:1px solid var(--border);border-radius:16px;padding:12px;text-align:center;cursor:pointer;background:#fff}
+.opt:hover{border-color:var(--blue);background:#F0F7FF}
+.opt span{font-size:20px;display:block}
+.opt b{font-size:13px;display:block;margin-top:6px}
+.opt small{font-size:10px;color:var(--gray)}
+.take{margin-top:10px}
+.take-h{display:flex;gap:10px;align-items:center}
+.take-h strong{font-size:14px}
+.take-h span{font-size:12px;color:var(--gray)}
+.take p{font-size:14px;line-height:1.5;margin-top:10px;color:#1E293B}
+.actions{display:flex;gap:18px;margin-top:12px;font-size:13px;color:var(--gray)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="logo">kilode</span>
+      <span class="live"><span class="dot"></span>LIVE</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="search">Search Kilode</span>
+      <span onclick="go('activity')" style="cursor:pointer">Bell</span>
+      <div class="avatar" onclick="go('myspace')">K</div>
+    </div>
+  </div>
+  <div class="main" id="main"></div>
+  <div class="dock">
+    <button class="dock-btn on" data-tab="home" onclick="go('home')"><span class="dock-icon">H</span>Home</button>
+    <button class="dock-btn" data-tab="socials" onclick="go('socials')"><span class="dock-icon">S</span>Socials</button>
+    <button class="plus" onclick="openCreate()">+</button>
+    <button class="dock-btn" data-tab="activity" onclick="go('activity')"><span class="dock-icon">A</span>Activity</button>
+    <button class="dock-btn" data-tab="myspace" onclick="go('myspace')"><span class="dock-icon">M</span>My Space</button>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="sheet-bg" id="sheet" onclick="closeCreate()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3>Create on Kilode</h3>
+        <button onclick="closeCreate()" style="width:32px;height:32px;border-radius:16px;border:none;background:var(--bg);cursor:pointer">X</button>
+      </div>
+      <div class="grid3" id="createGrid"></div>
+    </div>
+  </div>
+</div>
+<script>
+const desks=[{id:'jobs',l:'Jobs',i:'J'},{id:'market',l:'Market',i:'M'},{id:'events',l:'Events',i:'E'},{id:'cinema',l:'Cinema',i:'C'},{id:'music',l:'Music',i:'U'},{id:'chat',l:'Chat',i:'T'},{id:'ads',l:'Ads',i:'A'},{id:'spaces',l:'Spaces',i:'S'}];
+const create=[{l:'Post',s:'Share a take',i:'P',t:'socials'},{l:'Track',s:'Drop music',i:'U',t:'music'},{l:'Film',s:'Add cinema',i:'C',t:'cinema'},{l:'Event',s:'Host event',i:'E',t:'events'},{l:'Job',s:'Post job',i:'J',t:'jobs'},{l:'Ad',s:'Place ad',i:'A',t:'ads'},{l:'Room',s:'Start room',i:'R',t:'chat'},{l:'Market',s:'Sell',i:'M',t:'market'},{l:'Space',s:'Create space',i:'S',t:'spaces'}];
+let tab='home';
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2000)}
+function go(id){tab=id;document.querySelectorAll('.dock-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===id));render();closeCreate()}
+function openCreate(){document.getElementById('sheet').style.display='flex'}
+function closeCreate(){document.getElementById('sheet').style.display='none'}
+function render(){
+  const m=document.getElementById('main');
+  if(tab==='home'){
+    m.innerHTML=`\n      <div class="greet"><h1>Good morning, Lagos</h1><p>Catch up on rooms, stories, and drops from people you follow.</p></div>\n      <div class="pills"><span class="pill on">For you</span><span class="pill">Trending</span><span class="pill">Rooms</span><span class="pill">News</span></div>\n      <div class="card empty"><div class="empty-icon">+</div><div style="font-weight:700;margin-top:10px">No posts yet</div><div style="font-size:12px;color:var(--gray);margin-top:6px">Be first share a take for Nigeria.</div><button class="btn" onclick="openCreate()">Create post</button></div>\n      <div style="padding:0 16px;display:flex;justify-content:space-between"><b style="font-size:14px">Discover rooms</b><span style="font-size:11px;color:var(--gray)">2 active</span></div>\n      <div class="card room"><div class="room-av">LF</div><div style="flex:1"><b style="font-size:14px">Lagos Founders</b><div style="font-size:11px;color:var(--gray)">Startups Tech 2.4k members</div></div><button class="btn-black" onclick="toast('Joined Lagos Founders')">Join</button></div>\n      <div class="card room"><div class="room-av">AL</div><div style="flex:1"><b style="font-size:14px">Afrobeats Lab</b><div style="font-size:11px;color:var(--gray)">Drops Sessions 8k members</div></div><button class="btn-black" onclick="toast('Joined Afrobeats Lab')">Join</button></div>\n      <div class="card"><span class="feat">FEATURED BUSINESS</span><div style="font-size:17px;font-weight:800;margin-top:8px;line-height:22px">How Kilode is rebuilding discovery for Nigerian creators without an algorithm</div><div style="font-size:13px;color:#475569;margin-top:8px">Rooms, editorial curation, chronological feeds.</div><div style="font-size:11px;color:var(--gray2);margin-top:10px">Kilode Editorial 6 min Yesterday</div></div>\n      <div class="card ad"><div style="font-size:10px;font-weight:700;color:var(--gray2)">ADVERTISEMENT</div><div style="font-size:12px;color:var(--gray);margin-top:6px">Slot fills when ad unit is on. Layout preserved.</div><div style="font-size:10px;color:var(--gray2);text-align:center;margin-top:8px">728 x 90 Responsive</div></div>\n      <div style="padding:8px 16px;font-weight:700;font-size:14px">Desks</div>\n      <div class="desks">${desks.map(d=>`<div class="desk" onclick="go('${d.id}');toast('${d.l}')"><span>${d.i}</span><b>${d.l}</b></div>`).join('')}</div>`;
+  } else if(tab==='socials'){
+    m.innerHTML=`\n      <div class="card take-h" style="margin-top:0;border-radius:0;border-left:0;border-right:0"><div class="avatar">K</div><input id="takeIn" placeholder="What's happening in Naija?" style="flex:1;background:var(--bg);border:none;border-radius:999px;padding:10px 16px;font-size:14px;outline:none"/><button class="btn" style="margin:0;padding:8px 16px" onclick="toast('Take posted')">Post</button></div>\n      <div class="card take"><div class="take-h"><div class="avatar" style="width:36px;height:36px;border-radius:18px">C</div><div><strong>Chioma Ade</strong> <span>@choma 12m</span></div></div><p>Just shipped our community commerce toolkit. Small traders in Yaba. Nigerian problems, Nigerian software.</p><div class="actions"><span onclick="toast('Liked')">127 likes</span><span>19 reposts</span><span>8 comments</span></div></div>\n      <div class="card take"><div class="take-h"><div class="avatar" style="width:36px;height:36px;border-radius:18px">F</div><div><strong>Femi Visuals</strong> <span>@femi.vs 4m</span></div></div><p>Shot this on a busted Infinix at 5:43am on Third Mainland. Lagos never misses.</p><div class="actions"><span onclick="toast('Liked')">342 likes</span><span>42 reposts</span><span>31 comments</span></div></div>`;
+  } else if(tab==='activity'){
+    m.innerHTML=`<div style="padding:16px"><h2 style="font-size:18px;font-weight:800">Activity</h2><p style="font-size:12px;color:var(--gray);margin:4px 0 12px">Chronological No algorithm</p>\n      ${[['L','Chioma liked your take','2m'],['C','New reply in Lagos Founders','15m'],['M','Simi Sola dropped Ojuelegba Nights','1h']].map(([i,t,ts])=>`<div class="card" style="display:flex;gap:12px;align-items:center;cursor:pointer" onclick="toast('${t}')"><div class="empty-icon">${i}</div><div><b style="font-size:13px">${t}</b><div style="font-size:11px;color:var(--gray)">${ts}</div></div></div>`).join('')}</div>`;
+  } else if(tab==='myspace'){
+    m.innerHTML=`<div style="padding:16px"><div style="display:flex;gap:14px;align-items:center"><div class="avatar" style="width:64px;height:64px;border-radius:32px;font-size:22px">KA</div><div><div style="font-size:20px;font-weight:800">Kelechi Anene</div><div style="font-size:13px;color:var(--gray)">@kelechi Lagos NG</div><div style="font-size:12px;margin-top:4px">Builder Writer City OS</div></div></div>\n      <div style="display:flex;gap:16px;margin-top:14px;font-size:13px"><span><b>412</b> Following</span><span><b>2.1k</b> Followers</span><span><b>86</b> Posts</span></div>\n      <div style="display:flex;gap:8px;margin-top:14px"><button class="btn-black" style="flex:1" onclick="toast('Edit profile')">Edit profile</button><button style="flex:1;border:1px solid var(--border);border-radius:999px;background:#fff;font-weight:700;font-size:13px;padding:8px" onclick="toast('Share')">Share</button></div></div>`;
+  } else {
+    m.innerHTML=`<div style="padding:16px"><h2 style="font-size:18px;font-weight:800;text-transform:capitalize">${tab}</h2><p style="color:var(--gray);margin-top:8px;font-size:13px">Desk ready same blue design system as iOS app.</p><button class="btn" onclick="go('home')">Back home</button></div>`;
+  }
+}
+document.getElementById('createGrid').innerHTML=create.map(o=>`<div class="opt" onclick="go('${o.t}');toast('${o.l}')"><span>${o.i}</span><b>${o.l}</b><small>${o.s}</small></div>`).join('');
+render();
+</script>
+</body>
+</html>
