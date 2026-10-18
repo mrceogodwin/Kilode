@@ -15,6 +15,8 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
     Object.fromEntries(FILMS.map((f) => [f.id, f.votes]))
   );
 
+  const watching = FILMS[0];
+
   return (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
       <View style={s.deskHero}>
@@ -23,33 +25,55 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
         <Text style={s.sub}>Vote · discover · Friday screenings</Text>
       </View>
 
-      {playing ? (
-        <View style={[s.deskHero, { marginTop: 8, backgroundColor: "#000" }]}>
-          <View style={{ width: "100%", height: 160, backgroundColor: "#111", borderRadius: 12, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-            <Text style={{ color: "#fff", fontSize: 40 }}>▶</Text>
-            <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 8 }}>{playing.title}</Text>
-          </View>
-          <Text style={[s.h2, { color: "#fff" }]}>{playing.title}</Text>
-          <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 4 }}>{playing.runtime} · {playing.synopsis}</Text>
-          <TouchableOpacity
-            style={[s.ghostBtn, { marginTop: 14, borderColor: "rgba(255,255,255,0.3)" }]}
-            onPress={() => {
-              setPlaying(null);
-              show("Stopped");
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600" }}>Close player</Text>
+      {/* Watching Now hero */}
+      <TouchableOpacity
+        style={[s.postCard, { backgroundColor: "#111" }]}
+        onPress={() => {
+          setPlaying(watching);
+          show(`Playing ${watching.title}`);
+        }}
+      >
+        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 }}>WATCHING NOW</Text>
+        <View
+          style={{
+            height: 140,
+            borderRadius: 14,
+            backgroundColor: "#1a1a1a",
+            marginTop: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 42 }}>▶</Text>
+        </View>
+        <Text style={[s.roomName, { color: "#fff", marginTop: 10 }]}>{watching.title}</Text>
+        <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, marginTop: 4 }}>
+          {watching.runtime} · {watching.synopsis}
+        </Text>
+      </TouchableOpacity>
+
+      {playing && playing.id !== watching.id ? (
+        <View style={[s.postCard, { backgroundColor: "#0a0a0a" }]}>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Now playing · {playing.title}</Text>
+          <TouchableOpacity style={{ marginTop: 8 }} onPress={() => setPlaying(null)}>
+            <Text style={s.link}>Close</Text>
           </TouchableOpacity>
         </View>
       ) : null}
 
       <View style={s.sectionHead}>
         <Text style={s.sectionTitle}>This week</Text>
+        <TouchableOpacity onPress={() => show("Submit film · cinema poster")}> 
+          <Text style={s.link}>Submit</Text>
+        </TouchableOpacity>
       </View>
+
       {FILMS.map((f) => (
         <View key={f.id} style={s.postCard}>
           <Text style={s.roomName}>{f.title}</Text>
-          <Text style={s.meta}>{f.runtime} · {votes[f.id]} votes</Text>
+          <Text style={s.meta}>
+            {f.runtime} · {votes[f.id]} votes
+          </Text>
           <Text style={[s.postBody, { marginTop: 6 }]}>{f.synopsis}</Text>
           <View style={[s.rowGap, { marginTop: 12, paddingHorizontal: 0 }]}>
             <TouchableOpacity
