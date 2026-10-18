@@ -1,36 +1,43 @@
 # Kilode — React Native (iOS)
 
-**This is the native Expo / React Native app.**  
-`kilodenew.vercel.app` is the **web** shell — different codebase surface. Do not judge the mobile app from Safari.
+Production native app for Kilode (Nigerian community OS).
+
+**This repo is React Native / Expo only.**  
+Web HTML and `vercel.json` have been removed.
+
+Real backend + data live on **Kilode Nine** (Neon Postgres + Supabase).
 
 ## Run on iPhone / Simulator
 
 ```bash
+git clone https://github.com/mrceogodwin/Kilode.git
+cd Kilode
 npm install
 npx expo start --ios
 ```
 
-Or scan the QR with Expo Go.
+Or scan the QR code with **Expo Go** on your iPhone.
 
 ## What’s in this build
 
-- **Dark (default) + Light** themes — toggle from header ☀/☾ or My Space
-- **No website logo** — LIVE pill only in header
-- **Stable bottom dock** — Home · Socials · **+ More** · Activity · My Space (no floating offset)
-- **More (+)** → all Kilode desks + Create
-- Screens: Home (rooms, music, desks), Socials feed, Activity, My Space, desk stubs
-- Premium cards, type, sheets (reference-inspired dark social UI)
+- Dark (default) + Light themes — toggle from header or My Space
+- No website logo — LIVE pill only
+- Stable bottom dock — Home · Socials · **+** · Activity · My Space
+- More (+) opens all desks + Create sheet
+- Home: rooms, music drops, desks
+- Socials: composer + post cards with reactions
+- Activity: chronological, no algorithm
+- My Space: profile shell
 
 ## Files
 
 | File | Role |
 |------|------|
 | `App.tsx` | Screens + navigation shell |
-| `themeStyles.ts` | Dark/light palettes + StyleSheet factory |
-| `data.ts` | Desks, takes, rooms, tracks |
-| `app.json` | Expo iOS bundle `ng.kilode.app` |
+| `themeStyles.ts` | Dark/light palettes + styles |
+| `data.ts` | Mock desks, takes, rooms, tracks |
+| `app.json` | Expo iOS `ng.kilode.app` |
 
-## Not this repo
+## Next (production)
 
-- Web product: [Kilode-v2](https://github.com/mrceogodwin/Kilode-v2) → vercel
-- Web UI you recorded: **Safari → kilodenew.vercel.app** (not RN)
+Wire screens to Kilode Nine APIs: posts, rooms, chat, music, auth.
