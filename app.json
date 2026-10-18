@@ -4,9 +4,35 @@
     "slug": "kilode",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "scheme": "kilode",
     "platforms": ["ios", "android"],
-    "ios": { "supportsTablet": false, "bundleIdentifier": "ng.kilode.app" },
-    "android": { "package": "ng.kilode.app" }
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#0A0A0C",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ng.kilode.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent",
+        "NSCameraUsageDescription": "Kilode needs camera for posts and profile.",
+        "NSPhotoLibraryUsageDescription": "Kilode needs photos for posts and profile."
+      }
+    },
+    "android": {
+      "package": "ng.kilode.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0C"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "replace-with-eas-project-id"
+      }
+    }
   }
 }
