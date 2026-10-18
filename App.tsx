@@ -7,14 +7,13 @@ import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
-import { API_BASE } from "./lib/config";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
 
 function KilodeApp() {
-  const { session, loading: authLoading, signIn, signInGuest, signOut } = useAuth();
+  const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
@@ -84,6 +83,7 @@ function KilodeApp() {
         isDark={isDark}
         C={C}
         onSignIn={signIn}
+        onSignUp={signUp}
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
         onGoogle={() => { signInGuest("Google User"); show("Google · wire OAuth next"); }}
         show={show}
@@ -107,7 +107,7 @@ function KilodeApp() {
 
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
-      <View style={s.padH}><Text style={s.h1}>Good morning</Text><Text style={s.sub}>{session.handle} · {source}</Text></View>
+      <View style={s.padH}><Text style={s.h1}>Good morning</Text><Text style={s.sub}>{session.handle} · {session.kind} · {source}</Text></View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
         {CAROUSEL_FALLBACK.map((c) => (
           <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => show(c.cta)}>
