@@ -6,7 +6,8 @@
   "scripts": {
     "start": "expo start",
     "ios": "expo start --ios",
-    "android": "expo start --android"
+    "android": "expo start --android",
+    "tunnel": "expo start --tunnel"
   },
   "dependencies": {
     "expo": "~51.0.28",
@@ -15,6 +16,8 @@
     "react-native": "0.74.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.0"
+    "@babel/core": "^7.24.0",
+    "typescript": "~5.3.0",
+    "@types/react": "~18.2.0"
   }
 }
