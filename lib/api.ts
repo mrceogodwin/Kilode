@@ -6,8 +6,8 @@ export type ApiResult<T> =
   | { ok: false; error: string; data: T; source: "mock" };
 
 /**
- * Production client: always try Kilode Nine first.
- * Mock is offline/fallback only — never the product goal.
+ * Production client: try Kilode Nine first.
+ * Mock is offline/fallback only — Nine currently returns 406 for JSON Accept.
  */
 async function getJson<T>(path: string, fallback: T): Promise<ApiResult<T>> {
   if (FORCE_MOCK) {
@@ -35,7 +35,7 @@ async function getJson<T>(path: string, fallback: T): Promise<ApiResult<T>> {
   }
 }
 
-const TAKE_PATHS = ["/api/takes", "/api/listTakes", "/api/feed", "/api/posts", "/_server/takes"];
+const TAKE_PATHS = ["/api/takes", "/api/listTakes", "/api/feed", "/api/posts"];
 const ROOM_PATHS = ["/api/rooms", "/api/listRooms"];
 const NEWS_PATHS = ["/api/news", "/api/nf_posts"];
 const TRACK_PATHS = ["/api/tracks", "/api/music"];
@@ -73,7 +73,9 @@ export async function fetchTracks() {
 }
 
 export async function fetchActivity() {
-  return getJson("/api/activity", ACTIVITY);
+  const r = await getJson("/api/activity", ACTIVITY);
+  if (r.ok && r.source === "live") return r;
+  return { ok: true as const, data: ACTIVITY, source: "mock" as const };
 }
 
 export async function fetchCarousel() {
@@ -127,7 +129,6 @@ export async function postTake(body: string, token?: string | null) {
 export async function postComment(takeId: string, body: string, token?: string | null) {
   const text = body.trim();
   if (!text) return { ok: false as const, error: "Empty" };
-  // Production path when Nine exposes comments
   try {
     if (token && token !== "guest" && token !== "local" && !FORCE_MOCK) {
       const res = await fetch(`${API_BASE}/api/takes/${takeId}/comments`, {

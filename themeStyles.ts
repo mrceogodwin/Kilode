@@ -231,6 +231,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
       backgroundColor: C.elevated,
       alignItems: "center",
       justifyContent: "center",
+      position: "relative",
     },
     roomAvText: { fontWeight: "800", fontSize: 12, color: C.text },
     roomLive: {
