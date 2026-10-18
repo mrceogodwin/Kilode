@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
+import { MusicScreen } from "./screens/Music";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
 
@@ -256,6 +257,7 @@ function KilodeApp() {
     if (tab === "myspace") return <MySpace />;
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} />;
     if (DESKS.some((d) => d.id === tab)) return <Desk name={tab} />;
     return <Home />;
   };
