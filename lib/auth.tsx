@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE } from "./config";
+import { asAccountKind, type AccountKind } from "./accountKinds";
 
 const KEY = "@kilode/session";
 
@@ -8,7 +9,7 @@ export type Session = {
   token: string;
   handle: string;
   name: string;
-  kind: string;
+  kind: AccountKind;
 };
 
 type AuthCtx = {
@@ -16,7 +17,8 @@ type AuthCtx = {
   guest: boolean;
   loading: boolean;
   signInGuest: (name?: string) => void;
-  signIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  signIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => void;
 };
 
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const raw = await AsyncStorage.getItem(KEY);
         if (raw) {
           const s = JSON.parse(raw) as Session;
+          s.kind = asAccountKind(s.kind);
           setSession(s);
           setGuest(s.token === "guest");
         }
@@ -64,14 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     persist(s);
   }, []);
 
-  const signIn = useCallback(async (handle: string, password: string) => {
+  const signIn = useCallback(async (handle: string, password: string, kind?: AccountKind) => {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/auth/sign-in/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          email: handle.includes("@") ? handle : `${handle}@kilode.ng`,
+          email: handle.includes("@") ? handle : `${handle}@users.kilode.ng`,
           password,
         }),
       });
@@ -79,9 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         const s: Session = {
           token: data.token || data.session?.token || "live",
-          handle: data.user?.name || handle,
-          name: data.user?.name || handle,
-          kind: "member",
+          handle: data.user?.name || handle.replace(/^@/, ""),
+          name: data.user?.name || handle.replace(/^@/, ""),
+          kind: asAccountKind(kind || data.user?.kind || "member"),
         };
         setSession(s);
         setGuest(false);
@@ -90,14 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { ok: true };
       }
     } catch {
-      /* offline */
+      /* offline / HTML-only host */
     }
     if (handle.trim().length >= 2) {
       const s: Session = {
         token: "local",
         handle: handle.replace(/^@/, ""),
         name: handle.replace(/^@/, ""),
-        kind: "member",
+        kind: asAccountKind(kind),
       };
       setSession(s);
       setGuest(false);
@@ -109,6 +112,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { ok: false, error: "Enter a handle (min 2 chars)" };
   }, []);
 
+  const signUp = useCallback(async (handle: string, password: string, kind: AccountKind, displayName?: string) => {
+    const h = handle.replace(/^@/, "").trim();
+    if (h.length < 3) return { ok: false, error: "Username needs 3+ letters or numbers." };
+    if (password.length < 8) return { ok: false, error: "Password needs 8+ characters." };
+    setLoading(true);
+    // Production: registerAccount on Kilode-v2 / Nine when JSON auth is open
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/sign-up/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          email: `${h}@users.kilode.ng`,
+          password,
+          name: h,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const s: Session = {
+          token: data.token || data.session?.token || "live",
+          handle: h,
+          name: displayName || h,
+          kind: asAccountKind(kind),
+        };
+        setSession(s);
+        setGuest(false);
+        await persist(s);
+        setLoading(false);
+        return { ok: true };
+      }
+    } catch {
+      /* fall through local */
+    }
+    const s: Session = {
+      token: "local",
+      handle: h,
+      name: displayName || h,
+      kind: asAccountKind(kind),
+    };
+    setSession(s);
+    setGuest(false);
+    await persist(s);
+    setLoading(false);
+    return { ok: true };
+  }, []);
+
   const signOut = useCallback(() => {
     setSession(null);
     setGuest(false);
@@ -116,8 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ session, guest, loading, signInGuest, signIn, signOut }),
-    [session, guest, loading, signInGuest, signIn, signOut]
+    () => ({ session, guest, loading, signInGuest, signIn, signUp, signOut }),
+    [session, guest, loading, signInGuest, signIn, signUp, signOut]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
