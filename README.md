@@ -1,29 +1,36 @@
-# Kilode (iOS React Native)
+# Kilode — React Native (iOS)
 
-Real Expo React Native app for iOS — not a website shell.
+**This is the native Expo / React Native app.**  
+`kilodenew.vercel.app` is the **web** shell — different codebase surface. Do not judge the mobile app from Safari.
 
-## Run
+## Run on iPhone / Simulator
 
 ```bash
 npm install
 npx expo start --ios
 ```
 
-## Native UI (this pass)
+Or scan the QR with Expo Go.
 
-- **No header logo** — wordmark removed so it does not look like a website. LIVE pill + Search + Activity + profile only.
-- **Stable bottom dock** — no floating raised button. Fixed height, hairline top border.
-- **Middle `+` = More** — opens Kilode services (Jobs, Market, Rent, Events, Cinema, Teams, Ads, Spaces, Chat, Music) + Create entry.
-- **Premium tokens** in `theme.ts` / `styles.ts` — type scale, card elevation, button radii, dock labels.
+## What’s in this build
+
+- **Dark (default) + Light** themes — toggle from header ☀/☾ or My Space
+- **No website logo** — LIVE pill only in header
+- **Stable bottom dock** — Home · Socials · **+ More** · Activity · My Space (no floating offset)
+- **More (+)** → all Kilode desks + Create
+- Screens: Home (rooms, music, desks), Socials feed, Activity, My Space, desk stubs
+- Premium cards, type, sheets (reference-inspired dark social UI)
 
 ## Files
 
-- `App.tsx` — native shell (header, dock, More / Create sheets)
-- `theme.ts` — blue/white design tokens
-- `styles.ts` — shared StyleSheet
-- `index.html` — optional web shell for Vercel project `kilodenew`
+| File | Role |
+|------|------|
+| `App.tsx` | Screens + navigation shell |
+| `themeStyles.ts` | Dark/light palettes + StyleSheet factory |
+| `data.ts` | Desks, takes, rooms, tracks |
+| `app.json` | Expo iOS bundle `ng.kilode.app` |
 
-## Related
+## Not this repo
 
-- Full web product: [Kilode-v2](https://github.com/mrceogodwin/Kilode-v2) → https://kilode-v2.vercel.app
-- Vercel projects: `kilode`, `kilodenew`
+- Web product: [Kilode-v2](https://github.com/mrceogodwin/Kilode-v2) → vercel
+- Web UI you recorded: **Safari → kilodenew.vercel.app** (not RN)
