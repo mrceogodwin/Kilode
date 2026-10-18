@@ -12,7 +12,6 @@ import {
   ScrollView,
   Animated,
   Easing,
-  Image,
 } from "react-native";
 import { API_BASE } from "../lib/config";
 
@@ -24,14 +23,6 @@ type Props = {
   onGoogle: () => void;
   show: (m: string) => void;
 };
-
-/** Official outline wordmark — drop assets/kilode-logo.png from brand kit */
-let logoSource: any = null;
-try {
-  logoSource = require("../assets/kilode-logo.png");
-} catch {
-  logoSource = null;
-}
 
 export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
   const [mode, setMode] = useState<"in" | "up">("in");
@@ -76,14 +67,7 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.logoWrap}>
-            {logoSource ? (
-              <Image source={logoSource} style={styles.logoImg} resizeMode="contain" />
-            ) : (
-              <Text style={styles.logoFallback}>Kilode!</Text>
-            )}
-          </View>
-
+          {/* No logo mark — clean glass card only */}
           <View style={styles.card}>
             <View style={styles.tabs}>
               <TouchableOpacity style={[styles.tab, mode === "in" && styles.tabOn]} onPress={() => setMode("in")}>
@@ -192,7 +176,7 @@ const styles = StyleSheet.create({
     height: 320,
     borderRadius: 160,
     backgroundColor: "#c27a2e",
-    opacity: 0.22,
+    opacity: 0.28,
   },
   blueBlob: {
     position: "absolute",
@@ -212,23 +196,15 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100,
     backgroundColor: "#ea580c",
-    opacity: 0.1,
+    opacity: 0.12,
   },
-  veil: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,10,12,0.55)" },
+  veil: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,10,12,0.5)" },
   content: {
     flexGrow: 1,
     justifyContent: "flex-end",
     paddingHorizontal: 22,
     paddingBottom: 36,
     paddingTop: 48,
-  },
-  logoWrap: { alignItems: "center", marginBottom: 28 },
-  logoImg: { width: 240, height: 90 },
-  logoFallback: {
-    fontSize: 42,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    letterSpacing: -1.5,
   },
   card: {
     backgroundColor: "rgba(24,24,27,0.94)",
