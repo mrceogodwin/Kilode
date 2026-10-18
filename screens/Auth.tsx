@@ -12,6 +12,7 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Image,
 } from "react-native";
 import { API_BASE } from "../lib/config";
 
@@ -23,6 +24,14 @@ type Props = {
   onGoogle: () => void;
   show: (m: string) => void;
 };
+
+/** Official outline wordmark — drop assets/kilode-logo.png from brand kit */
+let logoSource: any = null;
+try {
+  logoSource = require("../assets/kilode-logo.png");
+} catch {
+  logoSource = null;
+}
 
 export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
   const [mode, setMode] = useState<"in" | "up">("in");
@@ -56,7 +65,6 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" />
-      {/* Ken Burns ambient layers — swap for danfo ImageBackground when asset ships */}
       <View style={StyleSheet.absoluteFill}>
         <Animated.View style={[styles.bgPlate, { transform: [{ scale }] }]}>
           <View style={styles.warmBlob} />
@@ -69,13 +77,11 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.logoWrap}>
-            <View style={styles.logoMark}>
-              <Text style={styles.logoMarkText}>K!</Text>
-            </View>
-            <Text style={styles.logoWord}>
-              Kilode<Text style={styles.logoBang}>!</Text>
-            </Text>
-            <Text style={styles.tagline}>Talk News. Real People.</Text>
+            {logoSource ? (
+              <Image source={logoSource} style={styles.logoImg} resizeMode="contain" />
+            ) : (
+              <Text style={styles.logoFallback}>Kilode!</Text>
+            )}
           </View>
 
           <View style={styles.card}>
@@ -89,9 +95,7 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
             </View>
 
             <Text style={styles.title}>{mode === "in" ? "Welcome back" : "Join Kilode"}</Text>
-            <Text style={styles.hint}>
-              {mode === "in" ? "Sign in to your Lagos city OS" : "Create your handle · free forever"}
-            </Text>
+            <Text style={styles.hint}>{mode === "in" ? "Sign in to continue" : "Create your handle"}</Text>
 
             <TouchableOpacity
               style={styles.google}
@@ -179,10 +183,7 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#0A0A0C" },
-  bgPlate: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#120e0a",
-  },
+  bgPlate: { ...StyleSheet.absoluteFillObject, backgroundColor: "#120e0a" },
   warmBlob: {
     position: "absolute",
     top: 40,
@@ -213,10 +214,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ea580c",
     opacity: 0.1,
   },
-  veil: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10,10,12,0.55)",
-  },
+  veil: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,10,12,0.55)" },
   content: {
     flexGrow: 1,
     justifyContent: "flex-end",
@@ -225,21 +223,13 @@ const styles = StyleSheet.create({
     paddingTop: 48,
   },
   logoWrap: { alignItems: "center", marginBottom: 28 },
-  logoMark: {
-    width: 72,
-    height: 72,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
+  logoImg: { width: 240, height: 90 },
+  logoFallback: {
+    fontSize: 42,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: -1.5,
   },
-  logoMarkText: { color: "#fff", fontSize: 28, fontWeight: "800", letterSpacing: -1 },
-  logoWord: { fontSize: 34, fontWeight: "800", color: "#fff", letterSpacing: -1.2 },
-  logoBang: { color: "#3B82F6" },
-  tagline: { marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.65)", fontWeight: "500" },
   card: {
     backgroundColor: "rgba(24,24,27,0.94)",
     borderRadius: 24,
