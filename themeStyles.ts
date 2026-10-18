@@ -2,7 +2,6 @@ import { StyleSheet, Platform, Dimensions } from "react-native";
 
 const { width: W } = Dimensions.get("window");
 
-// Figma-matched dark social palette (primary) + light skin
 export const palettes = {
   dark: {
     bg: "#0A0A0C",
@@ -54,11 +53,10 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     flex: { flex: 1 },
     center: { alignItems: "center", justifyContent: "center", padding: 24 },
     padH: { paddingHorizontal: 16 },
-    scrollPad: { paddingBottom: 28 },
+    scrollPad: { paddingBottom: 32 },
     row: { flexDirection: "row", alignItems: "center", gap: 6 },
     rowGap: { flexDirection: "row", gap: 10, marginTop: 16, width: "100%", paddingHorizontal: 16 },
 
-    // Header — minimal, app-native
     header: {
       height: 52,
       paddingHorizontal: 14,
@@ -102,13 +100,12 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     },
     avatarText: { color: C.white, fontWeight: "700", fontSize: 13 },
 
-    // Type
     h1: { fontSize: 24, fontWeight: "700", color: C.text, letterSpacing: -0.5 },
+    h2: { fontSize: 18, fontWeight: "700", color: C.text, letterSpacing: -0.3 },
     sub: { fontSize: 13, color: C.text2, marginTop: 3, lineHeight: 18 },
     link: { fontSize: 13, fontWeight: "600", color: C.accent },
     meta: { fontSize: 12, color: C.text3, marginTop: 2 },
 
-    // Category chips (Figma style)
     chipsRow: { paddingHorizontal: 14, paddingVertical: 12, gap: 8 },
     chip: {
       flexDirection: "row",
@@ -121,25 +118,43 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       borderWidth: 1,
       borderColor: C.border,
     },
-    chipOn: {
-      backgroundColor: C.chipOn,
-      borderColor: C.chipOn,
-    },
+    chipOn: { backgroundColor: C.chipOn, borderColor: C.chipOn },
     chipText: { fontSize: 13, fontWeight: "600", color: C.text2 },
     chipTextOn: { color: C.chipOnText },
 
-    // Sections
     sectionHead: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 16,
-      marginTop: 6,
+      marginTop: 8,
       marginBottom: 10,
     },
     sectionTitle: { fontSize: 15, fontWeight: "700", color: C.text, letterSpacing: -0.2 },
 
-    // Rooms
+    emptyCard: {
+      marginHorizontal: 14,
+      marginBottom: 12,
+      paddingVertical: 28,
+      paddingHorizontal: 20,
+      backgroundColor: C.card,
+      borderRadius: 20,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: C.border,
+      alignItems: "center",
+    },
+    emptyIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: C.elevated,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 12,
+    },
+    emptyTitle: { fontSize: 16, fontWeight: "700", color: C.text },
+    emptyDesc: { fontSize: 13, color: C.text2, textAlign: "center", marginTop: 6, lineHeight: 19, maxWidth: 240 },
+
     roomRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -182,8 +197,24 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       borderColor: C.border,
     },
     joinBtnText: { fontSize: 12, fontWeight: "700", color: isDark ? C.text : C.white },
+    joinLive: { backgroundColor: C.success, borderColor: C.success },
+    joinLiveText: { color: C.white },
 
-    // Music
+    newsCard: {
+      flexDirection: "row",
+      marginHorizontal: 14,
+      marginBottom: 8,
+      padding: 12,
+      backgroundColor: C.card,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: C.border,
+      gap: 12,
+    },
+    newsThumb: { width: 48, height: 48, borderRadius: 12 },
+    newsKicker: { fontSize: 11, fontWeight: "600", color: C.accent },
+    newsTitle: { fontSize: 14, fontWeight: "600", color: C.text, lineHeight: 19, marginTop: 3 },
+
     tracksRow: { paddingHorizontal: 14, gap: 10 },
     trackCard: {
       width: 118,
@@ -196,7 +227,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     trackTitle: { color: C.white, fontWeight: "700", fontSize: 13 },
     trackArtist: { color: "rgba(255,255,255,0.72)", fontSize: 11, marginTop: 2 },
 
-    // Desks
     desksRow: { paddingHorizontal: 14, gap: 12 },
     deskItem: { alignItems: "center", width: 70 },
     deskIcon: {
@@ -212,7 +242,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     },
     deskLabel: { fontSize: 11, fontWeight: "600", color: C.text2 },
 
-    // Composer
     composer: {
       flexDirection: "row",
       alignItems: "center",
@@ -248,7 +277,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     },
     postBtnText: { color: C.white, fontWeight: "700", fontSize: 13 },
 
-    // Post cards — Figma soft depth
     postCard: {
       marginHorizontal: 12,
       marginTop: 12,
@@ -257,9 +285,8 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       borderRadius: 18,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: C.border,
-      // soft elevation feel on dark
       shadowColor: "#000",
-      shadowOpacity: isDark ? 0.35 : 0.06,
+      shadowOpacity: isDark ? 0.3 : 0.06,
       shadowRadius: 12,
       shadowOffset: { width: 0, height: 4 },
       elevation: isDark ? 4 : 2,
@@ -302,8 +329,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       backgroundColor: isDark ? C.elevated : C.black,
     },
     followBtnText: { fontSize: 12, fontWeight: "700", color: isDark ? C.text : C.white },
-
-    // Reply bar (Figma)
     replyBar: {
       flexDirection: "row",
       alignItems: "center",
@@ -320,11 +345,7 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       borderColor: C.border,
     },
     replyPlaceholder: { color: C.text3, fontSize: 13 },
-    reactRow: {
-      flexDirection: "row",
-      gap: 6,
-      alignItems: "center",
-    },
+    reactRow: { flexDirection: "row", gap: 6, alignItems: "center" },
     reactPill: {
       backgroundColor: C.elevated,
       borderRadius: 999,
@@ -332,7 +353,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       paddingVertical: 4,
     },
 
-    // Activity
     activityRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -353,19 +373,20 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     activityText: { fontSize: 14, fontWeight: "600", color: C.text },
     unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent },
 
-    // Profile
-    profileHead: { alignItems: "center", paddingTop: 12 },
+    profileHead: { alignItems: "center", paddingTop: 8, paddingBottom: 8 },
     profileAv: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: 88,
+      height: 88,
+      borderRadius: 44,
       backgroundColor: C.accent,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 12,
+      borderWidth: 3,
+      borderColor: C.elevated,
     },
-    profileAvText: { color: C.white, fontSize: 28, fontWeight: "800" },
-    statsRow: { flexDirection: "row", marginTop: 20, gap: 28 },
+    profileAvText: { color: C.white, fontSize: 30, fontWeight: "800" },
+    statsRow: { flexDirection: "row", marginTop: 18, gap: 28 },
     stat: { alignItems: "center" },
     statN: { fontSize: 18, fontWeight: "800", color: C.text },
     statL: { fontSize: 12, color: C.text3, marginTop: 2 },
@@ -386,7 +407,29 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     },
     ghostBtnText: { color: C.text, fontWeight: "600", fontSize: 14 },
 
-    // Music player
+    deskHero: {
+      marginHorizontal: 14,
+      marginTop: 8,
+      padding: 20,
+      backgroundColor: C.card,
+      borderRadius: 20,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: C.border,
+      alignItems: "center",
+    },
+    deskHeroIcon: { fontSize: 40, marginBottom: 10 },
+    deskList: { marginTop: 12, paddingHorizontal: 14, gap: 8 },
+    deskListItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 14,
+      backgroundColor: C.card,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: C.border,
+      gap: 12,
+    },
+
     player: {
       position: "absolute",
       left: 12,
@@ -407,7 +450,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     playerSub: { color: "rgba(255,255,255,0.65)", fontSize: 11 },
     playerBtn: { color: C.white, fontSize: 14, paddingHorizontal: 6 },
 
-    // Bottom dock — stable, Figma-like
     dock: {
       height: Platform.OS === "ios" ? 72 : 64,
       backgroundColor: C.dock,
@@ -438,7 +480,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     },
     moreBtnText: { color: C.white, fontSize: 28, fontWeight: "400", marginTop: -1 },
 
-    // Sheets
     modalRoot: { flex: 1, justifyContent: "flex-end" },
     scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
     sheet: {
@@ -450,6 +491,7 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       paddingTop: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: C.border,
+      maxHeight: "88%",
     },
     sheetHandle: {
       alignSelf: "center",
@@ -491,7 +533,6 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     },
     deskGridLabel: { fontSize: 12, fontWeight: "700", color: C.text, marginTop: 4 },
 
-    // Toast
     toast: {
       position: "absolute",
       bottom: 96,

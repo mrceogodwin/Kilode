@@ -4,21 +4,18 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   SafeAreaView,
   StatusBar,
   Modal,
   useColorScheme,
-  Platform,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
-import { DESKS, CREATE, TAKES, ACTIVITY, ROOMS, TRACKS } from "./data";
+import { DESKS, CREATE, TAKES, ACTIVITY, ROOMS, TRACKS, NEWS } from "./data";
 
 /**
  * Kilode Premium — React Native (Expo)
- * Production shell. Dark-first Figma social design + light skin.
- * Backend / real data lives on Kilode Nine (Neon + Supabase).
- * This app is the native surface — wire APIs next.
+ * Solid production shell. Dark-first Figma social UI + light skin.
+ * Backend: Kilode Nine (Neon + Supabase). Wire APIs next.
  */
 export default function App() {
   const system = useColorScheme();
@@ -33,6 +30,7 @@ export default function App() {
   const [createOpen, setCreateOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [nowPlaying, setNowPlaying] = useState<(typeof TRACKS)[number] | null>(null);
 
   const show = (m: string) => {
@@ -60,7 +58,7 @@ export default function App() {
         )}
       </View>
       <View style={s.headerRight}>
-        <TouchableOpacity style={s.iconBtn} onPress={() => show("Search")} activeOpacity={0.7}>
+        <TouchableOpacity style={s.iconBtn} onPress={() => show("Search Kilode")} activeOpacity={0.7}>
           <Text style={s.iconBtnText}>⌕</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -97,25 +95,70 @@ export default function App() {
         ))}
       </ScrollView>
 
+      {/* Empty / create state */}
+      <View style={s.emptyCard}>
+        <View style={s.emptyIcon}>
+          <Text style={{ fontSize: 20 }}>✎</Text>
+        </View>
+        <Text style={s.emptyTitle}>No posts yet</Text>
+        <Text style={s.emptyDesc}>Be first to share discovery in Lagos. Takes, music, jobs — your city feed starts here.</Text>
+        <TouchableOpacity
+          style={[s.primaryBtn, { marginTop: 16, paddingHorizontal: 22 }]}
+          onPress={() => setCreateOpen(true)}
+          activeOpacity={0.85}
+        >
+          <Text style={s.primaryBtnText}>Create post</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={s.sectionHead}>
-        <Text style={s.sectionTitle}>Rooms · 2 live · moderated</Text>
+        <Text style={s.sectionTitle}>Rooms · {ROOMS.filter((r) => r.live).length} live · moderated</Text>
         <TouchableOpacity onPress={() => show("All rooms")}>
           <Text style={s.link}>See all</Text>
         </TouchableOpacity>
       </View>
-      {ROOMS.map((r) => (
-        <TouchableOpacity key={r.id} style={s.roomRow} activeOpacity={0.75}>
-          <View style={s.roomAv}>
-            <Text style={s.roomAvText}>{r.av}</Text>
-            {r.live ? <View style={s.roomLive} /> : null}
-          </View>
-          <View style={s.flex}>
-            <Text style={s.roomName}>{r.name}</Text>
-            <Text style={s.meta}>{r.meta}</Text>
-          </View>
-          <TouchableOpacity style={s.joinBtn} onPress={() => show(`Joined ${r.name}`)}>
-            <Text style={s.joinBtnText}>Join</Text>
+      {ROOMS.map((r) => {
+        const isJoined = !!joined[r.id];
+        return (
+          <TouchableOpacity key={r.id} style={s.roomRow} activeOpacity={0.75}>
+            <View style={s.roomAv}>
+              <Text style={s.roomAvText}>{r.av}</Text>
+              {r.live ? <View style={s.roomLive} /> : null}
+            </View>
+            <View style={s.flex}>
+              <Text style={s.roomName}>{r.name}</Text>
+              <Text style={s.meta}>
+                {r.live ? `${r.speaking} speaking · ` : ""}{r.meta}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[s.joinBtn, isJoined && s.joinLive]}
+              onPress={() => {
+                setJoined({ ...joined, [r.id]: !isJoined });
+                show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`);
+              }}
+            >
+              <Text style={[s.joinBtnText, isJoined && s.joinLiveText]}>
+                {isJoined ? "Joined" : "Join"}
+              </Text>
+            </TouchableOpacity>
           </TouchableOpacity>
+        );
+      })}
+
+      <View style={s.sectionHead}>
+        <Text style={s.sectionTitle}>News for you</Text>
+        <TouchableOpacity onPress={() => setHomeChip(3)}>
+          <Text style={s.link}>Open media</Text>
+        </TouchableOpacity>
+      </View>
+      {NEWS.map((n) => (
+        <TouchableOpacity key={n.id} style={s.newsCard} activeOpacity={0.8} onPress={() => show(n.title)}>
+          <View style={[s.newsThumb, { backgroundColor: n.tone }]} />
+          <View style={s.flex}>
+            <Text style={s.newsKicker}>{n.kicker} · {n.time}</Text>
+            <Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text>
+          </View>
         </TouchableOpacity>
       ))}
 
@@ -159,7 +202,7 @@ export default function App() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <View style={{ height: 24 }} />
+      <View style={{ height: 20 }} />
     </ScrollView>
   );
 
@@ -190,7 +233,7 @@ export default function App() {
               </View>
               <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
             </View>
-            <TouchableOpacity style={s.followBtn} onPress={() => show(`Follow ${t.name}`)}>
+            <TouchableOpacity style={s.followBtn} onPress={() => show(`Following ${t.name}`)}>
               <Text style={s.followBtnText}>Follow</Text>
             </TouchableOpacity>
           </View>
@@ -203,7 +246,10 @@ export default function App() {
             ))}
           </View>
           <View style={s.postActions}>
-            <TouchableOpacity style={s.action} onPress={() => setLiked({ ...liked, [t.id]: !liked[t.id] })}>
+            <TouchableOpacity
+              style={s.action}
+              onPress={() => setLiked({ ...liked, [t.id]: !liked[t.id] })}
+            >
               <Text style={[s.actionText, liked[t.id] && { color: C.danger }]}>
                 {liked[t.id] ? "♥" : "♡"} {t.likes + (liked[t.id] ? 1 : 0)}
               </Text>
@@ -232,7 +278,7 @@ export default function App() {
           </View>
         </View>
       ))}
-      <View style={{ height: 24 }} />
+      <View style={{ height: 20 }} />
     </ScrollView>
   );
 
@@ -267,9 +313,9 @@ export default function App() {
           <Text style={s.profileAvText}>KA</Text>
         </View>
         <Text style={s.h1}>Kelechi Anene</Text>
-        <Text style={s.sub}>@kelechi · Lagos, NG</Text>
-        <Text style={[s.postBody, { textAlign: "center", marginTop: 8 }]}>
-          Building Kilode. Product and community.
+        <Text style={s.sub}>@kelechi · Lagos, NG · Member</Text>
+        <Text style={[s.postBody, { textAlign: "center", marginTop: 8, paddingHorizontal: 24 }]}>
+          Building Kilode. Product, community, and the city OS for Naija.
         </Text>
         <View style={s.statsRow}>
           <View style={s.stat}><Text style={s.statN}>412</Text><Text style={s.statL}>Following</Text></View>
@@ -281,25 +327,61 @@ export default function App() {
             <Text style={s.primaryBtnText}>Edit profile</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.ghostBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
-            <Text style={s.ghostBtnText}>{isDark ? "Light mode" : "Dark mode"}</Text>
+            <Text style={s.ghostBtnText}>{isDark ? "Light" : "Dark"}</Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      <View style={s.sectionHead}>
+        <Text style={s.sectionTitle}>Your desks</Text>
+      </View>
+      <View style={s.deskList}>
+        {DESKS.slice(0, 4).map((d) => (
+          <TouchableOpacity key={d.id} style={s.deskListItem} onPress={() => go(d.id)} activeOpacity={0.8}>
+            <Text style={{ fontSize: 22 }}>{d.icon}</Text>
+            <View style={s.flex}>
+              <Text style={s.roomName}>{d.label}</Text>
+              <Text style={s.meta}>{d.blurb}</Text>
+            </View>
+            <Text style={s.meta}>›</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </ScrollView>
   );
 
-  const Desk = ({ name }: { name: string }) => (
-    <View style={[s.flex, s.center]}>
-      <Text style={{ fontSize: 40, marginBottom: 12 }}>
-        {DESKS.find((d) => d.id === name)?.icon || "📦"}
-      </Text>
-      <Text style={s.h1}>{DESKS.find((d) => d.id === name)?.label || name}</Text>
-      <Text style={s.sub}>Native screen · wire to Kilode Nine next</Text>
-      <TouchableOpacity style={[s.primaryBtn, { marginTop: 20, paddingHorizontal: 24 }]} onPress={() => go("home")}>
-        <Text style={s.primaryBtnText}>Back home</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const Desk = ({ name }: { name: string }) => {
+    const d = DESKS.find((x) => x.id === name);
+    return (
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
+        <View style={s.deskHero}>
+          <Text style={s.deskHeroIcon}>{d?.icon || "📦"}</Text>
+          <Text style={s.h1}>{d?.label || name}</Text>
+          <Text style={s.sub}>{d?.blurb || "Native desk"}</Text>
+          <Text style={[s.meta, { marginTop: 10, textAlign: "center" }]}>
+            Wire to Kilode Nine next · real listings & posts
+          </Text>
+          <TouchableOpacity
+            style={[s.primaryBtn, { marginTop: 18, paddingHorizontal: 28 }]}
+            onPress={() => setCreateOpen(true)}
+          >
+            <Text style={s.primaryBtnText}>Create in {d?.label || name}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={s.sectionHead}>
+          <Text style={s.sectionTitle}>Coming online</Text>
+        </View>
+        <View style={s.emptyCard}>
+          <Text style={s.emptyDesc}>
+            This desk will list real {d?.label?.toLowerCase() || "items"} from Kilode Nine once APIs are connected.
+          </Text>
+        </View>
+        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center" }]} onPress={() => go("home")}>
+          <Text style={s.ghostBtnText}>Back home</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  };
 
   const body = () => {
     if (tab === "home") return <Home />;
@@ -311,7 +393,11 @@ export default function App() {
   };
 
   const headerTitle =
-    tab === "activity" ? "Activity" : tab === "myspace" ? "My Space" : undefined;
+    tab === "activity"
+      ? "Activity"
+      : tab === "myspace"
+        ? "My Space"
+        : DESKS.find((d) => d.id === tab)?.label;
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
@@ -377,14 +463,16 @@ export default function App() {
                 <Text style={s.meta}>Post, track, film, job, ad…</Text>
               </View>
             </TouchableOpacity>
-            <View style={s.deskGrid}>
-              {DESKS.map((d) => (
-                <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
-                  <Text style={{ fontSize: 22 }}>{d.icon}</Text>
-                  <Text style={s.deskGridLabel}>{d.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={s.deskGrid}>
+                {DESKS.map((d) => (
+                  <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
+                    <Text style={{ fontSize: 22 }}>{d.icon}</Text>
+                    <Text style={s.deskGridLabel}>{d.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
