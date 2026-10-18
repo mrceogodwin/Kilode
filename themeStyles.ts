@@ -1,6 +1,7 @@
 import { StyleSheet, Platform, Dimensions } from "react-native";
 
 const { width: W } = Dimensions.get("window");
+const SLIDE_W = Math.min(W - 48, 300);
 
 export const palettes = {
   dark: {
@@ -48,6 +49,7 @@ export const palettes = {
 };
 
 export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
+  const cell = (W - 32 - 30) / 4;
   return StyleSheet.create({
     root: { flex: 1 },
     flex: { flex: 1 },
@@ -106,7 +108,51 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
     link: { fontSize: 13, fontWeight: "600", color: C.accent },
     meta: { fontSize: 12, color: C.text3, marginTop: 2 },
 
-    chipsRow: { paddingHorizontal: 14, paddingVertical: 12, gap: 8 },
+    // Premium carousel
+    carouselRow: { paddingHorizontal: 16, paddingTop: 12, gap: 12 },
+    slide: {
+      width: SLIDE_W,
+      height: 140,
+      borderRadius: 20,
+      padding: 18,
+      justifyContent: "flex-end",
+    },
+    slideTitle: { color: C.white, fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
+    slideSub: { color: "rgba(255,255,255,0.88)", fontSize: 13, marginTop: 4 },
+    slideCta: {
+      alignSelf: "flex-start",
+      marginTop: 10,
+      backgroundColor: "rgba(255,255,255,0.95)",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 999,
+    },
+    slideCtaText: { color: "#0A0A0C", fontSize: 12, fontWeight: "700" },
+    dotsRow: { flexDirection: "row", justifyContent: "center", gap: 6, paddingVertical: 10 },
+    dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.border },
+    dotOn: { width: 16, backgroundColor: C.accent },
+
+    // 4-column role grid
+    grid4: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: 16,
+      gap: 10,
+      marginBottom: 8,
+    },
+    gridCell: {
+      width: cell,
+      backgroundColor: C.card,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: C.border,
+      paddingVertical: 12,
+      alignItems: "center",
+    },
+    gridIcon: { fontSize: 22, marginBottom: 6 },
+    gridLabel: { fontSize: 11, fontWeight: "600", color: C.text2 },
+
+    chipsRow: { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
     chip: {
       flexDirection: "row",
       alignItems: "center",
@@ -329,12 +375,7 @@ export function makeStyles(C: (typeof palettes)["dark"], isDark: boolean) {
       backgroundColor: isDark ? C.elevated : C.black,
     },
     followBtnText: { fontSize: 12, fontWeight: "700", color: isDark ? C.text : C.white },
-    replyBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 10,
-      gap: 8,
-    },
+    replyBar: { flexDirection: "row", alignItems: "center", marginTop: 10, gap: 8 },
     replyInput: {
       flex: 1,
       backgroundColor: C.input,
