@@ -1,3 +1,4 @@
+/** Seed content aligned to Kilode Nine surface (Feeds, rooms, desks) */
 export const DESKS = [
   { id: "jobs", label: "Jobs", icon: "💼", blurb: "Roles across Lagos & remote" },
   { id: "market", label: "Market", icon: "🛍️", blurb: "Buy & sell local" },
@@ -9,6 +10,8 @@ export const DESKS = [
   { id: "ads", label: "Ads", icon: "📢", blurb: "Reach Naija audiences" },
   { id: "chat", label: "Chat", icon: "💬", blurb: "Rooms & DMs" },
   { id: "spaces", label: "Spaces", icon: "🏢", blurb: "Brand & business pages" },
+  { id: "sports", label: "Sports", icon: "⚽", blurb: "Scores & talk" },
+  { id: "tech", label: "Tech & Biz", icon: "💻", blurb: "Builders & markets" },
 ];
 
 export const ROLE_GRID = [
@@ -18,15 +21,24 @@ export const ROLE_GRID = [
   { id: "events", label: "Events", icon: "📅" },
   { id: "cinema", label: "Cinema", icon: "🎬" },
   { id: "music", label: "Music", icon: "🎵" },
-  { id: "teams", label: "Teams", icon: "👥" },
-  { id: "spaces", label: "Spaces", icon: "🏢" },
+  { id: "chat", label: "Chat", icon: "💬" },
+  { id: "ads", label: "Ads", icon: "📢" },
 ];
 
 export const CAROUSEL = [
-  { id: "c1", title: "Lagos is live", sub: "Rooms, music, desks — your city OS", cta: "Explore", color: "#1D4ED8", color2: "#3B82F6" },
-  { id: "c2", title: "Ojuelegba Nights", sub: "New drop from Simi Sola", cta: "Play", color: "#7C3AED", color2: "#A78BFA" },
-  { id: "c3", title: "Hire in Naija", sub: "Fresh roles from Lagos founders", cta: "Browse jobs", color: "#047857", color2: "#34D399" },
-  { id: "c4", title: "Cinema Friday", sub: "Vote the next screening", cta: "Open cinema", color: "#B45309", color2: "#FBBF24" },
+  { id: "c1", title: "Lagos is live", sub: "Rooms, music, desks", cta: "Explore", color: "#EA580C", color2: "#F97316" },
+  { id: "c2", title: "Ojuelegba Nights", sub: "Simi Sola · New drop", cta: "Play", color: "#7C3AED", color2: "#A78BFA" },
+  { id: "c3", title: "Hire in Naija", sub: "Fresh roles", cta: "Jobs", color: "#047857", color2: "#34D399" },
+  { id: "c4", title: "Cinema Friday", sub: "Vote the next screening", cta: "Cinema", color: "#1D4ED8", color2: "#3B82F6" },
+];
+
+export const STORIES = [
+  { id: "s0", label: "You", av: "+" },
+  { id: "s1", label: "Chioma", av: "C" },
+  { id: "s2", label: "Simi", av: "S" },
+  { id: "s3", label: "Femi", av: "F" },
+  { id: "s4", label: "Amaka", av: "A" },
+  { id: "s5", label: "Tunde", av: "T" },
 ];
 
 export const CREATE = [
@@ -39,40 +51,108 @@ export const CREATE = [
 ];
 
 export const TAKES = [
-  { id: "1", name: "Chioma Ade", handle: "chioma", time: "2h", role: "Commerce · Yaba", text: "Just shipped v2 of our Lagos commerce toolkit — inventory sync, WhatsApp checkout, instant settlement. Built for market women first. Pilot with 40 stalls on Balogun.", likes: 127, comments: 8, reposts: 19, tags: ["take", "spark"] },
-  { id: "2", name: "Simi Sola", handle: "simisola", time: "6h", role: "Artist · Lagos", text: "Ojuelegba Nights out now everywhere. Wrote this on a danfo to Yaba. Thank you Lagos for raising me.", likes: 342, comments: 21, reposts: 84, tags: ["music"], verified: true },
-  { id: "3", name: "Femi Bankole", handle: "femi_b", time: "4h", role: "Urbanist · Island", text: "Third Mainland at 6pm is a design failure, not a people failure. We mapped 12 informal bus stops that could become BRT Lite with just paint + shade + one marshal.", likes: 89, comments: 14, reposts: 12, tags: ["take", "fact"] },
-  { id: "4", name: "Amaka Nwosu", handle: "amaka", time: "8h", role: "Founder · Fintech", text: "Hiring 2 backend engineers in Lagos. Rust or Go. Real ownership, not ticket farms. DM if you’ve shipped payments under load.", likes: 56, comments: 31, reposts: 9, tags: ["jobs"], verified: true },
-  { id: "5", name: "Tunde Okoye", handle: "tunde", time: "11h", role: "Film · Nollywood", text: "Screening a 22-min short this Friday at Freedom Park. Free. Come argue about the ending with me after.", likes: 203, comments: 17, reposts: 45, tags: ["cinema", "events"] },
+  {
+    id: "1",
+    name: "Chioma Ade",
+    handle: "chioma",
+    time: "2h",
+    role: "Commerce · Yaba",
+    text: "Just shipped v2 of our Lagos commerce toolkit — inventory sync, WhatsApp checkout, instant settlement. Built for market women first.",
+    likes: 127,
+    comments: 8,
+    reposts: 19,
+    tags: ["take", "spark"],
+    media: true,
+    mediaTone: "#F97316",
+  },
+  {
+    id: "2",
+    name: "Simi Sola",
+    handle: "simisola",
+    time: "6h",
+    role: "Artist · Lagos",
+    text: "Ojuelegba Nights out now everywhere. Wrote this on a danfo to Yaba.",
+    likes: 342,
+    comments: 21,
+    reposts: 84,
+    tags: ["music"],
+    verified: true,
+    media: true,
+    mediaTone: "#7C3AED",
+  },
+  {
+    id: "3",
+    name: "Femi Bankole",
+    handle: "femi_b",
+    time: "4h",
+    role: "Urbanist · Island",
+    text: "Third Mainland at 6pm is a design failure, not a people failure. We mapped 12 informal bus stops that could become BRT Lite.",
+    likes: 89,
+    comments: 14,
+    reposts: 12,
+    tags: ["take", "fact"],
+  },
+  {
+    id: "4",
+    name: "Amaka Nwosu",
+    handle: "amaka",
+    time: "8h",
+    role: "Founder · Fintech",
+    text: "Hiring 2 backend engineers in Lagos. Rust or Go. Real ownership, not ticket farms.",
+    likes: 56,
+    comments: 31,
+    reposts: 9,
+    tags: ["jobs"],
+    verified: true,
+  },
+  {
+    id: "5",
+    name: "Tunde Okoye",
+    handle: "tunde",
+    time: "11h",
+    role: "Film · Nollywood",
+    text: "Screening a 22-min short this Friday at Freedom Park. Free. Come argue about the ending.",
+    likes: 203,
+    comments: 17,
+    reposts: 45,
+    tags: ["cinema", "events"],
+    media: true,
+    mediaTone: "#1D4ED8",
+  },
 ];
 
 export const ACTIVITY = [
-  { id: "a1", icon: "❤️", text: "Simi Sola liked your take", time: "2h", lane: "socials", unread: true },
-  { id: "a2", icon: "💬", text: "New reply in #lounge from Femi", time: "3h", lane: "chat", unread: true },
-  { id: "a3", icon: "🏠", text: "Lagos Founders posted a new room note", time: "5h", lane: "home", unread: false },
-  { id: "a4", icon: "🎵", text: "Ojuelegba Nights crossed 12k plays", time: "1d", lane: "music", unread: false },
-  { id: "a5", icon: "👥", text: "Amaka started following you", time: "1d", lane: "socials", unread: false },
-  { id: "a6", icon: "📢", text: "Your ad draft is ready for review", time: "2d", lane: "ads", unread: false },
+  { id: "a1", icon: "❤️", text: "Simi Sola and 2,035 others loved your post", time: "30s", lane: "socials", unread: true, action: "none" },
+  { id: "a2", icon: "💬", text: "Ahmed Bob Marley commented on your post", time: "2 min", lane: "socials", unread: true, action: "none" },
+  { id: "a3", icon: "➕", text: "Amaka Nwosu started following you", time: "1 hr", lane: "socials", unread: true, action: "follow_back" },
+  { id: "a4", icon: "❤️", text: "Indiya Mehera and others loved your post", time: "5 min", lane: "socials", unread: true, action: "none" },
+  { id: "a5", icon: "🎵", text: "Ojuelegba Nights crossed 12k plays", time: "1d", lane: "music", unread: false, action: "none" },
+  { id: "a6", icon: "💬", text: "New reply in #lounge from Femi", time: "3h", lane: "chat", unread: false, action: "none" },
+  { id: "a7", icon: "📢", text: "Your ad draft is ready for review", time: "2d", lane: "ads", unread: false, action: "none" },
 ];
 
 export const ROOMS = [
-  { id: "r1", av: "LF", name: "Lagos Founders", meta: "2.4k · House for builders", live: true, speaking: 12 },
-  { id: "r2", av: "AL", name: "Afrobeats Lab", meta: "1.2k · Studio & samples", live: true, speaking: 8 },
-  { id: "r3", av: "TX", name: "Tech Lagos", meta: "3.1k · Builders only", live: false, speaking: 0 },
-  { id: "r4", av: "CN", name: "Cinema Club", meta: "890 · Friday screenings", live: false, speaking: 0 },
+  { id: "r1", av: "KL", name: "Kilode Lounge", meta: "5.2k · Hot Topics", live: true, speaking: 18 },
+  { id: "r2", av: "NP", name: "Naija Pulse", meta: "7.8k · News & talk", live: true, speaking: 11 },
+  { id: "r3", av: "MV", name: "Music & Vibes", meta: "2.4k · Drops", live: true, speaking: 6 },
+  { id: "r4", av: "LF", name: "Lagos Founders", meta: "2.4k · Builders", live: false, speaking: 0 },
+  { id: "r5", av: "TX", name: "Tech & Biz", meta: "3.1k · Builders only", live: false, speaking: 0 },
+  { id: "r6", av: "CN", name: "Cinema", meta: "1.8k · Screenings", live: false, speaking: 0 },
 ];
 
 export const TRACKS = [
-  { id: "t1", title: "Ojuelegba Nights", artist: "Simi Sola", color: "#2563EB" },
+  { id: "t1", title: "Ojuelegba Nights", artist: "Simi Sola", color: "#F97316" },
   { id: "t2", title: "Eko Energy", artist: "Femi + Liza", color: "#059669" },
   { id: "t3", title: "Water & Light", artist: "Ayo Blue", color: "#7C3AED" },
   { id: "t4", title: "Danfo Dreams", artist: "Kemi Wave", color: "#EA580C" },
+  { id: "t5", title: "Island Rain", artist: "Bola Keys", color: "#2563EB" },
 ];
 
 export const NEWS = [
-  { id: "n1", kicker: "Business · Lagos", title: "Paystack alumni raise $3.2M to rebuild discovery for local commerce", time: "2h", tone: "#DBEAFE" },
+  { id: "n1", kicker: "Business · Lagos", title: "Paystack alumni raise $3.2M to rebuild discovery for local commerce", time: "2h", tone: "#FED7AA" },
   { id: "n2", kicker: "Culture · Nigeria", title: "Inside the studios mapping Afrobeats samples from Tejuosho to the world", time: "5h", tone: "#FEF9C3" },
   { id: "n3", kicker: "Policy · Lagos", title: "State opens short-let registration window — what hosts need to know", time: "8h", tone: "#D1FAE5" },
+  { id: "n4", kicker: "Sports", title: "Super Eagles camp notes — who starts on matchday", time: "3h", tone: "#DBEAFE" },
 ];
 
 export const LISTINGS: Record<string, { id: string; title: string; meta: string; price?: string; tag?: string }[]> = {
@@ -80,6 +160,7 @@ export const LISTINGS: Record<string, { id: string; title: string; meta: string;
     { id: "j1", title: "Backend Engineer (Rust/Go)", meta: "Fintech · Lagos · Full-time", price: "₦8–12M", tag: "Hot" },
     { id: "j2", title: "Product Designer", meta: "Commerce · Hybrid", price: "₦4–6M", tag: "New" },
     { id: "j3", title: "Community Lead", meta: "Kilode · Remote-friendly", price: "₦3–5M" },
+    { id: "j4", title: "iOS Engineer", meta: "Social · Lagos", price: "₦7–10M", tag: "New" },
   ],
   market: [
     { id: "m1", title: "Vintage Ankara set", meta: "Yaba · Seller verified", price: "₦18,000" },
@@ -110,6 +191,12 @@ export const LISTINGS: Record<string, { id: string; title: string; meta: string;
   spaces: [
     { id: "sp1", title: "Paystack Alumni", meta: "1.2k members · Verified" },
     { id: "sp2", title: "Nollywood Guild", meta: "890 · Film" },
+  ],
+  sports: [
+    { id: "sp1", title: "Matchday thread · Super Eagles", meta: "Live chat · 2.1k" },
+  ],
+  tech: [
+    { id: "tc1", title: "Weekly Lagos builders standup", meta: "Thu · Hybrid" },
   ],
 };
 
@@ -148,6 +235,15 @@ export const CHAT_THREADS = [
     unread: 1,
     messages: [
       { id: "m6", from: "Simi Sola", text: "Thanks for the repost 🙏", time: "6h", me: false },
+    ],
+  },
+  {
+    id: "ct4",
+    name: "Amaka Nwosu",
+    preview: "Can you intro the Yaba pilot?",
+    unread: 0,
+    messages: [
+      { id: "m7", from: "Amaka Nwosu", text: "Can you intro the Yaba pilot?", time: "1d", me: false },
     ],
   },
 ];
