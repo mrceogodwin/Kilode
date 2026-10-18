@@ -11,6 +11,53 @@ export const DESKS = [
   { id: "spaces", label: "Spaces", icon: "🏢", blurb: "Brand & business pages" },
 ];
 
+/** 4-column home grid — primary roles */
+export const ROLE_GRID = [
+  { id: "jobs", label: "Jobs", icon: "💼" },
+  { id: "market", label: "Market", icon: "🛍️" },
+  { id: "rent", label: "Rent", icon: "🏠" },
+  { id: "events", label: "Events", icon: "📅" },
+  { id: "cinema", label: "Cinema", icon: "🎬" },
+  { id: "music", label: "Music", icon: "🎵" },
+  { id: "teams", label: "Teams", icon: "👥" },
+  { id: "spaces", label: "Spaces", icon: "🏢" },
+];
+
+export const CAROUSEL = [
+  {
+    id: "c1",
+    title: "Lagos is live",
+    sub: "Rooms, music, desks — your city OS",
+    cta: "Explore",
+    color: "#1D4ED8",
+    color2: "#3B82F6",
+  },
+  {
+    id: "c2",
+    title: "Ojuelegba Nights",
+    sub: "New drop from Simi Sola",
+    cta: "Play",
+    color: "#7C3AED",
+    color2: "#A78BFA",
+  },
+  {
+    id: "c3",
+    title: "Hire in Naija",
+    sub: "Fresh roles from Lagos founders",
+    cta: "Browse jobs",
+    color: "#047857",
+    color2: "#34D399",
+  },
+  {
+    id: "c4",
+    title: "Cinema Friday",
+    sub: "Vote the next screening",
+    cta: "Open cinema",
+    color: "#B45309",
+    color2: "#FBBF24",
+  },
+];
+
 export const CREATE = [
   { label: "Post", sub: "Share a take", icon: "✏️", tab: "socials" },
   { label: "Track", sub: "Drop music", icon: "🎵", tab: "music" },

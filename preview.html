@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Kilode — Native UI Preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, system-ui, sans-serif;
+    background: #111;
+    color: #F4F4F5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 12px 48px;
+  }
+  h1.page { font-size: 14px; font-weight: 600; color: #A1A1AA; margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    background: #0A0A0C;
+    border-radius: 40px;
+    border: 8px solid #1c1c1e;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.55);
+    overflow: hidden;
+    position: relative;
+  }
+  .status {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .header {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+  }
+  .live {
+    display: flex; align-items: center; gap: 6px;
+    background: #0F2A1A; border: 1px solid #1A3D28;
+    border-radius: 999px; padding: 5px 10px;
+    font-size: 11px; font-weight: 700; color: #22C55E; letter-spacing: 0.5px;
+  }
+  .live i { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; }
+  .hdr-right { display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 18px;
+    background: #222226; display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .av {
+    width: 34px; height: 34px; border-radius: 17px;
+    background: #3B82F6; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .scroll { height: 620px; overflow-y: auto; padding-bottom: 90px; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .pad { padding: 0 16px; }
+  .h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+  .sub { font-size: 13px; color: #A1A1AA; margin-top: 3px; }
+
+  /* Carousel */
+  .carousel {
+    display: flex; gap: 12px; overflow-x: auto; padding: 14px 16px 6px;
+    scroll-snap-type: x mandatory;
+  }
+  .carousel::-webkit-scrollbar { display: none; }
+  .slide {
+    flex: 0 0 300px; scroll-snap-align: start;
+    height: 140px; border-radius: 20px; padding: 18px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    position: relative; overflow: hidden;
+  }
+  .slide::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 20%, rgba(0,0,0,0.55) 100%);
+  }
+  .slide > * { position: relative; z-index: 1; }
+  .slide-title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+  .slide-sub { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 4px; }
+  .slide-cta {
+    margin-top: 10px; align-self: flex-start;
+    background: rgba(255,255,255,0.95); color: #0A0A0C;
+    font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px;
+  }
+  .dots { display: flex; gap: 6px; justify-content: center; padding: 8px 0 4px; }
+  .dot { width: 6px; height: 6px; border-radius: 3px; background: #2A2A30; }
+  .dot.on { width: 16px; background: #3B82F6; }
+
+  /* Chips */
+  .chips { display: flex; gap: 8px; padding: 10px 14px; overflow-x: auto; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    background: #1C1C20; border: 1px solid #2A2A30; color: #A1A1AA; white-space: nowrap;
+  }
+  .chip.on { background: #F4F4F5; color: #0A0A0C; border-color: #F4F4F5; }
+
+  /* 4-col grid */
+  .grid4 {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; padding: 8px 16px 12px;
+  }
+  .gitem {
+    background: #18181B; border: 1px solid #2A2A30; border-radius: 16px;
+    padding: 12px 6px; text-align: center;
+  }
+  .gitem .ic { font-size: 22px; margin-bottom: 6px; }
+  .gitem .lb { font-size: 11px; font-weight: 600; color: #A1A1AA; }
+
+  .section {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px 8px;
+  }
+  .section h3 { font-size: 15px; font-weight: 700; }
+  .link { font-size: 13px; font-weight: 600; color: #3B82F6; }
+
+  .empty {
+    margin: 0 14px 12px; padding: 24px 20px; text-align: center;
+    background: #18181B; border: 1px solid #2A2A30; border-radius: 20px;
+  }
+  .empty-ic {
+    width: 48px; height: 48px; border-radius: 24px; background: #222226;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;
+  }
+  .btn {
+    display: inline-block; margin-top: 14px;
+    background: #3B82F6; color: #fff; font-weight: 700; font-size: 14px;
+    padding: 12px 22px; border-radius: 14px; border: none; cursor: pointer;
+  }
+
+  .music { display: flex; gap: 10px; overflow-x: auto; padding: 0 14px 8px; }
+  .music::-webkit-scrollbar { display: none; }
+  .track {
+    flex: 0 0 118px; height: 118px; border-radius: 16px; padding: 12px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .track b { font-size: 13px; }
+  .track span { font-size: 11px; opacity: 0.75; }
+
+  .news, .room {
+    margin: 0 14px 8px; padding: 12px; display: flex; gap: 12px; align-items: center;
+    background: #18181B; border: 1px solid #2A2A30; border-radius: 16px;
+  }
+  .nthumb { width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0; }
+  .nk { font-size: 11px; font-weight: 600; color: #3B82F6; }
+  .nt { font-size: 14px; font-weight: 600; line-height: 1.3; margin-top: 3px; }
+  .rav {
+    width: 44px; height: 44px; border-radius: 14px; background: #222226;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px;
+    position: relative; flex-shrink: 0;
+  }
+  .rav .live-d {
+    position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px;
+    border-radius: 6px; background: #22C55E; border: 2px solid #18181B;
+  }
+  .join {
+    margin-left: auto; padding: 7px 14px; border-radius: 999px;
+    background: #222226; border: 1px solid #2A2A30; font-size: 12px; font-weight: 700;
+  }
+
+  .dock {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 72px; background: #0C0C0E; border-top: 1px solid #2A2A30;
+    display: flex; align-items: center; justify-content: space-around;
+    padding-bottom: 8px;
+  }
+  .dbtn { width: 64px; text-align: center; font-size: 10px; color: #71717A; }
+  .dbtn .ic { font-size: 20px; display: block; margin-bottom: 2px; }
+  .dbtn.on { color: #3B82F6; font-weight: 700; }
+  .more {
+    width: 48px; height: 48px; border-radius: 16px; background: #3B82F6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #fff; box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; justify-content: center; }
+  .tabs button {
+    background: #222; border: 1px solid #333; color: #ccc; padding: 8px 14px;
+    border-radius: 999px; font-size: 13px; cursor: pointer;
+  }
+  .tabs button.on { background: #3B82F6; border-color: #3B82F6; color: #fff; }
+  .screen { display: none; }
+  .screen.on { display: block; }
+</style>
+</head>
+<body>
+  <h1 class="page">Kilode native preview · open on phone or desktop</h1>
+  <div class="tabs">
+    <button class="on" data-s="home">Home</button>
+    <button data-s="socials">Socials</button>
+    <button data-s="activity">Activity</button>
+    <button data-s="myspace">My Space</button>
+  </div>
+
+  <div class="phone">
+    <div class="status"><span>9:41</span><span>■■■</span></div>
+    <div class="header">
+      <div class="live"><i></i>LIVE</div>
+      <div class="hdr-right">
+        <div class="icon-btn">⌕</div>
+        <div class="icon-btn">☀</div>
+        <div class="av">K</div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <!-- HOME -->
+      <div class="screen on" id="home">
+        <div class="pad">
+          <div class="h1">Good morning, Lagos</div>
+          <div class="sub">City OS · Sun 18 Oct · 26° partly cloudy</div>
+        </div>
+
+        <div class="carousel">
+          <div class="slide" style="background:linear-gradient(135deg,#1D4ED8,#3B82F6)">
+            <div class="slide-title">Lagos is live</div>
+            <div class="slide-sub">Rooms, music, desks — your city OS</div>
+            <div class="slide-cta">Explore</div>
+          </div>
+          <div class="slide" style="background:linear-gradient(135deg,#7C3AED,#A78BFA)">
+            <div class="slide-title">Ojuelegba Nights</div>
+            <div class="slide-sub">New drop from Simi Sola</div>
+            <div class="slide-cta">Play</div>
+          </div>
+          <div class="slide" style="background:linear-gradient(135deg,#047857,#34D399)">
+            <div class="slide-title">Hire in Naija</div>
+            <div class="slide-sub">Fresh roles from Lagos founders</div>
+            <div class="slide-cta">Browse jobs</div>
+          </div>
+          <div class="slide" style="background:linear-gradient(135deg,#B45309,#FBBF24)">
+            <div class="slide-title">Cinema Friday</div>
+            <div class="slide-sub">Vote the next screening</div>
+            <div class="slide-cta">Open cinema</div>
+          </div>
+        </div>
+        <div class="dots"><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+
+        <div class="chips">
+          <div class="chip on">For you</div>
+          <div class="chip">Trending</div>
+          <div class="chip">Rooms</div>
+          <div class="chip">News</div>
+        </div>
+
+        <div class="section"><h3>Explore</h3><span class="link">More</span></div>
+        <div class="grid4">
+          <div class="gitem"><div class="ic">💼</div><div class="lb">Jobs</div></div>
+          <div class="gitem"><div class="ic">🛍️</div><div class="lb">Market</div></div>
+          <div class="gitem"><div class="ic">🏠</div><div class="lb">Rent</div></div>
+          <div class="gitem"><div class="ic">📅</div><div class="lb">Events</div></div>
+          <div class="gitem"><div class="ic">🎬</div><div class="lb">Cinema</div></div>
+          <div class="gitem"><div class="ic">🎵</div><div class="lb">Music</div></div>
+          <div class="gitem"><div class="ic">👥</div><div class="lb">Teams</div></div>
+          <div class="gitem"><div class="ic">🏢</div><div class="lb">Spaces</div></div>
+        </div>
+
+        <div class="empty">
+          <div class="empty-ic">✎</div>
+          <div style="font-weight:700;font-size:16px">No posts yet</div>
+          <div class="sub" style="max-width:240px;margin:6px auto 0;line-height:1.4">Be first to share discovery in Lagos.</div>
+          <button class="btn">Create post</button>
+        </div>
+
+        <div class="section"><h3>Music · New drops</h3><span class="link">Browse</span></div>
+        <div class="music">
+          <div class="track" style="background:#2563EB"><b>Ojuelegba Nights</b><span>Simi Sola</span></div>
+          <div class="track" style="background:#059669"><b>Eko Energy</b><span>Femi + Liza</span></div>
+          <div class="track" style="background:#7C3AED"><b>Water & Light</b><span>Ayo Blue</span></div>
+        </div>
+
+        <div class="section"><h3>News for you</h3><span class="link">Open media</span></div>
+        <div class="news">
+          <div class="nthumb" style="background:#DBEAFE"></div>
+          <div><div class="nk">Business · Lagos · 2h</div><div class="nt">Paystack alumni raise $3.2M to rebuild discovery</div></div>
+        </div>
+        <div class="news">
+          <div class="nthumb" style="background:#FEF9C3"></div>
+          <div><div class="nk">Culture · Nigeria · 5h</div><div class="nt">Inside studios mapping Afrobeats samples</div></div>
+        </div>
+
+        <div class="section"><h3>Rooms · 2 live</h3><span class="link">See all</span></div>
+        <div class="room">
+          <div class="rav">LF<span class="live-d"></span></div>
+          <div><div style="font-weight:700;font-size:15px">Lagos Founders</div><div class="sub">12 speaking · 2.4k</div></div>
+          <div class="join">Join</div>
+        </div>
+        <div class="room">
+          <div class="rav">AL<span class="live-d"></span></div>
+          <div><div style="font-weight:700;font-size:15px">Afrobeats Lab</div><div class="sub">8 speaking · 1.2k</div></div>
+          <div class="join">Join</div>
+        </div>
+        <div style="height:16px"></div>
+      </div>
+
+      <!-- SOCIALS -->
+      <div class="screen" id="socials">
+        <div style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #2A2A30;align-items:center">
+          <div class="av">K</div>
+          <div style="flex:1;background:#1A1A1E;border-radius:999px;padding:10px 14px;color:#71717A;font-size:14px">What's happening in Naija?</div>
+          <div class="btn" style="margin:0;padding:9px 14px;border-radius:999px;font-size:13px">Post</div>
+        </div>
+        <div style="margin:12px;padding:14px;background:#18181B;border:1px solid #2A2A30;border-radius:18px">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="av" style="background:#222226">C</div>
+            <div style="flex:1"><b>Chioma Ade</b><div class="sub">@chioma · 2h · Commerce</div></div>
+            <div class="join">Follow</div>
+          </div>
+          <p style="margin-top:10px;font-size:15px;line-height:1.45">Just shipped v2 of our Lagos commerce toolkit — inventory sync, WhatsApp checkout, instant settlement.</p>
+          <div style="display:flex;gap:18px;margin-top:12px;padding-top:12px;border-top:1px solid #2A2A30;font-size:13px;color:#71717A">
+            <span>♡ 127</span><span>💬 8</span><span>↗ 19</span><span>Share</span>
+          </div>
+        </div>
+        <div style="margin:12px;padding:14px;background:#18181B;border:1px solid #2A2A30;border-radius:18px">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="av" style="background:#222226">S</div>
+            <div style="flex:1"><b>Simi Sola ✓</b><div class="sub">@simisola · 6h · Artist</div></div>
+            <div class="join">Follow</div>
+          </div>
+          <p style="margin-top:10px;font-size:15px;line-height:1.45">Ojuelegba Nights out now everywhere. Wrote this on a danfo to Yaba.</p>
+          <div style="display:flex;gap:18px;margin-top:12px;padding-top:12px;border-top:1px solid #2A2A30;font-size:13px;color:#71717A">
+            <span>♡ 342</span><span>💬 21</span><span>↗ 84</span><span>Share</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY -->
+      <div class="screen" id="activity">
+        <div class="pad" style="margin-bottom:12px">
+          <div class="h1">Activity</div>
+          <div class="sub">Chronological · no algorithm</div>
+        </div>
+        <div class="room" style="border-color:#3B82F6;background:#12182A"><span style="font-size:20px">❤️</span><div style="flex:1"><b>Simi Sola liked your take</b><div class="sub">2h · socials</div></div><div style="width:8px;height:8px;border-radius:4px;background:#3B82F6"></div></div>
+        <div class="room" style="border-color:#3B82F6;background:#12182A"><span style="font-size:20px">💬</span><div style="flex:1"><b>New reply in #lounge from Femi</b><div class="sub">3h · chat</div></div><div style="width:8px;height:8px;border-radius:4px;background:#3B82F6"></div></div>
+        <div class="room"><span style="font-size:20px">🎵</span><div style="flex:1"><b>Ojuelegba Nights crossed 12k plays</b><div class="sub">1d · music</div></div></div>
+      </div>
+
+      <!-- MY SPACE -->
+      <div class="screen" id="myspace">
+        <div style="text-align:center;padding:16px">
+          <div class="av" style="width:88px;height:88px;border-radius:44px;font-size:30px;margin:0 auto 12px;border:3px solid #222226">KA</div>
+          <div class="h1">Kelechi Anene</div>
+          <div class="sub">@kelechi · Lagos, NG</div>
+          <p class="sub" style="margin-top:8px;max-width:280px;margin-left:auto;margin-right:auto;line-height:1.4">Building Kilode. Product, community, and the city OS for Naija.</p>
+          <div style="display:flex;justify-content:center;gap:28px;margin-top:18px">
+            <div><div style="font-size:18px;font-weight:800">412</div><div class="sub">Following</div></div>
+            <div><div style="font-size:18px;font-weight:800">2.1k</div><div class="sub">Followers</div></div>
+            <div><div style="font-size:18px;font-weight:800">86</div><div class="sub">Posts</div></div>
+          </div>
+          <button class="btn" style="margin-top:16px">Edit profile</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dock">
+      <div class="dbtn on"><span class="ic">⌂</span>Home</div>
+      <div class="dbtn"><span class="ic">◫</span>Socials</div>
+      <div class="more">+</div>
+      <div class="dbtn"><span class="ic">◐</span>Activity</div>
+      <div class="dbtn"><span class="ic">○</span>My Space</div>
+    </div>
+  </div>
+
+<script>
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+      document.getElementById(btn.dataset.s).classList.add('on');
+    };
+  });
+</script>
+</body>
+</html>
