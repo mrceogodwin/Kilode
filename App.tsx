@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
   useColorScheme,
   TextInput,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
-import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK } from "./data";
+import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity } from "./lib/api";
 import { API_BASE } from "./lib/config";
@@ -31,12 +32,15 @@ function KilodeApp() {
   const [slide, setSlide] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [boot, setBoot] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock">("mock");
 
   const [takes, setTakes] = useState<any[]>([]);
@@ -54,32 +58,43 @@ function KilodeApp() {
     setTab(t);
     setMoreOpen(false);
     setCreateOpen(false);
+    setSearchOpen(false);
   };
+
+  const loadAll = useCallback(async () => {
+    const [t, r, n, tr, a] = await Promise.all([
+      fetchTakes(),
+      fetchRooms(),
+      fetchNews(),
+      fetchTracks(),
+      fetchActivity(),
+    ]);
+    setTakes(Array.isArray(t.data) ? t.data : []);
+    setRooms(Array.isArray(r.data) ? r.data : []);
+    setNews(Array.isArray(n.data) ? n.data : []);
+    setTracks(Array.isArray(tr.data) ? tr.data : []);
+    setActivity(Array.isArray(a.data) ? a.data : []);
+    const anyLive = [t, r, n, tr].some((x) => x.source === "live");
+    setSource(anyLive ? "live" : "mock");
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [t, r, n, tr, a] = await Promise.all([
-        fetchTakes(),
-        fetchRooms(),
-        fetchNews(),
-        fetchTracks(),
-        fetchActivity(),
-      ]);
-      if (cancelled) return;
-      setTakes(Array.isArray(t.data) ? t.data : []);
-      setRooms(Array.isArray(r.data) ? r.data : []);
-      setNews(Array.isArray(n.data) ? n.data : []);
-      setTracks(Array.isArray(tr.data) ? tr.data : []);
-      setActivity(Array.isArray(a.data) ? a.data : []);
-      const anyLive = [t, r, n, tr].some((x) => x.source === "live");
-      setSource(anyLive ? "live" : "mock");
-      setBoot(false);
+      await loadAll();
+      if (!cancelled) setBoot(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadAll]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAll();
+    setRefreshing(false);
+    show("Refreshed");
+  };
 
   if (boot || authLoading) {
     return (
@@ -162,6 +177,11 @@ function KilodeApp() {
           </TouchableOpacity>
           <Text style={[s.meta, { marginTop: 20, textAlign: "center" }]}>API · {API_BASE}</Text>
         </View>
+        {toast ? (
+          <View style={s.toast}>
+            <Text style={s.toastText}>{toast}</Text>
+          </View>
+        ) : null}
       </SafeAreaView>
     );
   }
@@ -182,7 +202,7 @@ function KilodeApp() {
         <View style={[s.chip, { paddingVertical: 4, paddingHorizontal: 8 }]}>
           <Text style={[s.chipText, { fontSize: 10 }]}>{source}</Text>
         </View>
-        <TouchableOpacity style={s.iconBtn} onPress={() => show("Search")}>
+        <TouchableOpacity style={s.iconBtn} onPress={() => setSearchOpen(true)}>
           <Text style={s.iconBtnText}>⌕</Text>
         </TouchableOpacity>
         <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
@@ -195,8 +215,12 @@ function KilodeApp() {
     </View>
   );
 
+  const rc = (
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} colors={[C.accent]} />
+  );
+
   const Home = () => (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.padH}>
         <Text style={s.h1}>Good morning, Lagos</Text>
         <Text style={s.sub}>City OS · data: {source} · {session.handle}</Text>
@@ -231,16 +255,6 @@ function KilodeApp() {
           </TouchableOpacity>
         ))}
       </View>
-      {takes.length === 0 ? (
-        <View style={s.emptyCard}>
-          <View style={s.emptyIcon}><Text style={{ fontSize: 20 }}>✎</Text></View>
-          <Text style={s.emptyTitle}>No posts yet</Text>
-          <Text style={s.emptyDesc}>Be first to share discovery in Lagos.</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 16, paddingHorizontal: 22 }]} onPress={() => setCreateOpen(true)}>
-            <Text style={s.primaryBtnText}>Create post</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
       <View style={s.sectionHead}>
         <Text style={s.sectionTitle}>Music · New drops</Text>
         <TouchableOpacity onPress={() => go("music")}><Text style={s.link}>Browse</Text></TouchableOpacity>
@@ -256,7 +270,6 @@ function KilodeApp() {
       </ScrollView>
       <View style={s.sectionHead}>
         <Text style={s.sectionTitle}>News for you</Text>
-        <TouchableOpacity onPress={() => setHomeChip(3)}><Text style={s.link}>Open media</Text></TouchableOpacity>
       </View>
       {news.map((n: any) => (
         <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => show(n.title)}>
@@ -269,7 +282,6 @@ function KilodeApp() {
       ))}
       <View style={s.sectionHead}>
         <Text style={s.sectionTitle}>Rooms · {rooms.filter((r: any) => r.live).length} live</Text>
-        <TouchableOpacity onPress={() => show("All rooms")}><Text style={s.link}>See all</Text></TouchableOpacity>
       </View>
       {rooms.map((r: any) => {
         const isJoined = !!joined[r.id];
@@ -300,7 +312,7 @@ function KilodeApp() {
   );
 
   const Socials = () => (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.composer}>
         <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
         <TouchableOpacity style={s.composerInput} onPress={() => setCreateOpen(true)}>
@@ -346,7 +358,7 @@ function KilodeApp() {
   );
 
   const ActivityView = () => (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.padH}>
         <Text style={s.h1}>Activity</Text>
         <Text style={s.sub}>Chronological · no algorithm</Text>
@@ -386,18 +398,35 @@ function KilodeApp() {
 
   const Desk = ({ name }: { name: string }) => {
     const d = DESKS.find((x) => x.id === name);
+    const items = LISTINGS[name] || [];
     return (
-      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
         <View style={s.deskHero}>
           <Text style={s.deskHeroIcon}>{d?.icon || "📦"}</Text>
           <Text style={s.h1}>{d?.label || name}</Text>
           <Text style={s.sub}>{d?.blurb}</Text>
-          <Text style={[s.meta, { marginTop: 8 }]}>Wire path: {API_BASE}/api/{name}</Text>
           <TouchableOpacity style={[s.primaryBtn, { marginTop: 18, paddingHorizontal: 28 }]} onPress={() => setCreateOpen(true)}>
-            <Text style={s.primaryBtnText}>Create</Text>
+            <Text style={s.primaryBtnText}>Create in {d?.label || name}</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center" }]} onPress={() => go("home")}>
+        <View style={s.sectionHead}>
+          <Text style={s.sectionTitle}>{items.length ? `${items.length} listings` : "No listings yet"}</Text>
+        </View>
+        {items.map((item) => (
+          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => show(item.title)}>
+            <View style={s.flex}>
+              <Text style={s.roomName}>{item.title}</Text>
+              <Text style={s.meta}>{item.meta}</Text>
+            </View>
+            {item.price ? <Text style={[s.chipText, { fontWeight: "700", color: C.accent }]}>{item.price}</Text> : null}
+            {item.tag ? (
+              <View style={[s.chip, { marginLeft: 8, paddingVertical: 4 }]}>
+                <Text style={[s.chipText, { fontSize: 10 }]}>{item.tag}</Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={() => go("home")}>
           <Text style={s.ghostBtnText}>Back home</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -415,6 +444,14 @@ function KilodeApp() {
 
   const headerTitle =
     tab === "activity" ? "Activity" : tab === "myspace" ? "My Space" : DESKS.find((d) => d.id === tab)?.label;
+
+  const searchHits = searchQ.trim()
+    ? [
+        ...takes.filter((t) => `${t.name} ${t.text}`.toLowerCase().includes(searchQ.toLowerCase())).map((t) => ({ type: "Take", title: t.name, sub: t.text })),
+        ...rooms.filter((r) => r.name.toLowerCase().includes(searchQ.toLowerCase())).map((r) => ({ type: "Room", title: r.name, sub: r.meta })),
+        ...DESKS.filter((d) => d.label.toLowerCase().includes(searchQ.toLowerCase())).map((d) => ({ type: "Desk", title: d.label, sub: d.blurb })),
+      ].slice(0, 12)
+    : [];
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
@@ -448,6 +485,48 @@ function KilodeApp() {
           </TouchableOpacity>
         ))}
       </View>
+
+      <Modal visible={searchOpen} animationType="slide" onRequestClose={() => setSearchOpen(false)}>
+        <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
+          <View style={[s.header, { gap: 10 }]}>
+            <TextInput
+              autoFocus
+              style={{
+                flex: 1,
+                backgroundColor: C.input,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                color: C.text,
+                borderWidth: 1,
+                borderColor: C.border,
+              }}
+              placeholder="Search takes, rooms, desks…"
+              placeholderTextColor={C.text3}
+              value={searchQ}
+              onChangeText={setSearchQ}
+            />
+            <TouchableOpacity onPress={() => setSearchOpen(false)}>
+              <Text style={s.link}>Close</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView contentContainerStyle={s.scrollPad}>
+            {searchHits.map((h, i) => (
+              <TouchableOpacity key={i} style={s.roomRow} onPress={() => { show(h.title); setSearchOpen(false); }}>
+                <View style={s.flex}>
+                  <Text style={s.meta}>{h.type}</Text>
+                  <Text style={s.roomName}>{h.title}</Text>
+                  <Text style={s.meta} numberOfLines={1}>{h.sub}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+            {searchQ && !searchHits.length ? (
+              <Text style={[s.sub, { textAlign: "center", marginTop: 40 }]}>No results</Text>
+            ) : null}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
       <Modal visible={moreOpen} transparent animationType="slide" onRequestClose={() => setMoreOpen(false)}>
         <View style={s.modalRoot}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setMoreOpen(false)} />
@@ -468,6 +547,7 @@ function KilodeApp() {
           </View>
         </View>
       </Modal>
+
       <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
         <View style={s.modalRoot}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
@@ -488,7 +568,12 @@ function KilodeApp() {
           </View>
         </View>
       </Modal>
-      {toast ? <View style={s.toast}><Text style={s.toastText}>{toast}</Text></View> : null}
+
+      {toast ? (
+        <View style={s.toast}>
+          <Text style={s.toastText}>{toast}</Text>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
