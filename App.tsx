@@ -10,6 +10,7 @@ import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake
 import { API_BASE } from "./lib/config";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
+import { AuthScreen } from "./screens/Auth";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signInGuest, signOut } = useAuth();
@@ -33,8 +34,6 @@ function KilodeApp() {
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [joined, setJoined] = useState<Record<string, boolean>>({});
-  const [handle, setHandle] = useState("");
-  const [password, setPassword] = useState("");
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock">("mock");
@@ -79,24 +78,14 @@ function KilodeApp() {
 
   if (!session) {
     return (
-      <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
-        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-        <View style={[s.flex, s.center, { padding: 28 }]}>
-          <View style={s.livePill}><View style={s.liveDot} /><Text style={s.liveText}>KILODE</Text></View>
-          <Text style={[s.h1, { marginTop: 20, textAlign: "center" }]}>City OS for Naija</Text>
-          <Text style={[s.sub, { textAlign: "center", marginBottom: 28 }]}>Sign in to sync with Kilode Nine · or continue as guest</Text>
-          <TextInput style={{ width: "100%", backgroundColor: C.input, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, color: C.text, borderWidth: 1, borderColor: C.border, marginBottom: 10, fontSize: 16 }} placeholder="Handle or email" placeholderTextColor={C.text3} autoCapitalize="none" value={handle} onChangeText={setHandle} />
-          <TextInput style={{ width: "100%", backgroundColor: C.input, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, color: C.text, borderWidth: 1, borderColor: C.border, marginBottom: 16, fontSize: 16 }} placeholder="Password" placeholderTextColor={C.text3} secureTextEntry value={password} onChangeText={setPassword} />
-          <TouchableOpacity style={[s.primaryBtn, { width: "100%" }]} onPress={async () => { const r = await signIn(handle, password); if (!r.ok) show(r.error || "Failed"); else show("Welcome"); }}>
-            <Text style={s.primaryBtnText}>Sign in</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.ghostBtn, { width: "100%", marginTop: 12, alignItems: "center" }]} onPress={() => { signInGuest("Guest"); show("Guest mode"); }}>
-            <Text style={s.ghostBtnText}>Continue as guest</Text>
-          </TouchableOpacity>
-          <Text style={[s.meta, { marginTop: 20, textAlign: "center" }]}>API · {API_BASE}</Text>
-        </View>
-        {toast ? <View style={s.toast}><Text style={s.toastText}>{toast}</Text></View> : null}
-      </SafeAreaView>
+      <AuthScreen
+        isDark={isDark}
+        C={C}
+        onSignIn={signIn}
+        onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
+        onGoogle={() => { signInGuest("Google User"); show("Google · wire OAuth next"); }}
+        show={show}
+      />
     );
   }
 
@@ -166,7 +155,7 @@ function KilodeApp() {
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.composer}>
         <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
-        <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What&apos;s happening in Naija?</Text></TouchableOpacity>
+        <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What is happening in Naija?</Text></TouchableOpacity>
         <TouchableOpacity style={s.postBtn} onPress={() => setComposeOpen(true)}><Text style={s.postBtnText}>Post</Text></TouchableOpacity>
       </View>
       {takes.map((t: any) => (
