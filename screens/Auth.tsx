@@ -14,21 +14,24 @@ import {
   Easing,
 } from "react-native";
 import { API_BASE } from "../lib/config";
+import { ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 
 type Props = {
   isDark: boolean;
   C: any;
-  onSignIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  onSignIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
+  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
   onGuest: () => void;
   onGoogle: () => void;
   show: (m: string) => void;
 };
 
-export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
+export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Props) {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [kind, setKind] = useState<AccountKind>("member");
   const [busy, setBusy] = useState(false);
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -67,7 +70,6 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {/* No logo mark — clean glass card only */}
           <View style={styles.card}>
             <View style={styles.tabs}>
               <TouchableOpacity style={[styles.tab, mode === "in" && styles.tabOn]} onPress={() => setMode("in")}>
@@ -79,7 +81,9 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
             </View>
 
             <Text style={styles.title}>{mode === "in" ? "Welcome back" : "Join Kilode"}</Text>
-            <Text style={styles.hint}>{mode === "in" ? "Sign in to continue" : "Create your handle"}</Text>
+            <Text style={styles.hint}>
+              {mode === "in" ? "Sign in to continue" : "Choose account type · username + password"}
+            </Text>
 
             <TouchableOpacity
               style={styles.google}
@@ -100,17 +104,35 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
             </View>
 
             {mode === "up" ? (
-              <TextInput
-                style={styles.field}
-                placeholder="Display name"
-                placeholderTextColor="#71717A"
-                value={name}
-                onChangeText={setName}
-              />
+              <>
+                <Text style={styles.kindLabel}>Account type</Text>
+                <View style={styles.kindGrid}>
+                  {ACCOUNT_KINDS.map((k) => (
+                    <TouchableOpacity
+                      key={k.id}
+                      style={[styles.kindCell, kind === k.id && styles.kindCellOn]}
+                      onPress={() => setKind(k.id)}
+                    >
+                      <Text style={[styles.kindTitle, kind === k.id && styles.kindTitleOn]}>{k.label}</Text>
+                      <Text style={styles.kindHint} numberOfLines={2}>
+                        {k.hint}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TextInput
+                  style={styles.field}
+                  placeholder="Display name (optional)"
+                  placeholderTextColor="#71717A"
+                  value={name}
+                  onChangeText={setName}
+                />
+              </>
             ) : null}
+
             <TextInput
               style={styles.field}
-              placeholder="Handle or email"
+              placeholder="Username"
               placeholderTextColor="#71717A"
               autoCapitalize="none"
               value={handle}
@@ -118,7 +140,7 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
             />
             <TextInput
               style={styles.field}
-              placeholder="Password"
+              placeholder={mode === "up" ? "Password (8+)" : "Password"}
               placeholderTextColor="#71717A"
               secureTextEntry
               value={password}
@@ -130,10 +152,17 @@ export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
               disabled={busy}
               onPress={async () => {
                 setBusy(true);
-                const r = await onSignIn(handle || name || "you", password || "x");
-                setBusy(false);
-                if (!r.ok) show(r.error || "Failed");
-                else show(mode === "up" ? "Account ready" : "Welcome");
+                if (mode === "up") {
+                  const r = await onSignUp(handle, password, kind, name || undefined);
+                  setBusy(false);
+                  if (!r.ok) show(r.error || "Failed");
+                  else show(`Welcome · ${kind}`);
+                } else {
+                  const r = await onSignIn(handle, password);
+                  setBusy(false);
+                  if (!r.ok) show(r.error || "Failed");
+                  else show("Welcome");
+                }
               }}
             >
               <Text style={styles.primaryText}>
@@ -244,6 +273,21 @@ const styles = StyleSheet.create({
   dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 12 },
   dividerLine: { flex: 1, height: 1, backgroundColor: "#2A2A30" },
   dividerText: { fontSize: 12, fontWeight: "600", color: "#52525B", marginHorizontal: 12 },
+  kindLabel: { fontSize: 12, fontWeight: "700", color: "#A1A1AA", marginBottom: 8 },
+  kindGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
+  kindCell: {
+    width: "48%",
+    flexGrow: 1,
+    borderWidth: 1,
+    borderColor: "#2A2A30",
+    backgroundColor: "#121214",
+    borderRadius: 12,
+    padding: 10,
+  },
+  kindCellOn: { borderColor: "#3B82F6", backgroundColor: "rgba(59,130,246,0.12)" },
+  kindTitle: { fontSize: 12, fontWeight: "700", color: "#F4F4F5" },
+  kindTitleOn: { color: "#93C5FD" },
+  kindHint: { fontSize: 10, color: "#71717A", marginTop: 3, lineHeight: 13 },
   field: {
     backgroundColor: "#121214",
     borderWidth: 1,
