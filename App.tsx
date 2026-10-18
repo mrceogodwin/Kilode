@@ -14,6 +14,12 @@ import {
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, TAKES, ACTIVITY, ROOMS, TRACKS } from "./data";
 
+/**
+ * Kilode Premium — React Native (Expo)
+ * Production shell. Dark-first Figma social design + light skin.
+ * Backend / real data lives on Kilode Nine (Neon + Supabase).
+ * This app is the native surface — wire APIs next.
+ */
 export default function App() {
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
@@ -22,6 +28,7 @@ export default function App() {
   const isDark = effective === "dark";
 
   const [tab, setTab] = useState("home");
+  const [homeChip, setHomeChip] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -73,20 +80,25 @@ export default function App() {
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
       <View style={s.padH}>
-        <Text style={s.h1}>Good morning</Text>
-        <Text style={s.sub}>Lagos · Sun 18 Oct · 26° partly cloudy</Text>
+        <Text style={s.h1}>Good morning, Lagos</Text>
+        <Text style={s.sub}>City OS · Sun 18 Oct · 26° partly cloudy</Text>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
         {["For you", "Trending", "Rooms", "News"].map((c, i) => (
-          <TouchableOpacity key={c} style={[s.chip, i === 0 && s.chipOn]} activeOpacity={0.8}>
-            <Text style={[s.chipText, i === 0 && s.chipTextOn]}>{c}</Text>
+          <TouchableOpacity
+            key={c}
+            style={[s.chip, homeChip === i && s.chipOn]}
+            onPress={() => setHomeChip(i)}
+            activeOpacity={0.8}
+          >
+            <Text style={[s.chipText, homeChip === i && s.chipTextOn]}>{c}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       <View style={s.sectionHead}>
-        <Text style={s.sectionTitle}>Rooms · 2 live</Text>
+        <Text style={s.sectionTitle}>Rooms · 2 live · moderated</Text>
         <TouchableOpacity onPress={() => show("All rooms")}>
           <Text style={s.link}>See all</Text>
         </TouchableOpacity>
@@ -206,6 +218,18 @@ export default function App() {
               <Text style={s.actionText}>Share</Text>
             </TouchableOpacity>
           </View>
+          <View style={s.replyBar}>
+            <TouchableOpacity style={s.replyInput} onPress={() => show("Reply")} activeOpacity={0.8}>
+              <Text style={s.replyPlaceholder}>Type here...</Text>
+            </TouchableOpacity>
+            <View style={s.reactRow}>
+              {["😊", "❤️", "🔥", "⚡"].map((e) => (
+                <TouchableOpacity key={e} style={s.reactPill} onPress={() => show(e)}>
+                  <Text style={{ fontSize: 14 }}>{e}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </View>
       ))}
       <View style={{ height: 24 }} />
@@ -270,8 +294,8 @@ export default function App() {
         {DESKS.find((d) => d.id === name)?.icon || "📦"}
       </Text>
       <Text style={s.h1}>{DESKS.find((d) => d.id === name)?.label || name}</Text>
-      <Text style={s.sub}>Native screen · wire to API next</Text>
-      <TouchableOpacity style={[s.primaryBtn, { marginTop: 20 }]} onPress={() => go("home")}>
+      <Text style={s.sub}>Native screen · wire to Kilode Nine next</Text>
+      <TouchableOpacity style={[s.primaryBtn, { marginTop: 20, paddingHorizontal: 24 }]} onPress={() => go("home")}>
         <Text style={s.primaryBtnText}>Back home</Text>
       </TouchableOpacity>
     </View>
