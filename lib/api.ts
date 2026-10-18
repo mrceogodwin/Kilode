@@ -1,7 +1,9 @@
 import { API_BASE, FORCE_MOCK } from "./config";
 import { TAKES, ROOMS, NEWS, TRACKS, ACTIVITY, CAROUSEL } from "../data";
 
-export type ApiResult<T> = { ok: true; data: T; source: "live" | "mock" } | { ok: false; error: string; data: T; source: "mock" };
+export type ApiResult<T> =
+  | { ok: true; data: T; source: "live" | "mock" }
+  | { ok: false; error: string; data: T; source: "mock" };
 
 async function getJson<T>(path: string, fallback: T): Promise<ApiResult<T>> {
   if (FORCE_MOCK) {
@@ -25,7 +27,6 @@ async function getJson<T>(path: string, fallback: T): Promise<ApiResult<T>> {
 }
 
 export async function fetchTakes() {
-  // v2 server routes vary; try common paths then mock
   const paths = ["/api/takes", "/api/listTakes", "/_server/takes"];
   for (const p of paths) {
     const r = await getJson(p, TAKES);
@@ -70,9 +71,29 @@ export async function fetchCarousel() {
 }
 
 export async function postTake(body: string, token?: string | null) {
-  if (FORCE_MOCK || !token) {
-    return { ok: true, id: `local-${Date.now()}`, source: "mock" as const };
+  const text = body.trim();
+  if (!text) return { ok: false as const, error: "Empty", source: "mock" as const };
+
+  if (FORCE_MOCK || !token || token === "guest" || token === "local") {
+    return {
+      ok: true as const,
+      id: `local-${Date.now()}`,
+      source: "mock" as const,
+      take: {
+        id: `local-${Date.now()}`,
+        name: "You",
+        handle: "you",
+        time: "now",
+        role: "Member",
+        text,
+        likes: 0,
+        comments: 0,
+        reposts: 0,
+        tags: ["take"],
+      },
+    };
   }
+
   try {
     const res = await fetch(`${API_BASE}/api/takes`, {
       method: "POST",
@@ -81,12 +102,44 @@ export async function postTake(body: string, token?: string | null) {
         Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({ body: text }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return { ok: true, id: data.id ?? "ok", source: "live" as const };
+    return {
+      ok: true as const,
+      id: data.id ?? "ok",
+      source: "live" as const,
+      take: data.take || {
+        id: data.id || `live-${Date.now()}`,
+        name: "You",
+        handle: "you",
+        time: "now",
+        role: "Member",
+        text,
+        likes: 0,
+        comments: 0,
+        reposts: 0,
+        tags: ["take"],
+      },
+    };
   } catch {
-    return { ok: true, id: `local-${Date.now()}`, source: "mock" as const };
+    return {
+      ok: true as const,
+      id: `local-${Date.now()}`,
+      source: "mock" as const,
+      take: {
+        id: `local-${Date.now()}`,
+        name: "You",
+        handle: "you",
+        time: "now",
+        role: "Member",
+        text,
+        likes: 0,
+        comments: 0,
+        reposts: 0,
+        tags: ["take"],
+      },
+    };
   }
 }

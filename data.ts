@@ -75,7 +75,6 @@ export const NEWS = [
   { id: "n3", kicker: "Policy · Lagos", title: "State opens short-let registration window — what hosts need to know", time: "8h", tone: "#D1FAE5" },
 ];
 
-/** Desk listing seeds — wire to Kilode Nine listings tables next */
 export const LISTINGS: Record<string, { id: string; title: string; meta: string; price?: string; tag?: string }[]> = {
   jobs: [
     { id: "j1", title: "Backend Engineer (Rust/Go)", meta: "Fintech · Lagos · Full-time", price: "₦8–12M", tag: "Hot" },
@@ -97,20 +96,15 @@ export const LISTINGS: Record<string, { id: string; title: string; meta: string;
     { id: "e2", title: "Lagos Founders meetup", meta: "Sat · Civic Centre", price: "₦5,000" },
     { id: "e3", title: "Afrobeats open mic", meta: "Sun · Muri Okunola", price: "Free" },
   ],
-  cinema: [
-    { id: "ci1", title: "Ojuelegba Cut", meta: "22 min · Vote to screen", tag: "Voting" },
-    { id: "ci2", title: "Third Mainland", meta: "Documentary · 48 min" },
-  ],
-  music: [
-    { id: "mu1", title: "Ojuelegba Nights", meta: "Simi Sola · 12.4k plays" },
-    { id: "mu2", title: "Eko Energy", meta: "Femi + Liza · New" },
-  ],
+  cinema: [],
+  music: [],
   teams: [
     { id: "te1", title: "Need mobile eng for fintech MVP", meta: "3-month · Equity + cash" },
     { id: "te2", title: "Looking for Nollywood editor", meta: "Lagos · Project" },
   ],
   ads: [
     { id: "ad1", title: "Feed takeover · 24h", meta: "Lagos geo · From ₦25k", tag: "Boost" },
+    { id: "ad2", title: "Story pack · 7 days", meta: "Nigeria · Brand safe", price: "₦120k" },
   ],
   chat: [],
   spaces: [
@@ -118,3 +112,42 @@ export const LISTINGS: Record<string, { id: string; title: string; meta: string;
     { id: "sp2", title: "Nollywood Guild", meta: "890 · Film" },
   ],
 };
+
+export const FILMS = [
+  { id: "f1", title: "Ojuelegba Cut", runtime: "22 min", votes: 128, synopsis: "A night bus, a sample pack, and the city that refuses to sleep." },
+  { id: "f2", title: "Third Mainland", runtime: "48 min", votes: 86, synopsis: "Documentary on informal transit design and the people who move Lagos." },
+  { id: "f3", title: "Balogun Hour", runtime: "14 min", votes: 201, synopsis: "Market morning in 4K — commerce before the phones wake up." },
+];
+
+export const CHAT_THREADS = [
+  {
+    id: "ct1",
+    name: "#lounge",
+    preview: "Femi: who is going to Freedom Park Fri?",
+    unread: 2,
+    messages: [
+      { id: "m1", from: "Femi", text: "Who is going to Freedom Park Fri?", time: "3h", me: false },
+      { id: "m2", from: "Amaka", text: "I am — bringing the fintech crew", time: "2h", me: false },
+      { id: "m3", from: "You", text: "Count me in", time: "1h", me: true },
+    ],
+  },
+  {
+    id: "ct2",
+    name: "Lagos Founders",
+    preview: "New room note pinned",
+    unread: 0,
+    messages: [
+      { id: "m4", from: "Chioma", text: "Pinned: office hours Thu 4pm", time: "5h", me: false },
+      { id: "m5", from: "You", text: "Thanks — will join", time: "4h", me: true },
+    ],
+  },
+  {
+    id: "ct3",
+    name: "Simi Sola",
+    preview: "Thanks for the repost 🙏",
+    unread: 1,
+    messages: [
+      { id: "m6", from: "Simi Sola", text: "Thanks for the repost 🙏", time: "6h", me: false },
+    ],
+  },
+];
