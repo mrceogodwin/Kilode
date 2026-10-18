@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Animated,
+  Easing,
 } from "react-native";
 import { API_BASE } from "../lib/config";
 
@@ -22,134 +24,48 @@ type Props = {
   show: (m: string) => void;
 };
 
-export function AuthScreen({ isDark, C, onSignIn, onGuest, onGoogle, show }: Props) {
+export function AuthScreen({ onSignIn, onGuest, onGoogle, show }: Props) {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const scale = useRef(new Animated.Value(1)).current;
 
-  const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: "#0A0A0C" },
-    bg: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "#0A0A0C",
-    },
-    // Warm Lagos-night gradient stand-in until danfo photo is bundled as asset
-    glow: {
-      position: "absolute",
-      top: -80,
-      left: -40,
-      right: -40,
-      height: 420,
-      backgroundColor: "#1a1208",
-      opacity: 0.9,
-    },
-    glow2: {
-      position: "absolute",
-      top: 80,
-      left: 40,
-      width: 220,
-      height: 220,
-      borderRadius: 110,
-      backgroundColor: "#3B82F6",
-      opacity: 0.08,
-    },
-    content: {
-      flexGrow: 1,
-      justifyContent: "flex-end",
-      paddingHorizontal: 22,
-      paddingBottom: 36,
-      paddingTop: 48,
-    },
-    logoWrap: { alignItems: "center", marginBottom: 28 },
-    logoMark: {
-      width: 72,
-      height: 72,
-      borderRadius: 22,
-      backgroundColor: "rgba(255,255,255,0.06)",
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.12)",
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 14,
-    },
-    logoMarkText: { color: "#fff", fontSize: 28, fontWeight: "800", letterSpacing: -1 },
-    logoWord: { fontSize: 34, fontWeight: "800", color: "#fff", letterSpacing: -1.2 },
-    logoBang: { color: "#3B82F6" },
-    tagline: { marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.65)", fontWeight: "500" },
-    card: {
-      backgroundColor: "rgba(24,24,27,0.94)",
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.08)",
-      paddingHorizontal: 18,
-      paddingTop: 18,
-      paddingBottom: 16,
-    },
-    tabs: {
-      flexDirection: "row",
-      backgroundColor: "#121214",
-      borderRadius: 12,
-      padding: 3,
-      marginBottom: 14,
-      borderWidth: 1,
-      borderColor: "#2A2A30",
-    },
-    tab: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center" },
-    tabOn: { backgroundColor: "#222226" },
-    tabText: { fontSize: 13, fontWeight: "600", color: "#71717A" },
-    tabTextOn: { color: "#F4F4F5" },
-    title: { fontSize: 20, fontWeight: "700", color: "#F4F4F5", letterSpacing: -0.3 },
-    hint: { fontSize: 13, color: "#A1A1AA", marginTop: 4, marginBottom: 16, lineHeight: 18 },
-    google: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 10,
-      backgroundColor: "#FFFFFF",
-      borderRadius: 14,
-      paddingVertical: 14,
-      marginBottom: 12,
-    },
-    googleText: { color: "#0A0A0C", fontWeight: "700", fontSize: 14 },
-    dividerRow: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 12 },
-    dividerLine: { flex: 1, height: 1, backgroundColor: "#2A2A30" },
-    dividerText: { fontSize: 12, fontWeight: "600", color: "#52525B" },
-    field: {
-      backgroundColor: "#121214",
-      borderWidth: 1,
-      borderColor: "#2A2A30",
-      borderRadius: 14,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      color: "#F4F4F5",
-      fontSize: 15,
-      marginBottom: 10,
-    },
-    primary: {
-      backgroundColor: "#2563EB",
-      borderRadius: 14,
-      paddingVertical: 15,
-      alignItems: "center",
-      marginTop: 4,
-    },
-    primaryText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-    switchRow: { flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 16 },
-    switchMuted: { fontSize: 13, color: "#A1A1AA" },
-    switchLink: { fontSize: 13, fontWeight: "600", color: "#3B82F6" },
-    legal: { textAlign: "center", fontSize: 11, color: "#52525B", marginTop: 12, lineHeight: 16 },
-    guest: { alignItems: "center", marginTop: 14 },
-    guestText: { fontSize: 13, fontWeight: "600", color: "#3B82F6" },
-    api: { textAlign: "center", fontSize: 10, color: "#3f3f46", marginTop: 10 },
-  });
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.12,
+          duration: 11000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 11000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [scale]);
 
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.bg} />
-      <View style={styles.glow} />
-      <View style={styles.glow2} />
+      {/* Ken Burns ambient layers — swap for danfo ImageBackground when asset ships */}
+      <View style={StyleSheet.absoluteFill}>
+        <Animated.View style={[styles.bgPlate, { transform: [{ scale }] }]}>
+          <View style={styles.warmBlob} />
+          <View style={styles.blueBlob} />
+          <View style={styles.amberBlob} />
+        </Animated.View>
+        <View style={styles.veil} />
+      </View>
+
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.logoWrap}>
@@ -164,16 +80,10 @@ export function AuthScreen({ isDark, C, onSignIn, onGuest, onGoogle, show }: Pro
 
           <View style={styles.card}>
             <View style={styles.tabs}>
-              <TouchableOpacity
-                style={[styles.tab, mode === "in" && styles.tabOn]}
-                onPress={() => setMode("in")}
-              >
+              <TouchableOpacity style={[styles.tab, mode === "in" && styles.tabOn]} onPress={() => setMode("in")}>
                 <Text style={[styles.tabText, mode === "in" && styles.tabTextOn]}>Sign in</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, mode === "up" && styles.tabOn]}
-                onPress={() => setMode("up")}
-              >
+              <TouchableOpacity style={[styles.tab, mode === "up" && styles.tabOn]} onPress={() => setMode("up")}>
                 <Text style={[styles.tabText, mode === "up" && styles.tabTextOn]}>Create account</Text>
               </TouchableOpacity>
             </View>
@@ -191,7 +101,7 @@ export function AuthScreen({ isDark, C, onSignIn, onGuest, onGoogle, show }: Pro
               }}
               activeOpacity={0.9}
             >
-              <Text style={{ fontSize: 16 }}>G</Text>
+              <Text style={styles.googleG}>G</Text>
               <Text style={styles.googleText}>Continue with Google</Text>
             </TouchableOpacity>
 
@@ -266,3 +176,132 @@ export function AuthScreen({ isDark, C, onSignIn, onGuest, onGoogle, show }: Pro
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: "#0A0A0C" },
+  bgPlate: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#120e0a",
+  },
+  warmBlob: {
+    position: "absolute",
+    top: 40,
+    left: -60,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: "#c27a2e",
+    opacity: 0.22,
+  },
+  blueBlob: {
+    position: "absolute",
+    top: 160,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "#2563EB",
+    opacity: 0.12,
+  },
+  amberBlob: {
+    position: "absolute",
+    bottom: 200,
+    left: 40,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "#ea580c",
+    opacity: 0.1,
+  },
+  veil: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10,10,12,0.55)",
+  },
+  content: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+    paddingHorizontal: 22,
+    paddingBottom: 36,
+    paddingTop: 48,
+  },
+  logoWrap: { alignItems: "center", marginBottom: 28 },
+  logoMark: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  logoMarkText: { color: "#fff", fontSize: 28, fontWeight: "800", letterSpacing: -1 },
+  logoWord: { fontSize: 34, fontWeight: "800", color: "#fff", letterSpacing: -1.2 },
+  logoBang: { color: "#3B82F6" },
+  tagline: { marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.65)", fontWeight: "500" },
+  card: {
+    backgroundColor: "rgba(24,24,27,0.94)",
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 16,
+  },
+  tabs: {
+    flexDirection: "row",
+    backgroundColor: "#121214",
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#2A2A30",
+  },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center" },
+  tabOn: { backgroundColor: "#222226" },
+  tabText: { fontSize: 13, fontWeight: "600", color: "#71717A" },
+  tabTextOn: { color: "#F4F4F5" },
+  title: { fontSize: 20, fontWeight: "700", color: "#F4F4F5", letterSpacing: -0.3 },
+  hint: { fontSize: 13, color: "#A1A1AA", marginTop: 4, marginBottom: 16, lineHeight: 18 },
+  google: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginBottom: 12,
+  },
+  googleG: { fontSize: 16, fontWeight: "800", color: "#4285F4", marginRight: 10 },
+  googleText: { color: "#0A0A0C", fontWeight: "700", fontSize: 14 },
+  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 12 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#2A2A30" },
+  dividerText: { fontSize: 12, fontWeight: "600", color: "#52525B", marginHorizontal: 12 },
+  field: {
+    backgroundColor: "#121214",
+    borderWidth: 1,
+    borderColor: "#2A2A30",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: "#F4F4F5",
+    fontSize: 15,
+    marginBottom: 10,
+  },
+  primary: {
+    backgroundColor: "#2563EB",
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  primaryText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  switchRow: { flexDirection: "row", justifyContent: "center", marginTop: 16 },
+  switchMuted: { fontSize: 13, color: "#A1A1AA", marginRight: 6 },
+  switchLink: { fontSize: 13, fontWeight: "600", color: "#3B82F6" },
+  legal: { textAlign: "center", fontSize: 11, color: "#52525B", marginTop: 12, lineHeight: 16 },
+  guest: { alignItems: "center", marginTop: 14 },
+  guestText: { fontSize: 13, fontWeight: "600", color: "#3B82F6" },
+  api: { textAlign: "center", fontSize: 10, color: "#3f3f46", marginTop: 10 },
+});
