@@ -165,7 +165,7 @@ function KilodeApp() {
         <Text style={{ fontSize: 25, fontWeight: "800", color: C.text, letterSpacing: -0.8 }}>Discover</Text>
         <Text style={{ fontSize: 12, color: C.text2, marginTop: 3 }}>Your world, all in one place.</Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={292} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 292))}>
         {CAROUSEL_FALLBACK.map((c) => (
           <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => { const key = c.cta.toLowerCase(); if (key === "play") go("music"); else if (key === "jobs") go("jobs"); else if (key === "cinema") go("cinema"); else setMoreOpen(true); }}>
             <Text style={s.slideTitle}>{c.title}</Text>
