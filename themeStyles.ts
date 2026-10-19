@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-/** Kilode established system — dark-first green accent (matches product identity). */
+/** Kilode visual system — charcoal, off-white and muted gold. */
 export const palettes = {
   dark: {
     bg: "#0A0A0A",
@@ -11,10 +11,10 @@ export const palettes = {
     text: "#F5F5F5",
     text2: "#A3A3A3",
     text3: "#737373",
-    accent: "#22C55E",
-    accentSoft: "#0F2A1A",
+    accent: "#D4AF37",
+    accentSoft: "#2A2415",
     danger: "#F43F5E",
-    success: "#22C55E",
+    success: "#D4AF37",
     dock: "#0A0A0A",
   },
   light: {
@@ -26,10 +26,10 @@ export const palettes = {
     text: "#09090B",
     text2: "#52525B",
     text3: "#A1A1AA",
-    accent: "#16A34A",
-    accentSoft: "#DCFCE7",
+    accent: "#9A7621",
+    accentSoft: "#F5EBD0",
     danger: "#E11D48",
-    success: "#16A34A",
+    success: "#9A7621",
     dock: "#FFFFFF",
   },
 };
