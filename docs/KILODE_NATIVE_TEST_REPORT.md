@@ -1,50 +1,52 @@
 # Kilode native test report
 
-Updated: 2026-10-19
+Updated: 2026-10-19 (deployment root cause)
 
-## Environment
-- Source: `mrceogodwin/Kilode-v2` (includes mobile bridge commit `f033397ad0`)
-- Target: `mrceogodwin/Kilode` Expo RN
-- Live probe host: `https://kilode-nine.vercel.app`
+## Verified: why `/api/mobile/*` is not live
 
-## HTTP probes (real curl)
+### Vercel projects (team `team_F1UJzfByla9EZviJBNLRsrz2`)
 
-| Request | Result |
-|---------|--------|
-| `GET /` `Accept: application/json` | **406** `{"error":"Only HTML requests are supported here"}` |
-| `GET /api/takes` `Accept: application/json` | **406** same body (route does not exist on deploy) |
-| `GET /api/auth/get-session` `Accept: application/json` | **200** `null` (JSON allowed) |
-| `GET /api/cron/digest` `Accept: application/json` | **401** JSON `CRON_SECRET not set` (JSON allowed on real API routes) |
-| `GET /api/sitemap` | **200** XML |
-| `GET /api/mobile/health` (before deploy) | **406** (route not on live deploy yet) |
-| `GET /` `Accept: text/html` | **200** HTML Kilode shell |
+| Project | ID | GitHub repo in production deploys |
+|---------|-----|-------------------------------------|
+| **kilodenew** | `prj_tOSHU45aXGXX4DeoFLQqqcgUJwEd` | **`mrceogodwin/Kilode`** (Expo RN) |
+| **kilode** | `prj_UiLTbHnvL0iGbrM6hK8igZ33YIlU` | **`mrceogodwin/Kilode`** |
 
-### Interpretation
-1. The 406 message is **real and measured**, not assumed.
-2. Existing `/api/*` handlers that are deployed **do** return JSON (`/api/auth/*`, `/api/cron/*`).
-3. Unknown paths with JSON Accept receive the HTML-only 406.
-4. Mobile bridge routes were **committed to Kilode-v2** but are **not yet serving** on kilode-nine until that commit is deployed by Vercel.
+Latest **kilodenew** production deployment:
+- SHA: `2535b07a5064a6c43e38531dfb1856a4fbb057a2`
+- Message: `docs: Stage 3 evidence — 406 verified; mobile bridge committed on v2; live deploy pending`
+- Repo: **Kilode** (not Kilode-v2)
 
-## Code changes this cycle
+### Mobile bridge location
+- Code lives only in **`mrceogodwin/Kilode-v2`** @ `f033397ad0`
+- Paths: `src/routes/api/mobile/health.ts`, `takes.ts`, `tracks.ts`
+- **No Vercel project in this team is deploying Kilode-v2**
 
-### Kilode-v2
-- `src/routes/api/mobile/health.ts`
-- `src/routes/api/mobile/takes.ts` (wraps `listTakes`, `saveTake`)
-- `src/routes/api/mobile/tracks.ts` (wraps `listTracks`)
+Therefore production host `kilode-nine.vercel.app` cannot serve `/api/mobile/*` until a project that builds **Kilode-v2** is deployed and aliased.
 
-### Kilode (RN)
-- `lib/api.ts` points at `/api/mobile/*`
-- Distinguishes live / mock / error
+### Live probes (2026-10-19)
 
-## Not yet verified
-- Live `GET /api/mobile/takes` after deploy
-- Authenticated `POST /api/mobile/takes`
-- Expo device E2E
-- better-auth sign-in from native
+| URL | Status | Body |
+|-----|--------|------|
+| `https://kilode-nine.vercel.app/api/mobile/health` | **406** | `{"error":"Only HTML requests are supported here"}` |
+| `https://kilode-nine.vercel.app/api/auth/get-session` | **200** | `null` |
+| `https://kilode-nine.vercel.app/api/cron/digest` | **401** | JSON (route exists) |
+| `https://kilodenew.vercel.app/api/mobile/health` | **404** | Vercel NOT_FOUND |
 
-## Next verification after Vercel deploys v2
-```bash
-curl -sS -H 'Accept: application/json' https://kilode-nine.vercel.app/api/mobile/health
-curl -sS -H 'Accept: application/json' https://kilode-nine.vercel.app/api/mobile/takes
-```
-Expect JSON `{ ok: true, ... }` not 406.
+### Attempted fix
+- `create_git_project` for `mrceogodwin/Kilode-v2` → **403** scope auth on Vercel connector
+- Domain listing → **403** same scope
+
+**Blocker requiring user action:** Re-auth Vercel connector and/or in Vercel dashboard:
+1. Create or relink a project to **`mrceogodwin/Kilode-v2`** (production branch `main`).
+2. Deploy production.
+3. Point `kilode-nine.vercel.app` (or keep separate API host) at that deployment.
+4. Do **not** keep deploying the Expo RN repo as the web product (`kilodenew` currently does).
+
+### RN client
+- Points at `API_BASE` + `/api/mobile/*`
+- Correct after bridge is live; cannot pass live verification until deploy is fixed
+
+### Auth on bridge (code review — not live-tested)
+- `listTakes` uses `optionalAuthMiddleware` (public read OK)
+- `saveTake` uses `authMiddleware` — rejects unauthenticated writes (no auth bypass)
+- POST validates non-empty body; returns 400/401/500 appropriately in route wrapper
