@@ -36,7 +36,8 @@ const UA = "KilodeNative/1.0 (iOS; Expo)";
 async function tryLiveJson<T>(
   path: string,
   fallback: T,
-  fnName: string
+  fnName: string,
+  token?: string
 ): Promise<ApiResult<T>> {
   if (FORCE_MOCK) {
     return { ok: true, data: fallback, source: "mock", fn: fnName };
@@ -49,6 +50,7 @@ async function tryLiveJson<T>(
       headers: {
         Accept: "application/json",
         "User-Agent": UA,
+        ...(token && token !== "guest" ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
     clearTimeout(timer);
@@ -133,8 +135,8 @@ export async function fetchTracks(): Promise<ApiResult<any[]>> {
   };
 }
 
-export function fetchActivity() {
-  return tryLiveJson("/api/mobile/activity", ACTIVITY as any[], "listNotes");
+export function fetchActivity(token?: string) {
+  return tryLiveJson("/api/mobile/activity", ACTIVITY as any[], "listNotes", token);
 }
 
 export function fetchCarousel() {
