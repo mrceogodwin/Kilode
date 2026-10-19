@@ -49,7 +49,7 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
   if (active) {
     const body =
       active.body ||
-      `${active.title}\n\nThis is a Kilode Media reading surface. Full editorial body will load from the CMS when the mobile API is live. Until then, this screen is fully navigable with seed content so App Review never hits a dead end.\n\n— ${active.author || "Kilode Editorial"}`;
+      `${active.title}\n\nFull story coming soon.\n\n— ${active.author || "Kilode Editorial"}`;
 
     return (
       <ScrollView style={s.flex} contentContainerStyle={[s.scrollPad, { paddingHorizontal: 16 }]}>
@@ -93,7 +93,7 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
             <Text style={s.ghostBtnText}>Home</Text>
           </TouchableOpacity>
         </View>
-        <Text style={[s.meta, { marginTop: 16 }]}>Seed article · not live CMS</Text>
+        
       </ScrollView>
     );
   }
@@ -117,12 +117,12 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
       {visibleArticles[0] ? (
         <View style={{ marginTop: 4, marginBottom: 20 }}>
           <TouchableOpacity key={visibleArticles[0].id} activeOpacity={0.9} onPress={() => setActive(visibleArticles[0])} accessibilityRole="button" style={{ marginHorizontal: 16, overflow: "hidden", borderRadius: 18, backgroundColor: C.card }}>
-            {visibleArticles[0].imageUrl ? <Image source={{ uri: visibleArticles[0].imageUrl }} style={{ width: "100%", height: 218, backgroundColor: visibleArticles[0].tone || C.elevated }} resizeMode="cover" /> : <View style={{ height: 190, backgroundColor: visibleArticles[0].tone || C.elevated }} />}
-            <View style={{ paddingHorizontal: 14, paddingTop: 13, paddingBottom: 16 }}>
+            {visibleArticles[0].imageUrl ? <Image source={{ uri: visibleArticles[0].imageUrl }} style={{ width: "100%", height: 164, backgroundColor: visibleArticles[0].tone || C.elevated }} resizeMode="cover" /> : <View style={{ height: 164, backgroundColor: visibleArticles[0].tone || C.elevated }} />}
+            <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 }}>
               <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.9 }}>{(visibleArticles[0].kicker || "MEDIA").toUpperCase()} · {visibleArticles[0].time || "LATEST"}</Text>
-              <Text style={{ color: C.text, fontSize: 21, lineHeight: 27, fontWeight: "800", letterSpacing: -0.6, marginTop: 7 }}>{visibleArticles[0].title}</Text>
+              <Text style={{ color: C.text, fontSize: 17, lineHeight: 22, fontWeight: "750", letterSpacing: -0.3, marginTop: 6 }}>{visibleArticles[0].title}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 11 }}>
-                <Text style={{ color: C.text2, fontSize: 12 }}>Kilode Media · Preview story</Text>
+                <Text style={{ color: C.text2, fontSize: 11 }}>Kilode Media</Text>
                 <View style={{ flex: 1 }} />
                 <Ionicons name="arrow-up-right" size={18} color={C.accent} />
               </View>
