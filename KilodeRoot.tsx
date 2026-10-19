@@ -13,11 +13,13 @@ import { MusicScreen } from "./screens/Music";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
+import { SettingsScreen } from "./screens/Settings";
+import { blockUser, submitReport } from "./lib/moderation";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   const system = useColorScheme();
-  const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("light");
+  const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
   const C = palettes[effective];
   const isDark = effective === "dark";
@@ -44,10 +46,11 @@ function KilodeApp() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
   };
 
   const loadAll = useCallback(async () => {
@@ -249,6 +252,12 @@ function KilodeApp() {
             </TouchableOpacity>
             <TouchableOpacity style={s.action} onPress={() => setCommentTake(t)}><Text style={s.actionText}>💬 {t.comments || 0}</Text></TouchableOpacity>
             <TouchableOpacity style={s.action} onPress={() => show("Share")}><Text style={s.actionText}>Share</Text></TouchableOpacity>
+            <TouchableOpacity style={s.action} onPress={async () => { await submitReport("post", String(t.id), "other"); show("Reported · under review"); }}>
+              <Text style={s.actionText}>Report</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.action} onPress={async () => { await blockUser(String(t.handle || t.name)); show(`Blocked @${t.handle || t.name}`); }}>
+              <Text style={[s.actionText, { color: C.danger }]}>Block</Text>
+            </TouchableOpacity>
           </View>
         </View>
       ))}
@@ -284,8 +293,11 @@ function KilodeApp() {
         </View>
         <View style={s.rowGap}>
           <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => show("Edit profile")}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
-          <TouchableOpacity style={s.ghostBtn} onPress={() => { signOut(); show("Signed out"); }}><Text style={s.ghostBtnText}>Sign out</Text></TouchableOpacity>
+          <TouchableOpacity style={s.ghostBtn} onPress={() => setSettingsOpen(true)}><Text style={s.ghostBtnText}>Settings</Text></TouchableOpacity>
         </View>
+        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 16, marginTop: 10, alignItems: "center" }]} onPress={() => { signOut(); show("Signed out"); }}>
+          <Text style={s.ghostBtnText}>Sign out</Text>
+        </TouchableOpacity>
       </View>
       <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
       <View style={s.roomRow}>
@@ -323,6 +335,24 @@ function KilodeApp() {
   };
 
   const body = () => {
+    if (settingsOpen) return (
+      <SettingsScreen
+        s={s}
+        C={C}
+        isDark={isDark}
+        sessionHandle={session.handle}
+        show={show}
+        onBack={() => setSettingsOpen(false)}
+        onDeleteAccount={async () => {
+          try {
+            signOut();
+            return { ok: true };
+          } catch (e) {
+            return { ok: false, error: e instanceof Error ? e.message : "failed" };
+          }
+        }}
+      />
+    );
     if (tab === "home") return <Home />;
     if (tab === "socials") return <Socials />;
     if (tab === "activity") return <ActivityView />;
@@ -334,7 +364,13 @@ function KilodeApp() {
     return <Home />;
   };
 
-  const headerTitle = tab === "activity" ? "Notifications" : tab === "myspace" ? "My Space" : DESKS.find((d) => d.id === tab)?.label;
+  const headerTitle = settingsOpen
+    ? "Settings"
+    : tab === "activity"
+      ? "Notifications"
+      : tab === "myspace"
+        ? "My Space"
+        : DESKS.find((d) => d.id === tab)?.label;
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
