@@ -9,7 +9,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_APP_ENV": "development",
-        "EXPO_PUBLIC_API_URL": "https://kilode-nine.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://kilode-v2.vercel.app"
       },
       "ios": {
         "simulator": true
@@ -19,7 +19,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_APP_ENV": "preview",
-        "EXPO_PUBLIC_API_URL": "https://kilode-nine.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://kilode-v2.vercel.app"
       },
       "ios": {
         "simulator": false
@@ -28,7 +28,7 @@
     "production": {
       "env": {
         "EXPO_PUBLIC_APP_ENV": "production",
-        "EXPO_PUBLIC_API_URL": "https://kilode-nine.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://kilode-v2.vercel.app"
       },
       "ios": {
         "resourceClass": "m-medium"
