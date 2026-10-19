@@ -44,17 +44,17 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <TouchableOpacity onPress={() => setActiveTrack(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
             <Text style={s.link}>‹ Back to Music</Text>
           </TouchableOpacity>
-          <View style={{ height: 260, borderRadius: 22, backgroundColor: activeTrack.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 22, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}>
-            <View style={{ position: "absolute", width: 190, height: 190, borderRadius: 95, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", transform: [{ rotate: "22deg" }] }} /><View style={{ position: "absolute", width: 140, height: 140, borderRadius: 70, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)", transform: [{ rotate: "-18deg" }] }} /><Ionicons name="musical-notes" size={58} color="rgba(255,255,255,0.96)" />
+          <View style={{ height: 216, borderRadius: 18, backgroundColor: activeTrack.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 16, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}>
+            <View style={{ position: "absolute", width: 164, height: 164, borderRadius: 82, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", transform: [{ rotate: "22deg" }] }} /><View style={{ position: "absolute", width: 118, height: 118, borderRadius: 59, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)", transform: [{ rotate: "-18deg" }] }} /><Ionicons name="musical-notes" size={58} color="rgba(255,255,255,0.96)" />
           </View>
           <Text style={s.h1}>{activeTrack.title}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
-          <Text style={[s.meta, { marginTop: 14 }]}>Track details · preview catalogue</Text>
+          
           <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={() => { onPlay(activeTrack); show("Track selected. Streaming audio is not connected yet."); }}>
             <Ionicons name="play" size={17} color="#fff" />
             <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Select track</Text>
           </TouchableOpacity>
-          <Text style={[s.meta, { marginTop: 12 }]}>Selecting a track updates the in-app player bar; it does not start audio until a streaming source is connected.</Text>
+          
         </View>
       </ScrollView>
     );
@@ -68,7 +68,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <TouchableOpacity onPress={() => setActiveArtist(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
             <Text style={s.link}>‹ Back to Music</Text>
           </TouchableOpacity>
-          <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: activeArtist.color || C.accent, alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+          <View style={{ width: 58, height: 58, borderRadius: 29, backgroundColor: activeArtist.color || C.accent, alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
             <Ionicons name="person" size={34} color="#fff" />
           </View>
           <Text style={s.h1}>{activeArtist.name}</Text>
@@ -94,8 +94,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         </TouchableOpacity>
         <View style={{ paddingTop: 5, paddingBottom: 8 }}>
           <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1.8, marginBottom: 7 }}>KILODE SOUND</Text>
-          <Text style={[s.h1, { fontSize: 32, letterSpacing: -1.1 }]}>Music</Text>
-          <Text style={[s.sub, { marginTop: 4, fontSize: 14 }]}>Find your next repeat.</Text>
+          <Text style={[s.h1, { fontSize: 26, letterSpacing: -0.7 }]}>Music</Text>
         </View>
       </View>
 
@@ -128,15 +127,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
               {tracks.map((t: any) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={{ width: 156, marginRight: 13 }}
+                  style={{ width: 120, marginRight: 11 }}
                   activeOpacity={0.82}
                   onPress={() => selectTrack(t)}
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${t.title}`}
                 >
-                  <View style={{ height: 156, borderRadius: 15, overflow: "hidden", backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
-                    <View style={{ position: "absolute", width: 132, height: 132, borderRadius: 66, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" }} />
-                    <View style={{ position: "absolute", width: 104, height: 104, borderRadius: 52, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }} />
+                  <View style={{ height: 120, borderRadius: 12, overflow: "hidden", backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                    <View style={{ position: "absolute", width: 102, height: 102, borderRadius: 51, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" }} />
+                    <View style={{ position: "absolute", width: 80, height: 80, borderRadius: 40, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }} />
                     <View style={{ position: "absolute", width: 76, height: 76, borderRadius: 38, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }} />
                     <Ionicons name="musical-notes" size={28} color="rgba(255,255,255,0.92)" />
                     <View style={{ position: "absolute", right: 9, bottom: 9, width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15,15,16,0.88)", alignItems: "center", justifyContent: "center" }}><Ionicons name="play" size={14} color="#fff" /></View>
@@ -157,8 +156,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         <>
           <View style={{ marginHorizontal: 16, marginTop: 8, marginBottom: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <View>
-              <Text style={{ color: C.text, fontSize: 20, fontWeight: "800", letterSpacing: -0.45 }}>Top charts</Text>
-              <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>The sounds moving the culture</Text>
+              <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.35 }}>Top charts</Text>
+              
             </View>
             <View style={{ paddingHorizontal: 9, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: C.border }}>
               <Text style={{ color: C.text3, fontSize: 9, fontWeight: "800", letterSpacing: 1 }}>SAMPLE</Text>
@@ -170,7 +169,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           {CHARTS.map((c) => (
             <TouchableOpacity
               key={c.rank}
-              style={{ marginHorizontal: 16, paddingVertical: 13, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: C.border }}
+              style={{ marginHorizontal: 16, paddingVertical: 10, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: C.border }}
               activeOpacity={0.76}
               onPress={() => selectTrack({ id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent })}
               accessibilityRole="button"
@@ -195,7 +194,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <View style={{ marginHorizontal: 16, marginTop: 8, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <View>
               <Text style={{ color: C.text, fontSize: 20, fontWeight: "800", letterSpacing: -0.45 }}>Featured artists</Text>
-              <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>Meet the names behind the sound</Text>
+              
             </View>
             <View style={{ paddingHorizontal: 9, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: C.border }}>
               <Text style={{ color: C.text3, fontSize: 9, fontWeight: "800", letterSpacing: 1 }}>SAMPLE</Text>
