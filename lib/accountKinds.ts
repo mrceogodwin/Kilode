@@ -18,3 +18,11 @@ export function asAccountKind(v: string | undefined | null): AccountKind {
   const hit = ACCOUNT_KINDS.find((k) => k.id === v);
   return hit ? hit.id : "member";
 }
+
+/** Grouped by the distinct Kilode systems a new account can primarily operate. */
+export const ACCOUNT_GROUPS = [
+  { title: "PERSONAL", kinds: ["member"] },
+  { title: "CREATORS & MEDIA", kinds: ["artist", "writer", "cinema"] },
+  { title: "WORK & OPPORTUNITIES", kinds: ["job_seeker", "job_poster"] },
+  { title: "BUSINESS & MARKETPLACE", kinds: ["vendor", "brand", "advertiser", "renter"] },
+] as const satisfies readonly { title: string; kinds: readonly AccountKind[] }[];
