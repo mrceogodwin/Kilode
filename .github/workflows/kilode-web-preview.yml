@@ -1,0 +1,42 @@
+name: Kilode Web Preview Check
+
+on:
+  push:
+    branches:
+      - preview/web
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.ts'
+      - '**.tsx'
+      - '**.js'
+      - '**.jsx'
+      - 'app.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'babel.config.*'
+      - 'metro.config.*'
+      - 'vercel.json'
+      - '.github/workflows/kilode-web-preview.yml'
+
+jobs:
+  web-build:
+    name: Verify Expo web export
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript check
+        run: npm run typecheck --if-present
+      - name: Build browser preview
+        run: npm run build:web
+      - name: Verify exported entry point
+        run: test -s dist/index.html
