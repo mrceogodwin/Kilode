@@ -10,6 +10,7 @@ type Props = {
   color?: string;
   style?: ViewStyle;
   accessibilityLabel?: string;
+  isDark?: boolean;
 };
 
 export function KilodeIconButton({
@@ -19,6 +20,7 @@ export function KilodeIconButton({
   color = TEXT,
   style,
   accessibilityLabel,
+  isDark = true,
 }: Props) {
   return (
     <TouchableOpacity
@@ -26,7 +28,7 @@ export function KilodeIconButton({
       accessibilityLabel={accessibilityLabel || name}
       activeOpacity={0.7}
       onPress={onPress}
-      style={[styles.btn, style]}
+      style={[styles.btn, { backgroundColor: isDark ? "rgba(255,255,255,0.045)" : "rgba(130,105,48,0.055)", borderColor: isDark ? "rgba(212,175,55,0.16)" : "rgba(130,105,48,0.2)" }, style]}
     >
       <Ionicons name={name} size={size} color={color} />
     </TouchableOpacity>
@@ -40,8 +42,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.045)",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: BORDER,
+    borderColor: "rgba(212,175,55,0.16)",
   },
 });
