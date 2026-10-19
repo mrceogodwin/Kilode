@@ -26,6 +26,24 @@ import { EmptyState } from "./components/ui/EmptyState";
 import { ConnectionBanner } from "./components/ui/ConnectionBanner";
 import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
 
+const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  "💼": "briefcase-outline",
+  "🛍️": "bag-handle-outline",
+  "🏠": "home-outline",
+  "📅": "calendar-outline",
+  "🎬": "film-outline",
+  "🎵": "musical-notes-outline",
+  "💬": "chatbubble-ellipses-outline",
+  "📢": "megaphone-outline",
+  "📚": "book-outline",
+  "⚽": "football-outline",
+  "💻": "laptop-outline",
+  "▶️": "play-circle-outline",
+  "✏️": "create-outline",
+};
+const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap =>
+  SYSTEM_ICON[emoji] || "apps-outline";
+
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   // The web preview defaults to the same welcome screen as iOS.
@@ -584,7 +602,7 @@ function KilodeApp() {
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><Text style={{ fontSize: 22 }}>{d.icon}</Text><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
+            <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><View style={{ width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(212,175,55,0.09)" : "rgba(130,105,48,0.08)", borderWidth: 1, borderColor: isDark ? "rgba(212,175,55,0.16)" : "rgba(130,105,48,0.16)" }}><Ionicons name={systemIconName(d.icon)} size={21} color={C.accent} /></View><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
           </View>
         </View>
       </Modal>
@@ -597,7 +615,7 @@ function KilodeApp() {
             <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
             <View style={s.deskGrid}>{CREATE.map((o) => (
               <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
-                <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
+                <View style={{ width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(212,175,55,0.09)" : "rgba(130,105,48,0.08)", borderWidth: 1, borderColor: isDark ? "rgba(212,175,55,0.16)" : "rgba(130,105,48,0.16)" }}><Ionicons name={systemIconName(o.icon)} size={21} color={C.accent} /></View><Text style={s.deskGridLabel}>{o.label}</Text>
               </TouchableOpacity>
             ))}</View>
           </View>
