@@ -13,6 +13,7 @@ import { MusicScreen } from "./screens/Music";
 import { AuthScreen } from "./screens/Auth";
 import { MediaScreen } from "./screens/Media";
 import { SettingsScreen } from "./screens/Settings";
+import { DeskDetailScreen } from "./screens/DeskDetail";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
 import { Ionicons } from "@expo/vector-icons";
@@ -60,6 +61,7 @@ function KilodeApp() {
   const [detailItem, setDetailItem] = useState<any | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+  const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -72,7 +74,7 @@ function KilodeApp() {
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null);
   };
 
   const loadAll = useCallback(async () => {
@@ -384,7 +386,7 @@ function KilodeApp() {
         </View>
         <View style={s.sectionHead}><Text style={s.sectionTitle}>{items.length ? `${items.length} listings` : "No listings yet"}</Text></View>
         {items.map((item) => (
-          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setDetailItem(item)}>
+          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setSelectedDeskItem(item)}>
             <View style={s.flex}><Text style={s.roomName}>{item.title}</Text><Text style={s.meta}>{item.meta}</Text></View>
             {item.price ? <Text style={[s.chipText, { fontWeight: "700", color: C.accent }]}>{item.price}</Text> : null}
           </TouchableOpacity>
@@ -406,6 +408,16 @@ function KilodeApp() {
         show={show}
         onBack={() => setSettingsOpen(false)}
         onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
+      />
+    );
+    if (selectedDeskItem) return (
+      <DeskDetailScreen
+        s={s}
+        C={C}
+        system={DESKS.find((d) => d.id === tab)?.label || tab}
+        item={selectedDeskItem}
+        onBack={() => setSelectedDeskItem(null)}
+        show={show}
       />
     );
     if (tab === "media") return (
