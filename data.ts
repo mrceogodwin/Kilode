@@ -26,10 +26,10 @@ export const ROLE_GRID = [
 ];
 
 export const CAROUSEL = [
-  { id: "c1", title: "Lagos is live", sub: "Rooms, music, desks", cta: "Explore", color: "#15803D", color2: "#22C55E" },
-  { id: "c2", title: "Ojuelegba Nights", sub: "Simi Sola · New drop", cta: "Play", color: "#166534", color2: "#4ADE80" },
-  { id: "c3", title: "Hire in Naija", sub: "Fresh roles", cta: "Jobs", color: "#14532D", color2: "#22C55E" },
-  { id: "c4", title: "Cinema Friday", sub: "Vote the next screening", cta: "Cinema", color: "#052E16", color2: "#16A34A" },
+  { id: "c1", title: "Lagos is live", sub: "Rooms, music, desks", cta: "Explore", color: "#8B6B35", color2: "#D4AF37" },
+  { id: "c2", title: "Ojuelegba Nights", sub: "Simi Sola · New drop", cta: "Play", color: "#5A4728", color2: "#E5C158" },
+  { id: "c3", title: "Hire in Naija", sub: "Fresh roles", cta: "Jobs", color: "#3A3021", color2: "#D4AF37" },
+  { id: "c4", title: "Cinema Friday", sub: "Vote the next screening", cta: "Cinema", color: "#171613", color2: "#A88A4E" },
 ];
 
 export const STORIES = [
@@ -56,6 +56,7 @@ export const TAKES = [
     id: "1",
     name: "Chioma Ade",
     handle: "chioma",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80",
     time: "2h",
     role: "Commerce · Yaba",
     text: "Just shipped v2 of our Lagos commerce toolkit — inventory sync, WhatsApp checkout, instant settlement. Built for market women first. Pilot with 40 stalls on Balogun.",
@@ -65,13 +66,14 @@ export const TAKES = [
     tags: ["take", "spark"],
     factPct: 62,
     media: true,
-    mediaTone: "#22C55E",
+    mediaTone: "#D4AF37",
     mediaUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
   },
   {
     id: "2",
     name: "Simi Sola",
     handle: "simisola",
+    avatarUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=120&h=120&q=80",
     time: "6h",
     role: "Artist · Lagos",
     text: "Ojuelegba Nights out now everywhere. Wrote this on a danfo to Yaba. Thank you Lagos for raising me.",
@@ -82,13 +84,14 @@ export const TAKES = [
     verified: true,
     factPct: 70,
     media: true,
-    mediaTone: "#16A34A",
+    mediaTone: "#A88A4E",
     mediaUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80",
   },
   {
     id: "3",
     name: "Femi Bankole",
     handle: "femi_b",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&h=120&q=80",
     time: "4h",
     role: "Urbanist · Island",
     text: "Third Mainland at 6pm is a design failure, not a people failure. We mapped 12 informal bus stops that could become BRT Lite with just paint + shade + one marshal.",
@@ -98,13 +101,14 @@ export const TAKES = [
     tags: ["take", "fact"],
     factPct: 88,
     media: true,
-    mediaTone: "#15803D",
+    mediaTone: "#8B6B35",
     mediaUrl: "https://images.unsplash.com/photo-1570125909232-eb4e5e5a8a44?w=800&q=80",
   },
   {
     id: "4",
     name: "Amaka Nwosu",
     handle: "amaka",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80",
     time: "8h",
     role: "Founder · Fintech",
     text: "Hiring 2 backend engineers in Lagos. Rust or Go. Real ownership, not ticket farms. DM if you’ve shipped payments under load.",
@@ -119,6 +123,7 @@ export const TAKES = [
     id: "5",
     name: "Tunde Okoye",
     handle: "tunde",
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&h=120&q=80",
     time: "11h",
     role: "Film · Nollywood",
     text: "Screening a 22-min short this Friday at Freedom Park. Free. Come argue about the ending with me after.",
@@ -128,13 +133,14 @@ export const TAKES = [
     tags: ["cinema", "events"],
     factPct: 40,
     media: true,
-    mediaTone: "#166534",
+    mediaTone: "#5A4728",
     mediaUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80",
   },
   {
     id: "6",
     name: "Ope",
     handle: "ope",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80",
     time: "1d",
     role: "job_poster",
     text: "Working remotely in Nigeria is actually harder than going to a physical office because of power and data management.",
@@ -148,6 +154,7 @@ export const TAKES = [
     id: "7",
     name: "Lagos Founders",
     handle: "lagosfounders",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&h=120&q=80",
     time: "1d",
     role: "Space · Verified",
     text: "Thursday office hours at Civic Centre. Bring a one-pager. No pitch decks longer than 5 slides. Coffee on us.",
@@ -158,13 +165,14 @@ export const TAKES = [
     verified: true,
     factPct: 50,
     media: true,
-    mediaTone: "#14532D",
+    mediaTone: "#3A3021",
     mediaUrl: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80",
   },
   {
     id: "8",
     name: "Mudino",
     handle: "mudino",
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&h=120&q=80",
     time: "2d",
     role: "member",
     text: "Believe!",
@@ -174,7 +182,7 @@ export const TAKES = [
     tags: ["take"],
     factPct: 50,
     media: true,
-    mediaTone: "#22C55E",
+    mediaTone: "#D4AF37",
     mediaUrl: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80",
   },
 ];
@@ -198,20 +206,20 @@ export const ROOMS = [
 ];
 
 export const TRACKS = [
-  { id: "t1", title: "Ojuelegba Nights", artist: "Simi Sola", color: "#22C55E" },
-  { id: "t2", title: "Last Last", artist: "Burna Boy", color: "#15803D" },
-  { id: "t3", title: "Essence", artist: "Wizkid", color: "#166534" },
-  { id: "t4", title: "Danfo Dreams", artist: "Kemi Wave", color: "#14532D" },
-  { id: "t5", title: "Joro", artist: "Wizkid", color: "#16A34A" },
-  { id: "t6", title: "Balogun Bounce", artist: "Market Band", color: "#052E16" },
+  { id: "t1", title: "Ojuelegba Nights", artist: "Simi Sola", color: "#D4AF37" },
+  { id: "t2", title: "Last Last", artist: "Burna Boy", color: "#8B6B35" },
+  { id: "t3", title: "Essence", artist: "Wizkid", color: "#5A4728" },
+  { id: "t4", title: "Danfo Dreams", artist: "Kemi Wave", color: "#3A3021" },
+  { id: "t5", title: "Joro", artist: "Wizkid", color: "#A88A4E" },
+  { id: "t6", title: "Balogun Bounce", artist: "Market Band", color: "#171613" },
 ];
 
 export const NEWS = [
-  { id: "n1", kicker: "NAIJA · 885", title: "Police arrest 60 over assault of officer", time: "2h", tone: "#166534" },
-  { id: "n2", kicker: "BUSINESS · 691", title: "Oil spill hits Akwa Ibom oil community as NOSDRA probes source", time: "5h", tone: "#14532D" },
-  { id: "n3", kicker: "POLITICS", title: "2027: Wike says Otti backing Tinubu; Abla", time: "8h", tone: "#15803D" },
-  { id: "n4", kicker: "EDUCATION", title: "King’s College: Glory, decay and battle over", time: "3h", tone: "#22C55E" },
-  { id: "n5", kicker: "NEWS", title: "When rain becomes a governance test", time: "9h", tone: "#16A34A" },
+  { id: "n1", kicker: "NAIJA · 885", title: "Police arrest 60 over assault of officer", time: "2h", tone: "#5A4728", imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=240&h=180&q=80" },
+  { id: "n2", kicker: "BUSINESS · 691", title: "Oil spill hits Akwa Ibom oil community as NOSDRA probes source", time: "5h", tone: "#3A3021", imageUrl: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=240&h=180&q=80" },
+  { id: "n3", kicker: "POLITICS", title: "2027: Wike says Otti backing Tinubu; Abla", time: "8h", tone: "#8B6B35", imageUrl: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=240&h=180&q=80" },
+  { id: "n4", kicker: "EDUCATION", title: "King’s College: Glory, decay and battle over", time: "3h", tone: "#D4AF37", imageUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=240&h=180&q=80" },
+  { id: "n5", kicker: "NEWS", title: "When rain becomes a governance test", time: "9h", tone: "#A88A4E", imageUrl: "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=240&h=180&q=80" },
 ];
 
 export const LISTINGS: Record<string, { id: string; title: string; meta: string; price?: string; tag?: string }[]> = {
