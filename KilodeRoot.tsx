@@ -47,6 +47,7 @@ const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap =>
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   // The web preview defaults to the same welcome screen as iOS.
+  // Keep the unauthenticated welcome screen independent of feed loading; the feed is not needed to render onboarding.
   // Add ?preview=home when a reviewer explicitly wants to jump into the seeded home feed.
   useEffect(() => {
     const homePreview = Platform.OS === "web" &&
@@ -154,7 +155,7 @@ function KilodeApp() {
     }
   };
 
-  if (boot || authLoading || (Platform.OS === "web" && !session)) {
+  if (authLoading || (session && boot)) {
     return (
       <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator color={C.accent} size="large" />
