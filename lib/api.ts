@@ -1,21 +1,56 @@
-import { API_BASE, FORCE_MOCK } from "./config";
-import { TAKES, ROOMS, NEWS, TRACKS, ACTIVITY, CAROUSEL } from "../data";
-
-export type ApiResult<T> =
-  | { ok: true; data: T; source: "live" | "mock" }
-  | { ok: false; error: string; data: T; source: "mock" };
-
 /**
- * Production client: try Kilode Nine first.
- * Mock is offline/fallback only — Nine currently returns 406 for JSON Accept.
+ * Kilode native API client
+ *
+ * SOURCE OF TRUTH (Kilode-v2):
+ * - Business logic is TanStack `createServerFn` modules, not a public REST catalog.
+ * - takes-server.ts exports include: listTakes, saveTake, voteTake, likeTake,
+ *   listTakeReplies, replyTake, repostTake, toggleFollow, connectFellow, … (53 fns)
+ * - forum-server.ts: listPosts, savePost, saveComment, listMsgs, saveMsg, listTracks,
+ *   listAds, getProfile, saveProfile, … (45 fns)
+ * - register-server.ts: registerAccount, dbStatus
+ * - Auth: better-auth at same-origin `/api/auth/*` (see src/lib/auth/client.ts)
+ *
+ * PRODUCTION FACT:
+ * kilode-nine.vercel.app serves the HTML app + server functions.
+ * Arbitrary GET with Accept: application/json typically returns non-JSON / 406.
+ * Until explicit mobile-safe routes or a documented server-fn bridge exist,
+ * live calls fail and the client MUST surface that — not pretend seed is live.
+ *
+ * FORCE_MOCK: local UI work only. Never ship true in production builds.
  */
-async function getJson<T>(path: string, fallback: T): Promise<ApiResult<T>> {
+
+import { API_BASE, FORCE_MOCK } from "./config";
+import {
+  TAKES,
+  ROOMS,
+  NEWS,
+  TRACKS,
+  ACTIVITY,
+  CAROUSEL,
+} from "../data";
+
+export type DataSource = "live" | "mock" | "error";
+
+export type ApiResult<T> = {
+  ok: boolean;
+  data: T;
+  source: DataSource;
+  error?: string;
+  /** Server function name this maps to in Kilode-v2 */
+  fn?: string;
+};
+
+async function tryLiveJson<T>(
+  path: string,
+  fallback: T,
+  fnName: string
+): Promise<ApiResult<T>> {
   if (FORCE_MOCK) {
-    return { ok: true, data: fallback, source: "mock" };
+    return { ok: true, data: fallback, source: "mock", fn: fnName };
   }
   try {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 9000);
+    const timer = setTimeout(() => ctrl.abort(), 9000);
     const res = await fetch(`${API_BASE}${path}`, {
       signal: ctrl.signal,
       headers: {
@@ -23,140 +58,212 @@ async function getJson<T>(path: string, fallback: T): Promise<ApiResult<T>> {
         "User-Agent": "KilodeNative/1.0 (iOS; Expo)",
       },
     });
-    clearTimeout(t);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    clearTimeout(timer);
+    if (!res.ok) {
+      return {
+        ok: false,
+        data: fallback,
+        source: "error",
+        error: `HTTP ${res.status}`,
+        fn: fnName,
+      };
+    }
     const ct = res.headers.get("content-type") || "";
-    if (!ct.includes("json")) throw new Error("non-json");
+    if (!ct.includes("json")) {
+      return {
+        ok: false,
+        data: fallback,
+        source: "error",
+        error: "non-json (server is HTML/server-fn app, not public REST)",
+        fn: fnName,
+      };
+    }
     const data = (await res.json()) as T;
-    return { ok: true, data, source: "live" };
+    return { ok: true, data, source: "live", fn: fnName };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "network";
-    return { ok: false, error: msg, data: fallback, source: "mock" };
+    return { ok: false, data: fallback, source: "error", error: msg, fn: fnName };
   }
 }
 
-const TAKE_PATHS = ["/api/takes", "/api/listTakes", "/api/feed", "/api/posts"];
-const ROOM_PATHS = ["/api/rooms", "/api/listRooms"];
-const NEWS_PATHS = ["/api/news", "/api/nf_posts"];
-const TRACK_PATHS = ["/api/tracks", "/api/music"];
-
-export async function fetchTakes() {
-  for (const p of TAKE_PATHS) {
-    const r = await getJson(p, TAKES);
-    if (r.ok && r.source === "live") return r;
-  }
-  return { ok: true as const, data: TAKES, source: "mock" as const };
+/** Maps to takes-server `listTakes` */
+export function fetchTakes() {
+  return tryLiveJson("/api/takes", TAKES as any[], "listTakes");
 }
 
-export async function fetchRooms() {
-  for (const p of ROOM_PATHS) {
-    const r = await getJson(p, ROOMS);
-    if (r.ok && r.source === "live") return r;
-  }
-  return { ok: true as const, data: ROOMS, source: "mock" as const };
+/** Maps to forum-server room/list surfaces — path provisional until mobile route exists */
+export function fetchRooms() {
+  return tryLiveJson("/api/rooms", ROOMS as any[], "listRooms");
 }
 
-export async function fetchNews() {
-  for (const p of NEWS_PATHS) {
-    const r = await getJson(p, NEWS);
-    if (r.ok && r.source === "live") return r;
-  }
-  return { ok: true as const, data: NEWS, source: "mock" as const };
+/** Maps toward news-engine-server */
+export function fetchNews() {
+  return tryLiveJson("/api/news", NEWS as any[], "listNews");
 }
 
-export async function fetchTracks() {
-  for (const p of TRACK_PATHS) {
-    const r = await getJson(p, TRACKS);
-    if (r.ok && r.source === "live") return r;
-  }
-  return { ok: true as const, data: TRACKS, source: "mock" as const };
+/** Maps to forum-server `listTracks` */
+export function fetchTracks() {
+  return tryLiveJson("/api/tracks", TRACKS as any[], "listTracks");
 }
 
-export async function fetchActivity() {
-  const r = await getJson("/api/activity", ACTIVITY);
-  if (r.ok && r.source === "live") return r;
-  return { ok: true as const, data: ACTIVITY, source: "mock" as const };
+/** Maps toward social-server notes / activity */
+export function fetchActivity() {
+  return tryLiveJson("/api/activity", ACTIVITY as any[], "listNotes");
 }
 
-export async function fetchCarousel() {
-  return { ok: true as const, data: CAROUSEL, source: "mock" as const };
+export function fetchCarousel() {
+  return tryLiveJson("/api/carousel", CAROUSEL as any[], "listCarousel");
 }
 
-export async function postTake(body: string, token?: string | null) {
-  const text = body.trim();
-  if (!text) return { ok: false as const, error: "Empty", source: "mock" as const };
-
-  const localTake = {
+/** Maps to takes-server `saveTake` */
+export async function postTake(
+  text: string,
+  token?: string
+): Promise<ApiResult<{ id: string; text: string } | null>> {
+  const local = {
     id: `local-${Date.now()}`,
+    text,
     name: "You",
     handle: "you",
     time: "now",
-    role: "Member",
-    text,
+    role: "member",
     likes: 0,
     comments: 0,
     reposts: 0,
     tags: ["take"],
+    factPct: 50,
   };
-
-  if (FORCE_MOCK || !token || token === "guest" || token === "local") {
-    return { ok: true as const, id: localTake.id, source: "mock" as const, take: localTake };
+  if (FORCE_MOCK) {
+    return { ok: true, data: local as any, source: "mock", fn: "saveTake" };
   }
-
   try {
     const res = await fetch(`${API_BASE}/api/takes`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "User-Agent": "KilodeNative/1.0 (iOS; Expo)",
       },
-      body: JSON.stringify({ body: text }),
+      body: JSON.stringify({ text }),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      return {
+        ok: false,
+        data: local as any,
+        source: "error",
+        error: `HTTP ${res.status}`,
+        fn: "saveTake",
+      };
+    }
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("json")) {
+      return {
+        ok: false,
+        data: local as any,
+        source: "error",
+        error: "non-json",
+        fn: "saveTake",
+      };
+    }
     const data = await res.json();
+    return { ok: true, data, source: "live", fn: "saveTake" };
+  } catch (e) {
     return {
-      ok: true as const,
-      id: data.id ?? "ok",
-      source: "live" as const,
-      take: data.take || { ...localTake, id: data.id || localTake.id },
+      ok: false,
+      data: local as any,
+      source: "error",
+      error: e instanceof Error ? e.message : "network",
+      fn: "saveTake",
     };
-  } catch {
-    return { ok: true as const, id: localTake.id, source: "mock" as const, take: localTake };
   }
 }
 
-export async function postComment(takeId: string, body: string, token?: string | null) {
-  const text = body.trim();
-  if (!text) return { ok: false as const, error: "Empty" };
-  try {
-    if (token && token !== "guest" && token !== "local" && !FORCE_MOCK) {
-      const res = await fetch(`${API_BASE}/api/takes/${takeId}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ body: text }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return { ok: true as const, source: "live" as const, comment: data };
-      }
-    }
-  } catch {
-    /* fall through */
+/** Maps to takes-server `replyTake` / forum `saveComment` */
+export async function postComment(
+  takeId: string,
+  text: string,
+  token?: string
+): Promise<ApiResult<{ id: string; text: string } | null>> {
+  const local = { id: `c-${Date.now()}`, text, takeId };
+  if (FORCE_MOCK) {
+    return { ok: true, data: local, source: "mock", fn: "replyTake" };
   }
-  return {
-    ok: true as const,
-    source: "mock" as const,
-    comment: {
-      id: `c-${Date.now()}`,
-      takeId,
-      text,
-      name: "You",
-      time: "now",
-    },
-  };
+  try {
+    const res = await fetch(`${API_BASE}/api/takes/${takeId}/replies`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "User-Agent": "KilodeNative/1.0 (iOS; Expo)",
+      },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) {
+      return {
+        ok: false,
+        data: local,
+        source: "error",
+        error: `HTTP ${res.status}`,
+        fn: "replyTake",
+      };
+    }
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("json")) {
+      return {
+        ok: false,
+        data: local,
+        source: "error",
+        error: "non-json",
+        fn: "replyTake",
+      };
+    }
+    return { ok: true, data: await res.json(), source: "live", fn: "replyTake" };
+  } catch (e) {
+    return {
+      ok: false,
+      data: local,
+      source: "error",
+      error: e instanceof Error ? e.message : "network",
+      fn: "replyTake",
+    };
+  }
 }
+
+/**
+ * v2 takes-server function names (for future bridge / mobile routes).
+ * Do not invent REST paths without matching server implementation.
+ */
+export const V2_TAKES_FNS = [
+  "listTakes",
+  "listLive",
+  "listTrending",
+  "listTakesByTag",
+  "listUserTakes",
+  "searchTakes",
+  "getTake",
+  "saveTake",
+  "voteTake",
+  "likeTake",
+  "listTakeReplies",
+  "replyTake",
+  "repostTake",
+  "toggleSaveTake",
+  "toggleFollow",
+  "connectFellow",
+  "reportTake",
+] as const;
+
+export const V2_FORUM_FNS = [
+  "listPosts",
+  "savePost",
+  "saveComment",
+  "listMsgs",
+  "saveMsg",
+  "listTracks",
+  "saveTrack",
+  "listAds",
+  "getProfile",
+  "saveProfile",
+] as const;
