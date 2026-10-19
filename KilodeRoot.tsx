@@ -18,6 +18,7 @@ import { PostActions } from "./components/ui/PostActions";
 import { SectionHeader } from "./components/ui/SectionHeader";
 import { EmptyState } from "./components/ui/EmptyState";
 import { ConnectionBanner } from "./components/ui/ConnectionBanner";
+import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -58,6 +59,7 @@ function KilodeApp() {
   const [profileName, setProfileName] = useState(session?.name || "");
   const [profileHandle, setProfileHandle] = useState(session?.handle || "");
   const [profileBio, setProfileBio] = useState("");
+  const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
@@ -79,7 +81,12 @@ function KilodeApp() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => { await loadAll(); if (!cancelled) setBoot(false); })();
+    (async () => {
+      const b = await getBlockedUsers();
+      if (!cancelled) setBlocked(b);
+      await loadAll();
+      if (!cancelled) setBoot(false);
+    })();
     return () => { cancelled = true; };
   }, [loadAll]);
 
@@ -246,7 +253,7 @@ function KilodeApp() {
           accentColor={C.accent}
         />
       ) : null}
-      {takes.map((t: any) => (
+      {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
             <View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View>
@@ -282,6 +289,16 @@ function KilodeApp() {
             onShare={async () => {
               try { await Share.share({ message: `${t.name}: ${t.text}` }); }
               catch { show("Could not open share sheet"); }
+            }}
+            onReport={async () => {
+              await submitReport("post", String(t.id), "other");
+              show("Reported · saved locally until moderation API is live");
+            }}
+            onBlock={async () => {
+              const h = String(t.handle || t.name);
+              await blockUser(h);
+              setBlocked((prev) => (prev.includes(h) ? prev : [...prev, h]));
+              show(`Blocked @${h} on this device`);
             }}
           />
         </View>
