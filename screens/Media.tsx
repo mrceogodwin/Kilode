@@ -120,11 +120,11 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
             {visibleArticles[0].imageUrl ? <Image source={{ uri: visibleArticles[0].imageUrl }} style={{ width: "100%", height: 164, backgroundColor: visibleArticles[0].tone || C.elevated }} resizeMode="cover" /> : <View style={{ height: 164, backgroundColor: visibleArticles[0].tone || C.elevated }} />}
             <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 }}>
               <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.9 }}>{(visibleArticles[0].kicker || "MEDIA").toUpperCase()} · {visibleArticles[0].time || "LATEST"}</Text>
-              <Text style={{ color: C.text, fontSize: 17, lineHeight: 22, fontWeight: "750", letterSpacing: -0.3, marginTop: 6 }}>{visibleArticles[0].title}</Text>
+              <Text style={{ color: C.text, fontSize: 17, lineHeight: 22, fontWeight: "700", letterSpacing: -0.3, marginTop: 6 }}>{visibleArticles[0].title}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 11 }}>
                 <Text style={{ color: C.text2, fontSize: 11 }}>Kilode Media</Text>
                 <View style={{ flex: 1 }} />
-                <Ionicons name="arrow-up-right" size={18} color={C.accent} />
+                <Ionicons name="arrow-forward" size={18} color={C.accent} />
               </View>
             </View>
           </TouchableOpacity>
