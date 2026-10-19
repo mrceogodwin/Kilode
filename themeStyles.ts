@@ -14,7 +14,7 @@ export const palettes = {
     accent: "#C5A66A",
     accentSoft: "#2A2419",
     danger: "#F43F5E",
-    success: "#22C55E",
+    success: "#C5A66A",
     dock: "#101010",
   },
   light: {
@@ -29,7 +29,7 @@ export const palettes = {
     accent: "#A88A4E",
     accentSoft: "#F1E9D8",
     danger: "#E11D48",
-    success: "#16A34A",
+    success: "#A88A4E",
     dock: "#FDFCF9",
   },
 };
