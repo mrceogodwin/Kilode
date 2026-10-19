@@ -141,16 +141,16 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 }
 
 const WELCOME_SCENES = [
-  "https://videos.pexels.com/video-files/5805069/5805069-hd_1080_1920_25fps.mp4",
-  "https://videos.pexels.com/video-files/9690764/9690764-hd_1080_1920_30fps.mp4",
-  "https://videos.pexels.com/video-files/8027282/8027282-hd_1080_1920_25fps.mp4",
-  "https://videos.pexels.com/video-files/6940477/6940477-hd_1080_1920_25fps.mp4",
+  "https://videos.pexels.com/video-files/5805069/5805069-uhd_2160_3840_25fps.mp4",
+  "https://videos.pexels.com/video-files/9690764/9690764-uhd_2160_3840_30fps.mp4",
+  "https://videos.pexels.com/video-files/8027282/8027282-uhd_2160_3840_25fps.mp4",
+  "https://videos.pexels.com/video-files/6940477/6940477-uhd_1440_2560_25fps.mp4",
   "https://videos.pexels.com/video-files/12322749/12322749-hd_1080_1920_30fps.mp4",
   "https://videos.pexels.com/video-files/9653700/9653700-hd_1920_1080_25fps.mp4",
-  "https://videos.pexels.com/video-files/7148224/7148224-hd_1080_1920_25fps.mp4",
-  "https://videos.pexels.com/video-files/7148232/7148232-hd_1080_1920_25fps.mp4",
-  "https://videos.pexels.com/video-files/6940485/6940485-hd_1080_1920_25fps.mp4",
+  "https://videos.pexels.com/video-files/6940485/6940485-uhd_1440_2560_25fps.mp4",
   "https://videos.pexels.com/video-files/9187818/9187818-hd_1080_1920_25fps.mp4",
+  "https://videos.pexels.com/video-files/8929212/8929212-hd_1080_1920_30fps.mp4",
+  "https://videos.pexels.com/video-files/9690755/9690755-uhd_2160_3840_30fps.mp4"
 ];
 
 const GOLD = "#D4AF57";
