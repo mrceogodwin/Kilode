@@ -1,59 +1,40 @@
 # Kilode Native (Expo)
 
 **Repository:** `mrceogodwin/Kilode`  
+**Expo account (intended):** [mudino](https://expo.dev/accounts/mudino)  
 **Stack:** Expo SDK 51 · React Native 0.74 · TypeScript  
 **iOS bundle ID:** `ng.kilode.app`  
 **Android application ID:** `ng.kilode.app`
 
-This is the **mobile app only**. Build and distribute with **Expo EAS**, not Vercel.
+This is the **mobile app only**. Build with **Expo EAS**. Do not deploy this repo on Vercel as the website.
 
 | Product | Repo | Deploy |
 |---------|------|--------|
 | Website + API | `mrceogodwin/Kilode-v2` | Vercel |
-| Native iOS / Android | `mrceogodwin/Kilode` (this repo) | Expo EAS |
+| Native iOS / Android | `mrceogodwin/Kilode` | Expo EAS (`mudino`) |
 
-Do **not** connect this repository to Vercel as the Kilode website. That misconfiguration deploys the RN shell instead of Kilode-v2.
-
-## Run (development)
+## Develop
 
 ```bash
 npm install
-cp .env.example .env   # optional
 npx expo start --tunnel
 ```
 
-Open with **Expo Go** on a device.
+## EAS build (your machine — requires Expo login as mudino)
 
-## Production / TestFlight (EAS)
+Full steps: [docs/EAS_SETUP_MUDINO.md](docs/EAS_SETUP_MUDINO.md)
 
 ```bash
 npm i -g eas-cli
 eas login
-eas build:configure   # once — writes EAS projectId into app.json
+eas whoami          # must show: mudino
+eas init            # once — link or create project under mudino
 eas build --platform ios --profile production
 eas build --platform android --profile production
 ```
 
-Apple credentials are configured via `eas credentials` / App Store Connect — not committed.
-
 ## Backend
 
-Client calls Kilode-v2 mobile bridge:
+`EXPO_PUBLIC_API_URL` → Kilode-v2 host (default `https://kilode-nine.vercel.app`)
 
-- `GET /api/mobile/health`
-- `GET /api/mobile/takes`
-- `POST /api/mobile/takes` (authenticated)
-- `GET /api/mobile/tracks`
-
-Base URL: `EXPO_PUBLIC_API_URL` (default `https://kilode-nine.vercel.app`).
-
-If the bridge is not deployed on that host, the app reports **error** (not fake “live”). Seed data may still render for layout only.
-
-## Scripts
-
-| Command | Purpose |
-|---------|---------|
-| `npm start` | Expo dev server |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run eas:build:ios` | EAS iOS production |
-| `npm run eas:build:android` | EAS Android production |
+Mobile routes: `/api/mobile/health`, `/api/mobile/takes`, `/api/mobile/tracks`

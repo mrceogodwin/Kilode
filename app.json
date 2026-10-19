@@ -2,6 +2,7 @@
   "expo": {
     "name": "Kilode",
     "slug": "kilode",
+    "owner": "mudino",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -31,6 +32,11 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"]
+    "assetBundlePatterns": ["**/*"],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
   }
 }
