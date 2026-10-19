@@ -80,8 +80,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
+        const token = data.token || data.session?.token;
+        if (!token) {
+          setLoading(false);
+          return {
+            ok: false,
+            error: "The server did not return a native session token. Native authentication still needs backend support.",
+          };
+        }
         const s: Session = {
-          token: data.token || data.session?.token || "live",
+          token,
           handle: data.user?.name || handle.replace(/^@/, ""),
           name: data.user?.name || handle.replace(/^@/, ""),
           kind: asAccountKind(kind || data.user?.kind || "member"),
@@ -118,13 +126,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({
           email: `${h}@users.kilode.ng`,
           password,
-          name: h,
+          name: displayName || h,
         }),
       });
       if (res.ok) {
         const data = await res.json();
+        const token = data.token || data.session?.token;
+        if (!token) {
+          setLoading(false);
+          return {
+            ok: false,
+            error: "The server did not return a native session token. Native authentication still needs backend support.",
+          };
+        }
         const s: Session = {
-          token: data.token || data.session?.token || "live",
+          token,
           handle: h,
           name: displayName || h,
           kind: asAccountKind(kind),
