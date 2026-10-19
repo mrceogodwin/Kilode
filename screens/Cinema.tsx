@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { FILMS } from "../data";
 
 type Props = {
@@ -15,93 +16,135 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
     Object.fromEntries(FILMS.map((f) => [f.id, f.votes]))
   );
 
-  const watching = FILMS[0];
+  const featured = FILMS[0];
+  const rest = FILMS.slice(1);
 
   return (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
-      <View style={s.deskHero}>
-        <Text style={s.deskHeroIcon}>🎬</Text>
-        <Text style={s.h1}>Cinema</Text>
-        <Text style={s.sub}>Vote · discover · Friday screenings</Text>
-      </View>
+    <ScrollView
+      style={s.flex}
+      contentContainerStyle={[s.scrollPad, { paddingHorizontal: 16 }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <TouchableOpacity onPress={onBack} style={{ marginBottom: 12 }} accessibilityRole="button">
+        <Text style={s.link}>‹ Home</Text>
+      </TouchableOpacity>
 
-      {/* Featured film — sample content; no video stream is connected yet. */}
+      <Text style={{ fontSize: 13, fontWeight: "600", color: C.text3, letterSpacing: 0.4, textTransform: "uppercase" }}>
+        Entertainment
+      </Text>
+      <Text style={[s.h1, { marginTop: 4 }]}>Cinema</Text>
+      <Text style={[s.sub, { marginBottom: 16 }]}>Vote · discover · Friday screenings</Text>
+
       <TouchableOpacity
-        style={[s.postCard, { backgroundColor: "#111" }]}
+        activeOpacity={0.9}
         onPress={() => {
-          setPlaying(watching);
-          show(`Trailer for ${watching.title} is not connected yet.`);
+          setPlaying(featured);
+          show(`Trailer for ${featured.title} is not connected yet.`);
         }}
+        style={{ marginBottom: 20 }}
       >
-        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 }}>FEATURED FILM</Text>
         <View
           style={{
-            height: 140,
-            borderRadius: 14,
-            backgroundColor: "#1a1a1a",
-            marginTop: 10,
+            height: 200,
+            borderRadius: 16,
+            backgroundColor: C.elevated,
             alignItems: "center",
             justifyContent: "center",
+            overflow: "hidden",
           }}
         >
-          <Text style={{ color: "#fff", fontSize: 42 }}>▶</Text>
+          <Ionicons name="play-circle" size={56} color={C.accent} />
+          <Text
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              fontSize: 10,
+              fontWeight: "700",
+              color: C.accent,
+              letterSpacing: 0.8,
+            }}
+          >
+            FEATURED
+          </Text>
         </View>
-        <Text style={[s.roomName, { color: "#fff", marginTop: 10 }]}>{watching.title}</Text>
-        <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, marginTop: 4 }}>
-          {watching.runtime} · {watching.synopsis}
+        <Text style={[s.roomName, { marginTop: 10, fontSize: 17 }]}>{featured.title}</Text>
+        <Text style={[s.meta, { marginTop: 4, lineHeight: 18 }]}>
+          {featured.runtime} · {featured.synopsis}
         </Text>
       </TouchableOpacity>
 
       {playing ? (
-        <View style={[s.postCard, { backgroundColor: "#0a0a0a" }]}>
-          <Text style={{ color: "#fff", fontWeight: "700" }}>Selected film · {playing.title}</Text>
-          <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 6 }}>Video playback is not connected in this preview yet.</Text>
-          <TouchableOpacity style={{ marginTop: 8 }} onPress={() => setPlaying(null)}>
+        <View
+          style={{
+            marginBottom: 16,
+            padding: 14,
+            borderRadius: 12,
+            backgroundColor: C.elevated,
+            borderWidth: 1,
+            borderColor: C.border,
+          }}
+        >
+          <Text style={{ color: C.text, fontWeight: "700" }}>Selected · {playing.title}</Text>
+          <Text style={{ color: C.text2, marginTop: 6, fontSize: 13, lineHeight: 19 }}>
+            Video playback is not connected yet. Selection only.
+          </Text>
+          <TouchableOpacity style={{ marginTop: 10 }} onPress={() => setPlaying(null)}>
             <Text style={s.link}>Close</Text>
           </TouchableOpacity>
         </View>
       ) : null}
 
-      <View style={s.sectionHead}>
-        <Text style={s.sectionTitle}>This week</Text>
-        <TouchableOpacity onPress={() => show("Film submission needs the cinema upload service connected.")}> 
-          <Text style={s.link}>Submit</Text>
-        </TouchableOpacity>
-      </View>
-
-      {FILMS.map((f) => (
-        <View key={f.id} style={s.postCard}>
-          <Text style={s.roomName}>{f.title}</Text>
-          <Text style={s.meta}>
-            {f.runtime} · {votes[f.id]} votes
-          </Text>
-          <Text style={[s.postBody, { marginTop: 6 }]}>{f.synopsis}</Text>
-          <View style={[s.rowGap, { marginTop: 12, paddingHorizontal: 0 }]}>
+      <Text style={[s.sectionTitle, { marginBottom: 12 }]}>This week</Text>
+      {rest.map((f) => (
+        <TouchableOpacity
+          key={f.id}
+          style={{
+            flexDirection: "row",
+            gap: 12,
+            marginBottom: 14,
+            alignItems: "center",
+          }}
+          onPress={() => {
+            setPlaying(f);
+            show(`Trailer for ${f.title} is not connected yet.`);
+          }}
+        >
+          <View
+            style={{
+              width: 64,
+              height: 88,
+              borderRadius: 10,
+              backgroundColor: C.elevated,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="film-outline" size={22} color={C.text3} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.roomName} numberOfLines={2}>
+              {f.title}
+            </Text>
+            <Text style={s.meta} numberOfLines={2}>
+              {f.runtime} · {f.synopsis}
+            </Text>
             <TouchableOpacity
-              style={[s.primaryBtn, { flex: 1 }]}
-              onPress={() => {
-                setPlaying(f);
-                show(`Trailer for ${f.title} is not connected yet.`);
-              }}
-            >
-              <Text style={s.primaryBtnText}>Play</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.ghostBtn}
+              style={{ marginTop: 6, alignSelf: "flex-start" }}
               onPress={() => {
                 setVotes((v) => ({ ...v, [f.id]: (v[f.id] || 0) + 1 }));
-                show("Vote counted");
+                show("Vote saved on device");
               }}
             >
-              <Text style={s.ghostBtnText}>Vote</Text>
+              <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>
+                Vote · {votes[f.id] ?? f.votes}
+              </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </TouchableOpacity>
       ))}
 
-      <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={onBack}>
-        <Text style={s.ghostBtnText}>Back home</Text>
-      </TouchableOpacity>
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
