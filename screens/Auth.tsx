@@ -13,7 +13,6 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { API_BASE } from "../lib/config";
 import { ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 
 type Props = {
@@ -87,10 +86,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
 
             <TouchableOpacity
               style={styles.google}
-              onPress={() => {
-                onGoogle();
-                show("Google · wire OAuth next");
-              }}
+              onPress={onGoogle}
               activeOpacity={0.9}
             >
               <Text style={styles.googleG}>G</Text>
