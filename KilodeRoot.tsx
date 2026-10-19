@@ -81,7 +81,7 @@ function KilodeApp() {
   };
 
   const loadAll = useCallback(async () => {
-    const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity()]);
+    const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token)]);
     // The old Kilode Nine page currently server-renders “No posts yet”, and its mobile
     // bridge is not connected to this preview. Use the actual in-repo demo dataset on web
     // so the preview never looks empty; on iOS prefer API data but safely fall back if empty.
