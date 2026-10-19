@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -28,11 +28,18 @@ type Props = {
   articles: MediaArticle[];
   onBack: () => void;
   show: (m: string) => void;
+  initialArticleId?: string | null;
 };
 
 /** Dedicated Media experience — article list + reader (seed body until CMS API). */
-export function MediaScreen({ s, C, articles, onBack, show }: Props) {
+export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: Props) {
   const [active, setActive] = useState<MediaArticle | null>(null);
+
+  useEffect(() => {
+    if (!initialArticleId) return;
+    const match = articles.find((article) => String(article.id) === String(initialArticleId));
+    if (match) setActive(match);
+  }, [initialArticleId]);
 
   if (active) {
     const body =
@@ -103,7 +110,7 @@ export function MediaScreen({ s, C, articles, onBack, show }: Props) {
       </ScrollView>
       {articles.map((n) => (
         <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => setActive(n)} accessibilityRole="button">
-          <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
+          {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
           <View style={s.flex}>
             <Text style={s.newsKicker}>
               {n.kicker} · {n.time}
