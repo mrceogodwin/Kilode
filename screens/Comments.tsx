@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -56,6 +56,11 @@ export function CommentsSheet({
 }: Props) {
   const [list, setList] = useState<Comment[]>(() => SEED[takeId] || []);
   const [draft, setDraft] = useState("");
+
+  useEffect(() => {
+    setList(SEED[takeId] || []);
+    setDraft("");
+  }, [takeId, visible]);
   const [sending, setSending] = useState(false);
 
   const styles = StyleSheet.create({
@@ -169,19 +174,22 @@ export function CommentsSheet({
                 setSending(true);
                 const r = await postComment(takeId, draft, token);
                 setSending(false);
-                if (r.ok && r.comment) {
+                if (r.ok && r.data) {
+                  const saved = r.data.comment || r.data.reply || r.data;
                   setList((prev) => [
                     ...prev,
                     {
-                      id: r.comment.id,
+                      id: String(saved.id || ("local-" + Date.now())),
                       takeId,
-                      text: r.comment.text || draft.trim(),
-                      name: r.comment.name || "You",
-                      time: r.comment.time || "now",
+                      text: saved.text || saved.body || draft.trim(),
+                      name: saved.name || saved.author?.name || "You",
+                      time: saved.time || "now",
                     },
                   ]);
                   setDraft("");
-                  show(r.source === "live" ? "Comment live" : "Comment added");
+                  show(r.source === "live" ? "Comment sent to Kilode" : "Comment added to this preview");
+                } else {
+                  show(r.error ? ("Comment not sent: " + r.error) : "Comment could not be sent");
                 }
               }}
             >
