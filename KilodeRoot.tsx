@@ -92,11 +92,25 @@ function KilodeApp() {
 
   const Header = ({ title }: { title?: string }) => (
     <View style={s.header}>
-      <View style={s.headerLeft}>{title ? <Text style={s.headerTitle}>{title}</Text> : (<View style={s.livePill}><View style={s.liveDot} /><Text style={s.liveText}>LIVE</Text></View>)}</View>
+      <View style={s.headerLeft}>
+        {title ? (
+          <Text style={s.headerTitle}>{title}</Text>
+        ) : (
+          <Text style={s.brand}>
+            Kilode<Text style={s.brandAccent}>!</Text>
+          </Text>
+        )}
+      </View>
       <View style={s.headerRight}>
-        <View style={[s.chip, { paddingVertical: 4, paddingHorizontal: 8 }]}><Text style={[s.chipText, { fontSize: 10 }]}>{source}</Text></View>
-        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}><Text style={s.iconBtnText}>{isDark ? "☀" : "☾"}</Text></TouchableOpacity>
-        <TouchableOpacity style={s.avatar} onPress={() => go("myspace")}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text></TouchableOpacity>
+        <View style={[s.chip, { paddingVertical: 4, paddingHorizontal: 8 }]}>
+          <Text style={[s.chipText, { fontSize: 10 }]}>{source}</Text>
+        </View>
+        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
+          <Text style={s.iconBtnText}>{isDark ? "☀" : "☾"}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={s.avatar} onPress={() => go("myspace")}>
+          <Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -105,11 +119,15 @@ function KilodeApp() {
 
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
-      <View style={s.padH}><Text style={s.h1}>Good morning</Text><Text style={s.sub}>{session.handle} · {session.kind}</Text></View>
+      <View style={s.padH}>
+        <Text style={s.h1}>Good morning</Text>
+        <Text style={s.sub}>{session.handle} · {session.kind}</Text>
+      </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
         {CAROUSEL_FALLBACK.map((c) => (
           <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => show(c.cta)}>
-            <Text style={s.slideTitle}>{c.title}</Text><Text style={s.slideSub}>{c.sub}</Text>
+            <Text style={s.slideTitle}>{c.title}</Text>
+            <Text style={s.slideSub}>{c.sub}</Text>
             <View style={s.slideCta}><Text style={s.slideCtaText}>{c.cta}</Text></View>
           </TouchableOpacity>
         ))}
@@ -130,29 +148,23 @@ function KilodeApp() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-
       {(homeChip === 0 || homeChip === 1) && (
         <>
           <View style={s.sectionHead}><Text style={s.sectionTitle}>Explore</Text><TouchableOpacity onPress={() => setMoreOpen(true)}><Text style={s.link}>More</Text></TouchableOpacity></View>
           <View style={s.grid4}>{ROLE_GRID.map((r) => (<TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}><Text style={s.gridIcon}>{r.icon}</Text><Text style={s.gridLabel}>{r.label}</Text></TouchableOpacity>))}</View>
         </>
       )}
-
       {(homeChip === 0 || homeChip === 1) && (
         <>
           <View style={s.sectionHead}><Text style={s.sectionTitle}>{homeChip === 1 ? "Trending takes" : "Music · New drops"}</Text><TouchableOpacity onPress={() => go(homeChip === 1 ? "socials" : "music")}><Text style={s.link}>{homeChip === 1 ? "Socials" : "Browse"}</Text></TouchableOpacity></View>
           {homeChip === 1 ? (
-            takes
-              .slice()
-              .sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0))
-              .slice(0, 5)
-              .map((t: any) => (
-                <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => go("socials")}>
-                  <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
-                  <View style={s.flex}><Text style={s.roomName} numberOfLines={1}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
-                  <Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>♥ {t.likes || 0}</Text>
-                </TouchableOpacity>
-              ))
+            takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 5).map((t: any) => (
+              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => go("socials")}>
+                <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
+                <View style={s.flex}><Text style={s.roomName} numberOfLines={1}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
+                <Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>♥ {t.likes || 0}</Text>
+              </TouchableOpacity>
+            ))
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
               {tracks.map((t: any) => (
@@ -164,7 +176,6 @@ function KilodeApp() {
           )}
         </>
       )}
-
       {(homeChip === 0 || homeChip === 3) && (
         <>
           <View style={s.sectionHead}><Text style={s.sectionTitle}>News for you</Text></View>
@@ -176,7 +187,6 @@ function KilodeApp() {
           ))}
         </>
       )}
-
       {(homeChip === 0 || homeChip === 2) && (
         <>
           <View style={s.sectionHead}><Text style={s.sectionTitle}>Rooms · {rooms.filter((r: any) => r.live).length} live</Text></View>
@@ -209,7 +219,10 @@ function KilodeApp() {
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
             <View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View>
-            <View style={s.flex}><View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View><Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text></View>
+            <View style={s.flex}>
+              <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
+              <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
+            </View>
             <TouchableOpacity style={s.followBtn} onPress={() => show(`Following ${t.name}`)}><Text style={s.followBtnText}>Follow</Text></TouchableOpacity>
           </View>
           <Text style={s.postBody}>{t.text}</Text>
@@ -218,6 +231,14 @@ function KilodeApp() {
           ) : t.media ? (
             <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} />
           ) : null}
+          <View style={s.factCapRow}>
+            <Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>FACT {t.factPct ?? 50}%</Text>
+            <View style={s.factCapBar}>
+              <View style={[s.factFill, { flex: t.factPct ?? 50 }]} />
+              <View style={[s.capFill, { flex: 100 - (t.factPct ?? 50) }]} />
+            </View>
+            <Text style={[s.meta, { fontWeight: "700", color: C.danger }]}>CAP {100 - (t.factPct ?? 50)}%</Text>
+          </View>
           <View style={s.postActions}>
             <TouchableOpacity style={s.action} onPress={() => setLiked({ ...liked, [t.id]: !liked[t.id] })}>
               <Text style={[s.actionText, liked[t.id] && { color: C.danger }]}>{liked[t.id] ? "♥" : "♡"} {(t.likes || 0) + (liked[t.id] ? 1 : 0)}</Text>
@@ -279,7 +300,9 @@ function KilodeApp() {
           <Text style={s.deskHeroIcon}>{d?.icon || "📦"}</Text>
           <Text style={s.h1}>{d?.label || name}</Text>
           <Text style={s.sub}>{d?.blurb}</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 18, paddingHorizontal: 28 }]} onPress={() => setCreateOpen(true)}><Text style={s.primaryBtnText}>Create in {d?.label || name}</Text></TouchableOpacity>
+          <TouchableOpacity style={[s.primaryBtn, { marginTop: 18, paddingHorizontal: 28 }]} onPress={() => setCreateOpen(true)}>
+            <Text style={s.primaryBtnText}>Create in {d?.label || name}</Text>
+          </TouchableOpacity>
         </View>
         <View style={s.sectionHead}><Text style={s.sectionTitle}>{items.length ? `${items.length} listings` : "No listings yet"}</Text></View>
         {items.map((item) => (
@@ -288,7 +311,9 @@ function KilodeApp() {
             {item.price ? <Text style={[s.chipText, { fontWeight: "700", color: C.accent }]}>{item.price}</Text> : null}
           </TouchableOpacity>
         ))}
-        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={() => go("home")}><Text style={s.ghostBtnText}>Back home</Text></TouchableOpacity>
+        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={() => go("home")}>
+          <Text style={s.ghostBtnText}>Back home</Text>
+        </TouchableOpacity>
       </ScrollView>
     );
   };
