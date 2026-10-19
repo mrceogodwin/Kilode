@@ -5,7 +5,8 @@ import {
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
-import { ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
+import { ACCOUNT_GROUPS, ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
+import { KilodeWordmark } from "../components/KilodeWordmark";
 
 type Props = {
   isDark: boolean;
@@ -45,8 +46,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
       {mode === "welcome" ? (
         <View style={styles.welcome}>
           <View style={styles.topBrand}>
-            <Text style={styles.logo}>Kilode<Text style={styles.logoMark}>!</Text></Text>
-            <View style={styles.signature}><View style={styles.signatureLine} /><View style={styles.signatureDot} /></View>
+            <KilodeWordmark size="large" />
           </View>
           <View style={styles.heroWrap}>
             <View style={styles.hero}>
@@ -105,20 +105,41 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <ScrollView contentContainerStyle={styles.authContent} keyboardShouldPersistTaps="handled">
             <TouchableOpacity style={styles.back} onPress={() => setMode("welcome")}><Ionicons name="arrow-back" size={20} color="#F6F5F1" /></TouchableOpacity>
-            <View style={styles.authBrand}><Text style={styles.logo}>Kilode<Text style={styles.logoMark}>!</Text></Text></View>
+            <View style={styles.authBrand}><KilodeWordmark size="medium" /></View>
             <Text style={styles.authTitle}>{mode === "in" ? "Welcome back." : "Find your people."}</Text>
             <Text style={styles.authSubtitle}>{mode === "in" ? "Pick up where you left off." : "One account. Your whole world."}</Text>
             {mode === "up" ? (
               <>
-                <Text style={styles.label}>ACCOUNT TYPE</Text>
-                <View style={styles.kindGrid}>
-                  {ACCOUNT_KINDS.map((k) => (
-                    <TouchableOpacity key={k.id} style={[styles.kindCell, kind === k.id && styles.kindCellOn]} onPress={() => setKind(k.id)}>
-                      <Text style={[styles.kindTitle, kind === k.id && styles.kindTitleOn]}>{k.label}</Text>
-                      <Text style={styles.kindHint} numberOfLines={2}>{k.hint}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <Text style={styles.label}>YOUR KILODE ACCOUNT</Text>
+                <Text style={styles.kindIntro}>Choose the system you’re joining. Your account opens the tools and spaces built for that role.</Text>
+                {ACCOUNT_GROUPS.map((group) => (
+                  <View key={group.title} style={styles.kindGroup}>
+                    <Text style={styles.kindGroupTitle}>{group.title}</Text>
+                    <View style={styles.kindGrid}>
+                      {group.kinds.map((id) => {
+                        const k = ACCOUNT_KINDS.find((item) => item.id === id)!;
+                        const selected = kind === k.id;
+                        return (
+                          <TouchableOpacity
+                            key={k.id}
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected }}
+                            style={[styles.kindCell, selected && styles.kindCellOn]}
+                            onPress={() => setKind(k.id)}
+                          >
+                            <View style={styles.kindHeading}>
+                              <Text style={[styles.kindTitle, selected && styles.kindTitleOn]}>{k.label}</Text>
+                              <View style={[styles.kindRadio, selected && styles.kindRadioOn]}>
+                                {selected ? <View style={styles.kindRadioDot} /> : null}
+                              </View>
+                            </View>
+                            <Text style={styles.kindHint}>{k.hint}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                ))}
                 <TextInput style={styles.field} placeholder="Display name (optional)" placeholderTextColor="#77756F" value={name} onChangeText={setName} />
               </>
             ) : null}
@@ -201,10 +222,17 @@ const styles = StyleSheet.create({
   authTitle: { color: "#F7F6F2", fontSize: 32, lineHeight: 38, fontWeight: "800", letterSpacing: -1.2 },
   authSubtitle: { color: "#A7A49C", fontSize: 14, marginTop: 7, marginBottom: 28 },
   label: { color: GOLD, fontSize: 10, fontWeight: "800", letterSpacing: 1.4, marginBottom: 9 },
-  kindGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
-  kindCell: { width: "48%", flexGrow: 1, borderWidth: 1, borderColor: "#303033", backgroundColor: "#151517", borderRadius: 14, padding: 11 },
+  kindIntro: { color: "#A7A49C", fontSize: 13, lineHeight: 19, marginTop: -3, marginBottom: 17 },
+  kindGroup: { marginBottom: 13 },
+  kindGroupTitle: { color: "#858178", fontSize: 10, fontWeight: "800", letterSpacing: 1.2, marginBottom: 8 },
+  kindGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 2 },
+  kindCell: { width: "48%", flexGrow: 1, borderWidth: 1, borderColor: "#303033", backgroundColor: "#151517", borderRadius: 14, padding: 12, minHeight: 82 },
   kindCellOn: { borderColor: GOLD, backgroundColor: "rgba(212,175,87,0.09)" },
-  kindTitle: { color: "#F7F6F2", fontSize: 12, fontWeight: "700" },
+  kindHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 6 },
+  kindRadio: { width: 15, height: 15, borderRadius: 8, borderWidth: 1, borderColor: "#66625A", alignItems: "center", justifyContent: "center" },
+  kindRadioOn: { borderColor: GOLD },
+  kindRadioDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: GOLD },
+  kindTitle: { color: "#F7F6F2", fontSize: 12, fontWeight: "800", flexShrink: 1 },
   kindTitleOn: { color: GOLD },
   kindHint: { color: "#858178", fontSize: 10, marginTop: 4, lineHeight: 13 },
   field: { minHeight: 54, borderRadius: 15, borderWidth: 1, borderColor: "#303033", backgroundColor: "#151517", paddingHorizontal: 16, color: "#F7F6F2", fontSize: 15, marginBottom: 12 },
