@@ -200,11 +200,11 @@ function KilodeApp() {
             {news[0].imageUrl ? <Image source={{ uri: news[0].imageUrl }} style={{ width: "100%", height: 164, backgroundColor: C.elevated }} resizeMode="cover" /> : <View style={{ height: 164, backgroundColor: C.elevated }} />}
             <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: 15 }}>
               <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{String(news[0].kicker || "MEDIA").toUpperCase()}  ·  {news[0].time || "LATEST"}</Text>
-              <Text style={{ color: C.text, fontSize: 17, lineHeight: 22, fontWeight: "750", letterSpacing: -0.3, marginTop: 6 }} numberOfLines={3}>{news[0].title}</Text>
+              <Text style={{ color: C.text, fontSize: 17, lineHeight: 22, fontWeight: "800", letterSpacing: -0.3, marginTop: 6 }} numberOfLines={3}>{news[0].title}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 11 }}>
                 <Text style={{ color: C.text2, fontSize: 11 }}>Kilode Media</Text>
                 <View style={{ flex: 1 }} />
-                <Ionicons name="arrow-up-right" size={18} color={C.accent} />
+                <Ionicons name="arrow-forward" size={18} color={C.accent} />
               </View>
             </View>
           </TouchableOpacity>
@@ -317,7 +317,7 @@ function KilodeApp() {
           </View>
           <Text style={s.postBody}>{t.text}</Text>
           {t.mediaUrl ? (
-            <Image source={{ uri: t.mediaUrl }} style={s.postMedia} resizeMode="cover" />
+            <Image source={{ uri: t.mediaUrl }} style={s.postMedia as import("react-native").ImageStyle} resizeMode="cover" />
           ) : t.media ? (
             <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} />
           ) : null}
