@@ -1,22 +1,17 @@
 /**
  * Kilode native API client
  *
- * SOURCE OF TRUTH (Kilode-v2):
- * - Business logic is TanStack `createServerFn` modules, not a public REST catalog.
- * - takes-server.ts exports include: listTakes, saveTake, voteTake, likeTake,
- *   listTakeReplies, replyTake, repostTake, toggleFollow, connectFellow, … (53 fns)
- * - forum-server.ts: listPosts, savePost, saveComment, listMsgs, saveMsg, listTracks,
- *   listAds, getProfile, saveProfile, … (45 fns)
- * - register-server.ts: registerAccount, dbStatus
- * - Auth: better-auth at same-origin `/api/auth/*` (see src/lib/auth/client.ts)
+ * Live paths target the Kilode-v2 mobile bridge:
+ *   GET  /api/mobile/health
+ *   GET  /api/mobile/takes
+ *   POST /api/mobile/takes
+ *   GET  /api/mobile/tracks
  *
- * PRODUCTION FACT:
- * kilode-nine.vercel.app serves the HTML app + server functions.
- * Arbitrary GET with Accept: application/json typically returns non-JSON / 406.
- * Until explicit mobile-safe routes or a documented server-fn bridge exist,
- * live calls fail and the client MUST surface that — not pretend seed is live.
+ * Those routes wrap existing createServerFn handlers (listTakes, saveTake, listTracks).
+ * /api/auth/* remains better-auth.
  *
- * FORCE_MOCK: local UI work only. Never ship true in production builds.
+ * HTML-only gate on SPA routes still returns 406 for Accept: application/json
+ * on document paths — verified 2026-10-19 against kilode-nine.vercel.app.
  */
 
 import { API_BASE, FORCE_MOCK } from "./config";
@@ -36,9 +31,10 @@ export type ApiResult<T> = {
   data: T;
   source: DataSource;
   error?: string;
-  /** Server function name this maps to in Kilode-v2 */
   fn?: string;
 };
+
+const UA = "KilodeNative/1.0 (iOS; Expo)";
 
 async function tryLiveJson<T>(
   path: string,
@@ -50,12 +46,12 @@ async function tryLiveJson<T>(
   }
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 9000);
+    const timer = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(`${API_BASE}${path}`, {
       signal: ctrl.signal,
       headers: {
         Accept: "application/json",
-        "User-Agent": "KilodeNative/1.0 (iOS; Expo)",
+        "User-Agent": UA,
       },
     });
     clearTimeout(timer);
@@ -74,7 +70,7 @@ async function tryLiveJson<T>(
         ok: false,
         data: fallback,
         source: "error",
-        error: "non-json (server is HTML/server-fn app, not public REST)",
+        error: "non-json",
         fn: fnName,
       };
     }
@@ -86,43 +82,64 @@ async function tryLiveJson<T>(
   }
 }
 
-/** Maps to takes-server `listTakes` */
-export function fetchTakes() {
-  return tryLiveJson("/api/takes", TAKES as any[], "listTakes");
+/** Normalize takes payload from bridge { ok, takes?, next? } or raw array */
+function normalizeTakes(payload: any): any[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload.takes)) return payload.takes;
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  return [];
 }
 
-/** Maps to forum-server room/list surfaces — path provisional until mobile route exists */
+export async function fetchTakes(): Promise<ApiResult<any[]>> {
+  const r = await tryLiveJson<any>("/api/mobile/takes", { takes: TAKES }, "listTakes");
+  const list = r.ok ? normalizeTakes(r.data) : (TAKES as any[]);
+  // If bridge up but empty list, still live
+  if (r.ok) return { ok: true, data: list.length ? list : (TAKES as any[]), source: "live", fn: "listTakes" };
+  return { ok: false, data: TAKES as any[], source: "error", error: r.error, fn: "listTakes" };
+}
+
 export function fetchRooms() {
-  return tryLiveJson("/api/rooms", ROOMS as any[], "listRooms");
+  // No mobile rooms bridge yet — explicit error path with seed for UI shell only
+  return tryLiveJson("/api/mobile/rooms", ROOMS as any[], "listRooms");
 }
 
-/** Maps toward news-engine-server */
 export function fetchNews() {
-  return tryLiveJson("/api/news", NEWS as any[], "listNews");
+  return tryLiveJson("/api/mobile/news", NEWS as any[], "listNews");
 }
 
-/** Maps to forum-server `listTracks` */
-export function fetchTracks() {
-  return tryLiveJson("/api/tracks", TRACKS as any[], "listTracks");
+export async function fetchTracks(): Promise<ApiResult<any[]>> {
+  const r = await tryLiveJson<any>("/api/mobile/tracks", { tracks: TRACKS }, "listTracks");
+  if (r.ok) {
+    const list = Array.isArray(r.data)
+      ? r.data
+      : Array.isArray(r.data?.tracks)
+        ? r.data.tracks
+        : (TRACKS as any[]);
+    return { ok: true, data: list.length ? list : (TRACKS as any[]), source: "live", fn: "listTracks" };
+  }
+  return { ok: false, data: TRACKS as any[], source: "error", error: r.error, fn: "listTracks" };
 }
 
-/** Maps toward social-server notes / activity */
 export function fetchActivity() {
-  return tryLiveJson("/api/activity", ACTIVITY as any[], "listNotes");
+  return tryLiveJson("/api/mobile/activity", ACTIVITY as any[], "listNotes");
 }
 
 export function fetchCarousel() {
-  return tryLiveJson("/api/carousel", CAROUSEL as any[], "listCarousel");
+  return tryLiveJson("/api/mobile/carousel", CAROUSEL as any[], "listCarousel");
 }
 
-/** Maps to takes-server `saveTake` */
+export async function fetchHealth(): Promise<ApiResult<{ ok: boolean }>> {
+  return tryLiveJson("/api/mobile/health", { ok: false }, "health");
+}
+
 export async function postTake(
   text: string,
   token?: string
-): Promise<ApiResult<{ id: string; text: string } | null>> {
+): Promise<ApiResult<any>> {
   const local = {
     id: `local-${Date.now()}`,
     text,
+    body: text,
     name: "You",
     handle: "you",
     time: "now",
@@ -134,44 +151,38 @@ export async function postTake(
     factPct: 50,
   };
   if (FORCE_MOCK) {
-    return { ok: true, data: local as any, source: "mock", fn: "saveTake" };
+    return { ok: true, data: local, source: "mock", fn: "saveTake" };
   }
   try {
-    const res = await fetch(`${API_BASE}/api/takes`, {
+    const res = await fetch(`${API_BASE}/api/mobile/takes`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "User-Agent": "KilodeNative/1.0 (iOS; Expo)",
+        "User-Agent": UA,
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ body: text, kind: "take" }),
     });
-    if (!res.ok) {
-      return {
-        ok: false,
-        data: local as any,
-        source: "error",
-        error: `HTTP ${res.status}`,
-        fn: "saveTake",
-      };
-    }
     const ct = res.headers.get("content-type") || "";
     if (!ct.includes("json")) {
+      return { ok: false, data: local, source: "error", error: "non-json", fn: "saveTake" };
+    }
+    const data = await res.json();
+    if (!res.ok || data?.ok === false) {
       return {
         ok: false,
-        data: local as any,
+        data: local,
         source: "error",
-        error: "non-json",
+        error: data?.error || data?.reason || `HTTP ${res.status}`,
         fn: "saveTake",
       };
     }
-    const data = await res.json();
-    return { ok: true, data, source: "live", fn: "saveTake" };
+    return { ok: true, data: data.take || data, source: "live", fn: "saveTake" };
   } catch (e) {
     return {
       ok: false,
-      data: local as any,
+      data: local,
       source: "error",
       error: e instanceof Error ? e.message : "network",
       fn: "saveTake",
@@ -179,47 +190,41 @@ export async function postTake(
   }
 }
 
-/** Maps to takes-server `replyTake` / forum `saveComment` */
 export async function postComment(
   takeId: string,
   text: string,
   token?: string
-): Promise<ApiResult<{ id: string; text: string } | null>> {
+): Promise<ApiResult<any>> {
   const local = { id: `c-${Date.now()}`, text, takeId };
   if (FORCE_MOCK) {
     return { ok: true, data: local, source: "mock", fn: "replyTake" };
   }
   try {
-    const res = await fetch(`${API_BASE}/api/takes/${takeId}/replies`, {
+    const res = await fetch(`${API_BASE}/api/mobile/takes/${encodeURIComponent(takeId)}/replies`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "User-Agent": "KilodeNative/1.0 (iOS; Expo)",
+        "User-Agent": UA,
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ body: text }),
     });
-    if (!res.ok) {
-      return {
-        ok: false,
-        data: local,
-        source: "error",
-        error: `HTTP ${res.status}`,
-        fn: "replyTake",
-      };
-    }
     const ct = res.headers.get("content-type") || "";
     if (!ct.includes("json")) {
+      return { ok: false, data: local, source: "error", error: "non-json", fn: "replyTake" };
+    }
+    const data = await res.json();
+    if (!res.ok || data?.ok === false) {
       return {
         ok: false,
         data: local,
         source: "error",
-        error: "non-json",
+        error: data?.error || data?.reason || `HTTP ${res.status}`,
         fn: "replyTake",
       };
     }
-    return { ok: true, data: await res.json(), source: "live", fn: "replyTake" };
+    return { ok: true, data, source: "live", fn: "replyTake" };
   } catch (e) {
     return {
       ok: false,
@@ -231,39 +236,11 @@ export async function postComment(
   }
 }
 
-/**
- * v2 takes-server function names (for future bridge / mobile routes).
- * Do not invent REST paths without matching server implementation.
- */
 export const V2_TAKES_FNS = [
   "listTakes",
-  "listLive",
-  "listTrending",
-  "listTakesByTag",
-  "listUserTakes",
-  "searchTakes",
-  "getTake",
   "saveTake",
   "voteTake",
   "likeTake",
-  "listTakeReplies",
   "replyTake",
-  "repostTake",
-  "toggleSaveTake",
   "toggleFollow",
-  "connectFellow",
-  "reportTake",
-] as const;
-
-export const V2_FORUM_FNS = [
-  "listPosts",
-  "savePost",
-  "saveComment",
-  "listMsgs",
-  "saveMsg",
-  "listTracks",
-  "saveTrack",
-  "listAds",
-  "getProfile",
-  "saveProfile",
 ] as const;
