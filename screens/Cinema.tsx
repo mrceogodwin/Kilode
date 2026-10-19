@@ -25,15 +25,15 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
         <Text style={s.sub}>Vote · discover · Friday screenings</Text>
       </View>
 
-      {/* Watching Now hero */}
+      {/* Featured film — sample content; no video stream is connected yet. */}
       <TouchableOpacity
         style={[s.postCard, { backgroundColor: "#111" }]}
         onPress={() => {
           setPlaying(watching);
-          show(`Playing ${watching.title}`);
+          show(`Trailer for ${watching.title} is not connected yet.`);
         }}
       >
-        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 }}>WATCHING NOW</Text>
+        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 }}>FEATURED FILM</Text>
         <View
           style={{
             height: 140,
@@ -52,9 +52,10 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
         </Text>
       </TouchableOpacity>
 
-      {playing && playing.id !== watching.id ? (
+      {playing ? (
         <View style={[s.postCard, { backgroundColor: "#0a0a0a" }]}>
-          <Text style={{ color: "#fff", fontWeight: "700" }}>Now playing · {playing.title}</Text>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Selected film · {playing.title}</Text>
+          <Text style={{ color: "rgba(255,255,255,0.7)", marginTop: 6 }}>Video playback is not connected in this preview yet.</Text>
           <TouchableOpacity style={{ marginTop: 8 }} onPress={() => setPlaying(null)}>
             <Text style={s.link}>Close</Text>
           </TouchableOpacity>
@@ -63,7 +64,7 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
 
       <View style={s.sectionHead}>
         <Text style={s.sectionTitle}>This week</Text>
-        <TouchableOpacity onPress={() => show("Submit film · cinema poster")}> 
+        <TouchableOpacity onPress={() => show("Film submission needs the cinema upload service connected.")}> 
           <Text style={s.link}>Submit</Text>
         </TouchableOpacity>
       </View>
@@ -80,7 +81,7 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
               style={[s.primaryBtn, { flex: 1 }]}
               onPress={() => {
                 setPlaying(f);
-                show(`Playing ${f.title}`);
+                show(`Trailer for ${f.title} is not connected yet.`);
               }}
             >
               <Text style={s.primaryBtnText}>Play</Text>
