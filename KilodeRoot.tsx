@@ -526,14 +526,25 @@ function KilodeApp() {
             <TextInput multiline autoFocus style={{ minHeight: 120, backgroundColor: C.input, borderRadius: 16, padding: 14, color: C.text, borderWidth: 1, borderColor: C.border, fontSize: 16, textAlignVertical: "top" }} placeholder="What is happening in Naija?" placeholderTextColor={C.text3} value={composeText} onChangeText={setComposeText} />
             <TouchableOpacity style={[s.primaryBtn, { marginTop: 14, opacity: composeText.trim() && !posting ? 1 : 0.5 }]} disabled={!composeText.trim() || posting}
               onPress={async () => {
+                if (!session.token) {
+                  show("Sign in to publish a take.");
+                  return;
+                }
                 setPosting(true);
-                const r = await postTake(composeText, session.token);
-                setPosting(false);
-                if (r.ok && (r as any).data) {
-                  setTakes((prev) => [(r as any).data, ...prev]);
-                  setComposeText(""); setComposeOpen(false); go("socials");
-                  show(r.source === "live" ? "Posted live" : r.source === "error" ? "Saved offline (API error)" : "Posted local");
-                } else show("Could not post");
+                try {
+                  const r = await postTake(composeText, session.token);
+                  if (r.ok && (r as any).data) {
+                    setTakes((prev) => [(r as any).data, ...prev]);
+                    setComposeText(""); setComposeOpen(false); go("socials");
+                    show(r.source === "live" ? "Posted live" : "Added to preview");
+                  } else {
+                    show((r as any).error || "Could not post. Kilode's posting service may be unavailable.");
+                  }
+                } catch (e) {
+                  show(e instanceof Error ? e.message : "Could not post. Check your connection and try again.");
+                } finally {
+                  setPosting(false);
+                }
               }}>
               <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post take"}</Text>
             </TouchableOpacity>
