@@ -35,7 +35,6 @@ type Props = {
 export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: Props) {
   const [active, setActive] = useState<MediaArticle | null>(null);
   const [category, setCategory] = useState("For you");
-  const [category, setCategory] = useState("For you");
   const categories = ["For you", "Politics", "Tech", "Culture", "Sport"];
   const visibleArticles = category === "For you"
     ? articles
