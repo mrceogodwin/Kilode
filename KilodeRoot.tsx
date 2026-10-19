@@ -11,6 +11,8 @@ import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
 import { AuthScreen } from "./screens/Auth";
+import { MediaScreen } from "./screens/Media";
+import { SettingsScreen } from "./screens/Settings";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,6 +58,8 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [detailItem, setDetailItem] = useState<any | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -68,7 +72,7 @@ function KilodeApp() {
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
   };
 
   const loadAll = useCallback(async () => {
@@ -221,9 +225,9 @@ function KilodeApp() {
       )}
       {(homeChip === 0 || homeChip === 3) && (
         <>
-          <SectionHeader title="Media" actionLabel="See all" onAction={() => setHomeChip(3)} titleColor={C.text} actionColor={C.accent} />
+          <SectionHeader title="Media" actionLabel="See all" onAction={() => { setSelectedArticleId(null); go("media"); }} titleColor={C.text} actionColor={C.accent} />
           {news.map((n: any) => (
-            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => setDetailItem({ ...n, description: n.summary || n.description || "Full article content will appear here when the media service is connected." })}>
+            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
               {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
               <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
             </TouchableOpacity>
@@ -355,6 +359,7 @@ function KilodeApp() {
           <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => { setProfileName(session.name || ""); setProfileHandle(displayHandle || session.handle || ""); setProfileBio(displayBio); setEditOpen(true); }}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
           <TouchableOpacity style={s.ghostBtn} onPress={() => { signOut(); show("Signed out"); }}><Text style={s.ghostBtnText}>Sign out</Text></TouchableOpacity>
         </View>
+        <TouchableOpacity style={[s.ghostBtn, { marginTop: 10, alignItems: "center" }]} onPress={() => setSettingsOpen(true)}><Text style={s.ghostBtnText}>Settings & account</Text></TouchableOpacity>
       </View>
       <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
       <View style={s.roomRow}>
@@ -392,6 +397,27 @@ function KilodeApp() {
   };
 
   const body = () => {
+    if (settingsOpen) return (
+      <SettingsScreen
+        s={s}
+        C={C}
+        isDark={isDark}
+        sessionHandle={session.handle}
+        show={show}
+        onBack={() => setSettingsOpen(false)}
+        onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
+      />
+    );
+    if (tab === "media") return (
+      <MediaScreen
+        s={s}
+        C={C}
+        articles={news.map((n: any) => ({ id: String(n.id), title: n.title, kicker: n.kicker, time: n.time, tone: n.tone, body: n.summary || n.description, author: n.author || "Kilode Editorial", imageUrl: n.imageUrl }))}
+        initialArticleId={selectedArticleId}
+        onBack={() => { setSelectedArticleId(null); go("home"); }}
+        show={show}
+      />
+    );
     if (tab === "home") return <Home />;
     if (tab === "socials") return <Socials />;
     if (tab === "activity") return <ActivityView />;
@@ -403,7 +429,7 @@ function KilodeApp() {
     return <Home />;
   };
 
-  const headerTitle = tab === "activity" ? "Notifications" : tab === "myspace" ? "My Space" : DESKS.find((d) => d.id === tab)?.label;
+  const headerTitle = settingsOpen ? "Settings" : tab === "activity" ? "Notifications" : tab === "myspace" ? "My Space" : tab === "media" ? "Media" : DESKS.find((d) => d.id === tab)?.label;
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
