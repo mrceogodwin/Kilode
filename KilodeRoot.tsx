@@ -19,6 +19,8 @@ import { MediaScreen } from "./screens/Media";
 import { PostActions } from "./components/ui/PostActions";
 import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
+import { PostDetailScreen } from "./screens/PostDetail";
+import { UserProfileScreen } from "./screens/UserProfile";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -53,13 +55,14 @@ function KilodeApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
   };
 
   const loadAll = useCallback(async () => {
@@ -365,6 +368,7 @@ function KilodeApp() {
         onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
       />
     );
+    if (selectedPost) return <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]} onBack={() => setSelectedPost(null)} onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))} onComment={() => setCommentTake(selectedPost)} onFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedPost.handle || selectedPost.name)]: !prev[String(selectedPost.handle || selectedPost.name)] }))} onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved for review."); }} onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((prev) => prev.includes(h) ? prev : [...prev, h]); setSelectedPost(null); show("Blocked @" + h); }} show={show} />;
     if (selectedProfile) return (
       <UserProfileScreen
         s={s}
@@ -374,7 +378,7 @@ function KilodeApp() {
         isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
         onBack={() => setSelectedProfile(null)}
         onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))}
-        onOpenPost={(post) => { setSelectedProfile(null); setCommentTake(post); }}
+        onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }}
       />
     );
     if (selectedDeskItem) return (
