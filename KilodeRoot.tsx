@@ -145,9 +145,9 @@ function KilodeApp() {
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.padH}>
-        <Text style={{ fontSize: 13, fontWeight: "600", color: C.text3, letterSpacing: 0.3, textTransform: "uppercase" }}>For you</Text>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: C.text, letterSpacing: -0.4, marginTop: 2 }}>Discover Kilode</Text>
-        <Text style={s.sub}>{session.handle} · {session.kind}</Text>
+        <Text style={{ fontSize: 12, fontWeight: "600", color: C.text3, letterSpacing: 0.4, textTransform: "uppercase" }}>For you</Text>
+        <Text style={{ fontSize: 18, fontWeight: "700", color: C.text, letterSpacing: -0.3, marginTop: 2 }}>{session.name || session.handle}</Text>
+        <Text style={[s.sub, { marginBottom: 4 }]}>{session.kind} · Kilode</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
         {CAROUSEL_FALLBACK.map((c) => (
@@ -177,7 +177,14 @@ function KilodeApp() {
       {(homeChip === 0 || homeChip === 1) && (
         <>
           <SectionHeader title="Explore" actionLabel="More" onAction={() => setMoreOpen(true)} titleColor={C.text} actionColor={C.accent} />
-          <View style={s.grid4}>{ROLE_GRID.map((r) => (<TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}><Text style={s.gridIcon}>{r.icon}</Text><Text style={s.gridLabel}>{r.label}</Text></TouchableOpacity>))}</View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 4, paddingBottom: 4 }}>
+            {ROLE_GRID.map((r) => (
+              <TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}>
+                <Text style={s.gridIcon}>{r.icon}</Text>
+                <Text style={s.gridLabel}>{r.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </>
       )}
       {(homeChip === 0 || homeChip === 1) && (
