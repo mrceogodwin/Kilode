@@ -57,7 +57,7 @@ async function tryLiveJson<T>(
     if (!res.ok) {
       return {
         ok: false,
-        data: fallback,
+        data: [] as unknown as T,
         source: "error",
         error: `HTTP ${res.status}`,
         fn: fnName,
@@ -67,7 +67,7 @@ async function tryLiveJson<T>(
     if (!ct.includes("json")) {
       return {
         ok: false,
-        data: fallback,
+        data: [] as unknown as T,
         source: "error",
         error: "non-json response",
         fn: fnName,
@@ -77,7 +77,7 @@ async function tryLiveJson<T>(
     return { ok: true, data, source: "live", fn: fnName };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "network";
-    return { ok: false, data: fallback, source: "error", error: msg, fn: fnName };
+    return { ok: false, data: [] as unknown as T, source: "error", error: msg, fn: fnName };
   }
 }
 
@@ -101,7 +101,7 @@ export async function fetchTakes(): Promise<ApiResult<any[]>> {
   }
   return {
     ok: false,
-    data: TAKES as any[],
+    data: [],
     source: "error",
     error: r.error,
     fn: "listTakes",
@@ -128,7 +128,7 @@ export async function fetchTracks(): Promise<ApiResult<any[]>> {
   }
   return {
     ok: false,
-    data: TRACKS as any[],
+    data: [],
     source: "error",
     error: r.error,
     fn: "listTracks",
