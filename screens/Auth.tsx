@@ -23,15 +23,16 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [kind, setKind] = useState<AccountKind>("member");
+  const [kind, setKind] = useState<AccountKind | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
+    if (mode === "up" && !kind) { show("Choose the Kilode system you want to join."); return; }
     if (!handle.trim() || !password) { show("Enter your username and password."); return; }
     setBusy(true);
     try {
       const result = mode === "up"
-        ? await onSignUp(handle.trim(), password, kind, name.trim() || undefined)
+        ? await onSignUp(handle.trim(), password, kind as AccountKind, name.trim() || undefined)
         : await onSignIn(handle.trim(), password);
       if (!result.ok) show(result.error || "Something went wrong. Try again.");
       else show(mode === "up" ? `Welcome to Kilode · ${kind}` : "Welcome back");
