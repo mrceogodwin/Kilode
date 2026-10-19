@@ -11,6 +11,7 @@ import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
 import { AuthScreen } from "./screens/Auth";
+import { KilodeWordmark } from "./components/KilodeWordmark";
 import { MediaScreen } from "./screens/Media";
 import { SettingsScreen } from "./screens/Settings";
 import { DeskDetailScreen } from "./screens/DeskDetail";
@@ -140,9 +141,7 @@ function KilodeApp() {
         {title ? (
           <Text style={s.headerTitle}>{title}</Text>
         ) : (
-          <Text style={s.brand}>
-            Kilode<Text style={s.brandAccent}>!</Text>
-          </Text>
+          <KilodeWordmark size="small" />
         )}
       </View>
       <View style={s.headerRight}>
