@@ -206,7 +206,7 @@ function KilodeApp() {
           {rooms.map((r: any) => {
             const isJoined = !!joined[r.id];
             return (
-              <TouchableOpacity key={r.id} style={s.roomRow}>
+              <TouchableOpacity key={r.id} style={s.roomRow} onPress={() => setDetailItem({ title: r.name, meta: r.meta, description: `${r.live ? `${r.speaking || 0} people speaking. ` : ""}This is a preview room. Live audio and room messaging are not connected yet.` })}>
                 <View style={s.roomAv}><Text style={s.roomAvText}>{r.av}</Text>{r.live ? <View style={s.roomLive} /> : null}</View>
                 <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.live ? `${r.speaking || 0} speaking · ` : ""}{r.meta}</Text></View>
                 <TouchableOpacity style={[s.joinBtn, isJoined && s.joinLive]} onPress={() => { setJoined({ ...joined, [r.id]: !isJoined }); show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`); }}>
@@ -407,7 +407,7 @@ function KilodeApp() {
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
             <View style={s.deskGrid}>{CREATE.map((o) => (
-              <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
+              <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } setCreateOpen(false); go(o.tab); show(`${o.label} selected. Open the section to review available options; publishing is not connected yet.`); }}>
                 <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
               </TouchableOpacity>
             ))}</View>
