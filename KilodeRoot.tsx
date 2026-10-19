@@ -167,7 +167,7 @@ function KilodeApp() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={292} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 292))}>
         {CAROUSEL_FALLBACK.map((c) => (
-          <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => { const key = c.cta.toLowerCase(); if (key === "play") go("music"); else if (key === "jobs") go("jobs"); else if (key === "cinema") go("cinema"); else setMoreOpen(true); }}>
+          <TouchableOpacity key={c.id} activeOpacity={0.82} style={[s.slide, { backgroundColor: c.color, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }]} onPress={() => { const key = c.cta.toLowerCase(); if (key === "play") go("music"); else if (key === "jobs") go("jobs"); else if (key === "cinema") go("cinema"); else setMoreOpen(true); }}>
             <Text style={s.slideTitle}>{c.title}</Text>
             <Text style={s.slideSub}>{c.sub}</Text>
             <View style={s.slideCta}><Text style={s.slideCtaText}>{c.cta}</Text></View>
@@ -177,7 +177,7 @@ function KilodeApp() {
       <View style={s.dotsRow}>{CAROUSEL_FALLBACK.map((_, i) => <View key={i} style={[s.dot, i === slide && s.dotOn]} />)}</View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storyRow}>
         {STORIES.map((st) => (
-          <TouchableOpacity key={st.id} style={s.story} onPress={() => st.id === "s0" ? setComposeOpen(true) : setSelectedProfile({ name: st.label, handle: st.label.toLowerCase(), role: "Kilode member" })}>
+          <TouchableOpacity key={st.id} activeOpacity={0.72} style={s.story} onPress={() => st.id === "s0" ? setComposeOpen(true) : setSelectedProfile({ name: st.label, handle: st.label.toLowerCase(), role: "Kilode member" })}>
             <View style={s.storyRing}><View style={s.storyInner}>{st.avatarUrl ? <Image source={{ uri: st.avatarUrl }} style={{ width: 42, height: 42, borderRadius: 21 }} resizeMode="cover" /> : <Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text>}</View></View>
             <Text style={s.storyLabel} numberOfLines={1}>{st.label}</Text>
           </TouchableOpacity>
@@ -185,7 +185,7 @@ function KilodeApp() {
       </ScrollView>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
         {["For you", "Trending", "Rooms", "News"].map((c, i) => (
-          <TouchableOpacity key={c} style={[s.chip, homeChip === i && s.chipOn]} onPress={() => setHomeChip(i)}>
+          <TouchableOpacity key={c} activeOpacity={0.72} style={[s.chip, homeChip === i && s.chipOn]} onPress={() => setHomeChip(i)}>
             <Text style={[s.chipText, homeChip === i && s.chipTextOn]}>{c}</Text>
           </TouchableOpacity>
         ))}
@@ -195,7 +195,7 @@ function KilodeApp() {
           <SectionHeader title="Explore" actionLabel="More" onAction={() => setMoreOpen(true)} titleColor={C.text} actionColor={C.accent} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 4, paddingBottom: 4 }}>
             {ROLE_GRID.map((r) => (
-              <TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}>
+              <TouchableOpacity key={r.id} activeOpacity={0.72} style={s.gridCell} onPress={() => go(r.id)}>
                 <Text style={s.gridIcon}>{r.icon}</Text>
                 <Text style={s.gridLabel}>{r.label}</Text>
               </TouchableOpacity>
@@ -208,7 +208,7 @@ function KilodeApp() {
           <SectionHeader title={homeChip === 1 ? "Trending takes" : "Music · New drops"} actionLabel={homeChip === 1 ? "Socials" : "Browse"} onAction={() => go(homeChip === 1 ? "socials" : "music")} titleColor={C.text} actionColor={C.accent} />
           {homeChip === 1 ? (
             takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 5).map((t: any) => (
-              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => go("socials")}>
+              <TouchableOpacity key={t.id} activeOpacity={0.78} style={s.roomRow} onPress={() => go("socials")}>
                 <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
                 <View style={s.flex}><Text style={s.roomName} numberOfLines={1}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}><Ionicons name="heart" size={14} color={C.accent} /><Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>{t.likes || 0}</Text></View>
@@ -217,7 +217,7 @@ function KilodeApp() {
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
               {tracks.map((t: any) => (
-                <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => { setNowPlaying(t); show(`Selected ${t.title}. Audio playback is not connected in this preview yet.`); }}>
+                <TouchableOpacity key={t.id} activeOpacity={0.78} style={[s.trackCard, { backgroundColor: t.color || C.accent, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }]} onPress={() => { setNowPlaying(t); show(`Selected ${t.title}. Audio playback is not connected in this preview yet.`); }}>
                   <Ionicons name="play" size={18} color="#fff" style={{ marginBottom: 6 }} /><Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text><Text style={s.trackArtist} numberOfLines={1}>{t.artist}</Text>
                 </TouchableOpacity>
               ))}
@@ -229,7 +229,7 @@ function KilodeApp() {
         <>
           <SectionHeader title="Media" actionLabel="See all" onAction={() => { setSelectedArticleId(null); go("media"); }} titleColor={C.text} actionColor={C.accent} />
           {news.map((n: any) => (
-            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
+            <TouchableOpacity key={n.id} activeOpacity={0.78} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
               {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
               <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
             </TouchableOpacity>
@@ -279,7 +279,7 @@ function KilodeApp() {
       {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
-            <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}>{t.avatarUrl ? <Image source={{ uri: t.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} /> : <Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text>}</View></TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.72} onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}>{t.avatarUrl ? <Image source={{ uri: t.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} /> : <Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text>}</View></TouchableOpacity>
             <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
               <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
               <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
