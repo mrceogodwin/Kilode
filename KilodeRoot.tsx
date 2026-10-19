@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Share,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
@@ -22,6 +22,11 @@ import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
+  // Web preview only: open directly into a clearly seeded guest feed so reviewers can
+  // inspect the real native screen structure without creating an account. iOS keeps auth.
+  useEffect(() => {
+    if (Platform.OS === "web" && !authLoading && !session) signInGuest("Guest");
+  }, [authLoading, session, signInGuest]);
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
@@ -92,7 +97,7 @@ function KilodeApp() {
 
   const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Backend offline · seed" : "Refreshed"); };
 
-  if (boot || authLoading) {
+  if (boot || authLoading || (Platform.OS === "web" && !session)) {
     return (
       <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator color={C.accent} size="large" />
@@ -214,7 +219,7 @@ function KilodeApp() {
           <SectionHeader title="Media" actionLabel="See all" onAction={() => setHomeChip(3)} titleColor={C.text} actionColor={C.accent} />
           {news.map((n: any) => (
             <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => setDetailItem({ ...n, description: n.summary || n.description || "Full article content will appear here when the media service is connected." })}>
-              <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
+              {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
               <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
             </TouchableOpacity>
           ))}
@@ -263,7 +268,7 @@ function KilodeApp() {
       {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
-            <View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View>
+            <View style={s.postAv}>{t.avatarUrl ? <Image source={{ uri: t.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} /> : <Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text>}</View>
             <View style={s.flex}>
               <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
               <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
