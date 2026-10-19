@@ -321,13 +321,13 @@ function KilodeApp() {
           ) : t.media ? (
             <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} />
           ) : null}
-          <View style={s.factCapRow}>
-            <Text style={[s.meta, { fontWeight: "700", color: C.success }]}>FACT {t.factPct ?? 50}%</Text>
-            <View style={s.factCapBar}>
-              <View style={[s.factFill, { flex: t.factPct ?? 50 }]} />
-              <View style={[s.capFill, { flex: 100 - (t.factPct ?? 50) }]} />
+          <View style={[s.factCapRow, { marginTop: 12, opacity: 0.86 }]}>
+            <Text style={[s.meta, { fontWeight: "700", color: C.accent, fontSize: 10, letterSpacing: 0.4 }]}>FACT {t.factPct ?? 50}%</Text>
+            <View style={[s.factCapBar, { height: 3, borderRadius: 2, overflow: "hidden" }]}>
+              <View style={[s.factFill, { flex: t.factPct ?? 50, backgroundColor: C.accent }]} />
+              <View style={[s.capFill, { flex: 100 - (t.factPct ?? 50), backgroundColor: C.border }]} />
             </View>
-            <Text style={[s.meta, { fontWeight: "700", color: C.danger }]}>CAP {100 - (t.factPct ?? 50)}%</Text>
+            <Text style={[s.meta, { fontWeight: "700", color: C.text3, fontSize: 10, letterSpacing: 0.4 }]}>CAP {100 - (t.factPct ?? 50)}%</Text>
           </View>
           <PostActions
             liked={!!liked[t.id]}
