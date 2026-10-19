@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Share,
   Platform,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Palette } from "../themeStyles";
@@ -18,6 +19,7 @@ export type MediaArticle = {
   tone?: string;
   body?: string;
   author?: string;
+  imageUrl?: string;
 };
 
 type Props = {
@@ -26,11 +28,18 @@ type Props = {
   articles: MediaArticle[];
   onBack: () => void;
   show: (m: string) => void;
+  initialArticleId?: string | null;
 };
 
 /** Dedicated Media experience — article list + reader (seed body until CMS API). */
-export function MediaScreen({ s, C, articles, onBack, show }: Props) {
+export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: Props) {
   const [active, setActive] = useState<MediaArticle | null>(null);
+
+  useEffect(() => {
+    if (!initialArticleId) return;
+    const match = articles.find((article) => String(article.id) === String(initialArticleId));
+    if (match) setActive(match);
+  }, [initialArticleId]);
 
   if (active) {
     const body =
@@ -52,14 +61,11 @@ export function MediaScreen({ s, C, articles, onBack, show }: Props) {
         </Text>
         <Text style={[s.h1, { marginBottom: 8 }]}>{active.title}</Text>
         <Text style={[s.sub, { marginBottom: 16 }]}>{active.author || "Kilode Editorial"}</Text>
-        <View
-          style={{
-            height: 160,
-            borderRadius: 16,
-            backgroundColor: active.tone || C.elevated,
-            marginBottom: 16,
-          }}
-        />
+        {active.imageUrl ? (
+          <Image source={{ uri: active.imageUrl }} style={{ height: 190, borderRadius: 16, backgroundColor: active.tone || C.elevated, marginBottom: 16 }} resizeMode="cover" />
+        ) : (
+          <View style={{ height: 160, borderRadius: 16, backgroundColor: active.tone || C.elevated, marginBottom: 16 }} />
+        )}
         <Text style={{ fontSize: 16, lineHeight: 26, color: C.text }}>{body}</Text>
         <View style={{ flexDirection: "row", gap: 12, marginTop: 24 }}>
           <TouchableOpacity
@@ -104,7 +110,7 @@ export function MediaScreen({ s, C, articles, onBack, show }: Props) {
       </ScrollView>
       {articles.map((n) => (
         <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => setActive(n)} accessibilityRole="button">
-          <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
+          {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
           <View style={s.flex}>
             <Text style={s.newsKicker}>
               {n.kicker} · {n.time}
