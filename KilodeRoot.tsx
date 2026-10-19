@@ -194,6 +194,32 @@ function KilodeApp() {
         </TouchableOpacity>
       </View>
 
+      {(() => {
+        const workspaces: Record<string, { title: string; description: string; tab: string; action: string }> = {
+          artist: { title: "Artist Studio", description: "Your music, releases and artist presence.", tab: "music", action: "Open studio" },
+          writer: { title: "Writer Desk", description: "Stories, articles and editorial work.", tab: "media", action: "Open desk" },
+          cinema: { title: "Cinema Studio", description: "Manage your film submissions and cinema presence.", tab: "cinema", action: "Open studio" },
+          advertiser: { title: "Campaign Desk", description: "Promote a business and manage your ad presence.", tab: "ads", action: "Open campaigns" },
+          brand: { title: "Business Hub", description: "Your business presence, campaigns and listings.", tab: "ads", action: "Open hub" },
+          job_poster: { title: "Hiring Desk", description: "Create roles and manage applicants.", tab: "jobs", action: "Manage jobs" },
+          job_seeker: { title: "Career Space", description: "Explore roles and move your job search forward.", tab: "jobs", action: "Find jobs" },
+          vendor: { title: "Seller Hub", description: "Showcase products in Kilode Market.", tab: "market", action: "Open market" },
+          renter: { title: "Space Listings", description: "Manage rent, property and space listings.", tab: "rent", action: "Open listings" },
+        };
+        const workspace = workspaces[String(session.kind || "member")];
+        if (!workspace) return null;
+        return (
+          <View style={[s.roomRow, { marginHorizontal: 14, marginBottom: 12, borderColor: C.border, alignItems: "center" }]}>
+            <View style={s.flex}>
+              <Text style={{ color: C.text, fontSize: 15, fontWeight: "800" }}>{workspace.title}</Text>
+              <Text style={[s.meta, { marginTop: 3 }]}>{workspace.description}</Text>
+            </View>
+            <TouchableOpacity style={s.joinBtn} onPress={() => go(workspace.tab)}>
+              <Text style={s.joinBtnText}>{workspace.action}</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      })()}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.storyRow, { paddingTop: 2, paddingBottom: 14 }]}>
         {STORIES.map((st) => (
           <TouchableOpacity key={st.id} activeOpacity={0.72} style={s.story} onPress={() => st.id === "s0" ? setComposeOpen(true) : setSelectedProfile({ name: st.label, handle: st.label.toLowerCase(), role: "Kilode member" })}>
