@@ -14,6 +14,8 @@ import { AuthScreen } from "./screens/Auth";
 import { MediaScreen } from "./screens/Media";
 import { SettingsScreen } from "./screens/Settings";
 import { DeskDetailScreen } from "./screens/DeskDetail";
+import { UserProfileScreen } from "./screens/UserProfile";
+import { PostDetailScreen } from "./screens/PostDetail";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
 import { Ionicons } from "@expo/vector-icons";
@@ -62,6 +64,8 @@ function KilodeApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -74,7 +78,7 @@ function KilodeApp() {
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
   };
 
   const loadAll = useCallback(async () => {
@@ -177,7 +181,7 @@ function KilodeApp() {
       <View style={s.dotsRow}>{CAROUSEL_FALLBACK.map((_, i) => <View key={i} style={[s.dot, i === slide && s.dotOn]} />)}</View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storyRow}>
         {STORIES.map((st) => (
-          <TouchableOpacity key={st.id} style={s.story} onPress={() => setDetailItem({ title: `${st.label} story`, meta: "Story preview", description: `Stories from ${st.label} will appear here when published.` })}>
+          <TouchableOpacity key={st.id} style={s.story} onPress={() => st.id === "s0" ? setComposeOpen(true) : setSelectedProfile({ name: st.label, handle: st.label.toLowerCase(), role: "Kilode member" })}>
             <View style={s.storyRing}><View style={s.storyInner}>{st.avatarUrl ? <Image source={{ uri: st.avatarUrl }} style={{ width: 42, height: 42, borderRadius: 21 }} resizeMode="cover" /> : <Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text>}</View></View>
             <Text style={s.storyLabel} numberOfLines={1}>{st.label}</Text>
           </TouchableOpacity>
@@ -279,12 +283,12 @@ function KilodeApp() {
       {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
-            <View style={s.postAv}>{t.avatarUrl ? <Image source={{ uri: t.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} /> : <Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text>}</View>
-            <View style={s.flex}>
+            <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}>{t.avatarUrl ? <Image source={{ uri: t.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} /> : <Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text>}</View></TouchableOpacity>
+            <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
               <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
               <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
-            </View>
-            <TouchableOpacity style={s.followBtn} onPress={() => { setFollowing((prev) => ({ ...prev, [t.id]: !prev[t.id] })); show(following[t.id] ? `Unfollowed ${t.name}` : `Following ${t.name}`); }}><Text style={s.followBtnText}>{following[t.id] ? "Following" : "Follow"}</Text></TouchableOpacity>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.followBtn} onPress={() => { setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] })); show(following[String(t.handle || t.name)] ? `Unfollowed ${t.name}` : `Following ${t.name}`); }}><Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text></TouchableOpacity>
           </View>
           <Text style={s.postBody}>{t.text}</Text>
           {t.mediaUrl ? (
@@ -410,6 +414,8 @@ function KilodeApp() {
         onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
       />
     );
+    if (selectedPost) return <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]} onBack={() => setSelectedPost(null)} onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))} onComment={() => setCommentTake(selectedPost)} onFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedPost.handle || selectedPost.name)]: !prev[String(selectedPost.handle || selectedPost.name)] }))} onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved for review."); }} onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((prev) => prev.includes(h) ? prev : [...prev, h]); setSelectedPost(null); show("Blocked @" + h); }} show={show} />;
+    if (selectedProfile) return <UserProfileScreen s={s} C={C} user={selectedProfile} posts={takes.filter((post: any) => String(post.handle || post.name) === String(selectedProfile.handle || selectedProfile.name))} isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]} onBack={() => setSelectedProfile(null)} onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))} onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }} />;
     if (selectedDeskItem) return (
       <DeskDetailScreen
         s={s}
