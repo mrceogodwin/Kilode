@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
+  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +19,8 @@ type Props = {
 };
 
 export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
+  const { height: windowHeight } = useWindowDimensions();
+  const compactWelcome = windowHeight < 760;
   const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
@@ -54,11 +56,11 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" />
       {mode === "welcome" ? (
-        <View style={styles.welcome}>
+        <View style={[styles.welcome, compactWelcome && styles.welcomeCompact]}>
           <View style={styles.topBrand}>
             <KilodeWordmark size="large" />
           </View>
-          <View style={styles.heroWrap}>
+          <View style={[styles.heroWrap, compactWelcome && styles.heroWrapCompact]}>
             <View style={styles.hero}>
               <View style={styles.videoMosaic}>
                 {WELCOME_SCENES.map((_, index) => (
@@ -103,12 +105,12 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
               <View style={styles.heroCaption}><View style={styles.liveDot} /><Text style={styles.captionText}>10 SCENES · ONE WORLD</Text></View>
             </View>
           </View>
-          <View style={styles.copy}>
-            <Text style={styles.headline}>Everything you need.</Text>
-            <Text style={styles.headlineGold}>One platform.</Text>
-            <Text style={styles.description}>Discover your people, music, stories and what’s happening around you.</Text>
+          <View style={[styles.copy, compactWelcome && styles.copyCompact]}>
+            <Text style={[styles.headline, compactWelcome && styles.headlineCompact]}>Everything you need.</Text>
+            <Text style={[styles.headlineGold, compactWelcome && styles.headlineCompact]}>One platform.</Text>
+            <Text style={[styles.description, compactWelcome && styles.descriptionCompact]}>Discover your people, music, stories and what’s happening around you.</Text>
           </View>
-          <View style={styles.actions}>
+          <View style={[styles.actions, compactWelcome && styles.actionsCompact]}>
             <TouchableOpacity activeOpacity={0.85} style={styles.primary} onPress={() => setMode("up")}>
               <Text style={styles.primaryText}>Get started</Text><Ionicons name="arrow-forward" size={18} color="#11100D" />
             </TouchableOpacity>
@@ -195,6 +197,7 @@ const GOLD = "#D4AF57";
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#0B0B0D" },
   welcome: { flex: 1, paddingHorizontal: 24, paddingTop: 10, paddingBottom: Platform.OS === "ios" ? 8 : 18 },
+  welcomeCompact: { paddingHorizontal: 21, paddingTop: 4, paddingBottom: Platform.OS === "ios" ? 4 : 8 },
   topBrand: { height: 54, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   logo: { color: "#FAF9F6", fontSize: 35, fontWeight: "900", letterSpacing: -2.1, includeFontPadding: false },
   logoMark: { color: GOLD, fontSize: 39, fontWeight: "900", letterSpacing: -2.5 },
@@ -202,6 +205,7 @@ const styles = StyleSheet.create({
   signatureLine: { width: 34, height: 3, borderRadius: 2, backgroundColor: GOLD, transform: [{ rotate: "-24deg" }] },
   signatureDot: { position: "absolute", right: 0, bottom: 2, width: 5, height: 5, borderRadius: 3, backgroundColor: GOLD },
   heroWrap: { flex: 1, minHeight: 250, maxHeight: 430, marginTop: 10, marginBottom: 24 },
+  heroWrapCompact: { minHeight: 190, maxHeight: 270, marginTop: 5, marginBottom: 13 },
   hero: { flex: 1, borderRadius: 28, overflow: "hidden", justifyContent: "flex-start", backgroundColor: "#211D17" },
   videoMosaic: { ...StyleSheet.absoluteFillObject, flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignContent: "space-between", padding: 7, gap: 5 },
   videoTile: { width: "18.7%", height: "48.5%", borderRadius: 8, overflow: "hidden", backgroundColor: "#25221B", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
@@ -227,10 +231,14 @@ const styles = StyleSheet.create({
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: GOLD },
   captionText: { color: "#F7F4EA", fontSize: 10, fontWeight: "800", letterSpacing: 1.4 },
   copy: { marginBottom: 20 },
+  copyCompact: { marginBottom: 10 },
   headline: { color: "#F7F6F2", fontSize: 31, lineHeight: 36, fontWeight: "800", letterSpacing: -1.15 },
   headlineGold: { color: GOLD, fontSize: 31, lineHeight: 36, fontWeight: "800", letterSpacing: -1.15 },
+  headlineCompact: { fontSize: 27, lineHeight: 31, letterSpacing: -0.9 },
   description: { color: "#A7A49C", fontSize: 14, lineHeight: 21, marginTop: 10, maxWidth: 330 },
+  descriptionCompact: { fontSize: 13, lineHeight: 18, marginTop: 7 },
   actions: { gap: 8 },
+  actionsCompact: { gap: 4 },
   primary: { minHeight: 54, borderRadius: 17, backgroundColor: GOLD, paddingHorizontal: 19, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
   primaryText: { color: "#11100D", fontSize: 15, fontWeight: "800" },
   loginButton: { minHeight: 44, alignItems: "center", justifyContent: "center" },
