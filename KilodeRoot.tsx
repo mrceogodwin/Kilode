@@ -104,22 +104,34 @@ function KilodeApp() {
   };
 
   const loadAll = useCallback(async () => {
-    const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token)]);
-    // The old Kilode Nine page currently server-renders “No posts yet”, and its mobile
-    // bridge is not connected to this preview. Use the actual in-repo demo dataset on web
-    // so the preview never looks empty; on iOS prefer API data but safely fall back if empty.
-    const previewWeb = Platform.OS === "web";
-    // Only the explicit web design preview uses seed content. Native iOS must
-    // never disguise an API failure or empty database as real user activity.
-    setTakes(previewWeb ? TAKES : Array.isArray(t.data) ? t.data : []);
-    setRooms(previewWeb ? ROOMS : Array.isArray(r.data) ? r.data : []);
-    setNews(previewWeb ? NEWS : Array.isArray(n.data) ? n.data : []);
-    setTracks(previewWeb ? TRACKS : Array.isArray(tr.data) ? tr.data : []);
-    setActivity(previewWeb ? ACTIVITY : Array.isArray(a.data) ? a.data : []);
+    // The browser deployment is a design preview: render its bundled demo data
+    // immediately instead of waiting on mobile API routes it does not use.
+    if (Platform.OS === "web") {
+      setTakes(TAKES);
+      setRooms(ROOMS);
+      setNews(NEWS);
+      setTracks(TRACKS);
+      setActivity(ACTIVITY);
+      setSource("mock");
+      return "mock" as const;
+    }
+
+    const [t, r, n, tr, a] = await Promise.all([
+      fetchTakes(),
+      fetchRooms(),
+      fetchNews(),
+      fetchTracks(),
+      fetchActivity(session?.token),
+    ]);
+    setTakes(Array.isArray(t.data) ? t.data : []);
+    setRooms(Array.isArray(r.data) ? r.data : []);
+    setNews(Array.isArray(n.data) ? n.data : []);
+    setTracks(Array.isArray(tr.data) ? tr.data : []);
+    setActivity(Array.isArray(a.data) ? a.data : []);
+
     const sources = [t, r, n, tr].map((x) => x.source);
-    const nextSource: "live" | "mock" | "error" = previewWeb
-      ? "mock"
-      : sources.every((value) => value === "live")
+    const nextSource: "live" | "mock" | "error" =
+      sources.every((value) => value === "live")
         ? "live"
         : sources.some((value) => value === "error")
           ? "error"
