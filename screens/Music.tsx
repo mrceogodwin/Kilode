@@ -28,12 +28,63 @@ const ARTISTS = [
 
 export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
+  const [activeTrack, setActiveTrack] = useState<any | null>(null);
+  const [activeArtist, setActiveArtist] = useState<any | null>(null);
   const tracks = TRACKS || [];
 
   const selectTrack = (t: any) => {
-    onPlay(t);
-    show(`Selected ${t.title}. Streaming audio is not connected yet.`);
+    setActiveArtist(null);
+    setActiveTrack(t);
   };
+
+  if (activeTrack) {
+    return (
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+        <View style={s.padH}>
+          <TouchableOpacity onPress={() => setActiveTrack(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
+            <Text style={s.link}>‹ Back to Music</Text>
+          </TouchableOpacity>
+          <View style={{ height: 220, borderRadius: 20, backgroundColor: activeTrack.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+            <Ionicons name="musical-notes" size={56} color="#fff" />
+          </View>
+          <Text style={s.h1}>{activeTrack.title}</Text>
+          <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
+          <Text style={[s.meta, { marginTop: 14 }]}>Track details · preview catalogue</Text>
+          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={() => { onPlay(activeTrack); show("Track selected. Streaming audio is not connected yet."); }}>
+            <Ionicons name="play" size={17} color="#fff" />
+            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Select track</Text>
+          </TouchableOpacity>
+          <Text style={[s.meta, { marginTop: 12 }]}>Selecting a track updates the in-app player bar; it does not start audio until a streaming source is connected.</Text>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  if (activeArtist) {
+    const artistTracks = tracks.filter((t: any) => String(t.artist || "").toLowerCase() === String(activeArtist.name).toLowerCase());
+    return (
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+        <View style={s.padH}>
+          <TouchableOpacity onPress={() => setActiveArtist(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
+            <Text style={s.link}>‹ Back to Music</Text>
+          </TouchableOpacity>
+          <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: activeArtist.color || C.accent, alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+            <Ionicons name="person" size={34} color="#fff" />
+          </View>
+          <Text style={s.h1}>{activeArtist.name}</Text>
+          <Text style={s.sub}>{activeArtist.meta}</Text>
+          <View style={s.sectionHead}><Text style={s.sectionTitle}>Tracks</Text></View>
+          {artistTracks.length ? artistTracks.map((t: any) => (
+            <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)}>
+              <Ionicons name="musical-note" size={20} color={C.accent} />
+              <View style={[s.flex, { marginLeft: 12 }]}><Text style={s.roomName}>{t.title}</Text><Text style={s.meta}>{t.artist}</Text></View>
+              <Ionicons name="chevron-forward" size={18} color={C.text3} />
+            </TouchableOpacity>
+          )) : <Text style={[s.sub, s.padH]}>No tracks from this artist are in the current preview catalogue yet.</Text>}
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
@@ -147,7 +198,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             <TouchableOpacity
               key={a.id}
               style={s.roomRow}
-              onPress={() => show(`${a.name} · full artist pages when catalogue API is live`)}
+              onPress={() => setActiveArtist(a)}
             >
               <View
                 style={[
