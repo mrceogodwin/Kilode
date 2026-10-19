@@ -90,17 +90,19 @@ function KilodeApp() {
     // bridge is not connected to this preview. Use the actual in-repo demo dataset on web
     // so the preview never looks empty; on iOS prefer API data but safely fall back if empty.
     const previewWeb = Platform.OS === "web";
-    setTakes(!previewWeb && Array.isArray(t.data) && t.data.length ? t.data : TAKES);
-    setRooms(!previewWeb && Array.isArray(r.data) && r.data.length ? r.data : ROOMS);
-    setNews(!previewWeb && Array.isArray(n.data) && n.data.length ? n.data : NEWS);
-    setTracks(!previewWeb && Array.isArray(tr.data) && tr.data.length ? tr.data : TRACKS);
-    setActivity(Array.isArray(a.data) && a.data.length ? a.data : ACTIVITY);
+    // Only the explicit web design preview uses seed content. Native iOS must
+    // never disguise an API failure or empty database as real user activity.
+    setTakes(previewWeb ? TAKES : Array.isArray(t.data) ? t.data : []);
+    setRooms(previewWeb ? ROOMS : Array.isArray(r.data) ? r.data : []);
+    setNews(previewWeb ? NEWS : Array.isArray(n.data) ? n.data : []);
+    setTracks(previewWeb ? TRACKS : Array.isArray(tr.data) ? tr.data : []);
+    setActivity(previewWeb ? ACTIVITY : Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
     if (previewWeb) setSource("mock");
-    else if (sources.some((s) => s === "live" && [t, r, n, tr].some((x) => x.data?.length))) setSource("live");
-    else if (sources.every((s) => s === "error")) setSource("error");
-    else setSource("mock");
-  }, []);
+    else if (sources.every((value) => value === "live")) setSource("live");
+    else if (sources.some((value) => value === "error")) setSource("error");
+    else setSource("live");
+  }, [session?.token]);
 
   useEffect(() => {
     let cancelled = false;
