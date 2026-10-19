@@ -24,6 +24,21 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
+// Keep auth screens from spinning forever when the API host is unreachable.
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit = {},
+  timeoutMs = 8000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [guest, setGuest] = useState(false);
@@ -70,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (handle: string, password: string, kind?: AccountKind) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/sign-in/email`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/auth/sign-in/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
@@ -104,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         let storedKind: string | undefined;
         try {
-          const profile = await fetch(`${API_BASE}/api/mobile/profile`, {
+          const profile = await fetchWithTimeout(`${API_BASE}/api/mobile/profile`, {
             headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
           });
           if (profile.ok) storedKind = (await profile.json()).kind;
@@ -141,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     // Production: registerAccount on Kilode-v2 / Nine when JSON auth is open
     try {
-      const res = await fetch(`${API_BASE}/api/auth/sign-up/email`, {
+      const res = await fetchWithTimeout(`${API_BASE}/api/auth/sign-up/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
