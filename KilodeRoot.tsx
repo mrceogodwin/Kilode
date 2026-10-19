@@ -160,103 +160,133 @@ function KilodeApp() {
   const rc = <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} colors={[C.accent]} />;
 
   const Home = () => (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
-      <View style={[s.padH, { paddingTop: 8, paddingBottom: 2 }]}>
-        <Text style={{ fontSize: 25, fontWeight: "800", color: C.text, letterSpacing: -0.8 }}>Discover</Text>
-        <Text style={{ fontSize: 12, color: C.text2, marginTop: 3 }}>Your world, all in one place.</Text>
+    <ScrollView style={s.flex} contentContainerStyle={[s.scrollPad, { paddingBottom: 28 }]} showsVerticalScrollIndicator={false} refreshControl={rc}>
+      <View style={[s.padH, { paddingTop: 10, paddingBottom: 12, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }]}>
+        <View>
+          <Text style={{ fontSize: 28, fontWeight: "800", color: C.text, letterSpacing: -1.1 }}>Discover</Text>
+          <Text style={{ fontSize: 13, color: C.text2, marginTop: 3 }}>Your world, all in one place.</Text>
+        </View>
+        <TouchableOpacity activeOpacity={0.72} onPress={() => setMoreOpen(true)} style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingBottom: 3 }}>
+          <Text style={{ fontSize: 13, color: C.accent, fontWeight: "700" }}>Explore</Text>
+          <Ionicons name="arrow-forward" size={15} color={C.accent} />
+        </TouchableOpacity>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={292} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 292))}>
-        {CAROUSEL_FALLBACK.map((c) => (
-          <TouchableOpacity key={c.id} activeOpacity={0.82} style={[s.slide, { backgroundColor: c.color, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }]} onPress={() => { const key = c.cta.toLowerCase(); if (key === "play") go("music"); else if (key === "jobs") go("jobs"); else if (key === "cinema") go("cinema"); else setMoreOpen(true); }}>
-            <Text style={s.slideTitle}>{c.title}</Text>
-            <Text style={s.slideSub}>{c.sub}</Text>
-            <View style={s.slideCta}><Text style={s.slideCtaText}>{c.cta}</Text></View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      <View style={s.dotsRow}>{CAROUSEL_FALLBACK.map((_, i) => <View key={i} style={[s.dot, i === slide && s.dotOn]} />)}</View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storyRow}>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.storyRow, { paddingTop: 2, paddingBottom: 14 }]}>
         {STORIES.map((st) => (
           <TouchableOpacity key={st.id} activeOpacity={0.72} style={s.story} onPress={() => st.id === "s0" ? setComposeOpen(true) : setSelectedProfile({ name: st.label, handle: st.label.toLowerCase(), role: "Kilode member" })}>
-            <View style={s.storyRing}><View style={s.storyInner}>{st.avatarUrl ? <Image source={{ uri: st.avatarUrl }} style={{ width: 42, height: 42, borderRadius: 21 }} resizeMode="cover" /> : <Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text>}</View></View>
+            <View style={[s.storyRing, { borderColor: st.id === "s0" ? C.border : C.accent, borderWidth: st.id === "s0" ? 1 : 2 }]}>
+              <View style={s.storyInner}>{st.avatarUrl ? <Image source={{ uri: st.avatarUrl }} style={{ width: 42, height: 42, borderRadius: 21 }} resizeMode="cover" /> : <Ionicons name="add" size={22} color={C.accent} />}</View>
+            </View>
             <Text style={s.storyLabel} numberOfLines={1}>{st.label}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.chipsRow, { paddingTop: 4, paddingBottom: 14 }]}>
         {["For you", "Trending", "Rooms", "News"].map((c, i) => (
-          <TouchableOpacity key={c} activeOpacity={0.72} style={[s.chip, homeChip === i && s.chipOn]} onPress={() => setHomeChip(i)}>
+          <TouchableOpacity key={c} activeOpacity={0.72} style={[s.chip, homeChip === i && s.chipOn, { backgroundColor: homeChip === i ? C.accentSoft : "transparent", borderColor: homeChip === i ? C.accent : "transparent" }]} onPress={() => setHomeChip(i)}>
             <Text style={[s.chipText, homeChip === i && s.chipTextOn]}>{c}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {(homeChip === 0 || homeChip === 3) && news[0] ? (
+        <View style={{ marginBottom: 22 }}>
+          <View style={[s.sectionHead, { marginTop: 0, marginBottom: 10 }]}>
+            <Text style={s.sectionTitle}>The latest</Text>
+            <TouchableOpacity activeOpacity={0.72} onPress={() => { setSelectedArticleId(null); go("media"); }}><Text style={s.link}>All stories <Ionicons name="arrow-forward" size={12} /></Text></TouchableOpacity>
+          </View>
+          <TouchableOpacity activeOpacity={0.9} onPress={() => { setSelectedArticleId(String(news[0].id)); go("media"); }} style={{ marginHorizontal: 16, overflow: "hidden", borderRadius: 18, backgroundColor: C.card }}>
+            {news[0].imageUrl ? <Image source={{ uri: news[0].imageUrl }} style={{ width: "100%", height: 210, backgroundColor: C.elevated }} resizeMode="cover" /> : <View style={{ height: 190, backgroundColor: C.elevated }} />}
+            <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: 15 }}>
+              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{String(news[0].kicker || "MEDIA").toUpperCase()}  ·  {news[0].time || "LATEST"}</Text>
+              <Text style={{ color: C.text, fontSize: 20, lineHeight: 25, fontWeight: "800", letterSpacing: -0.5, marginTop: 7 }} numberOfLines={3}>{news[0].title}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 11 }}>
+                <Text style={{ color: C.text2, fontSize: 12 }}>Kilode Media · Preview story</Text>
+                <View style={{ flex: 1 }} />
+                <Ionicons name="arrow-up-right" size={18} color={C.accent} />
+              </View>
+            </View>
+          </TouchableOpacity>
+          {news.slice(1, 3).map((n: any) => (
+            <TouchableOpacity key={n.id} activeOpacity={0.78} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginTop: 12 }}>
+              {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={{ width: 84, height: 72, borderRadius: 10, backgroundColor: C.elevated }} resizeMode="cover" /> : <View style={{ width: 84, height: 72, borderRadius: 10, backgroundColor: C.elevated }} />}
+              <View style={{ flex: 1, paddingVertical: 3 }}>
+                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>{String(n.kicker || "MEDIA").toUpperCase()} · {n.time}</Text>
+                <Text style={{ color: C.text, fontSize: 14, lineHeight: 19, fontWeight: "700", marginTop: 5 }} numberOfLines={3}>{n.title}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={C.text3} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
+
       {(homeChip === 0 || homeChip === 1) && (
-        <>
-          <SectionHeader title="Explore" actionLabel="More" onAction={() => setMoreOpen(true)} titleColor={C.text} actionColor={C.accent} />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 4, paddingBottom: 4 }}>
-            {ROLE_GRID.map((r) => (
-              <TouchableOpacity key={r.id} activeOpacity={0.72} style={s.gridCell} onPress={() => go(r.id)}>
-                <Text style={s.gridIcon}>{r.icon}</Text>
-                <Text style={s.gridLabel}>{r.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </>
-      )}
-      {(homeChip === 0 || homeChip === 1) && (
-        <>
-          <SectionHeader title={homeChip === 1 ? "Trending takes" : "Music · New drops"} actionLabel={homeChip === 1 ? "Socials" : "Browse"} onAction={() => go(homeChip === 1 ? "socials" : "music")} titleColor={C.text} actionColor={C.accent} />
-          {homeChip === 1 ? (
-            takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 5).map((t: any) => (
-              <TouchableOpacity key={t.id} activeOpacity={0.78} style={s.roomRow} onPress={() => go("socials")}>
-                <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
-                <View style={s.flex}><Text style={s.roomName} numberOfLines={1}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}><Ionicons name="heart" size={14} color={C.accent} /><Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>{t.likes || 0}</Text></View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
-              {tracks.map((t: any) => (
-                <TouchableOpacity key={t.id} activeOpacity={0.78} style={[s.trackCard, { backgroundColor: t.color || C.accent, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }]} onPress={() => { setNowPlaying(t); show(`Selected ${t.title}. Audio playback is not connected in this preview yet.`); }}>
-                  <Ionicons name="play" size={18} color="#fff" style={{ marginBottom: 6 }} /><Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text><Text style={s.trackArtist} numberOfLines={1}>{t.artist}</Text>
+        <View style={{ marginBottom: 22 }}>
+          <View style={[s.sectionHead, { marginTop: 0, marginBottom: 12 }]}>
+            <Text style={s.sectionTitle}>{homeChip === 1 ? "People are talking" : "Music for your mood"}</Text>
+            <TouchableOpacity activeOpacity={0.72} onPress={() => go(homeChip === 1 ? "socials" : "music")}><Text style={s.link}>{homeChip === 1 ? "Socials" : "See all"} <Ionicons name="arrow-forward" size={12} /></Text></TouchableOpacity>
+          </View>
+          {homeChip === 1 ? takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 3).map((t: any) => (
+            <TouchableOpacity key={t.id} activeOpacity={0.78} onPress={() => go("socials")} style={{ flexDirection: "row", alignItems: "flex-start", gap: 11, paddingHorizontal: 16, paddingVertical: 12 }}>
+              <View style={{ width: 38, height: 38, borderRadius: 19, overflow: "hidden", backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>{t.avatarUrl ? <Image source={{ uri: t.avatarUrl }} style={{ width: 38, height: 38 }} /> : <Text style={{ color: C.text, fontWeight: "700" }}>{(t.name || "?").slice(0,1)}</Text>}</View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontSize: 13, fontWeight: "700" }}>{t.name} <Text style={{ color: C.text3, fontWeight: "400" }}>· {t.time}</Text></Text>
+                <Text style={{ color: C.text2, fontSize: 14, lineHeight: 20, marginTop: 4 }} numberOfLines={3}>{t.text}</Text>
+              </View>
+              <Ionicons name="heart-outline" size={17} color={C.text3} />
+            </TouchableOpacity>
+          )) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
+              {tracks.slice(0, 5).map((t: any, i: number) => (
+                <TouchableOpacity key={t.id} activeOpacity={0.82} onPress={() => { setNowPlaying(t); show(`Selected ${t.title}. Audio playback is not connected in this preview yet.`); }} style={{ width: 138 }}>
+                  <View style={{ height: 138, borderRadius: 14, overflow: "hidden", backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                    <View style={{ position: "absolute", width: 108, height: 108, borderRadius: 54, borderWidth: 1, borderColor: "rgba(255,255,255,0.24)" }} />
+                    <View style={{ position: "absolute", width: 78, height: 78, borderRadius: 39, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" }} />
+                    <Ionicons name="musical-notes" size={30} color="rgba(255,255,255,0.92)" />
+                    <View style={{ position: "absolute", right: 9, bottom: 9, width: 32, height: 32, borderRadius: 16, backgroundColor: C.bg, alignItems: "center", justifyContent: "center" }}><Ionicons name="play" size={14} color={C.text} /></View>
+                  </View>
+                  <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginTop: 8 }} numberOfLines={1}>{t.title}</Text>
+                  <Text style={{ color: C.text2, fontSize: 12, marginTop: 2 }} numberOfLines={1}>{t.artist}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           )}
-        </>
+        </View>
       )}
-      {(homeChip === 0 || homeChip === 3) && (
-        <>
-          <SectionHeader title="Media" actionLabel="See all" onAction={() => { setSelectedArticleId(null); go("media"); }} titleColor={C.text} actionColor={C.accent} />
-          {news.map((n: any) => (
-            <TouchableOpacity key={n.id} activeOpacity={0.78} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
-              {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
-              <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
-            </TouchableOpacity>
-          ))}
-        </>
-      )}
+
       {(homeChip === 0 || homeChip === 2) && (
-        <>
-          <SectionHeader title={`Rooms · ${rooms.filter((r: any) => r.live).length} live`} titleColor={C.text} actionColor={C.accent} />
-          {rooms.map((r: any) => {
+        <View style={{ marginBottom: 18 }}>
+          <View style={[s.sectionHead, { marginTop: 0, marginBottom: 8 }]}>
+            <Text style={s.sectionTitle}>Rooms worth joining</Text>
+            <TouchableOpacity activeOpacity={0.72} onPress={() => go("chat")}><Text style={s.link}>All rooms <Ionicons name="arrow-forward" size={12} /></Text></TouchableOpacity>
+          </View>
+          {rooms.slice(0, 3).map((r: any) => {
             const isJoined = !!joined[r.id];
             return (
-              <TouchableOpacity key={r.id} style={s.roomRow} onPress={() => setDetailItem({ title: r.name, meta: r.meta, description: `${r.live ? `${r.speaking || 0} people speaking. ` : ""}This is a preview room. Live audio and room messaging are not connected yet.` })}>
-                <View style={s.roomAv}><Text style={s.roomAvText}>{r.av}</Text>{r.live ? <View style={s.roomLive} /> : null}</View>
-                <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.live ? `${r.speaking || 0} speaking · ` : ""}{r.meta}</Text></View>
-                <TouchableOpacity style={[s.joinBtn, isJoined && s.joinLive]} onPress={() => { setJoined({ ...joined, [r.id]: !isJoined }); show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`); }}>
-                  <Text style={[s.joinBtnText, isJoined && s.joinLiveText]}>{isJoined ? "Joined" : "Join"}</Text>
+              <TouchableOpacity key={r.id} activeOpacity={0.78} onPress={() => setDetailItem({ title: r.name, meta: r.meta, description: `${r.live ? `${r.speaking || 0} people speaking. ` : ""}This is a preview room. Live audio and room messaging are not connected yet.` })} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 11 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ fontSize: 13, color: C.text, fontWeight: "800" }}>{r.av}</Text>
+                  {r.live ? <View style={{ position: "absolute", width: 8, height: 8, borderRadius: 4, right: -1, top: -1, backgroundColor: C.accent, borderWidth: 1, borderColor: C.bg }} /> : null}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{r.name}</Text>
+                  <Text style={{ color: C.text2, fontSize: 12, marginTop: 3 }}>{r.live ? `${r.speaking || 0} speaking · ` : ""}{r.meta}</Text>
+                </View>
+                <TouchableOpacity activeOpacity={0.72} style={{ paddingHorizontal: 13, paddingVertical: 7, borderRadius: 18, backgroundColor: isJoined ? C.accentSoft : C.elevated }} onPress={() => { setJoined({ ...joined, [r.id]: !isJoined }); show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`); }}>
+                  <Text style={{ color: isJoined ? C.accent : C.text, fontSize: 12, fontWeight: "700" }}>{isJoined ? "Joined" : "Join"}</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
             );
           })}
-        </>
+        </View>
       )}
-      <View style={{ height: 20 }} />
+      <View style={{ marginHorizontal: 16, paddingTop: 4, paddingBottom: 12 }}>
+        <Text style={{ color: C.text3, fontSize: 10, letterSpacing: 0.5 }}>KILODE PREVIEW · SAMPLE CONTENT</Text>
+      </View>
     </ScrollView>
   );
-
   const Socials = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.composer}>
