@@ -17,6 +17,7 @@ import { SettingsScreen } from "./screens/Settings";
 import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
 import { MediaScreen } from "./screens/Media";
 import { PostActions } from "./components/ui/PostActions";
+import { DeskDetailScreen } from "./screens/DeskDetail";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -49,12 +50,13 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null);
   };
 
   const loadAll = useCallback(async () => {
@@ -336,7 +338,7 @@ function KilodeApp() {
         </View>
         <View style={s.sectionHead}><Text style={s.sectionTitle}>{items.length ? `${items.length} listings` : "No listings yet"}</Text></View>
         {items.map((item) => (
-          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => show(item.title)}>
+          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setSelectedDeskItem(item)}>
             <View style={s.flex}><Text style={s.roomName}>{item.title}</Text><Text style={s.meta}>{item.meta}</Text></View>
             {item.price ? <Text style={[s.chipText, { fontWeight: "700", color: C.accent }]}>{item.price}</Text> : null}
           </TouchableOpacity>
@@ -358,6 +360,16 @@ function KilodeApp() {
         show={show}
         onBack={() => setSettingsOpen(false)}
         onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
+      />
+    );
+    if (selectedDeskItem) return (
+      <DeskDetailScreen
+        s={s}
+        C={C}
+        system={DESKS.find((d) => d.id === tab)?.label || tab}
+        item={selectedDeskItem}
+        onBack={() => setSelectedDeskItem(null)}
+        show={show}
       />
     );
     if (tab === "home") return <Home />;
