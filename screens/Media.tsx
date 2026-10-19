@@ -54,6 +54,7 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
     return (
       <ScrollView style={s.flex} contentContainerStyle={[s.scrollPad, { paddingHorizontal: 16 }]}>
         <TouchableOpacity
+          activeOpacity={0.72}
           onPress={() => setActive(null)}
           style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 }}
           accessibilityRole="button"
@@ -100,7 +101,7 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
   return (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
       <View style={s.padH}>
-        <TouchableOpacity onPress={onBack} style={{ marginBottom: 8 }}>
+        <TouchableOpacity activeOpacity={0.72} onPress={onBack} style={{ marginBottom: 8 }}>
           <Text style={s.link}>‹ Home</Text>
         </TouchableOpacity>
         <Text style={s.h1}>Media</Text>
@@ -127,7 +128,7 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
           <Ionicons name="chevron-forward" size={18} color={C.text3} />
         </TouchableOpacity>
       ))}
-      {articles.filter((n) => category === "For you" || String(n.kicker || "").toLowerCase().includes(category.toLowerCase())).length === 0 ? (
+      {visibleArticles.length === 0 ? (
         <View style={[s.center, { padding: 40 }]}>
           <Text style={s.sub}>{category === "For you" ? "No stories yet" : `No ${category.toLowerCase()} stories yet`}</Text>
         </View>
