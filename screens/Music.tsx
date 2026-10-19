@@ -92,23 +92,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         <TouchableOpacity onPress={onBack} style={{ marginBottom: 8 }} accessibilityRole="button">
           <Text style={s.link}>‹ Home</Text>
         </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <View
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              backgroundColor: C.accent,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="musical-notes" size={22} color="#fff" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.h1}>Music</Text>
-            <Text style={s.sub}>Find your next repeat.</Text>
-          </View>
+        <View style={{ paddingTop: 5, paddingBottom: 8 }}>
+          <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1.8, marginBottom: 7 }}>KILODE SOUND</Text>
+          <Text style={[s.h1, { fontSize: 32, letterSpacing: -1.1 }]}>Music</Text>
+          <Text style={[s.sub, { marginTop: 4, fontSize: 14 }]}>Find your next repeat.</Text>
         </View>
       </View>
 
@@ -141,19 +128,21 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
               {tracks.map((t: any) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={[s.trackCard, { backgroundColor: t.color || C.accent, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }]}
-                  activeOpacity={0.78}
+                  style={{ width: 156, marginRight: 13 }}
+                  activeOpacity={0.82}
                   onPress={() => selectTrack(t)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Select ${t.title}`}
+                  accessibilityLabel={`Open ${t.title}`}
                 >
-                  <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(0,0,0,0.18)", alignItems: "center", justifyContent: "center", marginBottom: 9 }}><Ionicons name="play" size={16} color="#fff" /></View>
-                  <Text style={s.trackTitle} numberOfLines={1}>
-                    {t.title}
-                  </Text>
-                  <Text style={s.trackArtist} numberOfLines={1}>
-                    {t.artist}
-                  </Text>
+                  <View style={{ height: 156, borderRadius: 15, overflow: "hidden", backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                    <View style={{ position: "absolute", width: 132, height: 132, borderRadius: 66, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" }} />
+                    <View style={{ position: "absolute", width: 104, height: 104, borderRadius: 52, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }} />
+                    <View style={{ position: "absolute", width: 76, height: 76, borderRadius: 38, borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }} />
+                    <Ionicons name="musical-notes" size={28} color="rgba(255,255,255,0.92)" />
+                    <View style={{ position: "absolute", right: 9, bottom: 9, width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15,15,16,0.88)", alignItems: "center", justifyContent: "center" }}><Ionicons name="play" size={14} color="#fff" /></View>
+                  </View>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 9 }} numberOfLines={1}>{t.title}</Text>
+                  <Text style={{ color: C.text2, fontSize: 12, marginTop: 3 }} numberOfLines={1}>{t.artist}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
