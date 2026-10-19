@@ -28,10 +28,13 @@ import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
-  // Web preview only: open directly into a clearly seeded guest feed so reviewers can
-  // inspect the real native screen structure without creating an account. iOS keeps auth.
+  // The web preview defaults to the same welcome screen as iOS.
+  // Add ?preview=home when a reviewer explicitly wants to jump into the seeded home feed.
   useEffect(() => {
-    if (Platform.OS === "web" && !authLoading && !session) signInGuest("Guest");
+    const homePreview = Platform.OS === "web" &&
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("preview") === "home";
+    if (homePreview && !authLoading && !session) signInGuest("Guest");
   }, [authLoading, session, signInGuest]);
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
