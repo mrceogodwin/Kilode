@@ -88,11 +88,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             error: "The server did not return a native session token. Native authentication still needs backend support.",
           };
         }
+        let storedKind: string | undefined;
+        try {
+          const profile = await fetch(`${API_BASE}/api/mobile/profile`, {
+            headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+          });
+          if (profile.ok) storedKind = (await profile.json()).kind;
+        } catch { /* profile may be temporarily unavailable; don't block sign-in */ }
         const s: Session = {
           token,
           handle: data.user?.name || handle.replace(/^@/, ""),
           name: data.user?.name || handle.replace(/^@/, ""),
-          kind: asAccountKind(kind || data.user?.kind || "member"),
+          kind: asAccountKind(kind || storedKind || data.user?.kind || "member"),
         };
         setSession(s);
         setGuest(false);
@@ -138,6 +145,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return {
             ok: false,
             error: "The server did not return a native session token. Native authentication still needs backend support.",
+          };
+        }
+        // Save the selected architecture role to the server profile, not only local storage.
+        const profileResponse = await fetch(`${API_BASE}/api/mobile/profile`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ kind, handle: h }),
+        });
+        if (!profileResponse.ok) {
+          setLoading(false);
+          return {
+            ok: false,
+            error: profileResponse.status === 503
+              ? "Your account was created, but Kilode could not save your account type because the profile database is not ready. Sign in again after support fixes the backend."
+              : "Kilode could not save your account type. Please try again.",
           };
         }
         const s: Session = {
