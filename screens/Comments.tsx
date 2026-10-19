@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -57,6 +57,12 @@ export function CommentsSheet({
   const [list, setList] = useState<Comment[]>(() => SEED[takeId] || []);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    setList(SEED[takeId] || []);
+    setDraft("");
+  }, [takeId, visible]);
 
   const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: C.bg },
@@ -169,19 +175,26 @@ export function CommentsSheet({
                 setSending(true);
                 const r = await postComment(takeId, draft, token);
                 setSending(false);
-                if (r.ok && r.comment) {
+                if (r.ok) {
+                  const saved = (r as any).data?.comment || (r as any).data?.reply || (r as any).data;
+                  if (!saved) {
+                    show("Comment response was empty");
+                    return;
+                  }
                   setList((prev) => [
                     ...prev,
                     {
-                      id: r.comment.id,
+                      id: String(saved.id || `local-${Date.now()}`),
                       takeId,
-                      text: r.comment.text || draft.trim(),
-                      name: r.comment.name || "You",
-                      time: r.comment.time || "now",
+                      text: saved.text || saved.body || draft.trim(),
+                      name: saved.name || "You",
+                      time: saved.time || "now",
                     },
                   ]);
                   setDraft("");
-                  show(r.source === "live" ? "Comment live" : "Comment added");
+                  show(r.source === "live" ? "Comment posted" : "Comment added in this preview");
+                } else {
+                  show(`Comment failed: ${r.error || "service unavailable"}`);
                 }
               }}
             >
