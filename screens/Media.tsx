@@ -114,20 +114,32 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
           </TouchableOpacity>
         ))}
       </ScrollView>
-      {visibleArticles.map((n) => (
-        <TouchableOpacity key={n.id} activeOpacity={0.78} style={s.newsCard} onPress={() => setActive(n)} accessibilityRole="button">
-          {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
-          <View style={s.flex}>
-            <Text style={s.newsKicker}>
-              {n.kicker} · {n.time}
-            </Text>
-            <Text style={s.newsTitle} numberOfLines={3}>
-              {n.title}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={C.text3} />
-        </TouchableOpacity>
-      ))}
+      {visibleArticles[0] ? (
+        <View style={{ marginTop: 4, marginBottom: 20 }}>
+          <TouchableOpacity key={visibleArticles[0].id} activeOpacity={0.9} onPress={() => setActive(visibleArticles[0])} accessibilityRole="button" style={{ marginHorizontal: 16, overflow: "hidden", borderRadius: 18, backgroundColor: C.card }}>
+            {visibleArticles[0].imageUrl ? <Image source={{ uri: visibleArticles[0].imageUrl }} style={{ width: "100%", height: 218, backgroundColor: visibleArticles[0].tone || C.elevated }} resizeMode="cover" /> : <View style={{ height: 190, backgroundColor: visibleArticles[0].tone || C.elevated }} />}
+            <View style={{ paddingHorizontal: 14, paddingTop: 13, paddingBottom: 16 }}>
+              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.9 }}>{(visibleArticles[0].kicker || "MEDIA").toUpperCase()} · {visibleArticles[0].time || "LATEST"}</Text>
+              <Text style={{ color: C.text, fontSize: 21, lineHeight: 27, fontWeight: "800", letterSpacing: -0.6, marginTop: 7 }}>{visibleArticles[0].title}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 11 }}>
+                <Text style={{ color: C.text2, fontSize: 12 }}>Kilode Media · Preview story</Text>
+                <View style={{ flex: 1 }} />
+                <Ionicons name="arrow-up-right" size={18} color={C.accent} />
+              </View>
+            </View>
+          </TouchableOpacity>
+          {visibleArticles.slice(1).map((n) => (
+            <TouchableOpacity key={n.id} activeOpacity={0.78} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginTop: 14 }} onPress={() => setActive(n)} accessibilityRole="button">
+              {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={{ width: 92, height: 78, borderRadius: 10, backgroundColor: n.tone || C.elevated }} resizeMode="cover" /> : <View style={{ width: 92, height: 78, borderRadius: 10, backgroundColor: n.tone || C.elevated }} />}
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>{(n.kicker || "MEDIA").toUpperCase()} · {n.time || ""}</Text>
+                <Text style={{ color: C.text, fontSize: 14, lineHeight: 19, fontWeight: "700", marginTop: 5 }} numberOfLines={3}>{n.title}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={C.text3} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
       {visibleArticles.length === 0 ? (
         <View style={[s.center, { padding: 40 }]}>
           <Text style={s.sub}>{category === "For you" ? "No stories yet" : `No ${category.toLowerCase()} stories yet`}</Text>
