@@ -6,6 +6,7 @@
 module.exports = ({ config }) => ({
   ...config,
   owner: config.owner || "mudino",
+  plugins: [...(config.plugins || []), "expo-font"],
   extra: {
     ...(config.extra || {}),
     eas: {
