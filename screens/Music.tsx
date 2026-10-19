@@ -13,11 +13,11 @@ type Props = {
 };
 
 const CHARTS = [
-  { rank: 1, title: "Ojuelegba Nights", artist: "Simi Sola", plays: "12.4k" },
-  { rank: 2, title: "Danfo Dreams", artist: "Kemi Wave", plays: "9.1k" },
-  { rank: 3, title: "Eko Energy", artist: "Femi + Liza", plays: "7.8k" },
-  { rank: 4, title: "Water & Light", artist: "Ayo Blue", plays: "6.2k" },
-  { rank: 5, title: "Island Rain", artist: "Bola Keys", plays: "5.1k" },
+  { rank: 1, title: "Ojuelegba Nights", artist: "Simi Sola" },
+  { rank: 2, title: "Danfo Dreams", artist: "Kemi Wave" },
+  { rank: 3, title: "Eko Energy", artist: "Femi + Liza" },
+  { rank: 4, title: "Water & Light", artist: "Ayo Blue" },
+  { rank: 5, title: "Island Rain", artist: "Bola Keys" },
 ];
 
 const ARTISTS = [
@@ -155,26 +155,36 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
 
       {tab === "charts" && (
         <>
-          <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Top charts</Text>
+          <View style={{ marginHorizontal: 16, marginTop: 8, marginBottom: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View>
+              <Text style={{ color: C.text, fontSize: 20, fontWeight: "800", letterSpacing: -0.45 }}>Top charts</Text>
+              <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>The sounds moving the culture</Text>
+            </View>
+            <View style={{ paddingHorizontal: 9, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: C.border }}>
+              <Text style={{ color: C.text3, fontSize: 9, fontWeight: "800", letterSpacing: 1 }}>SAMPLE</Text>
+            </View>
+          </View>
+          <View style={{ marginHorizontal: 16, marginBottom: 10, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10, backgroundColor: C.elevated }}>
+            <Text style={{ color: C.text2, fontSize: 11, lineHeight: 16 }}>Preview rankings only · live chart data is not connected.</Text>
           </View>
           {CHARTS.map((c) => (
             <TouchableOpacity
               key={c.rank}
-              style={s.roomRow}
+              style={{ marginHorizontal: 16, paddingVertical: 13, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: C.border }}
               activeOpacity={0.76}
-              onPress={() =>
-                selectTrack({ id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent })
-              }
+              onPress={() => selectTrack({ id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent })}
+              accessibilityRole="button"
+              accessibilityLabel={`Preview track ${c.title} by ${c.artist}`}
             >
-              <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
-              <View style={s.flex}>
-                <Text style={s.roomName}>{c.title}</Text>
-                <Text style={s.meta}>
-                  {c.artist} · {c.plays} plays
-                </Text>
+              <Text style={{ width: 34, color: c.rank === 1 ? C.accent : C.text3, fontSize: c.rank === 1 ? 20 : 16, fontWeight: "800", fontVariant: ["tabular-nums"] }}>{String(c.rank).padStart(2, "0")}</Text>
+              <View style={{ width: 44, height: 44, borderRadius: 9, marginRight: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="musical-notes" size={18} color={C.accent} />
               </View>
-              <Ionicons name="play-circle-outline" size={28} color={C.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }} numberOfLines={1}>{c.title}</Text>
+                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>{c.artist}</Text>
+              </View>
+              <Ionicons name="play-circle-outline" size={25} color={C.accent} />
             </TouchableOpacity>
           ))}
         </>
@@ -182,8 +192,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
 
       {tab === "artists" && (
         <>
-          <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Featured artists</Text>
+          <View style={{ marginHorizontal: 16, marginTop: 8, marginBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View>
+              <Text style={{ color: C.text, fontSize: 20, fontWeight: "800", letterSpacing: -0.45 }}>Featured artists</Text>
+              <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>Meet the names behind the sound</Text>
+            </View>
+            <View style={{ paddingHorizontal: 9, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: C.border }}>
+              <Text style={{ color: C.text3, fontSize: 9, fontWeight: "800", letterSpacing: 1 }}>SAMPLE</Text>
+            </View>
           </View>
           {ARTISTS.map((a) => (
             <TouchableOpacity
