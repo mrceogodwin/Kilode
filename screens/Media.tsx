@@ -34,6 +34,11 @@ type Props = {
 /** Dedicated Media experience — article list + reader (seed body until CMS API). */
 export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: Props) {
   const [active, setActive] = useState<MediaArticle | null>(null);
+  const [category, setCategory] = useState("For you");
+  const categories = ["For you", "Politics", "Tech", "Culture", "Sport"];
+  const visibleArticles = category === "For you"
+    ? articles
+    : articles.filter((article) => (article.kicker || "").toLowerCase().includes(category.toLowerCase()));
 
   useEffect(() => {
     if (!initialArticleId) return;
@@ -99,17 +104,17 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
           <Text style={s.link}>‹ Home</Text>
         </TouchableOpacity>
         <Text style={s.h1}>Media</Text>
-        <Text style={s.sub}>News & stories · seed until CMS API</Text>
+        <Text style={s.sub}>Stories worth your time.</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-        {["For you", "Politics", "Tech", "Culture", "Sport"].map((c, i) => (
-          <View key={c} style={[s.chip, i === 0 && s.chipOn]}>
-            <Text style={[s.chipText, i === 0 && s.chipTextOn]}>{c}</Text>
-          </View>
+        {categories.map((item) => (
+          <TouchableOpacity key={item} activeOpacity={0.72} accessibilityRole="button" accessibilityState={{ selected: category === item }} onPress={() => setCategory(item)} style={[s.chip, category === item && s.chipOn]}>
+            <Text style={[s.chipText, category === item && s.chipTextOn]}>{item}</Text>
+          </TouchableOpacity>
         ))}
       </ScrollView>
-      {articles.map((n) => (
-        <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => setActive(n)} accessibilityRole="button">
+      {visibleArticles.map((n) => (
+        <TouchableOpacity key={n.id} activeOpacity={0.78} style={s.newsCard} onPress={() => setActive(n)} accessibilityRole="button">
           {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} resizeMode="cover" /> : <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />}
           <View style={s.flex}>
             <Text style={s.newsKicker}>
