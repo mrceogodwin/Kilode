@@ -95,21 +95,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* offline / HTML-only host */
     }
-    if (handle.trim().length >= 2) {
-      const s: Session = {
-        token: "local",
-        handle: handle.replace(/^@/, ""),
-        name: handle.replace(/^@/, ""),
-        kind: asAccountKind(kind),
-      };
-      setSession(s);
-      setGuest(false);
-      await persist(s);
-      setLoading(false);
-      return { ok: true };
-    }
     setLoading(false);
-    return { ok: false, error: "Enter a handle (min 2 chars)" };
+    if (handle.trim().length < 2) {
+      return { ok: false, error: "Enter a username or email (at least 2 characters)." };
+    }
+    return {
+      ok: false,
+      error: "Sign-in service is unavailable. No account was signed in; try again later or continue as guest.",
+    };
   }, []);
 
   const signUp = useCallback(async (handle: string, password: string, kind: AccountKind, displayName?: string) => {
@@ -145,17 +138,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* fall through local */
     }
-    const s: Session = {
-      token: "local",
-      handle: h,
-      name: displayName || h,
-      kind: asAccountKind(kind),
-    };
-    setSession(s);
-    setGuest(false);
-    await persist(s);
     setLoading(false);
-    return { ok: true };
+    return {
+      ok: false,
+      error: "Account creation service is unavailable. No account was created; try again later or continue as guest.",
+    };
   }, []);
 
   const signOut = useCallback(() => {
