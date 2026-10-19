@@ -97,7 +97,7 @@ function KilodeApp() {
         onSignIn={signIn}
         onSignUp={signUp}
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
-        onGoogle={() => { signInGuest("Google User"); show("Google sign-in · client IDs not configured"); }}
+        onGoogle={() => { show("Google sign-in isn't connected yet."); }}
         show={show}
       />
     );
