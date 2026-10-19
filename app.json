@@ -28,13 +28,6 @@
         "backgroundColor": "#0B0B0F"
       }
     },
-    "extra": {
-      "eas": {
-        "projectId": ""
-      },
-      "apiUrl": process.env.EXPO_PUBLIC_API_URL || "https://kilode-nine.vercel.app",
-      "appEnv": process.env.EXPO_PUBLIC_APP_ENV || "production"
-    },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
