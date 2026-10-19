@@ -98,10 +98,15 @@ function KilodeApp() {
     setTracks(previewWeb ? TRACKS : Array.isArray(tr.data) ? tr.data : []);
     setActivity(previewWeb ? ACTIVITY : Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
-    if (previewWeb) setSource("mock");
-    else if (sources.every((value) => value === "live")) setSource("live");
-    else if (sources.some((value) => value === "error")) setSource("error");
-    else setSource("live");
+    const nextSource: "live" | "mock" | "error" = previewWeb
+      ? "mock"
+      : sources.every((value) => value === "live")
+        ? "live"
+        : sources.some((value) => value === "error")
+          ? "error"
+          : "live";
+    setSource(nextSource);
+    return nextSource;
   }, [session?.token]);
 
   useEffect(() => {
@@ -115,7 +120,21 @@ function KilodeApp() {
     return () => { cancelled = true; };
   }, [loadAll]);
 
-  const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Backend offline · seed" : "Refreshed"); };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const result = await loadAll();
+      show(result === "error"
+        ? "Some Kilode services are unavailable. Try again shortly."
+        : result === "mock"
+          ? "Preview content refreshed"
+          : "Refreshed");
+    } catch {
+      show("Could not refresh Kilode. Check your connection and try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (boot || authLoading || (Platform.OS === "web" && !session)) {
     return (
