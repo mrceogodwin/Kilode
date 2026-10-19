@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { BLUE, BORDER, TEXT3, WHITE } from "../../theme";
 
 export type TabId = "home" | "socials" | "activity" | "myspace";
 
@@ -10,19 +9,32 @@ type Props = {
   onTab: (id: TabId) => void;
   onCreate: () => void;
   isDark?: boolean;
+  accent?: string;
 };
 
-const TABS: { id: TabId; label: string; icon: keyof typeof Ionicons.glyphMap; iconOn: keyof typeof Ionicons.glyphMap }[] = [
+const TABS: {
+  id: TabId;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconOn: keyof typeof Ionicons.glyphMap;
+}[] = [
   { id: "home", label: "Home", icon: "home-outline", iconOn: "home" },
   { id: "socials", label: "Socials", icon: "people-outline", iconOn: "people" },
   { id: "activity", label: "Activity", icon: "notifications-outline", iconOn: "notifications" },
   { id: "myspace", label: "My Space", icon: "person-outline", iconOn: "person" },
 ];
 
-export function KilodeTabBar({ active, onTab, onCreate, isDark }: Props) {
-  const bg = isDark ? "#0B0B0F" : WHITE;
-  const muted = isDark ? "#71717A" : TEXT3;
-  const border = isDark ? "#2A2A35" : BORDER;
+/** Dock respects Kilode palette — green accent by default */
+export function KilodeTabBar({
+  active,
+  onTab,
+  onCreate,
+  isDark = true,
+  accent = "#22C55E",
+}: Props) {
+  const bg = isDark ? "#0A0A0A" : "#FFFFFF";
+  const muted = isDark ? "#737373" : "#A1A1AA";
+  const border = isDark ? "#2A2A2A" : "#E4E4E7";
 
   return (
     <View style={[styles.dock, { backgroundColor: bg, borderTopColor: border }]}>
@@ -30,19 +42,14 @@ export function KilodeTabBar({ active, onTab, onCreate, isDark }: Props) {
         const on = active === t.id;
         return (
           <TouchableOpacity key={t.id} style={styles.item} onPress={() => onTab(t.id)} accessibilityRole="tab">
-            <Ionicons name={on ? t.iconOn : t.icon} size={22} color={on ? BLUE : muted} />
-            <Text style={[styles.label, { color: on ? BLUE : muted }]}>{t.label}</Text>
+            <Ionicons name={on ? t.iconOn : t.icon} size={22} color={on ? accent : muted} />
+            <Text style={[styles.label, { color: on ? accent : muted }]}>{t.label}</Text>
           </TouchableOpacity>
         );
       })}
 
-      <TouchableOpacity
-        accessibilityLabel="Create"
-        style={styles.plusWrap}
-        onPress={onCreate}
-        activeOpacity={0.9}
-      >
-        <View style={[styles.plus, { borderColor: bg }]}>
+      <TouchableOpacity accessibilityLabel="Create" style={styles.plusWrap} onPress={onCreate} activeOpacity={0.9}>
+        <View style={[styles.plus, { backgroundColor: accent, borderColor: bg }]}>
           <Ionicons name="add" size={28} color="#fff" />
         </View>
       </TouchableOpacity>
@@ -51,8 +58,8 @@ export function KilodeTabBar({ active, onTab, onCreate, isDark }: Props) {
         const on = active === t.id;
         return (
           <TouchableOpacity key={t.id} style={styles.item} onPress={() => onTab(t.id)} accessibilityRole="tab">
-            <Ionicons name={on ? t.iconOn : t.icon} size={22} color={on ? BLUE : muted} />
-            <Text style={[styles.label, { color: on ? BLUE : muted }]}>{t.label}</Text>
+            <Ionicons name={on ? t.iconOn : t.icon} size={22} color={on ? accent : muted} />
+            <Text style={[styles.label, { color: on ? accent : muted }]}>{t.label}</Text>
           </TouchableOpacity>
         );
       })}
@@ -76,7 +83,6 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: BLUE,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,

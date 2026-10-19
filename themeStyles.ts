@@ -1,37 +1,36 @@
 import { StyleSheet } from "react-native";
-import { BLUE, BLUE_SOFT, BORDER, TEXT, TEXT2, TEXT3, DANGER, SUCCESS, BG, WHITE } from "./theme";
 
-/** Premium white + blue (light) / charcoal + blue (dark) */
+/** Kilode established system — dark-first green accent (matches product identity). */
 export const palettes = {
   dark: {
-    bg: "#0B0B0F",
-    card: "#14141A",
-    elevated: "#1C1C24",
-    input: "#121218",
-    border: "#2A2A35",
-    text: "#F4F4F5",
-    text2: "#A1A1AA",
-    text3: "#71717A",
-    accent: BLUE,
-    accentSoft: "#1E3A5F",
-    danger: DANGER,
-    success: SUCCESS,
-    dock: "#0B0B0F",
+    bg: "#0A0A0A",
+    card: "#141414",
+    elevated: "#1A1A1A",
+    input: "#121212",
+    border: "#2A2A2A",
+    text: "#F5F5F5",
+    text2: "#A3A3A3",
+    text3: "#737373",
+    accent: "#22C55E",
+    accentSoft: "#0F2A1A",
+    danger: "#F43F5E",
+    success: "#22C55E",
+    dock: "#0A0A0A",
   },
   light: {
-    bg: BG,
-    card: WHITE,
-    elevated: "#EEF2F7",
-    input: WHITE,
-    border: BORDER,
-    text: TEXT,
-    text2: TEXT2,
-    text3: TEXT3,
-    accent: BLUE,
-    accentSoft: BLUE_SOFT,
-    danger: DANGER,
-    success: SUCCESS,
-    dock: WHITE,
+    bg: "#F4F4F5",
+    card: "#FFFFFF",
+    elevated: "#F4F4F5",
+    input: "#FFFFFF",
+    border: "#E4E4E7",
+    text: "#09090B",
+    text2: "#52525B",
+    text3: "#A1A1AA",
+    accent: "#16A34A",
+    accentSoft: "#DCFCE7",
+    danger: "#E11D48",
+    success: "#16A34A",
+    dock: "#FFFFFF",
   },
 };
 
@@ -67,15 +66,15 @@ export function makeStyles(C: Palette, isDark: boolean) {
       flexDirection: "row",
       alignItems: "center",
       gap: 6,
-      backgroundColor: isDark ? C.accentSoft : C.accentSoft,
+      backgroundColor: isDark ? "#0F2A1A" : "#DCFCE7",
       borderWidth: 1,
-      borderColor: C.border,
+      borderColor: isDark ? "#1A3D28" : "#86EFAC",
       borderRadius: 999,
       paddingHorizontal: 10,
       paddingVertical: 5,
     },
-    liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
-    liveText: { fontSize: 11, fontWeight: "700", color: C.accent },
+    liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.success },
+    liveText: { fontSize: 11, fontWeight: "700", color: C.success },
 
     iconBtn: {
       width: 36,
@@ -111,8 +110,8 @@ export function makeStyles(C: Palette, isDark: boolean) {
     chipOn: { backgroundColor: C.accentSoft, borderColor: C.accent },
     chipText: { fontSize: 13, fontWeight: "600", color: C.text2 },
     chipTextOn: { color: C.accent },
-
     chipsRow: { paddingHorizontal: 14, paddingVertical: 10 },
+
     storyRow: { paddingHorizontal: 14, gap: 12, paddingBottom: 4 },
     story: { alignItems: "center", width: 68 },
     storyRing: {
@@ -166,17 +165,11 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     sectionTitle: { fontSize: 17, fontWeight: "700", color: C.text, letterSpacing: -0.2 },
     link: { fontSize: 13, fontWeight: "600", color: C.accent },
-
     h1: { fontSize: 22, fontWeight: "800", color: C.text, letterSpacing: -0.4 },
     sub: { fontSize: 13, color: C.text2, marginTop: 2 },
     meta: { fontSize: 12, color: C.text3 },
 
-    grid4: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      paddingHorizontal: 12,
-      gap: 8,
-    },
+    grid4: { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 12, gap: 8 },
     gridCell: {
       width: "23%",
       flexGrow: 1,
@@ -388,7 +381,6 @@ export function makeStyles(C: Palette, isDark: boolean) {
 
     deskHero: { alignItems: "center", paddingVertical: 28, paddingHorizontal: 20 },
     deskHeroIcon: { fontSize: 40, marginBottom: 8 },
-
     deskGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 4 },
     deskGridItem: {
       width: "30%",
@@ -450,7 +442,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     playerBtn: { fontSize: 16, color: C.text2, padding: 6 },
 
     modalRoot: { flex: 1, justifyContent: "flex-end" },
-    scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
+    scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
     sheet: {
       backgroundColor: C.card,
       borderTopLeftRadius: 20,
