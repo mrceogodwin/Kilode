@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal } from "react-native";
 import { CHAT_THREADS } from "../data";
 
 type Props = {
@@ -14,6 +14,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
   const [draft, setDraft] = useState("");
   const [q, setQ] = useState("");
   const [threads, setThreads] = useState(CHAT_THREADS);
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -69,7 +70,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             alignItems: "center",
           }}
         >
-          <TouchableOpacity onPress={() => show("Attach")} style={s.iconBtn}>
+          <TouchableOpacity onPress={() => show("File and media attachments need the chat service to be connected.")} style={s.iconBtn}>
             <Text style={s.iconBtnText}>+</Text>
           </TouchableOpacity>
           <TextInput
@@ -143,7 +144,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
       </View>
       <TouchableOpacity
         style={[s.primaryBtn, { marginHorizontal: 14, marginVertical: 8 }]}
-        onPress={() => show("New chat · pick people next")}
+        onPress={() => setNewMessageOpen(true)}
       >
         <Text style={s.primaryBtnText}>New message</Text>
       </TouchableOpacity>
@@ -175,6 +176,27 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
           ) : null}
         </TouchableOpacity>
       ))}
+      <Modal visible={newMessageOpen} transparent animationType="slide" onRequestClose={() => setNewMessageOpen(false)}>
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.45)" }}>
+          <TouchableOpacity activeOpacity={1} onPress={() => setNewMessageOpen(false)} style={{ flex: 1 }} />
+          <View style={{ backgroundColor: C.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 18, maxHeight: "70%", borderWidth: 1, borderColor: C.border }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <Text style={s.sectionTitle}>Choose a conversation</Text>
+              <TouchableOpacity onPress={() => setNewMessageOpen(false)}><Text style={s.link}>Close</Text></TouchableOpacity>
+            </View>
+            <Text style={[s.meta, { marginBottom: 10 }]}>These are sample conversations available in this preview. New contacts and live messaging need the backend.</Text>
+            <ScrollView>
+              {threads.filter((t) => !t.name.startsWith("#")).map((t) => (
+                <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => { setActive(t); setNewMessageOpen(false); }}>
+                  <View style={s.roomAv}><Text style={s.roomAvText}>{t.name.slice(0, 2).toUpperCase()}</Text></View>
+                  <View style={s.flex}><Text style={s.roomName}>{t.name}</Text><Text style={s.meta} numberOfLines={1}>{t.preview}</Text></View>
+                  <Text style={s.link}>Message ›</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={onBack}>
         <Text style={s.ghostBtnText}>Back home</Text>
       </TouchableOpacity>
