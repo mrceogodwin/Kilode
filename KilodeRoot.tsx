@@ -49,6 +49,7 @@ function KilodeApp() {
   const [editOpen, setEditOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [displayHandle, setDisplayHandle] = useState("");
+  const [displayBio, setDisplayBio] = useState("");
   const [profileName, setProfileName] = useState(session?.name || "");
   const [profileHandle, setProfileHandle] = useState(session?.handle || "");
   const [profileBio, setProfileBio] = useState("");
@@ -180,7 +181,7 @@ function KilodeApp() {
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
               {tracks.map((t: any) => (
-                <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => { setNowPlaying(t); show(`Playing ${t.title}`); }}>
+                <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => { setNowPlaying(t); show(`Selected ${t.title}. Audio playback is not connected in this preview yet.`); }}>
                   <Text style={s.trackPlay}>▶</Text><Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text><Text style={s.trackArtist} numberOfLines={1}>{t.artist}</Text>
                 </TouchableOpacity>
               ))}
