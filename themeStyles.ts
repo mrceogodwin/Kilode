@@ -59,7 +59,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
     headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
     headerTitle: { fontSize: 18, fontWeight: "700", color: C.text, letterSpacing: -0.4 },
-    brand: { fontSize: 22, fontWeight: "800", color: C.text, letterSpacing: -0.6 },
+    brand: { fontSize: 26, fontWeight: "900", color: C.text, letterSpacing: -1.35 },
     brandAccent: { color: C.accent },
 
     livePill: {
