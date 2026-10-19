@@ -10,5 +10,6 @@ export { KilodeTabBar } from "./KilodeTabBar";
 export { PostActions } from "./PostActions";
 export { SectionHeader } from "./SectionHeader";
 export { EmptyState } from "./EmptyState";
+export { ConnectionBanner } from "./ConnectionBanner";
 export type { TabId } from "./KilodeTabBar";
 export type { Reaction } from "./KilodeReactionBar";
