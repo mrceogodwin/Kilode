@@ -42,9 +42,9 @@ async function tryLiveJson<T>(
   if (FORCE_MOCK) {
     return { ok: true, data: fallback, source: "mock", fn: fnName };
   }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 7000);
   try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(`${API_BASE}${path}`, {
       signal: ctrl.signal,
       headers: {
@@ -53,7 +53,6 @@ async function tryLiveJson<T>(
         ...(token && token !== "guest" ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
-    clearTimeout(timer);
     if (!res.ok) {
       return {
         ok: false,
@@ -76,8 +75,12 @@ async function tryLiveJson<T>(
     const data = (await res.json()) as T;
     return { ok: true, data, source: "live", fn: fnName };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "network";
+    const msg = e instanceof Error
+      ? (e.name === "AbortError" ? "Request timed out after 7 seconds" : e.message)
+      : "network";
     return { ok: false, data: [] as unknown as T, source: "error", error: msg, fn: fnName };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
