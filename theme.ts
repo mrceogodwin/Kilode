@@ -2,6 +2,17 @@
 export const ACCENT = "#C5A66A";
 export const ACCENT_LIGHT = "#A88A4E";
 
+// Compatibility tokens for older UI primitives; mapped to Kilode gold/neutrals.
+export const BLUE = ACCENT;
+export const BLUE_SOFT = "#2A2419";
+export const GREEN = ACCENT;
+export const BORDER = "#303030";
+export const TEXT = "#F5F5F5";
+export const TEXT2 = "#A3A3A3";
+export const TEXT3 = "#737373";
+export const WHITE = "#191919";
+export const RADIUS = { sm: 8, md: 12, lg: 16, xl: 20, full: 999 } as const;
+
 /** Type scale — hierarchy for headlines → meta */
 export const TYPE = {
   brand: { fontSize: 22, fontWeight: "800" as const, letterSpacing: -0.6 },
