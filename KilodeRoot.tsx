@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Share,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
@@ -18,6 +18,7 @@ import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
 import { MediaScreen } from "./screens/Media";
 import { PostActions } from "./components/ui/PostActions";
 import { DeskDetailScreen } from "./screens/DeskDetail";
+import { UserProfileScreen } from "./screens/UserProfile";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -51,12 +52,14 @@ function KilodeApp() {
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null);
   };
 
   const loadAll = useCallback(async () => {
@@ -143,7 +146,7 @@ function KilodeApp() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
         {CAROUSEL_FALLBACK.map((c) => (
-          <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => show(c.cta)}>
+          <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => { if (c.id === "c1") setMoreOpen(true); else if (c.id === "c2") go("music"); else if (c.id === "c3") go("jobs"); else go("cinema"); }}>
             <Text style={s.slideTitle}>{c.title}</Text>
             <Text style={s.slideSub}>{c.sub}</Text>
             <View style={s.slideCta}><Text style={s.slideCtaText}>{c.cta}</Text></View>
@@ -153,7 +156,7 @@ function KilodeApp() {
       <View style={s.dotsRow}>{CAROUSEL_FALLBACK.map((_, i) => <View key={i} style={[s.dot, i === slide && s.dotOn]} />)}</View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storyRow}>
         {STORIES.map((st) => (
-          <TouchableOpacity key={st.id} style={s.story} onPress={() => show(st.label)}>
+          <TouchableOpacity key={st.id} style={s.story} onPress={() => st.id === "s0" ? setComposeOpen(true) : setSelectedProfile({ name: st.label, handle: st.label.toLowerCase(), role: "Kilode member" })}>
             <View style={s.storyRing}><View style={s.storyInner}><Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text></View></View>
             <Text style={s.storyLabel} numberOfLines={1}>{st.label}</Text>
           </TouchableOpacity>
@@ -177,7 +180,7 @@ function KilodeApp() {
           <View style={s.sectionHead}><Text style={s.sectionTitle}>{homeChip === 1 ? "Trending takes" : "Music · New drops"}</Text><TouchableOpacity onPress={() => go(homeChip === 1 ? "socials" : "music")}><Text style={s.link}>{homeChip === 1 ? "Socials" : "Browse"}</Text></TouchableOpacity></View>
           {homeChip === 1 ? (
             takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 5).map((t: any) => (
-              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => go("socials")}>
+              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => { go("socials"); setSelectedProfile(t); }}>
                 <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
                 <View style={s.flex}><Text style={s.roomName} numberOfLines={1}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
                 <Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>♥ {t.likes || 0}</Text>
@@ -236,12 +239,12 @@ function KilodeApp() {
       {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
-            <View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View>
-            <View style={s.flex}>
+            <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
+            <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
               <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
               <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
-            </View>
-            <TouchableOpacity style={s.followBtn} onPress={() => show(`Following ${t.name}`)}><Text style={s.followBtnText}>Follow</Text></TouchableOpacity>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.followBtn} onPress={() => setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] }))}><Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text></TouchableOpacity>
           </View>
           <Text style={s.postBody}>{t.text}</Text>
           {t.mediaUrl ? (
@@ -264,9 +267,9 @@ function KilodeApp() {
             accent={C.accent}
             danger={C.danger}
             muted={C.text2}
-            onLike={() => setLiked({ ...liked, [t.id]: !liked[t.id] })}
+            onLike={() => setLiked((prev) => ({ ...prev, [String(t.id)]: !prev[String(t.id)] }))}
             onComment={() => setCommentTake(t)}
-            onShare={() => show("Share")}
+            onShare={async () => { try { await Share.share({ message: `${t.name} (@${t.handle}) on Kilode:\n\n${t.text}` }); } catch { show("Could not open share options."); } }}
             onReport={async () => { await submitReport("post", String(t.id), "other"); show("Reported · under review"); }}
             onBlock={async () => {
               const h = String(t.handle || t.name);
@@ -360,6 +363,18 @@ function KilodeApp() {
         show={show}
         onBack={() => setSettingsOpen(false)}
         onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
+      />
+    );
+    if (selectedProfile) return (
+      <UserProfileScreen
+        s={s}
+        C={C}
+        user={selectedProfile}
+        posts={takes.filter((post: any) => String(post.handle || post.name) === String(selectedProfile.handle || selectedProfile.name))}
+        isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
+        onBack={() => setSelectedProfile(null)}
+        onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))}
+        onOpenPost={(post) => { setSelectedProfile(null); setCommentTake(post); }}
       />
     );
     if (selectedDeskItem) return (
