@@ -44,8 +44,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <TouchableOpacity onPress={() => setActiveTrack(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
             <Text style={s.link}>‹ Back to Music</Text>
           </TouchableOpacity>
-          <View style={{ height: 220, borderRadius: 20, backgroundColor: activeTrack.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-            <Ionicons name="musical-notes" size={56} color="#fff" />
+          <View style={{ height: 260, borderRadius: 22, backgroundColor: activeTrack.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 22, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}>
+            <View style={{ position: "absolute", width: 190, height: 190, borderRadius: 95, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)", transform: [{ rotate: "22deg" }] }} /><View style={{ position: "absolute", width: 140, height: 140, borderRadius: 70, borderWidth: 1, borderColor: "rgba(255,255,255,0.22)", transform: [{ rotate: "-18deg" }] }} /><Ionicons name="musical-notes" size={58} color="rgba(255,255,255,0.96)" />
           </View>
           <Text style={s.h1}>{activeTrack.title}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
@@ -107,14 +107,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.h1}>Music</Text>
-            <Text style={s.sub}>Drops · charts · artists · seed catalogue</Text>
+            <Text style={s.sub}>Find your next repeat.</Text>
           </View>
         </View>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
         {(["new", "charts", "artists"] as const).map((t) => (
-          <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
+          <TouchableOpacity key={t} activeOpacity={0.72} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
             <Text style={[s.chipText, tab === t && s.chipTextOn]}>
               {t === "new" ? "New drops" : t === "charts" ? "Top charts" : "Artists"}
             </Text>
@@ -141,12 +141,13 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
               {tracks.map((t: any) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
+                  style={[s.trackCard, { backgroundColor: t.color || C.accent, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }]}
+                  activeOpacity={0.78}
                   onPress={() => selectTrack(t)}
                   accessibilityRole="button"
                   accessibilityLabel={`Select ${t.title}`}
                 >
-                  <Ionicons name="play" size={18} color="#fff" style={{ marginBottom: 6 }} />
+                  <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(0,0,0,0.18)", alignItems: "center", justifyContent: "center", marginBottom: 9 }}><Ionicons name="play" size={16} color="#fff" /></View>
                   <Text style={s.trackTitle} numberOfLines={1}>
                     {t.title}
                   </Text>
@@ -172,6 +173,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             <TouchableOpacity
               key={c.rank}
               style={s.roomRow}
+              activeOpacity={0.76}
               onPress={() =>
                 selectTrack({ id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent })
               }
@@ -198,6 +200,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             <TouchableOpacity
               key={a.id}
               style={s.roomRow}
+              activeOpacity={0.76}
               onPress={() => setActiveArtist(a)}
             >
               <View
