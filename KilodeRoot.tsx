@@ -4,7 +4,7 @@ import {
   useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
-import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
+import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
 import { ChatScreen } from "./screens/Chat";
@@ -41,7 +41,6 @@ function KilodeApp() {
 
   const [tab, setTab] = useState("home");
   const [homeChip, setHomeChip] = useState(0);
-  const [slide, setSlide] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
