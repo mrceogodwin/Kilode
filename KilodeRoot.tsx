@@ -36,7 +36,7 @@ function KilodeApp() {
   const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [source, setSource] = useState<"live" | "mock">("mock");
+  const [source, setSource] = useState<"live" | "mock" | "error">("mock");
   const [takes, setTakes] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
@@ -56,7 +56,10 @@ function KilodeApp() {
     setNews(Array.isArray(n.data) ? n.data : []);
     setTracks(Array.isArray(tr.data) ? tr.data : []);
     setActivity(Array.isArray(a.data) ? a.data : []);
-    setSource([t, r, n, tr].some((x) => x.source === "live") ? "live" : "mock");
+    const sources = [t, r, n, tr].map((x) => x.source);
+    if (sources.some((s) => s === "live")) setSource("live");
+    else if (sources.every((s) => s === "error")) setSource("error");
+    else setSource("mock");
   }, []);
 
   useEffect(() => {
@@ -65,7 +68,7 @@ function KilodeApp() {
     return () => { cancelled = true; };
   }, [loadAll]);
 
-  const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show("Refreshed"); };
+  const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Still offline seed" : "Refreshed"); };
 
   if (boot || authLoading) {
     return (
@@ -372,10 +375,10 @@ function KilodeApp() {
                 setPosting(true);
                 const r = await postTake(composeText, session.token);
                 setPosting(false);
-                if (r.ok && (r as any).take) {
-                  setTakes((prev) => [(r as any).take, ...prev]);
+                if (r.ok && (r as any).data) {
+                  setTakes((prev) => [(r as any).data, ...prev]);
                   setComposeText(""); setComposeOpen(false); go("socials");
-                  show(r.source === "live" ? "Posted live" : "Posted");
+                  show(r.source === "live" ? "Posted live" : r.source === "error" ? "Saved offline (API error)" : "Posted local");
                 } else show("Could not post");
               }}>
               <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post take"}</Text>
