@@ -1,36 +1,36 @@
 import { StyleSheet } from "react-native";
 
-/** Kilode established system — dark-first green accent (matches product identity). */
+/** Kilode visual system — calm neutrals, muted gold accent, clear hierarchy. */
 export const palettes = {
   dark: {
-    bg: "#0A0A0A",
-    card: "#141414",
-    elevated: "#1A1A1A",
-    input: "#121212",
-    border: "#2A2A2A",
+    bg: "#101010",
+    card: "#191919",
+    elevated: "#222222",
+    input: "#171717",
+    border: "#303030",
     text: "#F5F5F5",
     text2: "#A3A3A3",
     text3: "#737373",
-    accent: "#22C55E",
-    accentSoft: "#0F2A1A",
+    accent: "#C5A66A",
+    accentSoft: "#2A2419",
     danger: "#F43F5E",
     success: "#22C55E",
-    dock: "#0A0A0A",
+    dock: "#101010",
   },
   light: {
-    bg: "#F4F4F5",
+    bg: "#F7F6F2",
     card: "#FFFFFF",
-    elevated: "#F4F4F5",
+    elevated: "#F0EEE8",
     input: "#FFFFFF",
-    border: "#E4E4E7",
+    border: "#E7E3D9",
     text: "#09090B",
     text2: "#52525B",
     text3: "#A1A1AA",
-    accent: "#16A34A",
-    accentSoft: "#DCFCE7",
+    accent: "#A88A4E",
+    accentSoft: "#F1E9D8",
     danger: "#E11D48",
     success: "#16A34A",
-    dock: "#FFFFFF",
+    dock: "#FDFCF9",
   },
 };
 
@@ -42,7 +42,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     flex: { flex: 1 },
     center: { alignItems: "center", justifyContent: "center" },
     padH: { paddingHorizontal: 16 },
-    scrollPad: { paddingBottom: 28 },
+    scrollPad: { paddingBottom: 36 },
     row: { flexDirection: "row", alignItems: "center" },
     rowGap: { flexDirection: "row", gap: 10, paddingHorizontal: 16, marginTop: 14 },
 
@@ -58,8 +58,8 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
     headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-    headerTitle: { fontSize: 18, fontWeight: "700", color: C.text, letterSpacing: -0.3 },
-    brand: { fontSize: 20, fontWeight: "800", color: C.text, letterSpacing: -0.4 },
+    headerTitle: { fontSize: 19, fontWeight: "750", color: C.text, letterSpacing: -0.45 },
+    brand: { fontSize: 23, fontWeight: "800", color: C.text, letterSpacing: -0.8 },
     brandAccent: { color: C.accent },
 
     livePill: {
@@ -136,7 +136,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     slide: {
       width: 300,
       height: 140,
-      borderRadius: 16,
+      borderRadius: 18,
       padding: 16,
       justifyContent: "flex-end",
     },
@@ -163,9 +163,9 @@ export function makeStyles(C: Palette, isDark: boolean) {
       marginTop: 18,
       marginBottom: 10,
     },
-    sectionTitle: { fontSize: 17, fontWeight: "700", color: C.text, letterSpacing: -0.2 },
+    sectionTitle: { fontSize: 18, fontWeight: "750", color: C.text, letterSpacing: -0.35 },
     link: { fontSize: 13, fontWeight: "600", color: C.accent },
-    h1: { fontSize: 22, fontWeight: "800", color: C.text, letterSpacing: -0.4 },
+    h1: { fontSize: 26, fontWeight: "800", color: C.text, letterSpacing: -0.7 },
     sub: { fontSize: 13, color: C.text2, marginTop: 2 },
     meta: { fontSize: 12, color: C.text3 },
 
@@ -176,7 +176,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
       minWidth: 72,
       aspectRatio: 1,
       backgroundColor: C.card,
-      borderRadius: 14,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: C.border,
       alignItems: "center",

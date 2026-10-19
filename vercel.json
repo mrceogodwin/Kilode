@@ -1,7 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "github": {
-    "enabled": false
-  },
-  "buildCommand": "echo 'This repository is the Kilode Expo native app. Deploy the website from mrceogodwin/Kilode-v2. Native builds use Expo EAS.' && exit 1"
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "dist"
 }
