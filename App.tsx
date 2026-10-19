@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
@@ -84,7 +84,7 @@ function KilodeApp() {
         onSignIn={signIn}
         onSignUp={signUp}
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
-        onGoogle={() => { signInGuest("Google User"); show("Google · wire OAuth next"); }}
+        onGoogle={() => { signInGuest("Google User"); show("Google · OAuth keys next"); }}
         show={show}
       />
     );
@@ -174,7 +174,11 @@ function KilodeApp() {
             <TouchableOpacity style={s.followBtn} onPress={() => show(`Following ${t.name}`)}><Text style={s.followBtnText}>Follow</Text></TouchableOpacity>
           </View>
           <Text style={s.postBody}>{t.text}</Text>
-          {t.media ? <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} /> : null}
+          {t.mediaUrl ? (
+            <Image source={{ uri: t.mediaUrl }} style={s.postMedia} resizeMode="cover" />
+          ) : t.media ? (
+            <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} />
+          ) : null}
           <View style={s.postActions}>
             <TouchableOpacity style={s.action} onPress={() => setLiked({ ...liked, [t.id]: !liked[t.id] })}>
               <Text style={[s.actionText, liked[t.id] && { color: C.danger }]}>{liked[t.id] ? "♥" : "♡"} {(t.likes || 0) + (liked[t.id] ? 1 : 0)}</Text>
