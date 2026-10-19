@@ -12,11 +12,12 @@ import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
+import { KilodeTabBar } from "./components/ui";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   const system = useColorScheme();
-  const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
+  const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("light");
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
   const C = palettes[effective];
   const isDark = effective === "dark";
@@ -68,7 +69,7 @@ function KilodeApp() {
     return () => { cancelled = true; };
   }, [loadAll]);
 
-  const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Still offline seed" : "Refreshed"); };
+  const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Backend offline · seed" : "Refreshed"); };
 
   if (boot || authLoading) {
     return (
@@ -235,7 +236,7 @@ function KilodeApp() {
             <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} />
           ) : null}
           <View style={s.factCapRow}>
-            <Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>FACT {t.factPct ?? 50}%</Text>
+            <Text style={[s.meta, { fontWeight: "700", color: C.success }]}>FACT {t.factPct ?? 50}%</Text>
             <View style={s.factCapBar}>
               <View style={[s.factFill, { flex: t.factPct ?? 50 }]} />
               <View style={[s.capFill, { flex: 100 - (t.factPct ?? 50) }]} />
@@ -288,7 +289,7 @@ function KilodeApp() {
       </View>
       <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
       <View style={s.roomRow}>
-        <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Paystack · Kilode Nine</Text></View>
+        <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Paystack · backend when live</Text></View>
         <TouchableOpacity style={s.joinBtn} onPress={() => show("Top up soon")}><Text style={s.joinBtnText}>Top up</Text></TouchableOpacity>
       </View>
     </ScrollView>
@@ -347,21 +348,12 @@ function KilodeApp() {
           <TouchableOpacity onPress={() => setNowPlaying(null)}><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
         </View>
       ) : null}
-      <View style={s.dock}>
-        {([["home", "Home", "⌂"], ["socials", "Socials", "◫"]] as const).map(([id, label, icon]) => (
-          <TouchableOpacity key={id} style={s.dockBtn} onPress={() => go(id)}>
-            <Text style={[s.dockIcon, tab === id && { color: C.accent }]}>{icon}</Text>
-            <Text style={[s.dockLabel, tab === id && s.dockLabelOn]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity style={s.moreBtn} onPress={() => setMoreOpen(true)}><Text style={s.moreBtnText}>+</Text></TouchableOpacity>
-        {([["activity", "Activity", "◐"], ["myspace", "My Space", "○"]] as const).map(([id, label, icon]) => (
-          <TouchableOpacity key={id} style={s.dockBtn} onPress={() => go(id)}>
-            <Text style={[s.dockIcon, tab === id && { color: C.accent }]}>{icon}</Text>
-            <Text style={[s.dockLabel, tab === id && s.dockLabelOn]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <KilodeTabBar
+        active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"}
+        onTab={(id) => go(id)}
+        onCreate={() => setCreateOpen(true)}
+        isDark={isDark}
+      />
 
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
         <View style={s.modalRoot}>
