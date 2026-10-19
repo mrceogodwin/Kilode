@@ -41,8 +41,8 @@ export function ConnectionBanner({ source, isDark }: Props) {
       />
       <Text style={[styles.text, { color: fg }]}>
         {offline
-          ? "API offline · seed layout only · actions stay local"
-          : "Demo seed data · not live server content"}
+          ? "Some Kilode services are unavailable · live actions may fail"
+          : "Preview content · not live server data"}
       </Text>
     </View>
   );
