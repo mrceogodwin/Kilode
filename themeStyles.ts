@@ -163,7 +163,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
       marginTop: 20,
       marginBottom: 10,
     },
-    sectionTitle: { fontSize: 17, fontWeight: "750", color: C.text, letterSpacing: -0.45 },
+    sectionTitle: { fontSize: 17, fontWeight: "700", color: C.text, letterSpacing: -0.45 },
     link: { fontSize: 13, fontWeight: "600", color: C.accent },
     h1: { fontSize: 27, fontWeight: "800", color: C.text, letterSpacing: -0.8 },
     sub: { fontSize: 13, color: C.text2, marginTop: 3, lineHeight: 18 },
