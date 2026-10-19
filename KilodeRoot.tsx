@@ -4,7 +4,7 @@ import {
   useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
-import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
+import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
 import { ChatScreen } from "./screens/Chat";
@@ -73,13 +73,18 @@ function KilodeApp() {
 
   const loadAll = useCallback(async () => {
     const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity()]);
-    setTakes(Array.isArray(t.data) ? t.data : []);
-    setRooms(Array.isArray(r.data) ? r.data : []);
-    setNews(Array.isArray(n.data) ? n.data : []);
-    setTracks(Array.isArray(tr.data) ? tr.data : []);
-    setActivity(Array.isArray(a.data) ? a.data : []);
+    // The old Kilode Nine page currently server-renders “No posts yet”, and its mobile
+    // bridge is not connected to this preview. Use the actual in-repo demo dataset on web
+    // so the preview never looks empty; on iOS prefer API data but safely fall back if empty.
+    const previewWeb = Platform.OS === "web";
+    setTakes(!previewWeb && Array.isArray(t.data) && t.data.length ? t.data : TAKES);
+    setRooms(!previewWeb && Array.isArray(r.data) && r.data.length ? r.data : ROOMS);
+    setNews(!previewWeb && Array.isArray(n.data) && n.data.length ? n.data : NEWS);
+    setTracks(!previewWeb && Array.isArray(tr.data) && tr.data.length ? tr.data : TRACKS);
+    setActivity(Array.isArray(a.data) && a.data.length ? a.data : ACTIVITY);
     const sources = [t, r, n, tr].map((x) => x.source);
-    if (sources.some((s) => s === "live")) setSource("live");
+    if (previewWeb) setSource("mock");
+    else if (sources.some((s) => s === "live" && [t, r, n, tr].some((x) => x.data?.length))) setSource("live");
     else if (sources.every((s) => s === "error")) setSource("error");
     else setSource("mock");
   }, []);
@@ -167,7 +172,7 @@ function KilodeApp() {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storyRow}>
         {STORIES.map((st) => (
           <TouchableOpacity key={st.id} style={s.story} onPress={() => setDetailItem({ title: `${st.label} story`, meta: "Story preview", description: `Stories from ${st.label} will appear here when published.` })}>
-            <View style={s.storyRing}><View style={s.storyInner}><Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text></View></View>
+            <View style={s.storyRing}><View style={s.storyInner}>{st.avatarUrl ? <Image source={{ uri: st.avatarUrl }} style={{ width: 42, height: 42, borderRadius: 21 }} resizeMode="cover" /> : <Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text>}</View></View>
             <Text style={s.storyLabel} numberOfLines={1}>{st.label}</Text>
           </TouchableOpacity>
         ))}
