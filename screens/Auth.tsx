@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar,
   StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
@@ -25,6 +25,15 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind | null>(null);
   const [busy, setBusy] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  // Keep the welcome hero useful if a remote video is slow or blocked.
+  useEffect(() => {
+    if (mode !== "welcome" || videoReady || videoFailed) return;
+    const timeout = setTimeout(() => setVideoFailed(true), 5000);
+    return () => clearTimeout(timeout);
+  }, [mode, videoReady, videoFailed]);
 
   const submit = async () => {
     if (mode === "up" && !kind) { show("Choose the Kilode system you want to join."); return; }
@@ -66,15 +75,24 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                 ))}
               </View>
               <View style={styles.heroCenterVideo}>
-                <Video
-                  source={{ uri: WELCOME_SCENES[0] }}
-                  style={styles.centerVideo}
-                  resizeMode={ResizeMode.COVER}
-                  shouldPlay
-                  isLooping
-                  isMuted
-                  useNativeControls={false}
-                />
+                <View style={styles.videoFallback}>
+                  <View style={styles.fallbackOrb}><Ionicons name="musical-notes" size={30} color="#E5C158" /></View>
+                  <Text style={styles.fallbackTitle}>KILODE</Text>
+                  <Text style={styles.fallbackSub}>MUSIC · CULTURE · PEOPLE</Text>
+                </View>
+                {!videoFailed ? (
+                  <Video
+                    source={{ uri: WELCOME_SCENES[0] }}
+                    style={[styles.centerVideo, { opacity: videoReady ? 1 : 0 }]}
+                    resizeMode={ResizeMode.COVER}
+                    shouldPlay
+                    isLooping
+                    isMuted
+                    useNativeControls={false}
+                    onReadyForDisplay={() => setVideoReady(true)}
+                    onError={() => setVideoFailed(true)}
+                  />
+                ) : null}
                 <View style={styles.centerVideoShade} />
                 <View style={styles.centerLive}><View style={styles.liveDot} /><Text style={styles.centerLiveText}>LIVE CULTURE</Text></View>
                 <View style={styles.centerCaption}><Ionicons name="musical-notes" size={12} color={GOLD} /><Text style={styles.captionText}>THE SOUND OF YOUR WORLD</Text></View>
@@ -191,7 +209,11 @@ const styles = StyleSheet.create({
   tileGlyph: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(12,12,13,0.42)", borderWidth: 1, borderColor: "rgba(212,175,87,0.18)" },
   tileShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(7,7,8,0.28)" },
   heroCenterVideo: { position: "absolute", width: "43%", top: "4%", bottom: "4%", left: "28.5%", borderRadius: 20, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.58)", backgroundColor: "#161411", shadowColor: "#000", shadowOpacity: 0.45, shadowRadius: 18, elevation: 10 },
-  centerVideo: { width: "100%", height: "100%" },
+  centerVideo: { ...StyleSheet.absoluteFillObject },
+  videoFallback: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", backgroundColor: "#17150F" },
+  fallbackOrb: { width: 62, height: 62, borderRadius: 31, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(212,175,87,0.10)", borderWidth: 1, borderColor: "rgba(212,175,87,0.5)" },
+  fallbackTitle: { color: "#F7F4EA", fontSize: 18, fontWeight: "900", letterSpacing: 3, marginTop: 14 },
+  fallbackSub: { color: "#D4AF57", fontSize: 7, fontWeight: "800", letterSpacing: 1.2, marginTop: 5 },
   centerVideoShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(7,7,8,0.18)" },
   centerLive: { position: "absolute", top: 10, left: 8, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 7, paddingVertical: 6, borderRadius: 20, backgroundColor: "rgba(15,15,16,0.78)" },
   centerLiveText: { color: "#F7F4EA", fontSize: 8, fontWeight: "800", letterSpacing: 0.7 },
