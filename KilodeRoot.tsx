@@ -49,6 +49,7 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
@@ -195,7 +196,7 @@ function KilodeApp() {
         <>
           <View style={s.sectionHead}><Text style={s.sectionTitle}>News for you</Text></View>
           {news.map((n: any) => (
-            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => go("media")}>
+            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
               <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
               <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
             </TouchableOpacity>
@@ -356,14 +357,7 @@ function KilodeApp() {
         sessionHandle={session.handle}
         show={show}
         onBack={() => setSettingsOpen(false)}
-        onDeleteAccount={async () => {
-          try {
-            signOut();
-            return { ok: true };
-          } catch (e) {
-            return { ok: false, error: e instanceof Error ? e.message : "failed" };
-          }
-        }}
+        onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
       />
     );
     if (tab === "home") return <Home />;
@@ -383,9 +377,12 @@ function KilodeApp() {
           kicker: n.kicker,
           time: n.time,
           tone: n.tone,
-          author: "Kilode Editorial",
+          body: n.summary || n.description,
+          author: n.author || "Kilode Editorial",
+          imageUrl: n.imageUrl,
         }))}
-        onBack={() => go("home")}
+        initialArticleId={selectedArticleId}
+        onBack={() => { setSelectedArticleId(null); go("home"); }}
         show={show}
       />
     );
