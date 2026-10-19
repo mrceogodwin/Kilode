@@ -34,12 +34,12 @@ export const CAROUSEL = [
 
 export const STORIES = [
   { id: "s0", label: "You", av: "+" },
-  { id: "s1", label: "Chioma", av: "C" },
-  { id: "s2", label: "Simi", av: "S" },
-  { id: "s3", label: "Femi", av: "F" },
-  { id: "s4", label: "Amaka", av: "A" },
-  { id: "s5", label: "Tunde", av: "T" },
-  { id: "s6", label: "Kemi", av: "K" },
+  { id: "s1", label: "Chioma", av: "C", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80" },
+  { id: "s2", label: "Simi", av: "S", avatarUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=120&h=120&q=80" },
+  { id: "s3", label: "Femi", av: "F", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&h=120&q=80" },
+  { id: "s4", label: "Amaka", av: "A", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80" },
+  { id: "s5", label: "Tunde", av: "T", avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&h=120&q=80" },
+  { id: "s6", label: "Kemi", av: "K", avatarUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=120&h=120&q=80" },
 ];
 
 export const CREATE = [
