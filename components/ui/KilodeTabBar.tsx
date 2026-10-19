@@ -24,17 +24,17 @@ const TABS: {
   { id: "myspace", label: "My Space", icon: "person-outline", iconOn: "person" },
 ];
 
-/** Dock respects Kilode palette — green accent by default */
+/** Kilode dock: restrained liquid-glass feel, signature gold, crisp outline icons. */
 export function KilodeTabBar({
   active,
   onTab,
   onCreate,
   isDark = true,
-  accent = "#22C55E",
+  accent = "#D4AF37",
 }: Props) {
-  const bg = isDark ? "#0A0A0A" : "#FFFFFF";
-  const muted = isDark ? "#737373" : "#A1A1AA";
-  const border = isDark ? "#2A2A2A" : "#E4E4E7";
+  const bg = isDark ? "rgba(15,15,16,0.96)" : "rgba(250,249,246,0.96)";
+  const muted = isDark ? "#8A8A8E" : "#777777";
+  const border = isDark ? "rgba(212,175,55,0.18)" : "rgba(130,105,48,0.18)";
 
   return (
     <View style={[styles.dock, { backgroundColor: bg, borderTopColor: border }]}>
@@ -80,11 +80,17 @@ const styles = StyleSheet.create({
   label: { fontSize: 10, fontWeight: "600" },
   plusWrap: { marginTop: -18 },
   plus: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 3,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.78)",
+    shadowColor: "#D4AF37",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.24,
+    shadowRadius: 8,
+    elevation: 5,
   },
 });
