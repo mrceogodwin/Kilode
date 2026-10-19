@@ -56,8 +56,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
                 key={t.id}
                 style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
                 onPress={() => {
-                  onPlay(t);
-                  show(`Playing ${t.title}`);
+                  show(`Selected “${t.title}”. Audio playback is not connected in this preview yet.`);
                 }}
               >
                 <Text style={s.trackPlay}>▶</Text>
@@ -73,7 +72,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Push a link</Text>
           </View>
-          <TouchableOpacity style={[s.primaryBtn, { marginHorizontal: 14 }]} onPress={() => show("Artist push · wire Paystack")}> 
+          <TouchableOpacity style={[s.primaryBtn, { marginHorizontal: 14 }]} onPress={() => show("Track submission and paid promotion need the music and payment services connected.")}> 
             <Text style={s.primaryBtnText}>Submit track URL</Text>
           </TouchableOpacity>
         </>
@@ -89,8 +88,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
               key={c.rank}
               style={s.roomRow}
               onPress={() => {
-                onPlay({ id: String(c.rank), title: c.title, artist: c.artist, color: C.accent });
-                show(`Playing ${c.title}`);
+                show(`Selected “${c.title}”. Audio playback is not connected in this preview yet.`);
               }}
             >
               <View style={[s.roomAv, { backgroundColor: C.elevated }]}>
@@ -112,7 +110,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             <Text style={s.sectionTitle}>Featured artists</Text>
           </View>
           {ARTISTS.map((a) => (
-            <TouchableOpacity key={a.id} style={s.roomRow} onPress={() => show(`Artist · ${a.name}`)}>
+            <TouchableOpacity key={a.id} style={s.roomRow} onPress={() => show(`${a.name} · artist profiles and follow sync are not connected yet.`)}>
               <View style={[s.roomAv, { backgroundColor: a.color }]}>
                 <Text style={[s.roomAvText, { color: "#fff" }]}>{a.name.slice(0, 1)}</Text>
               </View>
