@@ -52,17 +52,15 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
           <View style={styles.heroWrap}>
             <View style={styles.hero}>
               <View style={styles.videoMosaic}>
-                {WELCOME_SCENES.map((uri, index) => (
-                  <View key={index} style={[styles.videoTile, { transform: [{ translateY: index % 3 === 0 ? -4 : index % 3 === 1 ? 5 : 0 }] }]}>
-                    <Video
-                      source={{ uri }}
-                      style={styles.tileVideo}
-                      resizeMode={ResizeMode.COVER}
-                      shouldPlay
-                      isLooping
-                      isMuted
-                      useNativeControls={false}
-                    />
+                {WELCOME_SCENES.map((_, index) => (
+                  <View key={index} style={[styles.videoTile, styles.videoTileStill, { transform: [{ translateY: index % 3 === 0 ? -4 : index % 3 === 1 ? 5 : 0 }] }]}>
+                    <View style={styles.tileGlyph}>
+                      <Ionicons
+                        name={index % 3 === 0 ? "musical-notes-outline" : index % 3 === 1 ? "people-outline" : "play-outline"}
+                        size={18}
+                        color="rgba(229,193,88,0.78)"
+                      />
+                    </View>
                     <View style={styles.tileShade} />
                   </View>
                 ))}
@@ -189,7 +187,8 @@ const styles = StyleSheet.create({
   hero: { flex: 1, borderRadius: 28, overflow: "hidden", justifyContent: "flex-start", backgroundColor: "#211D17" },
   videoMosaic: { ...StyleSheet.absoluteFillObject, flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignContent: "space-between", padding: 7, gap: 5 },
   videoTile: { width: "18.7%", height: "48.5%", borderRadius: 8, overflow: "hidden", backgroundColor: "#25221B", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
-  tileVideo: { width: "100%", height: "100%" },
+  videoTileStill: { alignItems: "center", justifyContent: "center" },
+  tileGlyph: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(12,12,13,0.42)", borderWidth: 1, borderColor: "rgba(212,175,87,0.18)" },
   tileShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(7,7,8,0.28)" },
   heroCenterVideo: { position: "absolute", width: "43%", top: "4%", bottom: "4%", left: "28.5%", borderRadius: 20, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.58)", backgroundColor: "#161411", shadowColor: "#000", shadowOpacity: 0.45, shadowRadius: 18, elevation: 10 },
   centerVideo: { width: "100%", height: "100%" },
