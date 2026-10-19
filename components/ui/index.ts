@@ -7,5 +7,8 @@ export { KilodeIconButton } from "./KilodeIconButton";
 export { KilodeSkeleton } from "./KilodeSkeleton";
 export { KilodeReactionBar } from "./KilodeReactionBar";
 export { KilodeTabBar } from "./KilodeTabBar";
+export { PostActions } from "./PostActions";
+export { SectionHeader } from "./SectionHeader";
+export { EmptyState } from "./EmptyState";
 export type { TabId } from "./KilodeTabBar";
 export type { Reaction } from "./KilodeReactionBar";
