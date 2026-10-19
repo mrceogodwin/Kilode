@@ -7,30 +7,41 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_API_URL": "https://kilode-nine.vercel.app"
+      },
       "ios": {
-        "simulator": false
+        "simulator": true
       }
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "EXPO_PUBLIC_API_URL": "https://kilode-nine.vercel.app"
+      },
       "ios": {
         "simulator": false
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://kilode-nine.vercel.app"
+      },
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
       },
       "autoIncrement": true
     }
   },
   "submit": {
     "production": {
-      "ios": {
-        "appleId": "your@apple.id",
-        "ascAppId": "your-app-store-connect-id",
-        "appleTeamId": "YOURTEAMID"
-      }
+      "ios": {}
     }
   }
 }

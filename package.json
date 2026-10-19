@@ -7,7 +7,11 @@
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "tunnel": "expo start --tunnel"
+    "tunnel": "expo start --tunnel",
+    "typecheck": "tsc --noEmit",
+    "eas:build:ios": "eas build --platform ios --profile production",
+    "eas:build:android": "eas build --platform android --profile production",
+    "eas:build:preview": "eas build --platform all --profile preview"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",

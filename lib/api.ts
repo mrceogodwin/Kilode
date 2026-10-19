@@ -1,17 +1,14 @@
 /**
- * Kilode native API client
+ * Kilode native API client → Kilode-v2 mobile bridge
  *
- * Live paths target the Kilode-v2 mobile bridge:
+ * Live paths (when deployed on the v2 host):
  *   GET  /api/mobile/health
  *   GET  /api/mobile/takes
  *   POST /api/mobile/takes
  *   GET  /api/mobile/tracks
  *
- * Those routes wrap existing createServerFn handlers (listTakes, saveTake, listTracks).
- * /api/auth/* remains better-auth.
- *
- * HTML-only gate on SPA routes still returns 406 for Accept: application/json
- * on document paths — verified 2026-10-19 against kilode-nine.vercel.app.
+ * Production truth: if the network call fails, source is "error".
+ * Seed data may fill the UI for layout only — never reported as "live".
  */
 
 import { API_BASE, FORCE_MOCK } from "./config";
@@ -70,7 +67,7 @@ async function tryLiveJson<T>(
         ok: false,
         data: fallback,
         source: "error",
-        error: "non-json",
+        error: "non-json response",
         fn: fnName,
       };
     }
@@ -82,7 +79,6 @@ async function tryLiveJson<T>(
   }
 }
 
-/** Normalize takes payload from bridge { ok, takes?, next? } or raw array */
 function normalizeTakes(payload: any): any[] {
   if (Array.isArray(payload)) return payload;
   if (payload && Array.isArray(payload.takes)) return payload.takes;
@@ -92,14 +88,25 @@ function normalizeTakes(payload: any): any[] {
 
 export async function fetchTakes(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/takes", { takes: TAKES }, "listTakes");
-  const list = r.ok ? normalizeTakes(r.data) : (TAKES as any[]);
-  // If bridge up but empty list, still live
-  if (r.ok) return { ok: true, data: list.length ? list : (TAKES as any[]), source: "live", fn: "listTakes" };
-  return { ok: false, data: TAKES as any[], source: "error", error: r.error, fn: "listTakes" };
+  if (r.ok) {
+    const list = normalizeTakes(r.data);
+    return {
+      ok: true,
+      data: list,
+      source: "live",
+      fn: "listTakes",
+    };
+  }
+  return {
+    ok: false,
+    data: TAKES as any[],
+    source: "error",
+    error: r.error,
+    fn: "listTakes",
+  };
 }
 
 export function fetchRooms() {
-  // No mobile rooms bridge yet — explicit error path with seed for UI shell only
   return tryLiveJson("/api/mobile/rooms", ROOMS as any[], "listRooms");
 }
 
@@ -114,10 +121,16 @@ export async function fetchTracks(): Promise<ApiResult<any[]>> {
       ? r.data
       : Array.isArray(r.data?.tracks)
         ? r.data.tracks
-        : (TRACKS as any[]);
-    return { ok: true, data: list.length ? list : (TRACKS as any[]), source: "live", fn: "listTracks" };
+        : [];
+    return { ok: true, data: list, source: "live", fn: "listTracks" };
   }
-  return { ok: false, data: TRACKS as any[], source: "error", error: r.error, fn: "listTracks" };
+  return {
+    ok: false,
+    data: TRACKS as any[],
+    source: "error",
+    error: r.error,
+    fn: "listTracks",
+  };
 }
 
 export function fetchActivity() {
@@ -200,16 +213,19 @@ export async function postComment(
     return { ok: true, data: local, source: "mock", fn: "replyTake" };
   }
   try {
-    const res = await fetch(`${API_BASE}/api/mobile/takes/${encodeURIComponent(takeId)}/replies`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "User-Agent": UA,
-      },
-      body: JSON.stringify({ body: text }),
-    });
+    const res = await fetch(
+      `${API_BASE}/api/mobile/takes/${encodeURIComponent(takeId)}/replies`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "User-Agent": UA,
+        },
+        body: JSON.stringify({ body: text }),
+      }
+    );
     const ct = res.headers.get("content-type") || "";
     if (!ct.includes("json")) {
       return { ok: false, data: local, source: "error", error: "non-json", fn: "replyTake" };
@@ -235,12 +251,3 @@ export async function postComment(
     };
   }
 }
-
-export const V2_TAKES_FNS = [
-  "listTakes",
-  "saveTake",
-  "voteTake",
-  "likeTake",
-  "replyTake",
-  "toggleFollow",
-] as const;

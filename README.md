@@ -1,57 +1,59 @@
-# Kilode — Production React Native (Expo) iOS
+# Kilode Native (Expo)
 
-This repository is a **real native iOS app** built with **Expo SDK 51 + React Native 0.74**.
-It is **not** a website and **not** the HTML preview used in chat.
+**Repository:** `mrceogodwin/Kilode`  
+**Stack:** Expo SDK 51 · React Native 0.74 · TypeScript  
+**iOS bundle ID:** `ng.kilode.app`  
+**Android application ID:** `ng.kilode.app`
 
-## Stack
+This is the **mobile app only**. Build and distribute with **Expo EAS**, not Vercel.
 
-- TypeScript
-- Expo managed workflow
-- React Native `SafeAreaView`, native `Modal`, `RefreshControl`, `AsyncStorage`
-- Bundle ID: `ng.kilode.app`
+| Product | Repo | Deploy |
+|---------|------|--------|
+| Website + API | `mrceogodwin/Kilode-v2` | Vercel |
+| Native iOS / Android | `mrceogodwin/Kilode` (this repo) | Expo EAS |
 
-## Run on a real iPhone
+Do **not** connect this repository to Vercel as the Kilode website. That misconfiguration deploys the RN shell instead of Kilode-v2.
+
+## Run (development)
 
 ```bash
 npm install
+cp .env.example .env   # optional
 npx expo start --tunnel
 ```
 
-Open **Expo Go** → scan QR. That is native JS running on iOS, not Safari.
+Open with **Expo Go** on a device.
 
-## Production build (TestFlight / App Store)
+## Production / TestFlight (EAS)
 
 ```bash
 npm i -g eas-cli
 eas login
+eas build:configure   # once — writes EAS projectId into app.json
 eas build --platform ios --profile production
+eas build --platform android --profile production
 ```
 
-Configure Apple credentials in `eas.json` before submit.
+Apple credentials are configured via `eas credentials` / App Store Connect — not committed.
 
-## Backend (Kilode Nine)
+## Backend
 
-Production web: https://kilode-nine.vercel.app
+Client calls Kilode-v2 mobile bridge:
 
-Today those routes answer **HTML only** (`406 Only HTML requests are supported` for `Accept: application/json`).
-Until Nine ships public JSON for mobile, the native client uses **local seed data as fallback** so the app is usable offline and in TestFlight.
+- `GET /api/mobile/health`
+- `GET /api/mobile/takes`
+- `POST /api/mobile/takes` (authenticated)
+- `GET /api/mobile/tracks`
 
-The product goal is **live Nine data** — not mock-as-product. Wire path: `lib/api.ts` → `EXPO_PUBLIC_API_URL`.
+Base URL: `EXPO_PUBLIC_API_URL` (default `https://kilode-nine.vercel.app`).
 
-## Structure
+If the bridge is not deployed on that host, the app reports **error** (not fake “live”). Seed data may still render for layout only.
 
-```
-App.tsx              # Root + tabs + sheets
-screens/Auth.tsx     # Sign in / Create / Google stub
-screens/Chat.tsx     # Threads + send
-screens/Cinema.tsx   # Films + vote
-lib/api.ts           # Production fetch + fallback
-lib/auth.tsx         # Session + AsyncStorage
-lib/config.ts        # API base URL
-data.ts              # Seed / offline
-themeStyles.ts       # Dark-first design system
-```
+## Scripts
 
-## Status
-
-Native shell is production-oriented. Full feature parity with Kilode v2 / Nine (wallets, ads, realtime chat, media upload, OAuth) continues on this same RN codebase.
+| Command | Purpose |
+|---------|---------|
+| `npm start` | Expo dev server |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run eas:build:ios` | EAS iOS production |
+| `npm run eas:build:android` | EAS Android production |
