@@ -1,4 +1,4 @@
-/** Seed content aligned to Kilode Nine surface (Feeds, rooms, desks) */
+/** Seed content — offline until Nine opens JSON APIs (406 today). Images: remote URIs. */
 export const DESKS = [
   { id: "jobs", label: "Jobs", icon: "💼", blurb: "Roles across Lagos & remote" },
   { id: "market", label: "Market", icon: "🛍️", blurb: "Buy & sell local" },
@@ -39,6 +39,7 @@ export const STORIES = [
   { id: "s3", label: "Femi", av: "F" },
   { id: "s4", label: "Amaka", av: "A" },
   { id: "s5", label: "Tunde", av: "T" },
+  { id: "s6", label: "Kemi", av: "K" },
 ];
 
 export const CREATE = [
@@ -57,13 +58,14 @@ export const TAKES = [
     handle: "chioma",
     time: "2h",
     role: "Commerce · Yaba",
-    text: "Just shipped v2 of our Lagos commerce toolkit — inventory sync, WhatsApp checkout, instant settlement. Built for market women first.",
+    text: "Just shipped v2 of our Lagos commerce toolkit — inventory sync, WhatsApp checkout, instant settlement. Built for market women first. Pilot with 40 stalls on Balogun.",
     likes: 127,
     comments: 8,
     reposts: 19,
     tags: ["take", "spark"],
     media: true,
     mediaTone: "#F97316",
+    mediaUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
   },
   {
     id: "2",
@@ -71,7 +73,7 @@ export const TAKES = [
     handle: "simisola",
     time: "6h",
     role: "Artist · Lagos",
-    text: "Ojuelegba Nights out now everywhere. Wrote this on a danfo to Yaba.",
+    text: "Ojuelegba Nights out now everywhere. Wrote this on a danfo to Yaba. Thank you Lagos for raising me.",
     likes: 342,
     comments: 21,
     reposts: 84,
@@ -79,6 +81,7 @@ export const TAKES = [
     verified: true,
     media: true,
     mediaTone: "#7C3AED",
+    mediaUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80",
   },
   {
     id: "3",
@@ -86,11 +89,14 @@ export const TAKES = [
     handle: "femi_b",
     time: "4h",
     role: "Urbanist · Island",
-    text: "Third Mainland at 6pm is a design failure, not a people failure. We mapped 12 informal bus stops that could become BRT Lite.",
+    text: "Third Mainland at 6pm is a design failure, not a people failure. We mapped 12 informal bus stops that could become BRT Lite with just paint + shade + one marshal.",
     likes: 89,
     comments: 14,
     reposts: 12,
     tags: ["take", "fact"],
+    media: true,
+    mediaTone: "#1D4ED8",
+    mediaUrl: "https://images.unsplash.com/photo-1570125909232-eb4e5e5a8a44?w=800&q=80",
   },
   {
     id: "4",
@@ -98,7 +104,7 @@ export const TAKES = [
     handle: "amaka",
     time: "8h",
     role: "Founder · Fintech",
-    text: "Hiring 2 backend engineers in Lagos. Rust or Go. Real ownership, not ticket farms.",
+    text: "Hiring 2 backend engineers in Lagos. Rust or Go. Real ownership, not ticket farms. DM if you’ve shipped payments under load.",
     likes: 56,
     comments: 31,
     reposts: 9,
@@ -111,13 +117,61 @@ export const TAKES = [
     handle: "tunde",
     time: "11h",
     role: "Film · Nollywood",
-    text: "Screening a 22-min short this Friday at Freedom Park. Free. Come argue about the ending.",
+    text: "Screening a 22-min short this Friday at Freedom Park. Free. Come argue about the ending with me after.",
     likes: 203,
     comments: 17,
     reposts: 45,
     tags: ["cinema", "events"],
     media: true,
     mediaTone: "#1D4ED8",
+    mediaUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80",
+  },
+  {
+    id: "6",
+    name: "Kemi Wave",
+    handle: "kemiwave",
+    time: "1d",
+    role: "Artist · Port Harcourt",
+    text: "Danfo Dreams hit 9k plays overnight. PH energy is different. Studio sessions open next week — producers only.",
+    likes: 178,
+    comments: 12,
+    reposts: 33,
+    tags: ["music"],
+    verified: true,
+    media: true,
+    mediaTone: "#EA580C",
+    mediaUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80",
+  },
+  {
+    id: "7",
+    name: "Lagos Founders",
+    handle: "lagosfounders",
+    time: "1d",
+    role: "Space · Verified",
+    text: "Thursday office hours at Civic Centre. Bring a one-pager. No pitch decks longer than 5 slides. Coffee on us.",
+    likes: 94,
+    comments: 22,
+    reposts: 18,
+    tags: ["events", "teams"],
+    verified: true,
+    media: true,
+    mediaTone: "#047857",
+    mediaUrl: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80",
+  },
+  {
+    id: "8",
+    name: "Bola Keys",
+    handle: "bolakeys",
+    time: "2d",
+    role: "Artist · Island",
+    text: "Island Rain is out. Soft R&B for the generator hours. Link in bio — or just search on Kilode Music.",
+    likes: 61,
+    comments: 5,
+    reposts: 11,
+    tags: ["music"],
+    media: true,
+    mediaTone: "#2563EB",
+    mediaUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80",
   },
 ];
 
@@ -129,6 +183,8 @@ export const ACTIVITY = [
   { id: "a5", icon: "🎵", text: "Ojuelegba Nights crossed 12k plays", time: "1d", lane: "music", unread: false, action: "none" },
   { id: "a6", icon: "💬", text: "New reply in #lounge from Femi", time: "3h", lane: "chat", unread: false, action: "none" },
   { id: "a7", icon: "📢", text: "Your ad draft is ready for review", time: "2d", lane: "ads", unread: false, action: "none" },
+  { id: "a8", icon: "🎬", text: "Cinema Friday · Freedom Park is filling up", time: "4h", lane: "cinema", unread: true, action: "none" },
+  { id: "a9", icon: "💼", text: "3 new roles match your profile", time: "6h", lane: "jobs", unread: false, action: "none" },
 ];
 
 export const ROOMS = [
@@ -138,6 +194,7 @@ export const ROOMS = [
   { id: "r4", av: "LF", name: "Lagos Founders", meta: "2.4k · Builders", live: false, speaking: 0 },
   { id: "r5", av: "TX", name: "Tech & Biz", meta: "3.1k · Builders only", live: false, speaking: 0 },
   { id: "r6", av: "CN", name: "Cinema", meta: "1.8k · Screenings", live: false, speaking: 0 },
+  { id: "r7", av: "SP", name: "Sports Desk", meta: "2.1k · Matchday", live: true, speaking: 9 },
 ];
 
 export const TRACKS = [
@@ -146,6 +203,7 @@ export const TRACKS = [
   { id: "t3", title: "Water & Light", artist: "Ayo Blue", color: "#7C3AED" },
   { id: "t4", title: "Danfo Dreams", artist: "Kemi Wave", color: "#EA580C" },
   { id: "t5", title: "Island Rain", artist: "Bola Keys", color: "#2563EB" },
+  { id: "t6", title: "Balogun Bounce", artist: "Market Band", color: "#B45309" },
 ];
 
 export const NEWS = [
@@ -153,6 +211,7 @@ export const NEWS = [
   { id: "n2", kicker: "Culture · Nigeria", title: "Inside the studios mapping Afrobeats samples from Tejuosho to the world", time: "5h", tone: "#FEF9C3" },
   { id: "n3", kicker: "Policy · Lagos", title: "State opens short-let registration window — what hosts need to know", time: "8h", tone: "#D1FAE5" },
   { id: "n4", kicker: "Sports", title: "Super Eagles camp notes — who starts on matchday", time: "3h", tone: "#DBEAFE" },
+  { id: "n5", kicker: "Tech · Lagos", title: "Why three fintechs are racing to build WhatsApp checkout for markets", time: "9h", tone: "#E0E7FF" },
 ];
 
 export const LISTINGS: Record<string, { id: string; title: string; meta: string; price?: string; tag?: string }[]> = {
@@ -161,11 +220,13 @@ export const LISTINGS: Record<string, { id: string; title: string; meta: string;
     { id: "j2", title: "Product Designer", meta: "Commerce · Hybrid", price: "₦4–6M", tag: "New" },
     { id: "j3", title: "Community Lead", meta: "Kilode · Remote-friendly", price: "₦3–5M" },
     { id: "j4", title: "iOS Engineer", meta: "Social · Lagos", price: "₦7–10M", tag: "New" },
+    { id: "j5", title: "Growth Marketer", meta: "Consumer · Hybrid", price: "₦5–7M" },
   ],
   market: [
     { id: "m1", title: "Vintage Ankara set", meta: "Yaba · Seller verified", price: "₦18,000" },
     { id: "m2", title: "iPhone 13 · 128GB", meta: "Ikeja · Good condition", price: "₦420,000", tag: "Deal" },
     { id: "m3", title: "Studio monitors pair", meta: "Surulere · Musician", price: "₦95,000" },
+    { id: "m4", title: "MacBook Air M1", meta: "VI · Light use", price: "₦650,000" },
   ],
   rent: [
     { id: "re1", title: "2-bed Lekki Phase 1", meta: "Short-let · WiFi · Generator", price: "₦45k/night", tag: "Popular" },
@@ -176,6 +237,7 @@ export const LISTINGS: Record<string, { id: string; title: string; meta: string;
     { id: "e1", title: "Freedom Park short film", meta: "Fri 7pm · Free", tag: "Tonight" },
     { id: "e2", title: "Lagos Founders meetup", meta: "Sat · Civic Centre", price: "₦5,000" },
     { id: "e3", title: "Afrobeats open mic", meta: "Sun · Muri Okunola", price: "Free" },
+    { id: "e4", title: "Tech Lagos standup", meta: "Thu · Hybrid", price: "Free" },
   ],
   cinema: [],
   music: [],
