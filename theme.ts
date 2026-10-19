@@ -11,7 +11,10 @@ export const TEXT = "#F5F5F5";
 export const TEXT2 = "#A3A3A3";
 export const TEXT3 = "#737373";
 export const WHITE = "#191919";
-export const RADIUS = { sm: 8, md: 12, lg: 16, xl: 20, full: 999 } as const;
+export const BG = "#101010";
+export const BLACK = "#09090B";
+export const GRAY = "#A3A3A3";
+export const GRAY2 = "#737373";
 
 /** Type scale — hierarchy for headlines → meta */
 export const TYPE = {
