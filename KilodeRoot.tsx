@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
+  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Share,
   useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
@@ -44,6 +44,12 @@ function KilodeApp() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
+  const [detailItem, setDetailItem] = useState<any | null>(null);
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const [editOpen, setEditOpen] = useState(false);
+  const [profileName, setProfileName] = useState(session?.name || "");
+  const [profileHandle, setProfileHandle] = useState(session?.handle || "");
+  const [profileBio, setProfileBio] = useState("");
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
@@ -129,7 +135,7 @@ function KilodeApp() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
         {CAROUSEL_FALLBACK.map((c) => (
-          <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => show(c.cta)}>
+          <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => { const key = c.cta.toLowerCase(); if (key === "play") go("music"); else if (key === "jobs") go("jobs"); else if (key === "cinema") go("cinema"); else setMoreOpen(true); }}>
             <Text style={s.slideTitle}>{c.title}</Text>
             <Text style={s.slideSub}>{c.sub}</Text>
             <View style={s.slideCta}><Text style={s.slideCtaText}>{c.cta}</Text></View>
@@ -139,7 +145,7 @@ function KilodeApp() {
       <View style={s.dotsRow}>{CAROUSEL_FALLBACK.map((_, i) => <View key={i} style={[s.dot, i === slide && s.dotOn]} />)}</View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storyRow}>
         {STORIES.map((st) => (
-          <TouchableOpacity key={st.id} style={s.story} onPress={() => show(st.label)}>
+          <TouchableOpacity key={st.id} style={s.story} onPress={() => setDetailItem({ title: `${st.label} story`, meta: "Story preview", description: `Stories from ${st.label} will appear here when published.` })}>
             <View style={s.storyRing}><View style={s.storyInner}><Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text></View></View>
             <Text style={s.storyLabel} numberOfLines={1}>{st.label}</Text>
           </TouchableOpacity>
@@ -184,7 +190,7 @@ function KilodeApp() {
         <>
           <View style={s.sectionHead}><Text style={s.sectionTitle}>News for you</Text></View>
           {news.map((n: any) => (
-            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => show(n.title)}>
+            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => setDetailItem({ ...n, description: n.summary || n.description || "Full article content will appear here when the media service is connected." })}>
               <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
               <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
             </TouchableOpacity>
@@ -227,7 +233,7 @@ function KilodeApp() {
               <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
               <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
             </View>
-            <TouchableOpacity style={s.followBtn} onPress={() => show(`Following ${t.name}`)}><Text style={s.followBtnText}>Follow</Text></TouchableOpacity>
+            <TouchableOpacity style={s.followBtn} onPress={() => { setFollowing((prev) => ({ ...prev, [t.id]: !prev[t.id] })); show(following[t.id] ? `Unfollowed ${t.name}` : `Following ${t.name}`); }}><Text style={s.followBtnText}>{following[t.id] ? "Following" : "Follow"}</Text></TouchableOpacity>
           </View>
           <Text style={s.postBody}>{t.text}</Text>
           {t.mediaUrl ? (
@@ -248,7 +254,7 @@ function KilodeApp() {
               <Text style={[s.actionText, liked[t.id] && { color: C.danger }]}>{liked[t.id] ? "♥" : "♡"} {(t.likes || 0) + (liked[t.id] ? 1 : 0)}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={s.action} onPress={() => setCommentTake(t)}><Text style={s.actionText}>💬 {t.comments || 0}</Text></TouchableOpacity>
-            <TouchableOpacity style={s.action} onPress={() => show("Share")}><Text style={s.actionText}>Share</Text></TouchableOpacity>
+            <TouchableOpacity style={s.action} onPress={async () => { try { await Share.share({ message: `${t.name}: ${t.text}` }); } catch { show("Could not open share sheet"); } }}><Text style={s.actionText}>Share</Text></TouchableOpacity>
           </View>
         </View>
       ))}
@@ -283,14 +289,14 @@ function KilodeApp() {
           <View style={s.stat}><Text style={s.statN}>0</Text><Text style={s.statL}>Followers</Text></View>
         </View>
         <View style={s.rowGap}>
-          <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => show("Edit profile")}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
+          <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => { setProfileName(session.name || ""); setProfileHandle(session.handle || ""); setEditOpen(true); }}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
           <TouchableOpacity style={s.ghostBtn} onPress={() => { signOut(); show("Signed out"); }}><Text style={s.ghostBtnText}>Sign out</Text></TouchableOpacity>
         </View>
       </View>
       <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
       <View style={s.roomRow}>
         <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Paystack · backend when live</Text></View>
-        <TouchableOpacity style={s.joinBtn} onPress={() => show("Top up soon")}><Text style={s.joinBtnText}>Top up</Text></TouchableOpacity>
+        <TouchableOpacity style={s.joinBtn} onPress={() => setDetailItem({ title: "Kilode Wallet", meta: "Wallet setup", description: "Wallet top-ups will be available when the payment backend is connected. No money has been charged." })}><Text style={s.joinBtnText}>Top up</Text></TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -310,7 +316,7 @@ function KilodeApp() {
         </View>
         <View style={s.sectionHead}><Text style={s.sectionTitle}>{items.length ? `${items.length} listings` : "No listings yet"}</Text></View>
         {items.map((item) => (
-          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => show(item.title)}>
+          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setDetailItem({ ...item, description: item.tag ? `${item.tag} · ${item.meta}` : item.meta, section: d?.label || name })}>
             <View style={s.flex}><Text style={s.roomName}>{item.title}</Text><Text style={s.meta}>{item.meta}</Text></View>
             {item.price ? <Text style={[s.chipText, { fontWeight: "700", color: C.accent }]}>{item.price}</Text> : null}
           </TouchableOpacity>
@@ -401,6 +407,39 @@ function KilodeApp() {
                 <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
               </TouchableOpacity>
             ))}</View>
+          </View>
+        </View>
+      </Modal>
+
+
+      <Modal visible={editOpen} transparent animationType="slide" onRequestClose={() => setEditOpen(false)}>
+        <View style={s.modalRoot}>
+          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setEditOpen(false)} />
+          <View style={s.sheet}>
+            <View style={s.sheetHandle} />
+            <View style={s.sheetHead}><Text style={s.sheetTitle}>Edit profile</Text><TouchableOpacity onPress={() => setEditOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
+            <Text style={[s.meta, { marginBottom: 6 }]}>Display name</Text>
+            <TextInput value={profileName} onChangeText={setProfileName} placeholder="Your name" placeholderTextColor={C.text3} style={{ backgroundColor: C.input, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, color: C.text, marginBottom: 12 }} />
+            <Text style={[s.meta, { marginBottom: 6 }]}>Username</Text>
+            <TextInput value={profileHandle} onChangeText={setProfileHandle} autoCapitalize="none" placeholder="username" placeholderTextColor={C.text3} style={{ backgroundColor: C.input, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, color: C.text, marginBottom: 12 }} />
+            <Text style={[s.meta, { marginBottom: 6 }]}>Bio</Text>
+            <TextInput value={profileBio} onChangeText={setProfileBio} placeholder="A little about you" placeholderTextColor={C.text3} multiline style={{ minHeight: 76, backgroundColor: C.input, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, color: C.text, marginBottom: 14, textAlignVertical: "top" }} />
+            <TouchableOpacity style={s.primaryBtn} onPress={() => { setEditOpen(false); show("Profile changes saved locally. Account sync is not connected yet."); }}><Text style={s.primaryBtnText}>Save changes</Text></TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={!!detailItem} transparent animationType="slide" onRequestClose={() => setDetailItem(null)}>
+        <View style={s.modalRoot}>
+          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setDetailItem(null)} />
+          <View style={s.sheet}>
+            <View style={s.sheetHandle} />
+            <View style={s.sheetHead}><Text style={s.sheetTitle}>{detailItem?.title || "Details"}</Text><TouchableOpacity onPress={() => setDetailItem(null)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
+            {detailItem?.section ? <Text style={[s.newsKicker, { marginBottom: 8 }]}>{detailItem.section}</Text> : null}
+            {detailItem?.price ? <Text style={[s.h1, { marginBottom: 8 }]}>{detailItem.price}</Text> : null}
+            <Text style={[s.sub, { marginBottom: 8 }]}>{detailItem?.meta || detailItem?.kicker || "Kilode"}</Text>
+            <Text style={{ color: C.text, fontSize: 15, lineHeight: 23 }}>{detailItem?.description || detailItem?.synopsis || "More details will appear here as this Kilode service is connected."}</Text>
+            <TouchableOpacity style={[s.primaryBtn, { marginTop: 18 }]} onPress={() => { show("Action is not connected to a live service yet."); setDetailItem(null); }}><Text style={s.primaryBtnText}>Close details</Text></TouchableOpacity>
           </View>
         </View>
       </Modal>
