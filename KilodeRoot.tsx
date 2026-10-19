@@ -147,10 +147,7 @@ function KilodeApp() {
         )}
       </View>
       <View style={s.headerRight}>
-        <View style={[s.chip, { paddingVertical: 4, paddingHorizontal: 8 }]}>
-          <Text style={[s.chipText, { fontSize: 10 }]}>{source}</Text>
-        </View>
-        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
+<TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
           <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color={C.text} />
         </TouchableOpacity>
         <TouchableOpacity style={s.avatar} onPress={() => go("myspace")}>
@@ -164,10 +161,9 @@ function KilodeApp() {
 
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
-      <View style={s.padH}>
-        <Text style={{ fontSize: 12, fontWeight: "600", color: C.text3, letterSpacing: 0.4, textTransform: "uppercase" }}>For you</Text>
-        <Text style={{ fontSize: 18, fontWeight: "700", color: C.text, letterSpacing: -0.3, marginTop: 2 }}>{session.name || session.handle}</Text>
-        <Text style={[s.sub, { marginBottom: 4 }]}>{session.kind} · Kilode</Text>
+      <View style={[s.padH, { paddingTop: 8, paddingBottom: 2 }]}>
+        <Text style={{ fontSize: 25, fontWeight: "800", color: C.text, letterSpacing: -0.8 }}>Discover</Text>
+        <Text style={{ fontSize: 12, color: C.text2, marginTop: 3 }}>Your world, all in one place.</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
         {CAROUSEL_FALLBACK.map((c) => (
