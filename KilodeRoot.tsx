@@ -15,6 +15,8 @@ import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { PostActions } from "./components/ui/PostActions";
+import { SectionHeader } from "./components/ui/SectionHeader";
+import { EmptyState } from "./components/ui/EmptyState";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -135,7 +137,8 @@ function KilodeApp() {
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.padH}>
-        <Text style={s.h1}>Good morning</Text>
+        <Text style={{ fontSize: 13, fontWeight: "600", color: C.text3, letterSpacing: 0.3, textTransform: "uppercase" }}>For you</Text>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: C.text, letterSpacing: -0.4, marginTop: 2 }}>Discover Kilode</Text>
         <Text style={s.sub}>{session.handle} · {session.kind}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
@@ -165,13 +168,13 @@ function KilodeApp() {
       </ScrollView>
       {(homeChip === 0 || homeChip === 1) && (
         <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>Explore</Text><TouchableOpacity onPress={() => setMoreOpen(true)}><Text style={s.link}>More</Text></TouchableOpacity></View>
+          <SectionHeader title="Explore" actionLabel="More" onAction={() => setMoreOpen(true)} titleColor={C.text} actionColor={C.accent} />
           <View style={s.grid4}>{ROLE_GRID.map((r) => (<TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}><Text style={s.gridIcon}>{r.icon}</Text><Text style={s.gridLabel}>{r.label}</Text></TouchableOpacity>))}</View>
         </>
       )}
       {(homeChip === 0 || homeChip === 1) && (
         <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>{homeChip === 1 ? "Trending takes" : "Music · New drops"}</Text><TouchableOpacity onPress={() => go(homeChip === 1 ? "socials" : "music")}><Text style={s.link}>{homeChip === 1 ? "Socials" : "Browse"}</Text></TouchableOpacity></View>
+          <SectionHeader title={homeChip === 1 ? "Trending takes" : "Music · New drops"} actionLabel={homeChip === 1 ? "Socials" : "Browse"} onAction={() => go(homeChip === 1 ? "socials" : "music")} titleColor={C.text} actionColor={C.accent} />
           {homeChip === 1 ? (
             takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 5).map((t: any) => (
               <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => go("socials")}>
@@ -193,7 +196,7 @@ function KilodeApp() {
       )}
       {(homeChip === 0 || homeChip === 3) && (
         <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>News for you</Text></View>
+          <SectionHeader title="Media" actionLabel="See all" onAction={() => setHomeChip(3)} titleColor={C.text} actionColor={C.accent} />
           {news.map((n: any) => (
             <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => setDetailItem({ ...n, description: n.summary || n.description || "Full article content will appear here when the media service is connected." })}>
               <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
@@ -204,7 +207,7 @@ function KilodeApp() {
       )}
       {(homeChip === 0 || homeChip === 2) && (
         <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>Rooms · {rooms.filter((r: any) => r.live).length} live</Text></View>
+          <SectionHeader title={`Rooms · ${rooms.filter((r: any) => r.live).length} live`} titleColor={C.text} actionColor={C.accent} />
           {rooms.map((r: any) => {
             const isJoined = !!joined[r.id];
             return (
@@ -230,6 +233,18 @@ function KilodeApp() {
         <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What is happening in Naija?</Text></TouchableOpacity>
         <TouchableOpacity style={s.postBtn} onPress={() => setComposeOpen(true)}><Text style={s.postBtnText}>Post</Text></TouchableOpacity>
       </View>
+      {takes.length === 0 ? (
+        <EmptyState
+          title="No takes yet"
+          body="Be the first to post what’s happening in Naija."
+          actionLabel="Create a take"
+          onAction={() => setComposeOpen(true)}
+          icon="chatbubbles-outline"
+          textColor={C.text}
+          mutedColor={C.text2}
+          accentColor={C.accent}
+        />
+      ) : null}
       {takes.map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
