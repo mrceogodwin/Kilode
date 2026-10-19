@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, ImageBackground,
+  StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
+import { Video, ResizeMode } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
 import { ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 
@@ -48,18 +49,42 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
             <View style={styles.signature}><View style={styles.signatureLine} /><View style={styles.signatureDot} /></View>
           </View>
           <View style={styles.heroWrap}>
-            <ImageBackground
-              source={{ uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=90" }}
-              resizeMode="cover"
-              imageStyle={styles.heroImage}
-              style={styles.hero}
-            >
-              <View style={styles.heroShade} />
+            <View style={styles.hero}>
+              <View style={styles.videoMosaic}>
+                {WELCOME_SCENES.map((uri, index) => (
+                  <View key={index} style={[styles.videoTile, { transform: [{ translateY: index % 3 === 0 ? -4 : index % 3 === 1 ? 5 : 0 }] }]}>
+                    <Video
+                      source={{ uri }}
+                      style={styles.tileVideo}
+                      resizeMode={ResizeMode.COVER}
+                      shouldPlay
+                      isLooping
+                      isMuted
+                      useNativeControls={false}
+                    />
+                    <View style={styles.tileShade} />
+                  </View>
+                ))}
+              </View>
+              <View style={styles.heroCenterVideo}>
+                <Video
+                  source={{ uri: WELCOME_SCENES[0] }}
+                  style={styles.centerVideo}
+                  resizeMode={ResizeMode.COVER}
+                  shouldPlay
+                  isLooping
+                  isMuted
+                  useNativeControls={false}
+                />
+                <View style={styles.centerVideoShade} />
+                <View style={styles.centerLive}><View style={styles.liveDot} /><Text style={styles.centerLiveText}>LIVE CULTURE</Text></View>
+                <View style={styles.centerCaption}><Ionicons name="musical-notes" size={12} color={GOLD} /><Text style={styles.captionText}>THE SOUND OF YOUR WORLD</Text></View>
+              </View>
               <View style={styles.floatingTag}><Ionicons name="musical-notes" size={14} color="#E5C158" /><Text style={styles.tagText}>MUSIC</Text></View>
-              <View style={[styles.floatingTag, styles.tagMedia]}><Ionicons name="play-circle" size={14} color="#E5C158" /><Text style={styles.tagText}>MEDIA</Text></View>
-              <View style={[styles.floatingTag, styles.tagSocial]}><Ionicons name="people" size={14} color="#E5C158" /><Text style={styles.tagText}>SOCIALS</Text></View>
-              <View style={styles.heroCaption}><View style={styles.liveDot} /><Text style={styles.captionText}>YOUR WORLD, CONNECTED</Text></View>
-            </ImageBackground>
+              <View style={[styles.floatingTag, styles.tagMedia]}><Ionicons name="play-circle" size={14} color="#E5C158" /><Text style={styles.tagText}>CULTURE</Text></View>
+              <View style={[styles.floatingTag, styles.tagSocial]}><Ionicons name="people" size={14} color="#E5C158" /><Text style={styles.tagText}>YOUR PEOPLE</Text></View>
+              <View style={styles.heroCaption}><View style={styles.liveDot} /><Text style={styles.captionText}>10 SCENES · ONE WORLD</Text></View>
+            </View>
           </View>
           <View style={styles.copy}>
             <Text style={styles.headline}>Everything you need.</Text>
@@ -115,6 +140,19 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   );
 }
 
+const WELCOME_SCENES = [
+  "https://videos.pexels.com/video-files/5805069/5805069-uhd_2160_3840_25fps.mp4",
+  "https://videos.pexels.com/video-files/9690764/9690764-uhd_2160_3840_30fps.mp4",
+  "https://videos.pexels.com/video-files/8027282/8027282-uhd_2160_3840_25fps.mp4",
+  "https://videos.pexels.com/video-files/6940477/6940477-uhd_1440_2560_25fps.mp4",
+  "https://videos.pexels.com/video-files/12322749/12322749-hd_1080_1920_30fps.mp4",
+  "https://videos.pexels.com/video-files/9653700/9653700-hd_1920_1080_25fps.mp4",
+  "https://videos.pexels.com/video-files/7148224/7148224-hd_1080_1920_25fps.mp4",
+  "https://videos.pexels.com/video-files/7148232/7148232-hd_1080_1920_25fps.mp4",
+  "https://videos.pexels.com/video-files/6940477/6940477-uhd_1440_2560_25fps.mp4",
+  "https://videos.pexels.com/video-files/8027282/8027282-uhd_2160_3840_25fps.mp4",
+];
+
 const GOLD = "#D4AF57";
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#0B0B0D" },
@@ -127,8 +165,17 @@ const styles = StyleSheet.create({
   signatureDot: { position: "absolute", right: 0, bottom: 2, width: 5, height: 5, borderRadius: 3, backgroundColor: GOLD },
   heroWrap: { flex: 1, minHeight: 250, maxHeight: 430, marginTop: 10, marginBottom: 24 },
   hero: { flex: 1, borderRadius: 28, overflow: "hidden", justifyContent: "flex-start", backgroundColor: "#211D17" },
-  heroImage: { borderRadius: 28 },
-  heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(8,8,9,0.22)" },
+  videoMosaic: { ...StyleSheet.absoluteFillObject, flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignContent: "space-between", padding: 7, gap: 5 },
+  videoTile: { width: "18.7%", height: "48.5%", borderRadius: 8, overflow: "hidden", backgroundColor: "#25221B", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
+  tileVideo: { width: "100%", height: "100%" },
+  tileShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(7,7,8,0.28)" },
+  heroCenterVideo: { position: "absolute", width: "43%", top: "4%", bottom: "4%", left: "28.5%", borderRadius: 20, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.58)", backgroundColor: "#161411", shadowColor: "#000", shadowOpacity: 0.45, shadowRadius: 18, elevation: 10 },
+  centerVideo: { width: "100%", height: "100%" },
+  centerVideoShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(7,7,8,0.18)" },
+  centerLive: { position: "absolute", top: 10, left: 8, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 7, paddingVertical: 6, borderRadius: 20, backgroundColor: "rgba(15,15,16,0.78)" },
+  centerLiveText: { color: "#F7F4EA", fontSize: 8, fontWeight: "800", letterSpacing: 0.7 },
+  centerCaption: { position: "absolute", bottom: 10, left: 8, right: 8, flexDirection: "row", alignItems: "center", gap: 4 },
+
   floatingTag: { position: "absolute", top: 18, left: 16, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 20, backgroundColor: "rgba(15,15,16,0.82)", borderWidth: 1, borderColor: "rgba(212,175,87,0.32)" },
   tagMedia: { top: 86, left: undefined, right: 14 },
   tagSocial: { top: undefined, left: 14, bottom: 78 },
