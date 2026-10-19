@@ -35,6 +35,7 @@ type Props = {
 export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: Props) {
   const [active, setActive] = useState<MediaArticle | null>(null);
   const [category, setCategory] = useState("For you");
+  const [category, setCategory] = useState("For you");
   const categories = ["For you", "Politics", "Tech", "Culture", "Sport"];
   const visibleArticles = category === "For you"
     ? articles
@@ -127,9 +128,9 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
           <Ionicons name="chevron-forward" size={18} color={C.text3} />
         </TouchableOpacity>
       ))}
-      {articles.length === 0 ? (
+      {articles.filter((n) => category === "For you" || String(n.kicker || "").toLowerCase().includes(category.toLowerCase())).length === 0 ? (
         <View style={[s.center, { padding: 40 }]}>
-          <Text style={s.sub}>No stories yet</Text>
+          <Text style={s.sub}>{category === "For you" ? "No stories yet" : `No ${category.toLowerCase()} stories yet`}</Text>
         </View>
       ) : null}
     </ScrollView>
