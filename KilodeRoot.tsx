@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { PostActions } from "./components/ui/PostActions";
 import { SectionHeader } from "./components/ui/SectionHeader";
 import { EmptyState } from "./components/ui/EmptyState";
+import { ConnectionBanner } from "./components/ui/ConnectionBanner";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -374,6 +375,7 @@ function KilodeApp() {
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
+      <ConnectionBanner source={source} isDark={isDark} />
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
         <View style={s.player}>
