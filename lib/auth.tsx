@@ -78,6 +78,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password,
         }),
       });
+      if (!res.ok) {
+        let message = "";
+        try {
+          const payload = await res.json();
+          message = payload.message || payload.error || payload.code || "";
+        } catch { /* host may return HTML */ }
+        setLoading(false);
+        return {
+          ok: false,
+          error: message || (res.status === 401 || res.status === 403
+            ? "Those login details were not accepted."
+            : `Sign-in failed (HTTP ${res.status}). Please try again.`),
+        };
+      }
       if (res.ok) {
         const data = await res.json();
         const token = data.token || data.session?.token;
@@ -137,6 +151,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           kind,
         }),
       });
+      if (!res.ok) {
+        let message = "";
+        try {
+          const payload = await res.json();
+          message = payload.message || payload.error || payload.code || "";
+        } catch { /* host may return HTML */ }
+        setLoading(false);
+        return {
+          ok: false,
+          error: message || (res.status === 409
+            ? "An account with that username already exists."
+            : `Account creation failed (HTTP ${res.status}). Please try again.`),
+        };
+      }
       if (res.ok) {
         const data = await res.json();
         const token = data.token || data.session?.token;
