@@ -26,10 +26,10 @@ export const ROLE_GRID = [
 ];
 
 export const CAROUSEL = [
-  { id: "c1", title: "Lagos is live", sub: "Rooms, music, desks", cta: "Explore", color: "#15803D", color2: "#22C55E" },
-  { id: "c2", title: "Ojuelegba Nights", sub: "Simi Sola · New drop", cta: "Play", color: "#166534", color2: "#4ADE80" },
-  { id: "c3", title: "Hire in Naija", sub: "Fresh roles", cta: "Jobs", color: "#14532D", color2: "#22C55E" },
-  { id: "c4", title: "Cinema Friday", sub: "Vote the next screening", cta: "Cinema", color: "#052E16", color2: "#16A34A" },
+  { id: "c1", title: "Lagos is live", sub: "Rooms, music, desks", cta: "Explore", color: "#1C1B17", color2: "#D4AF37" },
+  { id: "c2", title: "Ojuelegba Nights", sub: "Simi Sola · New drop", cta: "Play", color: "#242017", color2: "#E5C158" },
+  { id: "c3", title: "Hire in Naija", sub: "Fresh roles", cta: "Jobs", color: "#201F1B", color2: "#C8A64D" },
+  { id: "c4", title: "Cinema Friday", sub: "Vote the next screening", cta: "Cinema", color: "#161616", color2: "#B89438" },
 ];
 
 export const STORIES = [
