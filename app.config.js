@@ -1,7 +1,7 @@
 /**
- * Expo dynamic config — merges app.json with public env.
- * Owner: Expo account https://expo.dev/accounts/mudino
- * EAS projectId is written by `eas build:configure` / `eas init` after you log in.
+ * Expo dynamic config.
+ * Intended Expo account: https://expo.dev/accounts/mudino
+ * projectId is written by `eas init` after you run `eas login` as mudino.
  */
 module.exports = ({ config }) => ({
   ...config,
