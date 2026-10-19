@@ -602,7 +602,7 @@ function KilodeApp() {
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><View style={{ width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(212,175,55,0.09)" : "rgba(130,105,48,0.08)", borderWidth: 1, borderColor: isDark ? "rgba(212,175,55,0.16)" : "rgba(130,105,48,0.16)" }}><Ionicons name={systemIconName(d.icon)} size={21} color={C.accent} /></View><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
+            <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><View style={{ width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(255,255,255,0.055)" : "rgba(255,255,255,0.62)", borderWidth: 1, borderColor: isDark ? "rgba(229,193,88,0.28)" : "rgba(130,105,48,0.22)", shadowColor: isDark ? "#D4AF37" : "#7A642E", shadowOpacity: isDark ? 0.12 : 0.08, shadowRadius: 9, shadowOffset: { width: 0, height: 3 }, elevation: 2 }}><Ionicons name={systemIconName(d.icon)} size={21} color={C.accent} /></View><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
           </View>
         </View>
       </Modal>
@@ -615,7 +615,7 @@ function KilodeApp() {
             <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
             <View style={s.deskGrid}>{CREATE.map((o) => (
               <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
-                <View style={{ width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(212,175,55,0.09)" : "rgba(130,105,48,0.08)", borderWidth: 1, borderColor: isDark ? "rgba(212,175,55,0.16)" : "rgba(130,105,48,0.16)" }}><Ionicons name={systemIconName(o.icon)} size={21} color={C.accent} /></View><Text style={s.deskGridLabel}>{o.label}</Text>
+                <View style={{ width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "rgba(255,255,255,0.055)" : "rgba(255,255,255,0.62)", borderWidth: 1, borderColor: isDark ? "rgba(229,193,88,0.28)" : "rgba(130,105,48,0.22)", shadowColor: isDark ? "#D4AF37" : "#7A642E", shadowOpacity: isDark ? 0.12 : 0.08, shadowRadius: 9, shadowOffset: { width: 0, height: 3 }, elevation: 2 }}><Ionicons name={systemIconName(o.icon)} size={21} color={C.accent} /></View><Text style={s.deskGridLabel}>{o.label}</Text>
               </TouchableOpacity>
             ))}</View>
           </View>
