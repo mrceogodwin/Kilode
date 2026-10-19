@@ -3,5 +3,6 @@
   "github": {
     "enabled": false
   },
-  "buildCommand": "npm run build:web"
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "dist"
 }
