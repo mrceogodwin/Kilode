@@ -155,7 +155,7 @@ function KilodeApp() {
     }
   };
 
-  if (authLoading || (session && boot)) {
+  if (session && (authLoading || boot)) {
     return (
       <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator color={C.accent} size="large" />
