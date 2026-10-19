@@ -286,13 +286,14 @@ function KilodeApp() {
         <View style={s.profileAv}><Text style={s.profileAvText}>{(session.name || "K").slice(0, 2).toUpperCase()}</Text></View>
         <Text style={s.h1}>{displayName || session.name}</Text>
         <Text style={s.sub}>@{displayHandle || session.handle} · {session.kind}</Text>
+        {displayBio ? <Text style={{ color: C.text2, fontSize: 14, lineHeight: 21, marginTop: 8, marginBottom: 4, textAlign: "center" }}>{displayBio}</Text> : null}
         <View style={s.statsRow}>
           <View style={s.stat}><Text style={s.statN}>{takes.length}</Text><Text style={s.statL}>Takes</Text></View>
           <View style={s.stat}><Text style={s.statN}>0</Text><Text style={s.statL}>Following</Text></View>
           <View style={s.stat}><Text style={s.statN}>0</Text><Text style={s.statL}>Followers</Text></View>
         </View>
         <View style={s.rowGap}>
-          <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => { setProfileName(session.name || ""); setProfileHandle(session.handle || ""); setEditOpen(true); }}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
+          <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => { setProfileName(session.name || ""); setProfileHandle(displayHandle || session.handle || ""); setProfileBio(displayBio); setEditOpen(true); }}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
           <TouchableOpacity style={s.ghostBtn} onPress={() => { signOut(); show("Signed out"); }}><Text style={s.ghostBtnText}>Sign out</Text></TouchableOpacity>
         </View>
       </View>
@@ -427,7 +428,7 @@ function KilodeApp() {
             <TextInput value={profileHandle} onChangeText={setProfileHandle} autoCapitalize="none" placeholder="username" placeholderTextColor={C.text3} style={{ backgroundColor: C.input, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, color: C.text, marginBottom: 12 }} />
             <Text style={[s.meta, { marginBottom: 6 }]}>Bio</Text>
             <TextInput value={profileBio} onChangeText={setProfileBio} placeholder="A little about you" placeholderTextColor={C.text3} multiline style={{ minHeight: 76, backgroundColor: C.input, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, color: C.text, marginBottom: 14, textAlignVertical: "top" }} />
-            <TouchableOpacity style={s.primaryBtn} onPress={() => { setDisplayName(profileName.trim() || session.name || ""); setDisplayHandle(profileHandle.trim().replace(/^@/, "") || session.handle || ""); setEditOpen(false); show("Profile updated on this device. Account sync is not connected yet."); }}><Text style={s.primaryBtnText}>Save changes</Text></TouchableOpacity>
+            <TouchableOpacity style={s.primaryBtn} onPress={() => { setDisplayName(profileName.trim() || session.name || ""); setDisplayHandle(profileHandle.trim().replace(/^@/, "") || session.handle || ""); setDisplayBio(profileBio.trim()); setEditOpen(false); show("Profile updated on this device. Account sync is not connected yet."); }}><Text style={s.primaryBtnText}>Save changes</Text></TouchableOpacity>
           </View>
         </View>
       </Modal>
