@@ -58,8 +58,8 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
     headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-    headerTitle: { fontSize: 19, fontWeight: "750", color: C.text, letterSpacing: -0.45 },
-    brand: { fontSize: 23, fontWeight: "800", color: C.text, letterSpacing: -0.8 },
+    headerTitle: { fontSize: 18, fontWeight: "700", color: C.text, letterSpacing: -0.4 },
+    brand: { fontSize: 22, fontWeight: "800", color: C.text, letterSpacing: -0.6 },
     brandAccent: { color: C.accent },
 
     livePill: {
@@ -160,14 +160,14 @@ export function makeStyles(C: Palette, isDark: boolean) {
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 16,
-      marginTop: 18,
+      marginTop: 20,
       marginBottom: 10,
     },
-    sectionTitle: { fontSize: 18, fontWeight: "750", color: C.text, letterSpacing: -0.35 },
+    sectionTitle: { fontSize: 16, fontWeight: "700", color: C.text, letterSpacing: -0.25 },
     link: { fontSize: 13, fontWeight: "600", color: C.accent },
-    h1: { fontSize: 26, fontWeight: "800", color: C.text, letterSpacing: -0.7 },
-    sub: { fontSize: 13, color: C.text2, marginTop: 2 },
-    meta: { fontSize: 12, color: C.text3 },
+    h1: { fontSize: 24, fontWeight: "800", color: C.text, letterSpacing: -0.5 },
+    sub: { fontSize: 13, color: C.text2, marginTop: 3, lineHeight: 18 },
+    meta: { fontSize: 12, color: C.text3, fontWeight: "500" },
 
     grid4: { flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 12, gap: 8 },
     gridCell: {
@@ -176,7 +176,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
       minWidth: 72,
       aspectRatio: 1,
       backgroundColor: C.card,
-      borderRadius: 16,
+      borderRadius: 14,
       borderWidth: 1,
       borderColor: C.border,
       alignItems: "center",
@@ -211,7 +211,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     newsThumb: { width: 64, height: 64, borderRadius: 10 },
     newsKicker: { fontSize: 11, fontWeight: "600", color: C.accent, marginBottom: 2 },
-    newsTitle: { fontSize: 14, fontWeight: "600", color: C.text },
+    newsTitle: { fontSize: 14, fontWeight: "600", color: C.text, lineHeight: 19 },
 
     roomRow: {
       flexDirection: "row",
@@ -308,7 +308,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     postName: { fontSize: 15, fontWeight: "700", color: C.text },
     verified: { color: C.accent, marginLeft: 4, fontWeight: "700" },
-    postBody: { fontSize: 15, lineHeight: 21, color: C.text, marginBottom: 10 },
+    postBody: { fontSize: 15, lineHeight: 22, color: C.text, marginBottom: 10 },
     postMedia: { width: "100%", height: 180, borderRadius: 12, marginBottom: 10, backgroundColor: C.elevated },
 
     factCapRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
