@@ -215,14 +215,13 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   };
 
   const goBackMusicDestination = () => {
-    setDestinationHistory((history) => {
-      if (history.length) {
-        setDestination(history[history.length - 1]);
-        return history.slice(0, -1);
-      }
-      setDestination(null);
-      return [];
-    });
+    if (destinationHistory.length) {
+      setDestination(destinationHistory[destinationHistory.length - 1]);
+      setDestinationHistory(destinationHistory.slice(0, -1));
+      return;
+    }
+    setDestination(null);
+    setDestinationHistory([]);
   };
 
   const catalogueTracks = tracks.filter((track: any) => {
