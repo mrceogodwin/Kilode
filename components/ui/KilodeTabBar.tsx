@@ -28,11 +28,11 @@ export function KilodeTabBar({
   onTab,
   onCreate,
   isDark = true,
-  accent = "#E5C158",
+  accent = "#91C7A0",
 }: Props) {
-  const bg = isDark ? "rgba(12,12,14,0.98)" : "rgba(250,249,246,0.98)";
+  const bg = isDark ? "#14171A" : "#FFFFFF";
   const muted = isDark ? "#7A7A80" : "#777";
-  const border = isDark ? "rgba(229,193,88,0.14)" : "rgba(130,105,48,0.14)";
+  const border = isDark ? "#2B3035" : "#E1E5DF";
 
   const item = (t: (typeof LEFT)[0]) => {
     const on = active === t.id;
@@ -62,23 +62,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
+    minHeight: 66,
     paddingTop: 8,
-    paddingBottom: Platform.OS === "ios" ? 20 : 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingBottom: Platform.OS === "ios" ? 22 : 10,
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
-  item: { alignItems: "center", minWidth: 58, gap: 2 },
-  label: { fontSize: 10, fontWeight: "600" },
-  plusWrap: { marginTop: -20 },
+  item: { alignItems: "center", justifyContent: "center", flex: 1, minWidth: 0, minHeight: 48, gap: 3 },
+  label: { fontSize: 10, fontWeight: "700", letterSpacing: 0.1 },
+  plusWrap: { alignItems: "center", justifyContent: "center", width: 58, marginTop: -17 },
   plus: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 50,
+    height: 50,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#E5C158",
+    borderWidth: 2,
+    borderColor: "#D7F0DD",
+    shadowColor: "#5DAA74",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
+    shadowOpacity: 0.24,
+    shadowRadius: 9,
     elevation: 6,
   },
 });
