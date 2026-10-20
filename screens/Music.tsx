@@ -13,6 +13,7 @@ type Props = {
   onOpenTrack?: (track: any) => void;
   onOpenArtist?: (artistName: string) => void;
   accountKind?: string;
+  tracks?: any[];
 };
 
 const TABS = ["Home", "Discover", "Charts", "Artists"] as const;
@@ -38,10 +39,10 @@ const GENRES = [
   { id: "amapiano", label: "Amapiano", color: "#10B981" },
 ];
 
-export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind }: Props) {
+export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, tracks: tracksProp }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Home");
   const [following, setFollowing] = useState(false);
-  const tracks = TRACKS || [];
+  const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
 
   const openTrack = (t: any) => {
