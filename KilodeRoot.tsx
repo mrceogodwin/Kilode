@@ -82,6 +82,7 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackProgress, setPlaybackProgress] = useState(0);
   const soundRef = useRef<Audio.Sound | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
@@ -111,11 +112,18 @@ function KilodeApp() {
         return;
       }
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
-      const created = await Audio.Sound.createAsync({ uri: track.previewUrl }, { shouldPlay: true, volume: 1 }, status => {
-        if (status.isLoaded) setIsPlaying(status.isPlaying);
+      const created = await Audio.Sound.createAsync({ uri: track.previewUrl }, { shouldPlay: true, volume: 1, progressUpdateIntervalMillis: 250 }, status => {
+        if (status.isLoaded) {
+          setIsPlaying(status.isPlaying);
+          setPlaybackProgress(status.durationMillis ? status.positionMillis / status.durationMillis : 0);
+          if (status.didJustFinish) {
+            setIsPlaying(false);
+            setPlaybackProgress(0);
+          }
+        }
       });
       soundRef.current = created.sound;
-      setIsPlaying(true);
+      setIsPlaying(created.status.isLoaded ? created.status.isPlaying : true);
     } catch {
       setIsPlaying(false);
       show("Audio preview could not load. Check your connection and try again.");
@@ -136,6 +144,15 @@ function KilodeApp() {
       show("Could not change playback state.");
     }
   }, [nowPlaying, playTrack]);
+
+  useEffect(() => () => {
+    if (soundRef.current) {
+      void soundRef.current.stopAsync().catch(() => undefined);
+      void soundRef.current.unloadAsync().catch(() => undefined);
+      soundRef.current = null;
+    }
+  }, []);
+
   const go = (t: string) => {
     setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
     setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null); setSelectedTrack(null); setSelectedArtist(null);
@@ -403,10 +420,13 @@ function KilodeApp() {
           <View style={s.flex}>
             <Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text>
             <Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}{nowPlaying.previewKind === "sample" ? " · sample audio" : ""}</Text>
+            <View style={{ height: 2, backgroundColor: C.border, borderRadius: 2, marginTop: 5, overflow: "hidden" }}>
+              <View style={{ height: 2, width: String(Math.round(playbackProgress * 100)) + "%", backgroundColor: C.accent }} />
+            </View>
             {isPlaying ? <View style={{ flexDirection: "row", gap: 3, marginTop: 4, alignItems: "flex-end" }}><View style={{ width: 3, height: 6, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 11, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 8, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 13, borderRadius: 2, backgroundColor: C.accent }} /></View> : null}
           </View>
           <TouchableOpacity onPress={togglePlayback} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}><Ionicons name={isPlaying ? "pause" : "play"} size={21} color={C.accent} /></TouchableOpacity>
-          <TouchableOpacity onPress={async () => { if (soundRef.current) { await soundRef.current.stopAsync().catch(() => undefined); await soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); }} accessibilityRole="button" accessibilityLabel="Close player"><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
+          <TouchableOpacity onPress={async () => { if (soundRef.current) { await soundRef.current.stopAsync().catch(() => undefined); await soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} accessibilityRole="button" accessibilityLabel="Close player"><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
         </View>
       ) : null}
       <KilodeTabBar
