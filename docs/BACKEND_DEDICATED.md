@@ -30,9 +30,9 @@ EAS / TestFlight = native build readiness (separate).
 2. Apply migration `001_kilode_core.sql`.
 3. Enable Email auth (and later Apple / Google if required).
 4. Configure Storage buckets for avatars/media with RLS.
-5. Add `@supabase/supabase-js` to the Expo app and a thin `lib/supabase.ts` client (anon key only).
-6. Wire Socials posts, profile, and feeds to Supabase tables.
-7. Edge Functions (or RPC) for privileged ops: moderation queue, admin actions, kind-gated creates.
+5. Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; the SDK and thin client are already in the repo.
+6. Verify Socials post creation and feed reads against a real Supabase user. The shared client now includes read queries for Media, Music, Events, Market and Jobs.
+7. Build the missing create forms and write handlers for Media, Music, Events, Market and Jobs, then enforce account-kind permissions server-side. Use Edge Functions/RPC for privileged moderation and admin operations.
 8. Super Admin: `profiles.role = super_admin` set **only** by project owner in SQL — never via public signup.
 9. Server-side enforcement of account-type capabilities (not only client `can()`).
 
