@@ -50,7 +50,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [savedTrackIds, setSavedTrackIds] = useState<Record<string, boolean>>({});
   const [recentTrackIds, setRecentTrackIds] = useState<string[]>([]);
-  const [libraryReady, setLibraryReady] = useState(false);
+  const [loadedLibraryStorageKey, setLoadedLibraryStorageKey] = useState<string | null>(null);
   const libraryStorageKey = `kilode.music.library.v1.${userId || "guest"}`;
 
 
@@ -77,7 +77,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
   useEffect(() => {
     let active = true;
-    setLibraryReady(false);
+    setLoadedLibraryStorageKey(null);
     AsyncStorage.getItem(libraryStorageKey).then((raw) => {
       if (!active) return;
       if (raw) {
@@ -93,17 +93,17 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         setSavedTrackIds({});
         setRecentTrackIds([]);
       }
-      setLibraryReady(true);
-    }).catch(() => setLibraryReady(true));
+      setLoadedLibraryStorageKey(libraryStorageKey);
+    }).catch(() => setLoadedLibraryStorageKey(libraryStorageKey));
     return () => { active = false; };
   }, [libraryStorageKey]);
 
   useEffect(() => {
-    if (!libraryReady) return;
+    if (loadedLibraryStorageKey !== libraryStorageKey) return;
     AsyncStorage.setItem(libraryStorageKey, JSON.stringify({ savedTrackIds, recentTrackIds })).catch(() => {
       show("Couldn't save your Music library on this device.");
     });
-  }, [libraryReady, libraryStorageKey, savedTrackIds, recentTrackIds]);
+  }, [loadedLibraryStorageKey, libraryStorageKey, savedTrackIds, recentTrackIds]);
 
   useEffect(() => {
     let active = true;
