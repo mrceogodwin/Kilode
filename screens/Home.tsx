@@ -139,31 +139,42 @@ export function HomeScreen({
 
   const heroMedia = news[0];
   const heroTrack = tracks[0];
+  const heroEvent = events[0];
+  const heroSocial = takes[0];
   const carousel = [
-    heroMedia
-      ? {
-          key: "m",
-          kind: "Media" as const,
-          title: heroMedia.title,
-          sub: heroMedia.kicker || "Story",
-          imageUrl: heroMedia.imageUrl,
-          meta: heroMedia.time || "Now",
-          onPress: () => onOpenMedia(String(heroMedia.id)),
-        }
-      : null,
-    heroTrack
-      ? {
-          key: "t",
-          kind: "Music" as const,
-          title: heroTrack.title,
-          sub: heroTrack.artist || "Featured",
-          imageUrl: undefined as string | undefined,
-          color: heroTrack.color || "#5A4728",
-          meta: "Play",
-          onPress: () => onPlayTrack(heroTrack),
-        }
-      : null,
-  ].filter(Boolean) as any[];
+    {
+      key: "m", kind: "Media" as const,
+      title: heroMedia?.title || "Stories worth your time",
+      sub: heroMedia?.kicker || "Latest from Media",
+      imageUrl: heroMedia?.imageUrl as string | undefined,
+      onPress: () => heroMedia ? onOpenMedia(String(heroMedia.id)) : onOpenMedia(),
+      icon: "newspaper-outline" as const, color: "#E56B6F",
+    },
+    {
+      key: "t", kind: "Music" as const,
+      title: heroTrack?.title || "Discover new sounds",
+      sub: heroTrack?.artist || "Play from Music",
+      imageUrl: undefined as string | undefined,
+      onPress: () => heroTrack ? onPlayTrack(heroTrack) : onOpenMusic(),
+      icon: "musical-notes-outline" as const, color: "#F08A4B",
+    },
+    {
+      key: "e", kind: "Events" as const,
+      title: heroEvent?.title || "What's happening",
+      sub: heroEvent?.meta || heroEvent?.venue || "Explore events",
+      imageUrl: heroEvent?.imageUrl as string | undefined,
+      onPress: onOpenEvents,
+      icon: "calendar-outline" as const, color: "#F2C94C",
+    },
+    {
+      key: "s", kind: "Socials" as const,
+      title: heroSocial?.text || heroSocial?.body || "Join the conversation",
+      sub: heroSocial?.name || heroSocial?.handle || "From Socials",
+      imageUrl: undefined as string | undefined,
+      onPress: () => heroSocial ? onOpenPost(heroSocial) : onOpenSocials(),
+      icon: "people-outline" as const, color: "#E56B6F",
+    },
+  ];
 
   const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     setSlide(Math.round(e.nativeEvent.contentOffset.x / (CARD_W + 10)));
@@ -265,83 +276,73 @@ export function HomeScreen({
           </View>
         );
       })() : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, gap: 6 }}>
-        {RAIL.map((r) => {
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+        {RAIL.map((r, index) => {
           const on = r.id === "home";
+          const colors = ["#E6A94A", "#E56B6F", "#F08A4B", "#F2C94C"];
+          const tint = on ? C.accent : colors[index % colors.length];
           return (
             <TouchableOpacity
               key={r.id}
               onPress={() => goRail(r.id)}
+              activeOpacity={0.82}
               style={{
-                flexDirection: "row",
+                width: "23.5%",
+                minHeight: 62,
+                flexGrow: 1,
+                flexBasis: "22%",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 5,
-                paddingHorizontal: 12,
-                paddingVertical: 7,
-                borderRadius: 999,
-                backgroundColor: on ? C.accentSoft : C.elevated,
+                paddingHorizontal: 3,
+                paddingVertical: 8,
+                borderRadius: 12,
+                backgroundColor: C.card,
                 borderWidth: 1,
                 borderColor: on ? C.accent : C.border,
               }}
             >
-              <Ionicons name={r.icon} size={13} color={on ? C.accent : C.text2} />
-              <Text style={{ color: on ? C.accent : C.text2, fontWeight: "700", fontSize: 12 }}>{r.label}</Text>
+              <View style={{ width: 27, height: 27, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: tint + "20" }}>
+                <Ionicons name={r.icon} size={15} color={tint} />
+              </View>
+              <Text style={{ color: on ? C.accent : C.text2, fontWeight: "600", fontSize: 9, textAlign: "center" }} numberOfLines={1}>{r.label}</Text>
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
 
-      <ScrollView
-        ref={carouselRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        decelerationRate="fast"
-        snapToInterval={CARD_W + 10}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 12 }}
-        onScroll={onCarouselScroll}
-        scrollEventThrottle={16}
-      >
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {carousel.map((card) => (
           <TouchableOpacity
             key={card.key}
-            activeOpacity={0.9}
+            activeOpacity={0.88}
             onPress={card.onPress}
             style={{
-              width: CARD_W,
-              height: 148,
-              borderRadius: 16,
+              width: "48%",
+              minHeight: 104,
+              flexGrow: 1,
+              flexBasis: "46%",
+              borderRadius: 14,
               overflow: "hidden",
-              backgroundColor: "#17191F",
-              shadowColor: "#000",
-              shadowOpacity: 0.22,
-              shadowRadius: 12,
-              shadowOffset: { width: 0, height: 5 },
-              elevation: 3,
+              backgroundColor: C.card,
               borderWidth: 1,
               borderColor: C.border,
+              padding: 11,
+              justifyContent: "space-between",
             }}
           >
-            {card.imageUrl ? (
-              <Image source={{ uri: card.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-            ) : (
-              <LinearGradient colors={["#353946", "#242833", "#111318"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" }}>
-                  <Ionicons name="musical-notes" size={27} color="rgba(255,255,255,0.92)" />
-                </View>
-              </LinearGradient>
-            )}
-            <LinearGradient colors={["transparent", "rgba(5,6,8,0.88)"]} locations={[0.05, 1]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 34, paddingBottom: 12 }}>
-              <Text style={{ color: card.kind === "Media" ? "#E56B6F" : card.kind === "Music" ? "#F08A4B" : "#F2C94C", fontSize: 10, fontWeight: "700", letterSpacing: 0.5 }}>{card.kind}</Text>
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", letterSpacing: -0.2, marginTop: 3 }} numberOfLines={2}>
-                {card.title}
-              </Text>
-            </LinearGradient>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View style={{ width: 28, height: 28, borderRadius: 9, backgroundColor: card.color + "20", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name={card.icon} size={15} color={card.color} />
+              </View>
+              <Ionicons name="arrow-up-forward-outline" size={13} color={C.text3} />
+            </View>
+            <View style={{ marginTop: 9 }}>
+              <Text style={{ color: card.color, fontSize: 9, fontWeight: "700", letterSpacing: 0.45 }}>{card.kind.toUpperCase()}</Text>
+              <Text style={{ color: C.text, fontSize: 12, lineHeight: 15, fontWeight: "600", marginTop: 3 }} numberOfLines={2}>{card.title}</Text>
+              <Text style={{ color: C.text3, fontSize: 10, marginTop: 3 }} numberOfLines={1}>{card.sub}</Text>
+            </View>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-      <View style={{ flexDirection: "row", justifyContent: "center", gap: 4, marginTop: 8 }}>
-        {carousel.map((_, i) => (
-          <View key={i} style={{ width: i === slide ? 12 : 4, height: 4, borderRadius: 2, backgroundColor: i === slide ? C.accent : C.border }} />
         ))}
       </View>
 
