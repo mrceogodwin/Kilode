@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Share,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform, PanResponder, Dimensions,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform, PanResponder, Dimensions, Animated, Easing,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { Audio } from "expo-av";
@@ -68,6 +68,45 @@ function DetailMiniPlayer({ s, C, track, isPlaying, progress, onToggle, onClose 
       <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close player">
         <Ionicons name="close" size={18} color={C.text2} />
       </TouchableOpacity>
+    </View>
+  );
+}
+
+function PlaybackEqualizer({ isPlaying, color }: { isPlaying: boolean; color: string }) {
+  const bars = useRef([0.35, 0.65, 0.45, 0.8, 0.3].map(() => new Animated.Value(0.25))).current;
+  const loops = useRef<Animated.CompositeAnimation[]>([]);
+
+  useEffect(() => {
+    loops.current.forEach((animation) => animation.stop());
+    if (!isPlaying) {
+      bars.forEach((bar) => bar.setValue(0.22));
+      return;
+    }
+    loops.current = bars.map((bar, index) => Animated.loop(
+      Animated.sequence([
+        Animated.timing(bar, { toValue: 0.35 + ((index * 17) % 55) / 100, duration: 170 + index * 55, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(bar, { toValue: 0.18 + ((index * 13) % 28) / 100, duration: 190 + index * 35, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ));
+    loops.current.forEach((animation, index) => {
+      const timer = setTimeout(() => animation.start(), index * 55);
+      // Keep stagger timers local to this effect so pause/unmount cannot leave them running.
+      staggerTimers.push(timer);
+    });
+    return () => {
+      loops.current.forEach((animation) => animation.stop());
+      staggerTimers.forEach(clearTimeout);
+    };
+    // The bars are stable refs; only playback state controls the animation lifecycle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying]);
+
+  const staggerTimers: ReturnType<typeof setTimeout>[] = [];
+  return (
+    <View accessibilityLabel={isPlaying ? "Animated audio equalizer" : "Audio paused"} style={{ height: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3, width: 27 }}>
+      {bars.map((bar, index) => (
+        <Animated.View key={index} style={{ width: 3, height: 15, borderRadius: 3, backgroundColor: color, transform: [{ scaleY: bar }] }} />
+      ))}
     </View>
   );
 }
@@ -770,7 +809,10 @@ function KilodeApp() {
             <View style={{ height: 2, backgroundColor: C.border, borderRadius: 2, marginTop: 5, overflow: "hidden" }}>
               <View style={{ height: 2, width: (String(Math.round(playbackProgress * 100)) + "%") as `${number}%`, backgroundColor: C.accent }} />
             </View>
-            {isPlaying ? <View style={{ flexDirection: "row", gap: 3, marginTop: 4, alignItems: "flex-end" }}><View style={{ width: 3, height: 6, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 11, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 8, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 13, borderRadius: 2, backgroundColor: C.accent }} /></View> : null}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
+              <PlaybackEqualizer isPlaying={isPlaying} color={C.accent} />
+              <Text style={{ color: C.text3, fontSize: 10, letterSpacing: 0.5 }}>{isPlaying ? "NOW PLAYING" : "PAUSED"}</Text>
+            </View>
           </View>
           <TouchableOpacity onPress={() => { void stepPlaybackQueue(-1); }} accessibilityRole="button" accessibilityLabel="Previous track"><Ionicons name="play-skip-back" size={17} color={playbackQueueIndexRef.current > 0 ? C.text : C.text3} /></TouchableOpacity>
           <TouchableOpacity onPress={togglePlayback} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}><Ionicons name={isPlaying ? "pause" : "play"} size={21} color={C.accent} /></TouchableOpacity>
