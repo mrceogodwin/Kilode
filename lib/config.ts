@@ -1,10 +1,8 @@
 /**
  * Kilode Native client config
  *
- * Website / API product: mrceogodwin/Kilode-v2 (Vercel)
- * This app:             mrceogodwin/Kilode (Expo + EAS only)
- *
- * Do not deploy this repository as the website.
+ * Native app: mrceogodwin/Kilode (Expo + EAS).
+ * A dedicated Kilode API must be explicitly configured before live requests are enabled.
  */
 
 const envUrl =
@@ -12,8 +10,8 @@ const envUrl =
 const envName =
   typeof process !== "undefined" ? process.env?.EXPO_PUBLIC_APP_ENV : undefined;
 
-/** Production API host for Kilode-v2 mobile bridge */
-export const API_BASE = (envUrl && envUrl.trim()) || "https://kilode-nine.vercel.app";
+/** Dedicated Kilode API host; empty until explicitly configured. */
+export const API_BASE = (envUrl && envUrl.trim()) || "";
 
 /** development | preview | production */
 export const APP_ENV = (envName && envName.trim()) || "production";
