@@ -87,7 +87,7 @@ export function CreatorsScreen({ s, C, onBack, show }: Props) {
             <View style={{ padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
               <Image source={{ uri: c.avatar }} style={{ width: 52, height: 52, borderRadius: 26, marginTop: -28, borderWidth: 2, borderColor: C.card }} />
               <View style={{ flex: 1 }}>
-                <Text style={{ color: C.text, fontWeight: "800", fontSize: 15 }}>{c.name}</Text>
+                <Text style={{ color: C.text, fontWeight: "600", fontSize: 14, letterSpacing: -0.1 }}>{c.name}</Text>
                 <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>@{c.handle}</Text>
                 <Text style={{ color: C.text2, fontSize: 12, marginTop: 2 }}>{c.meta}</Text>
               </View>
@@ -114,7 +114,7 @@ export function CreatorsScreen({ s, C, onBack, show }: Props) {
         );
       })}
 
-      <Text style={{ color: C.text, fontSize: 16, fontWeight: "800", paddingHorizontal: 16, marginTop: 22, marginBottom: 12 }}>
+      <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.1, paddingHorizontal: 16, marginTop: 22, marginBottom: 12 }}>
         Creator clips
       </Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
