@@ -473,6 +473,7 @@ function KilodeApp() {
         onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
         onOpenJobs={() => go("jobs")}
         onOpenSystem={(id) => go(id)}
+        onOpenItem={(system, item) => setSelectedDeskItem({ ...item, system })}
         onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
         onCompose={() => setComposeOpen(true)} onPlayTrack={playTrack} show={show}
       />
