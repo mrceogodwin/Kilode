@@ -122,7 +122,6 @@ function KilodeApp() {
   const [tab, setTab] = useState("home");
   const navigationHistoryRef = useRef<string[]>(["home"]);
   const navigationForwardRef = useRef<string[]>([]);
-  const swipeStartXRef = useRef(0);
   const [homeSearchOpen, setHomeSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -206,7 +205,14 @@ function KilodeApp() {
     onMoveShouldSetPanResponder: (_evt, gesture) => {
       const width = Dimensions.get("window").width;
       const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.3;
-      return horizontal && ((swipeStartXRef.current <= 24 && gesture.dx > 18) || (swipeStartXRef.current >= width - 24 && gesture.dx < -18));
+      const startX = gesture.x0;
+      return horizontal && ((startX <= 24 && gesture.dx > 18) || (startX >= width - 24 && gesture.dx < -18));
+    },
+    onMoveShouldSetPanResponderCapture: (_evt, gesture) => {
+      const width = Dimensions.get("window").width;
+      const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.3;
+      const startX = gesture.x0;
+      return horizontal && ((startX <= 24 && gesture.dx > 18) || (startX >= width - 24 && gesture.dx < -18));
     },
     onPanResponderRelease: (_evt, gesture) => {
       if (gesture.dx > 70) navigateBackRef.current();
@@ -724,7 +730,6 @@ function KilodeApp() {
     <SafeAreaView
       style={[s.root, { backgroundColor: C.bg }]}
       {...edgeSwipeResponder.panHandlers}
-      onTouchStart={(event) => { swipeStartXRef.current = event.nativeEvent.pageX; }}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
