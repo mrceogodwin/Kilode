@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userId: u.id,
           handle: profile?.handle || h,
           name: profile?.display_name || h,
-          kind: asAccountKind(kind || profile?.kind || "member"),
+          kind: asAccountKind(profile?.kind || "member"),
           localOnly: false,
         };
         setSession(s);
@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               token,
               handle: data.user?.name || h,
               name: data.user?.name || h,
-              kind: asAccountKind(kind || data.user?.kind || "member"),
+              kind: asAccountKind(data.user?.kind || "member"),
               localOnly: false,
             };
             setSession(s);
