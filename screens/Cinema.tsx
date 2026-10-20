@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { can } from "../lib/permissions";
 
 const { width: W } = Dimensions.get("window");
 const POSTER = (W - 32 - 20) / 3;
@@ -10,6 +11,7 @@ type Props = {
   C: any;
   onBack: () => void;
   show: (m: string) => void;
+  accountKind?: string;
 };
 
 const TABS = ["Movies", "TV Shows", "Trailers"] as const;
@@ -27,8 +29,9 @@ const TRENDING = [
   { id: "c4", title: "Living in Bondage", rating: "4.1", imageUrl: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400&q=80" },
 ];
 
-export function CinemaScreen({ s, C, onBack, show }: Props) {
+export function CinemaScreen({ s, C, onBack, show, accountKind }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Movies");
+  const canSubmit = can(accountKind, "cinema_submit");
 
   return (
     <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -37,98 +40,80 @@ export function CinemaScreen({ s, C, onBack, show }: Props) {
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
         <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Cinema</Text>
-        <TouchableOpacity onPress={() => show("Cinema search when catalogue is live.")}>
-          <Ionicons name="search" size={20} color={C.text2} />
+        <TouchableOpacity
+          onPress={() =>
+            canSubmit
+              ? show("Submit film URL when Cinema API is live.")
+              : show("Cinema Poster accounts can submit films.")
+          }
+        >
+          <Ionicons name="add-circle-outline" size={22} color={canSubmit ? C.accent : C.text3} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 14, gap: 8 }}>
+      {canSubmit ? (
+        <TouchableOpacity
+          onPress={() => show("Submit movie when Cinema API is live.")}
+          style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: C.accent, borderRadius: 999, paddingVertical: 12, alignItems: "center" }}
+        >
+          <Text style={{ color: "#111", fontWeight: "800", fontSize: 14 }}>Submit a film</Text>
+        </TouchableOpacity>
+      ) : null}
+
+      <View style={{ flexDirection: "row", marginHorizontal: 16, marginTop: 12, gap: 8 }}>
         {TABS.map((t) => (
           <TouchableOpacity
             key={t}
             onPress={() => setTab(t)}
             style={{
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: tab === t ? C.accent : "transparent",
+              flex: 1,
+              paddingVertical: 10,
+              borderRadius: 12,
+              alignItems: "center",
+              backgroundColor: tab === t ? C.accent : C.elevated,
               borderWidth: 1,
               borderColor: tab === t ? C.accent : C.border,
             }}
           >
-            <Text style={{ color: tab === t ? "#111" : C.text2, fontWeight: "700", fontSize: 13 }}>{t}</Text>
+            <Text style={{ color: tab === t ? "#111" : C.text2, fontWeight: "800", fontSize: 12 }}>{t}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
-      {/* Featured */}
-      <View
-        style={{
-          marginHorizontal: 16,
-          marginTop: 16,
-          borderRadius: 18,
-          overflow: "hidden",
-          backgroundColor: C.elevated,
-          height: 220,
-        }}
-      >
-        <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-        <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: 0, backgroundColor: "rgba(0,0,0,0.4)", padding: 16, justifyContent: "flex-end" }}>
-          <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800" }}>{FEATURED.title}</Text>
-          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, marginTop: 4 }}>{FEATURED.meta}</Text>
+      <View style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 18, overflow: "hidden", backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+        <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
+        <View style={{ padding: 14 }}>
+          <Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>{FEATURED.title}</Text>
+          <Text style={{ color: C.text3, marginTop: 4, fontSize: 13 }}>{FEATURED.meta}</Text>
           <TouchableOpacity
             onPress={() => show("Trailer plays when Cinema CDN is connected.")}
-            style={{
-              marginTop: 14,
-              alignSelf: "flex-start",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              backgroundColor: C.accent,
-              paddingHorizontal: 18,
-              paddingVertical: 12,
-              borderRadius: 999,
-            }}
+            style={{ marginTop: 12, backgroundColor: C.accent, borderRadius: 999, paddingVertical: 12, alignItems: "center" }}
           >
-            <Ionicons name="play" size={16} color="#111" />
             <Text style={{ color: "#111", fontWeight: "800", fontSize: 14 }}>Watch Trailer</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={{ paddingHorizontal: 16, marginTop: 22, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>
-          {tab === "Trailers" ? "Latest trailers" : tab === "TV Shows" ? "Series" : "Trending Movies"}
-        </Text>
+      <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
+        <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>Trending</Text>
         <TouchableOpacity onPress={() => show("Full catalogue when Cinema API is live.")}>
-          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 13 }}>View all</Text>
+          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, gap: 10 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, marginTop: 10, gap: 10 }}>
         {TRENDING.map((m) => (
           <TouchableOpacity
             key={m.id}
-            activeOpacity={0.88}
             onPress={() => show(`${m.title} · full player when Cinema is connected.`)}
             style={{ width: POSTER }}
           >
-            <Image
-              source={{ uri: m.imageUrl }}
-              style={{ width: POSTER, height: POSTER * 1.4, borderRadius: 12, backgroundColor: C.elevated }}
-              resizeMode="cover"
-            />
-            <Text style={{ color: C.text, fontWeight: "700", fontSize: 12, marginTop: 8 }} numberOfLines={2}>
-              {m.title}
-            </Text>
-            <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 3 }}>★ {m.rating}</Text>
+            <Image source={{ uri: m.imageUrl }} style={{ width: POSTER, height: POSTER * 1.4, borderRadius: 12, backgroundColor: C.elevated }} resizeMode="cover" />
+            <Text style={{ color: C.text, fontWeight: "700", fontSize: 12, marginTop: 6 }} numberOfLines={2}>{m.title}</Text>
+            <Text style={{ color: C.text3, fontSize: 11 }}>★ {m.rating}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
-
-      <Text style={{ color: C.text3, fontSize: 12, textAlign: "center", marginTop: 28, paddingHorizontal: 24 }}>
-        Streaming is not connected yet. Trailers and titles are preview content only.
-      </Text>
+      </View>
     </ScrollView>
   );
 }

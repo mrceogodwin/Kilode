@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { can } from "../lib/permissions";
 
 const { width: W } = Dimensions.get("window");
 const GAP = 12;
@@ -29,82 +30,28 @@ type Props = {
   C: any;
   onBack: () => void;
   show: (m: string) => void;
+  accountKind?: string;
 };
 
 const CATS = ["All", "Electronics", "Fashion", "Home", "Beauty"];
 
 const PRODUCTS: Product[] = [
-  {
-    id: "p1",
-    title: "Nike Air Force 1",
-    price: "₦85,000",
-    rating: 4.8,
-    category: "Fashion",
-    imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80",
-  },
-  {
-    id: "p2",
-    title: "iPhone 15 Pro",
-    price: "₦1,250,000",
-    rating: 4.9,
-    category: "Electronics",
-    imageUrl: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&q=80",
-  },
-  {
-    id: "p3",
-    title: "Galaxy Buds",
-    price: "₦120,000",
-    rating: 4.7,
-    category: "Electronics",
-    imageUrl: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&q=80",
-  },
-  {
-    id: "p4",
-    title: "Men's Hoodie",
-    price: "₦45,000",
-    rating: 4.6,
-    category: "Fashion",
-    imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&q=80",
-  },
-  {
-    id: "p5",
-    title: "Vintage Ankara set",
-    price: "₦18,000",
-    rating: 4.5,
-    category: "Fashion",
-    imageUrl: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=500&q=80",
-  },
-  {
-    id: "p6",
-    title: "Ceramic planter",
-    price: "₦12,500",
-    rating: 4.4,
-    category: "Home",
-    imageUrl: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&q=80",
-  },
-  {
-    id: "p7",
-    title: "Skincare kit",
-    price: "₦22,000",
-    rating: 4.6,
-    category: "Beauty",
-    imageUrl: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=500&q=80",
-  },
-  {
-    id: "p8",
-    title: "Wireless charger",
-    price: "₦18,500",
-    rating: 4.3,
-    category: "Electronics",
-    imageUrl: "https://images.unsplash.com/photo-1591290619762-c588f7cba272?w=500&q=80",
-  },
+  { id: "p1", title: "Nike Air Force 1", price: "₦85,000", rating: 4.8, category: "Fashion", imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80" },
+  { id: "p2", title: "iPhone 15 Pro", price: "₦1,250,000", rating: 4.9, category: "Electronics", imageUrl: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&q=80" },
+  { id: "p3", title: "Galaxy Buds", price: "₦120,000", rating: 4.7, category: "Electronics", imageUrl: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&q=80" },
+  { id: "p4", title: "Men's Hoodie", price: "₦45,000", rating: 4.6, category: "Fashion", imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&q=80" },
+  { id: "p5", title: "Vintage Ankara set", price: "₦18,000", rating: 4.5, category: "Fashion", imageUrl: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=500&q=80" },
+  { id: "p6", title: "Ceramic planter", price: "₦12,500", rating: 4.4, category: "Home", imageUrl: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&q=80" },
+  { id: "p7", title: "Skincare kit", price: "₦22,000", rating: 4.6, category: "Beauty", imageUrl: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=500&q=80" },
+  { id: "p8", title: "Wireless charger", price: "₦18,500", rating: 4.3, category: "Electronics", imageUrl: "https://images.unsplash.com/photo-1591290619762-c588f7cba272?w=500&q=80" },
 ];
 
-export function MarketScreen({ s, C, onBack, show }: Props) {
+export function MarketScreen({ s, C, onBack, show, accountKind }: Props) {
   const [cat, setCat] = useState("All");
   const [q, setQ] = useState("");
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [active, setActive] = useState<Product | null>(null);
+  const canSell = can(accountKind, "market_sell");
 
   const list = useMemo(() => {
     let rows = PRODUCTS;
@@ -120,11 +67,7 @@ export function MarketScreen({ s, C, onBack, show }: Props) {
           <Text style={{ color: C.accent, fontWeight: "600" }}>‹ Market</Text>
         </TouchableOpacity>
         {active.imageUrl ? (
-          <Image
-            source={{ uri: active.imageUrl }}
-            style={{ width: "100%", height: 300, borderRadius: 18, backgroundColor: C.elevated }}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: active.imageUrl }} style={{ width: "100%", height: 300, borderRadius: 18, backgroundColor: C.elevated }} resizeMode="cover" />
         ) : null}
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.4 }}>{active.category.toUpperCase()}</Text>
@@ -149,14 +92,7 @@ export function MarketScreen({ s, C, onBack, show }: Props) {
           <Text style={{ color: "#111", fontWeight: "800", fontSize: 16 }}>Add to cart</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={{
-            marginTop: 10,
-            borderRadius: 999,
-            paddingVertical: 14,
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: C.border,
-          }}
+          style={{ marginTop: 10, borderRadius: 999, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: C.border }}
           onPress={() => show("Message seller when chat is connected.")}
         >
           <Text style={{ color: C.text, fontWeight: "700", fontSize: 15 }}>Message seller</Text>
@@ -177,28 +113,18 @@ export function MarketScreen({ s, C, onBack, show }: Props) {
         </TouchableOpacity>
       </View>
 
-      <View
-        style={{
-          marginHorizontal: 16,
-          marginTop: 12,
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: C.elevated,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: C.border,
-          paddingHorizontal: 12,
-          height: 42,
-        }}
-      >
+      {canSell ? (
+        <TouchableOpacity
+          onPress={() => show("List product when Market API is live.")}
+          style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: C.accent, borderRadius: 999, paddingVertical: 12, alignItems: "center" }}
+        >
+          <Text style={{ color: "#111", fontWeight: "800", fontSize: 14 }}>Sell on Kilode</Text>
+        </TouchableOpacity>
+      ) : null}
+
+      <View style={{ marginHorizontal: 16, marginTop: 12, flexDirection: "row", alignItems: "center", backgroundColor: C.elevated, borderRadius: 12, borderWidth: 1, borderColor: C.border, paddingHorizontal: 12, height: 42 }}>
         <Ionicons name="search" size={18} color={C.text3} />
-        <TextInput
-          value={q}
-          onChangeText={setQ}
-          placeholder="Search Market"
-          placeholderTextColor={C.text3}
-          style={{ flex: 1, marginLeft: 8, color: C.text, fontSize: 15 }}
-        />
+        <TextInput value={q} onChangeText={setQ} placeholder="Search Market" placeholderTextColor={C.text3} style={{ flex: 1, marginLeft: 8, color: C.text, fontSize: 15 }} />
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
@@ -206,14 +132,7 @@ export function MarketScreen({ s, C, onBack, show }: Props) {
           <TouchableOpacity
             key={c}
             onPress={() => setCat(c)}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: cat === c ? C.accent : "transparent",
-              borderWidth: 1,
-              borderColor: cat === c ? C.accent : C.border,
-            }}
+            style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: cat === c ? C.accent : "transparent", borderWidth: 1, borderColor: cat === c ? C.accent : C.border }}
           >
             <Text style={{ color: cat === c ? "#111" : C.text2, fontWeight: "700", fontSize: 13 }}>{c}</Text>
           </TouchableOpacity>
@@ -222,34 +141,17 @@ export function MarketScreen({ s, C, onBack, show }: Props) {
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: PAD, paddingTop: 14, gap: GAP }}>
         {list.map((p) => (
-          <TouchableOpacity
-            key={p.id}
-            activeOpacity={0.9}
-            onPress={() => setActive(p)}
-            style={{ width: COL }}
-          >
-            <View
-              style={{
-                borderRadius: 14,
-                overflow: "hidden",
-                backgroundColor: C.card,
-                borderWidth: 1,
-                borderColor: C.border,
-              }}
-            >
+          <TouchableOpacity key={p.id} activeOpacity={0.9} onPress={() => setActive(p)} style={{ width: COL }}>
+            <View style={{ borderRadius: 14, overflow: "hidden", backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
               {p.imageUrl ? (
                 <Image source={{ uri: p.imageUrl }} style={{ width: "100%", height: COL * 0.95, backgroundColor: C.elevated }} resizeMode="cover" />
               ) : (
                 <View style={{ width: "100%", height: COL * 0.95, backgroundColor: C.elevated }} />
               )}
               <View style={{ padding: 10 }}>
-                <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }} numberOfLines={2}>
-                  {p.title}
-                </Text>
+                <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }} numberOfLines={2}>{p.title}</Text>
                 <Text style={{ color: C.accent, fontWeight: "800", fontSize: 14, marginTop: 4 }}>{p.price}</Text>
-                {p.rating ? (
-                  <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>★ {p.rating}</Text>
-                ) : null}
+                {p.rating ? <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>★ {p.rating}</Text> : null}
               </View>
             </View>
           </TouchableOpacity>
