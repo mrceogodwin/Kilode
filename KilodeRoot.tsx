@@ -138,6 +138,10 @@ function KilodeApp() {
   useEffect(() => {
     let active = true;
     (async () => {
+      if (!session) {
+        if (active) { setDisplayName(""); setDisplayHandle(""); setProfileBio(""); }
+        return;
+      }
       try {
         if (session.userId && getBackendMode() === "supabase") {
           const profile = await fetchOwnProfile(session.userId);
