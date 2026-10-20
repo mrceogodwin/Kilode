@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 type Props = {
   s: any; C: any; sessionName: string; news: any[]; tracks: any[]; takes: any[];
-  liked: Record<string, boolean>; onLikePost: (id: string) => void; refreshing: boolean; onRefresh: () => void;
+  liked: Record<string, boolean>; onLikePost: (id: string) => void; onCommentPost: (post: any) => void; onSharePost: (post: any) => void; refreshing: boolean; onRefresh: () => void;
   onOpenMedia: (id?: string) => void; onOpenMusic: () => void; onOpenEvents: () => void;
   onOpenMarket: () => void; onOpenJobs: () => void; events?: any[]; market?: any[]; jobs?: any[];
   onOpenSystem: (id: string) => void; onOpenSocials: () => void; onOpenPost: (p: any) => void; onOpenItem: (system: string, item: any) => void;
@@ -39,7 +39,7 @@ function firstText(...values: any[]) {
 }
 
 export function HomeScreen({
-  s, C, sessionName, news, tracks, takes, liked, onLikePost, refreshing, onRefresh,
+  s, C, sessionName, news, tracks, takes, liked, onLikePost, onCommentPost, onSharePost, refreshing, onRefresh,
   onOpenMedia, onOpenMusic, onOpenEvents, onOpenMarket, onOpenJobs,
   events = [], market = [], jobs = [], onOpenSystem, onOpenSocials, onOpenPost, onOpenItem,
   onOpenProfile, onCompose, onPlayTrack, show, searchOpen, onCloseSearch,
@@ -135,14 +135,14 @@ export function HomeScreen({
             <Ionicons name={social && liked[String(item.raw.id)] ? "heart" : "heart-outline"} size={18} color={social && liked[String(item.raw.id)] ? "#FF4965" : C.text3} />
             <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.likes_count ?? item.raw.likes ?? ""}</Text>
           </TouchableOpacity>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <TouchableOpacity onPress={() => social ? onCommentPost(item.raw) : show(`${item.kind} comments are not available here yet`)} accessibilityRole="button" accessibilityLabel={social ? "Open comments" : `${item.kind} comments`} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <Ionicons name="chatbubble-outline" size={17} color={C.text3} />
             <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.comments_count ?? item.raw.comments ?? ""}</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => onSharePost(item.raw)} accessibilityRole="button" accessibilityLabel="Share post" style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <Ionicons name="share-social-outline" size={17} color={C.text3} />
             <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.shares_count ?? ""}</Text>
-          </View>
+          </TouchableOpacity>
           <View style={{ flex: 1 }} />
           <Ionicons name="bookmark-outline" size={18} color={C.text3} />
         </View>
