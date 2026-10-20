@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_BASE } from "./config";
+import { API_BASE, getBackendMode } from "./config";
 import { asAccountKind, type AccountKind } from "./accountKinds";
+import { createPost, fetchOwnProfile, getSupabase, listRecentPosts } from "./supabase";
 
 const KEY = "@kilode/session";
 const KIND_KEY = "@kilode/lastKind";
@@ -11,8 +12,10 @@ export type Session = {
   handle: string;
   name: string;
   kind: AccountKind;
-  /** true when session is device-local because API did not accept JSON auth */
+  /** true when session is device-local because no live backend accepted the session */
   localOnly?: boolean;
+  /** Supabase auth user id when live */
+  userId?: string;
 };
 
 type AuthCtx = {
@@ -54,6 +57,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
+        const sb = getSupabase();
+        if (sb) {
+          const { data } = await sb.auth.getSession();
+          const u = data.session?.user;
+          if (u && data.session?.access_token) {
+            const profile = await fetchOwnProfile(u.id);
+            const s: Session = {
+              token: data.session.access_token,
+              userId: u.id,
+              handle: profile?.handle || (u.user_metadata?.handle as string) || u.email?.split("@")[0] || "user",
+              name: profile?.display_name || (u.user_metadata?.display_name as string) || "Kilode",
+              kind: asAccountKind(profile?.kind || (u.user_metadata?.kind as string) || "member"),
+              localOnly: false,
+            };
+            setSession(s);
+            setGuest(false);
+            await AsyncStorage.setItem(KEY, JSON.stringify(s));
+            setLoading(false);
+            return;
+          }
+        }
         const raw = await AsyncStorage.getItem(KEY);
         if (raw) {
           const s = JSON.parse(raw) as Session;
@@ -95,93 +119,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     persist(s);
   }, []);
 
-  const setAccountKind = useCallback(
-    async (kind: AccountKind) => {
-      const k = asAccountKind(kind);
-      await AsyncStorage.setItem(KIND_KEY, k);
-      setSession((prev) => {
-        if (!prev) return prev;
-        const next = { ...prev, kind: k };
-        persist(next);
-        return next;
-      });
-    },
-    []
-  );
+  const setAccountKind = useCallback(async (kind: AccountKind) => {
+    const k = asAccountKind(kind);
+    await AsyncStorage.setItem(KIND_KEY, k);
+    setSession((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, kind: k };
+      persist(next);
+      return next;
+    });
+  }, []);
 
   const signIn = useCallback(async (handle: string, password: string, kind?: AccountKind) => {
     setLoading(true);
     const h = handle.replace(/^@/, "").trim();
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/auth/sign-in/email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          email: handle.includes("@") ? handle : `${h}@users.kilode.ng`,
-          password,
-        }),
-      });
-      if (!res.ok) {
-        let message = "";
-        try {
-          const payload = await res.json();
-          message = payload.message || payload.error || payload.code || "";
-        } catch {
-          /* host may return HTML */
-        }
+    const email = handle.includes("@") ? handle.trim() : `${h}@users.kilode.ng`;
+
+    // Dedicated Supabase backend
+    if (getBackendMode() === "supabase") {
+      const sb = getSupabase();
+      if (!sb) {
         setLoading(false);
-        return {
-          ok: false,
-          error:
-            message ||
-            (res.status === 401 || res.status === 403
-              ? "Those login details were not accepted."
-              : `Sign-in failed (HTTP ${res.status}). Please try again.`),
-        };
+        return { ok: false, error: "Supabase is not configured." };
       }
-      const data = await res.json();
-      const token = data.token || data.session?.token;
-      if (!token) {
-        setLoading(false);
-        return {
-          ok: false,
-          error: "The server did not return a native session token. Native authentication still needs backend support.",
-        };
-      }
-      let storedKind: string | undefined;
       try {
-        const profile = await fetchWithTimeout(`${API_BASE}/api/mobile/profile`, {
-          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
-        });
-        if (profile.ok) storedKind = (await profile.json()).kind;
-      } catch {
-        /* profile optional */
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error || !data.session?.user) {
+          setLoading(false);
+          return { ok: false, error: error?.message || "Those login details were not accepted." };
+        }
+        const u = data.session.user;
+        const profile = await fetchOwnProfile(u.id);
+        const s: Session = {
+          token: data.session.access_token,
+          userId: u.id,
+          handle: profile?.handle || h,
+          name: profile?.display_name || h,
+          kind: asAccountKind(kind || profile?.kind || "member"),
+          localOnly: false,
+        };
+        setSession(s);
+        setGuest(false);
+        await persist(s);
+        setLoading(false);
+        return { ok: true };
+      } catch (e) {
+        setLoading(false);
+        return { ok: false, error: e instanceof Error ? e.message : "Sign-in failed." };
       }
-      const s: Session = {
-        token,
-        handle: data.user?.name || h,
-        name: data.user?.name || h,
-        kind: asAccountKind(kind || storedKind || data.user?.kind || "member"),
-        localOnly: false,
-      };
-      setSession(s);
-      setGuest(false);
-      await persist(s);
-      setLoading(false);
-      return { ok: true };
-    } catch {
-      /* offline / HTML-only host — restore local session if one was stored for this handle */
     }
 
-    // Device-local sign-in when API is unreachable (clearly localOnly)
+    // Optional custom API only (not Kilode-v2/nine by default)
+    if (API_BASE) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE}/api/auth/sign-in/email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const token = data.token || data.session?.token;
+          if (token) {
+            const s: Session = {
+              token,
+              handle: data.user?.name || h,
+              name: data.user?.name || h,
+              kind: asAccountKind(kind || data.user?.kind || "member"),
+              localOnly: false,
+            };
+            setSession(s);
+            setGuest(false);
+            await persist(s);
+            setLoading(false);
+            return { ok: true };
+          }
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+
     try {
       const raw = await AsyncStorage.getItem(KEY);
       if (raw) {
         const existing = JSON.parse(raw) as Session;
-        if (
-          existing.handle === h &&
-          (existing.localOnly || existing.token?.startsWith("local:"))
-        ) {
+        if (existing.handle === h && (existing.localOnly || existing.token?.startsWith("local:"))) {
           existing.kind = asAccountKind(kind || existing.kind);
           existing.localOnly = true;
           setSession(existing);
@@ -202,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {
       ok: false,
       error:
-        "Sign-in service is unavailable. No live account was signed in. Create a local account or continue as guest.",
+        "Sign-in service is unavailable. Create a local account, continue as guest, or configure Supabase.",
     };
   }, []);
 
@@ -213,74 +236,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!kind) return { ok: false, error: "Choose an account type." };
 
     setLoading(true);
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/auth/sign-up/email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          email: `${h}@users.kilode.ng`,
+    const email = `${h}@users.kilode.ng`;
+
+    if (getBackendMode() === "supabase") {
+      const sb = getSupabase();
+      if (!sb) {
+        setLoading(false);
+        return { ok: false, error: "Supabase is not configured." };
+      }
+      try {
+        const { data, error } = await sb.auth.signUp({
+          email,
           password,
-          name: displayName || h,
-          kind,
-        }),
-      });
-      if (!res.ok) {
-        let message = "";
-        try {
-          const payload = await res.json();
-          message = payload.message || payload.error || payload.code || "";
-        } catch {
-          /* HTML host */
+          options: {
+            data: {
+              handle: h,
+              display_name: displayName || h,
+              kind,
+            },
+          },
+        });
+        if (error) {
+          setLoading(false);
+          return { ok: false, error: error.message };
         }
-        // Fall through to local account when host rejects JSON (e.g. 406)
-        if (res.status !== 406 && res.status !== 404 && res.status < 500) {
+        if (!data.session?.user) {
           setLoading(false);
           return {
             ok: false,
-            error:
-              message ||
-              (res.status === 409
-                ? "An account with that username already exists."
-                : `Account creation failed (HTTP ${res.status}). Please try again.`),
+            error: "Check your email to confirm the account, then sign in.",
           };
         }
-      } else {
-        const data = await res.json();
-        const token = data.token || data.session?.token;
-        if (token) {
-          try {
-            await fetchWithTimeout(`${API_BASE}/api/mobile/profile`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ kind, handle: h }),
-            });
-          } catch {
-            /* profile optional */
-          }
-          const s: Session = {
-            token,
-            handle: h,
-            name: displayName || h,
-            kind: asAccountKind(kind),
-            localOnly: false,
-          };
-          setSession(s);
-          setGuest(false);
-          await persist(s);
-          setLoading(false);
-          return { ok: true };
-        }
+        const u = data.session.user;
+        const profile = await fetchOwnProfile(u.id);
+        const s: Session = {
+          token: data.session.access_token,
+          userId: u.id,
+          handle: profile?.handle || h,
+          name: profile?.display_name || displayName || h,
+          kind: asAccountKind(profile?.kind || kind),
+          localOnly: false,
+        };
+        setSession(s);
+        setGuest(false);
+        await persist(s);
+        setLoading(false);
+        return { ok: true };
+      } catch (e) {
+        setLoading(false);
+        return { ok: false, error: e instanceof Error ? e.message : "Sign-up failed." };
       }
-    } catch {
-      /* fall through local */
     }
 
-    // Local-only account so native registration still works while mobile APIs return 406.
-    // Not claimed as a live server account — session.localOnly === true.
+    // Offline / no dedicated backend — explicit local-only account
     const s: Session = {
       token: localToken(h),
       handle: h,
@@ -296,6 +304,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(() => {
+    const sb = getSupabase();
+    if (sb) sb.auth.signOut().catch(() => undefined);
     setSession(null);
     setGuest(false);
     persist(null);
@@ -313,4 +323,26 @@ export function useAuth() {
   const v = useContext(Ctx);
   if (!v) throw new Error("useAuth outside AuthProvider");
   return v;
+}
+
+/** Socials feed helper used by root when Supabase is live. */
+export async function loadSocialsFeed(): Promise<{ source: "live" | "mock" | "error"; data: any[]; error?: string }> {
+  if (getBackendMode() !== "supabase") {
+    return { source: "mock", data: [] };
+  }
+  const r = await listRecentPosts(40);
+  if (!r.ok) return { source: "error", data: [], error: r.error };
+  return { source: "live", data: r.data };
+}
+
+export async function publishSocialPost(
+  text: string,
+  userId?: string
+): Promise<{ source: "live" | "mock" | "error"; data?: any; error?: string }> {
+  if (!userId || getBackendMode() !== "supabase") {
+    return { source: "mock", error: "live publish requires Supabase session" };
+  }
+  const r = await createPost(text, userId);
+  if (!r.ok) return { source: "error", error: r.error };
+  return { source: "live", data: r.data };
 }
