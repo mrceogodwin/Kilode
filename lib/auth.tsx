@@ -204,24 +204,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    try {
-      const raw = await AsyncStorage.getItem(KEY);
-      if (raw) {
-        const existing = JSON.parse(raw) as Session;
-        if (existing.handle === h && (existing.localOnly || existing.token?.startsWith("local:"))) {
-          existing.kind = asAccountKind(kind || existing.kind);
-          existing.localOnly = true;
-          setSession(existing);
-          setGuest(false);
-          await persist(existing);
-          setLoading(false);
-          return { ok: true };
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-
     setLoading(false);
     if (h.length < 2) {
       return { ok: false, error: "Enter a username or email (at least 2 characters)." };
