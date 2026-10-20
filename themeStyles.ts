@@ -400,6 +400,27 @@ export function makeStyles(C: Palette, isDark: boolean) {
       gap: 6,
     },
     deskGridLabel: { fontSize: 12, fontWeight: "600", color: C.text, textAlign: "center" },
+    createActionRow: {
+      minHeight: 62,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 9,
+      paddingHorizontal: 4,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: C.border,
+      backgroundColor: "transparent",
+    },
+    createActionIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: C.accentSoft,
+      borderWidth: 1,
+      borderColor: C.accent + "30",
+    },
 
     dock: {
       flexDirection: "row",
