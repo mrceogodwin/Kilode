@@ -27,6 +27,7 @@ type Props = {
   s: any;
   C: any;
   events: EventItem[];
+  liveData?: boolean;
   onBack: () => void;
   show: (m: string) => void;
 };
@@ -87,15 +88,15 @@ const TAG_COLOR: Record<string, string> = {
   Tonight: "#E5C158",
 };
 
-export function EventsScreen({ s, C, events, onBack, show }: Props) {
+export function EventsScreen({ s, C, events, liveData = false, onBack, show }: Props) {
   const base = events?.length
     ? events.map((e) => ({
         ...e,
         category: e.category || (e.tag === "Tonight" ? "Parties" : "Concerts"),
         imageUrl: e.imageUrl || FALLBACK[0].imageUrl,
-        previewOnly: true,
+        previewOnly: !liveData,
       }))
-    : FALLBACK;
+    : liveData ? [] : FALLBACK;
 
   const [filter, setFilter] = useState("All");
   const [q, setQ] = useState("");
