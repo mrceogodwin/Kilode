@@ -240,65 +240,36 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         </TouchableOpacity>
       </View>
 
-      {/* Editorial story feed */}
-      {listMode === "grid" ? (
-        <View style={{ paddingHorizontal: 16, flexDirection: "row", flexWrap: "wrap", gap: GRID_GAP }}>
-          {gridItems.map((a) => (
-            <TouchableOpacity
-              key={a.id}
-              activeOpacity={0.85}
-              onPress={() => setActive(a)}
-              style={{ width: GRID_CELL, marginBottom: 4 }}
-            >
-              {a.imageUrl ? (
-                <Image
-                  source={{ uri: a.imageUrl }}
-                  style={{ width: GRID_CELL, height: GRID_CELL * 1.15, borderRadius: 10, backgroundColor: C.elevated }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={{ width: GRID_CELL, height: GRID_CELL * 1.15, borderRadius: 10, backgroundColor: a.tone || C.elevated }} />
-              )}
-              <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginTop: 7, lineHeight: 17 }} numberOfLines={2}>
+      {/* Editorial story feed — compact thumbnail rows */}
+      <View style={{ paddingHorizontal: 16 }}>
+        {listItems.map((a) => (
+          <TouchableOpacity
+            key={a.id}
+            activeOpacity={0.82}
+            onPress={() => setActive(a)}
+            style={{ flexDirection: "row", gap: 12, marginBottom: 14, alignItems: "center" }}
+          >
+            {a.imageUrl ? (
+              <Image
+                source={{ uri: a.imageUrl }}
+                style={{ width: 88, height: 72, borderRadius: 10, backgroundColor: C.elevated }}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={{ width: 88, height: 72, borderRadius: 10, backgroundColor: a.tone || C.elevated }} />
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 }}>
+                {(a.kicker || "MEDIA").toUpperCase()} · {a.time || ""}
+              </Text>
+              <Text style={{ color: C.text, fontSize: 15, fontWeight: "700", marginTop: 4, lineHeight: 21, letterSpacing: -0.2 }} numberOfLines={2}>
                 {a.title}
               </Text>
-              <Text style={{ color: C.text3, fontSize: 10, marginTop: 3 }} numberOfLines={1}>
-                {(a.kicker || "Media").toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : (
-        /* Thumbnail list */
-        <View style={{ paddingHorizontal: 16 }}>
-          {listItems.map((a) => (
-            <TouchableOpacity
-              key={a.id}
-              activeOpacity={0.82}
-              onPress={() => setActive(a)}
-              style={{ flexDirection: "row", gap: 12, marginBottom: 14, alignItems: "center" }}
-            >
-              {a.imageUrl ? (
-                <Image
-                  source={{ uri: a.imageUrl }}
-                  style={{ width: 88, height: 72, borderRadius: 10, backgroundColor: C.elevated }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={{ width: 88, height: 72, borderRadius: 10, backgroundColor: a.tone || C.elevated }} />
-              )}
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 }}>
-                  {(a.kicker || "MEDIA").toUpperCase()} · {a.time || ""}
-                </Text>
-                <Text style={{ color: C.text, fontSize: 15, fontWeight: "700", marginTop: 4, lineHeight: 21, letterSpacing: -0.2 }} numberOfLines={2}>
-                  {a.title}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={C.text3} />
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={C.text3} />
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* Single clearly labelled sponsored placement */}
       <View
