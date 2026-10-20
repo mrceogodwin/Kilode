@@ -22,33 +22,39 @@ jobs:
       - name: Verify Expo project and backend target
         env:
           EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
-          EXPO_PUBLIC_API_URL: https://kilode-v2.vercel.app
+          EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
           EXPO_PUBLIC_APP_ENV: preview
         run: |
           node - <<'NODE'
-          const fs = require('fs');
           const config = require('./app.config.js')({ config: require('./app.json').expo });
           const id = config.extra?.eas?.projectId || '';
           if (!id) {
             console.error('EAS project ID is empty. Initialize/link the project under Expo account mudino and add EAS_PROJECT_ID as a GitHub Actions secret.');
             process.exit(1);
           }
-          if (config.extra?.apiUrl !== 'https://kilode-v2.vercel.app') {
-            console.error('Native app is not targeting the approved Kilode-v2 API host.');
+          const api = process.env.EXPO_PUBLIC_API_URL || '';
+          if (/kilode-v2\.vercel\.app|kilode-nine\.vercel\.app/i.test(api)) {
+            console.error('Refusing to build: legacy website backend URLs are not approved for the native app.');
             process.exit(1);
           }
           console.log('Expo owner:', config.owner);
           console.log('Expo slug:', config.slug);
           console.log('iOS bundle:', config.ios?.bundleIdentifier);
           console.log('EAS project ID is present.');
-          console.log('API host:', config.extra.apiUrl);
+          console.log('Custom API configured:', api ? 'yes' : 'no');
+          console.log('Supabase configured:', Boolean(process.env.EXPO_PUBLIC_SUPABASE_URL && process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY));
+          if (!api && !(process.env.EXPO_PUBLIC_SUPABASE_URL && process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY)) {
+            console.log('Backend is not configured; this build will use clearly labelled offline/preview data.');
+          }
           NODE
 
       - name: Build installable iOS preview
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
-          EXPO_PUBLIC_API_URL: https://kilode-v2.vercel.app
+          EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
           EXPO_PUBLIC_APP_ENV: preview
         run: |
           if [ -z "$EXPO_TOKEN" ]; then
