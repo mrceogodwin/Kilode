@@ -20,7 +20,7 @@ alter table public.tracks
   add column if not exists duration_seconds integer check (duration_seconds is null or duration_seconds >= 0),
   add column if not exists price_minor integer check (price_minor is null or price_minor >= 0),
   add column if not exists currency text not null default 'NGN',
-  add column if not exists status text not null default 'published'
+  add column if not exists status text not null default 'draft'
     check (status in ('draft','processing','submitted','published','rejected')),
   add column if not exists updated_at timestamptz not null default now();
 
@@ -84,7 +84,7 @@ create table if not exists public.music_payments (
   status text not null default 'pending' check (status in ('pending','processing','succeeded','failed','refunded','cancelled')),
   verified_at timestamptz,
   created_at timestamptz not null default now(),
-  check ((track_id is not null)::integer + (release_id is not null)::integer <= 1)
+  check (not (track_id is not null and release_id is not null))
 );
 alter table public.music_payments enable row level security;
 create policy music_payments_read_own on public.music_payments
