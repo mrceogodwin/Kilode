@@ -86,7 +86,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.6 }}>
           {(active.kicker || "MEDIA").toUpperCase()} · {active.time || "Today"}
         </Text>
-        <Text style={{ color: C.text, fontSize: 22, fontWeight: "700", letterSpacing: -0.5, marginTop: 8, lineHeight: 27 }}>
+        <Text style={{ color: C.text, fontSize: 19, fontWeight: "600", letterSpacing: -0.35, marginTop: 8, lineHeight: 24 }}>
           {active.title}
         </Text>
         <Text style={{ color: C.text3, fontSize: 12, marginTop: 8 }}>{active.author || "Kilode Editorial"}</Text>
