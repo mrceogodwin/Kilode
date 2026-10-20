@@ -126,8 +126,8 @@ export const NEWS = [
 ];
 
 export const TRACKS = [
-  { id: "t1", title: "Hunter of Africa", artist: "Mudino", color: "#B45309" },
-  { id: "t2", title: "We Want a Party", artist: "Mudino", color: "#7C3AED" },
+  { id: "t1", title: "Hunter of Africa", artist: "Mudino", color: "#B45309", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", previewKind: "sample" },
+  { id: "t2", title: "We Want a Party", artist: "Mudino", color: "#7C3AED", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", previewKind: "sample" },
   { id: "t3", title: "Calm Down", artist: "Rema", color: "#D97706" },
   { id: "t4", title: "Water & Light", artist: "Ayo Blue", color: "#2563EB" },
 ];
