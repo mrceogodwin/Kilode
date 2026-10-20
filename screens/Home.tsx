@@ -65,7 +65,7 @@ export function HomeScreen({
       const n = raw ? Date.parse(String(raw)) : 0;
       if (Number.isFinite(n) && n > 0) return n;
       // Seed/preview items often carry relative labels such as "2h ago".
-      const relative = String(raw || "").match(/(\d+)\s*(m|min|h|hr|d|day)s?\s*ago/i);
+      const relative = String(raw || "").match(/(\d+)\s*(m|min|h|hr|d|day)s?(?:\s*ago)?$/i);
       if (relative) {
         const amount = Number(relative[1]);
         const unit = relative[2].toLowerCase();
