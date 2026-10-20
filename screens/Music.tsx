@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from "react-native";
+import { createMusicReleaseDraft } from "../lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { can } from "../lib/permissions";
@@ -13,6 +14,7 @@ type Props = {
   onOpenTrack?: (track: any) => void;
   onOpenArtist?: (artistName: string) => void;
   accountKind?: string;
+  userId?: string;
   tracks?: any[];
 };
 
@@ -39,9 +41,13 @@ const GENRES = [
   { id: "amapiano", label: "Amapiano", color: "#10B981" },
 ];
 
-export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, tracks: tracksProp }: Props) {
+export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, userId, tracks: tracksProp }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Home");
   const [following, setFollowing] = useState(false);
+  const [draftOpen, setDraftOpen] = useState(false);
+  const [releaseTitle, setReleaseTitle] = useState("");
+  const [releaseType, setReleaseType] = useState<"single" | "ep" | "album">("single");
+  const [savingDraft, setSavingDraft] = useState(false);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
 
@@ -54,17 +60,51 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   };
 
   return (
+    <>
+    <Modal visible={draftOpen} animationType="slide" transparent onRequestClose={() => setDraftOpen(false)}>
+      <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.58)" }}>
+        <View style={{ backgroundColor: C.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 32, borderWidth: 1, borderColor: C.border }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+            <Text style={{ color: C.text, fontSize: 20, fontWeight: "800", flex: 1 }}>New release</Text>
+            <TouchableOpacity onPress={() => setDraftOpen(false)} accessibilityLabel="Close release form"><Ionicons name="close" size={24} color={C.text2} /></TouchableOpacity>
+          </View>
+          <Text style={{ color: C.text2, fontSize: 13, lineHeight: 19, marginBottom: 16 }}>Start a private draft. Your music will not appear publicly until the release is submitted, reviewed and published.</Text>
+          <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginBottom: 7 }}>Release title</Text>
+          <TextInput value={releaseTitle} onChangeText={setReleaseTitle} placeholder="Enter release title" placeholderTextColor={C.text3} maxLength={120} style={{ color: C.text, backgroundColor: C.elevated, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 14 }} />
+          <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginBottom: 8 }}>Release type</Text>
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 18 }}>
+            {(["single", "ep", "album"] as const).map((kind) => (
+              <TouchableOpacity key={kind} onPress={() => setReleaseType(kind)} style={{ flex: 1, borderRadius: 11, paddingVertical: 11, alignItems: "center", backgroundColor: releaseType === kind ? C.accentSoft : C.elevated, borderWidth: 1, borderColor: releaseType === kind ? C.accent : C.border }}>
+                <Text style={{ color: releaseType === kind ? C.accent : C.text2, fontSize: 13, fontWeight: "700", textTransform: "capitalize" }}>{kind}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity disabled={savingDraft} onPress={async () => {
+            if (!userId) { show("Sign in to your live Artist account to save a release draft."); return; }
+            setSavingDraft(true);
+            const result = await createMusicReleaseDraft(userId, { title: releaseTitle, releaseType });
+            setSavingDraft(false);
+            if (!result.ok) { show(result.error || "Could not save release draft."); return; }
+            setReleaseTitle("");
+            setReleaseType("single");
+            setDraftOpen(false);
+            show("Release draft saved privately. Audio upload is the next step.");
+          }} style={{ backgroundColor: C.accent, borderRadius: 13, paddingVertical: 14, alignItems: "center", opacity: savingDraft ? 0.7 : 1 }}>
+            {savingDraft ? <ActivityIndicator color="#111" /> : <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>Save private draft</Text>}
+          </TouchableOpacity>
+          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 10 }}>This creates release metadata only. Audio selection, upload progress and rights review are not yet connected.</Text>
+        </View>
+      </View>
+    </Modal>
     <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
       <View style={{ paddingHorizontal: 16, paddingTop: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <TouchableOpacity onPress={onBack} accessibilityRole="button">
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-                <TouchableOpacity
-          onPress={() =>
-            canList
-              ? show("Track submit form opens when Music list API is live.")
-              : show("Artist accounts can list tracks. Switch account type or register as Artist.")
-          }
+        <TouchableOpacity
+          onPress={() => canList ? setDraftOpen(true) : show("Music uploads are available to Artist accounts.")}
+          accessibilityRole="button"
+          accessibilityLabel="Create music release draft"
         >
           <Ionicons name="add-circle-outline" size={22} color={canList ? C.accent : C.text3} />
         </TouchableOpacity>
@@ -72,7 +112,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
       {canList ? (
         <TouchableOpacity
-          onPress={() => show("Drop track when Music list API is live.")}
+          onPress={() => setDraftOpen(true)}
           style={{
             marginHorizontal: 16,
             marginTop: 12,
