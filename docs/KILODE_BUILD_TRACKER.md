@@ -7,15 +7,15 @@
 ## Current checkpoint
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
-- **Latest work:** Music replaces the oversized “From Kilode” row with a registered-artist carousel; broken avatar URLs now fall back to initials/icons in the carousel and full Artists list. Header wordmark redesign is also in the branch. CI must be checked against the latest HEAD.
-- **Verified checkpoint `4a246073`:** native validation and web export checks passed. The artist-carousel commit `942014fe` web export passed; native validation was queued at last check. The avatar-fallback change is newer and still requires CI.
+- **Latest work:** Music replaces the oversized “From Kilode” row with a registered-artist carousel; broken avatar URLs fall back to initials/icons in the carousel and full Artists list. Header wordmark redesign is also in the branch.
+- **Latest CI checkpoint `f89e2f4e`:** native validation passed, including TypeScript, Expo Doctor, and iOS JavaScript bundle export. Web Preview Check also passed. These are automated checks, not a compiled/installable iOS binary or device test.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
 
 ## P0 — Release, safety and test gates
 
-- [ ] Confirm native validation and web export CI results for the current branch HEAD; fix failures and rerun on the final commit.
+- [x] Confirm native validation and web export CI results for current checkpoint `f89e2f4e` (both passed). Re-run after subsequent source changes.
 - [ ] Link the app to the owner's Expo project with `eas init` under the correct Expo account; never invent the project ID.
 - [ ] Produce and verify an installable iOS build; test on a physical iPhone.
 - [ ] Create/confirm the dedicated Supabase project; configure URL and publishable/anon key in build secrets (never client-side service-role keys).
@@ -31,7 +31,7 @@
 - [ ] Review wordmark sizing and legibility on iPhone and web export; the requested crayon-like raised effect is approximated with native text layers and shadows, not a custom textured font asset.
 - [x] Remove duplicate Socials top-left create button; contextual create CTA is used by system.
 - [x] Add tab history and edge-swipe back/forward logic; back closes selected transient overlays/details first.
-- [ ] Confirm latest CI on the latest commit.
+- [x] Confirm CI on checkpoint `f89e2f4e`; repeat after future source changes.
 - [ ] Physical-device test edge gestures with nested scroll views, carousels, text inputs, music controls and the bottom dock; ensure gesture handling never blocks ordinary scrolling.
 - [ ] Audit all modal/sheet/detail states so back consistently closes the topmost state before leaving its parent.
 - [ ] Confirm tab forward history semantics and restoration behaviour; detail screens are not yet verified as restorable through forward navigation.
@@ -46,7 +46,7 @@
 - [x] Local saved tracks/playlists and recent listening are stored per user/device.
 - [x] Queue navigation and rapid track-switch safeguards have been implemented in prior commits.
 - [x] Latest change clears in-memory library state when storage read fails, instead of retaining another account's state.
-- [ ] Confirm latest avatar-fallback, Music carousel and logo changes pass native validation and web export.
+- [x] Avatar fallback, Music carousel and logo changes pass native validation and web export on checkpoint `f89e2f4e`.
 - [ ] Test account switching, corrupt storage, storage rejection, save/unsave, and app restart on device.
 - [ ] Verify Top 100 uses trustworthy, server-ranked catalogue data when backend is configured; do not label seed catalogue as real rankings.
 - [ ] Verify category/genre matching with actual catalogue metadata and useful empty/error states.
