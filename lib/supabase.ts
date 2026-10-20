@@ -179,6 +179,19 @@ export async function updateOwnProfile(
   return { ok: true, data: data as ProfileRow };
 }
 
+/** Public artist catalogue. Only profile fields safe for discovery are selected. */
+export async function listArtistProfiles(limit = 40): Promise<{ ok: boolean; data: ProfileRow[]; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, data: [], error: "Kilode's artist catalogue is not configured yet." };
+  const { data, error } = await sb.from("profiles")
+    .select("id, handle, display_name, kind, role, bio, avatar_url")
+    .eq("kind", "artist")
+    .order("display_name", { ascending: true })
+    .limit(Math.max(1, Math.min(limit, 100)));
+  if (error) return { ok: false, data: [], error: error.message };
+  return { ok: true, data: (data || []) as ProfileRow[] };
+}
+
 /** Read the signed-in user's follow state for an artist profile. */
 export async function isFollowingArtist(followerId: string, artistId: string): Promise<{ ok: boolean; following: boolean; error?: string }> {
   const sb = getSupabase();
