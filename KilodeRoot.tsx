@@ -954,7 +954,7 @@ function KilodeApp() {
               </View>
               <TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu" style={s.iconBtn}><Ionicons name="close" size={20} color={C.text2} /></TouchableOpacity>
             </View>
-            <View style={{ gap: 2 }}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 540 }} contentContainerStyle={{ width: "100%", flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10, paddingBottom: 4 }}>
               {createOptions.map((o) => {
                 const allowed = !(o as any).capability || can(session.kind, (o as any).capability);
                 const iconName: keyof typeof Ionicons.glyphMap = ({
@@ -974,18 +974,18 @@ function KilodeApp() {
                   : "Open Ads and campaign tools";
                 return (
                   <TouchableOpacity key={o.label} accessibilityRole="button" accessibilityLabel={`${o.label}. ${subtitle}`}
-                    style={[s.createActionRow, !allowed && { opacity: 0.45 }]}
+                    activeOpacity={0.78}
+                    style={{ width: "48%", minHeight: 112, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated, alignItems: "flex-start", justifyContent: "space-between", opacity: allowed ? 1 : 0.45 }}
                     onPress={() => {
                       if (!allowed) { show(`Your account type cannot ${o.label.toLowerCase()} yet.`); return; }
                       if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; }
                       setCreateOpen(false); go(o.tab);
                     }}>
-                    <View style={s.createActionIcon}><Ionicons name={iconName} size={21} color={C.accent} /></View>
+                    <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.accent + "30", alignItems: "center", justifyContent: "center" }}><Ionicons name={iconName} size={21} color={C.accent} /></View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{o.label}</Text>
-                      <Text numberOfLines={1} style={{ color: C.text2, fontSize: 11, marginTop: 3 }}>{subtitle}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={C.text3} />
+                      <Text numberOfLines={2} style={{ color: C.text2, fontSize: 11, lineHeight: 15, marginTop: 3 }}>{subtitle}</Text>
+                    </ScrollView>
                   </TouchableOpacity>
                 );
               })}
