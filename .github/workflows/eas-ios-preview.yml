@@ -23,6 +23,8 @@ jobs:
         env:
           EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
           EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
           EXPO_PUBLIC_APP_ENV: preview
         run: |
           node - <<'NODE'
