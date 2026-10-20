@@ -18,7 +18,7 @@ EAS / TestFlight = native build readiness (separate).
 | Account kinds | `lib/accountKinds.ts` + client `lib/permissions.ts` |
 | Seed data | `data.ts` — layout only when offline |
 | Moderation | `lib/moderation.ts` — largely local AsyncStorage |
-| Schema | `supabase/migrations/001_kilode_core.sql` — includes posts/catalogue tables, RLS and Realtime publication setup |
+| Schema | `supabase/migrations/001_kilode_core.sql` + `002_auth_profile_bootstrap.sql` — core tables/RLS/Realtime plus automatic profile creation on Auth sign-up |
 | Supabase JS SDK | Installed in `package.json`; `lib/supabase.ts` provides the client and queries |
 | Super Admin UI | **Missing** in native |
 
@@ -27,11 +27,11 @@ EAS / TestFlight = native build readiness (separate).
 ## 2. What must be created
 
 1. **New Supabase project** (recommended name: `kilode-native` or similar).
-2. Apply migration `001_kilode_core.sql`.
+2. Apply migrations `001_kilode_core.sql` and `002_auth_profile_bootstrap.sql` in order. Migration 002 creates/backfills `profiles` for Supabase Auth users; without it, sign-up can succeed while post creation fails because `posts.author_id` requires a profile.
 3. Enable Email auth (and later Apple / Google if required).
 4. Configure Storage buckets for avatars/media with RLS.
 5. Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; the SDK and thin client are already in the repo.
-6. Verify Socials post creation and feed reads against a real Supabase user. The shared client now includes read queries for Media, Music, Events, Market and Jobs.
+6. Verify profile bootstrap, Socials post creation, and feed reads against a real Supabase user. The shared client now includes read queries for Media, Music, Events, Market and Jobs.
 7. Build the missing create forms and write handlers for Media, Music, Events, Market and Jobs, then enforce account-kind permissions server-side. Use Edge Functions/RPC for privileged moderation and admin operations.
 8. Super Admin: `profiles.role = super_admin` set **only** by project owner in SQL — never via public signup.
 9. Server-side enforcement of account-type capabilities (not only client `can()`).
