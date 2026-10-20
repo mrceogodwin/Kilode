@@ -293,6 +293,46 @@ export async function createMusicReleaseDraft(
   return { ok: true, id: String(data.id) };
 }
 
+/** Upload a selected audio file to private storage and attach it to an owned draft. */
+export async function uploadMusicReleaseAudio(
+  artistId: string,
+  releaseId: string,
+  asset: { uri: string; name: string; mimeType?: string | null; size?: number | null }
+): Promise<{ ok: boolean; path?: string; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, error: "Kilode Music backend is not configured." };
+  if (!artistId || !releaseId) return { ok: false, error: "Sign in and create a release draft first." };
+  if (!asset.uri) return { ok: false, error: "Choose an audio file first." };
+  if (asset.size && asset.size > 100 * 1024 * 1024) return { ok: false, error: "Audio files must be 100 MB or smaller." };
+
+  const safeName = asset.name.trim().replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100) || "track-audio";
+  const path = `${artistId}/${releaseId}/${Date.now()}-${safeName}`;
+  try {
+    const response = await fetch(asset.uri);
+    if (!response.ok) return { ok: false, error: "Could not read the selected audio file." };
+    const fileData = await response.arrayBuffer();
+    const contentType = asset.mimeType || "audio/mpeg";
+    const { error: uploadError } = await sb.storage.from("kilode-music-audio").upload(path, fileData, {
+      contentType,
+      upsert: false,
+    });
+    if (uploadError) return { ok: false, error: uploadError.message };
+
+    const { error: updateError } = await sb.from("music_releases")
+      .update({ audio_path: path })
+      .eq("id", releaseId)
+      .eq("artist_id", artistId)
+      .eq("status", "draft");
+    if (updateError) {
+      await sb.storage.from("kilode-music-audio").remove([path]);
+      return { ok: false, error: updateError.message };
+    }
+    return { ok: true, path };
+  } catch {
+    return { ok: false, error: "Audio upload failed. Check your connection and try again." };
+  }
+}
+
 /** List only the signed-in artist's own release drafts and submissions. */
 export async function listOwnMusicReleases(artistId: string): Promise<{ ok: boolean; data: any[]; error?: string }> {
   const sb = getSupabase();
