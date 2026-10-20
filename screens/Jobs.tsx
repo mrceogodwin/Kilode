@@ -33,7 +33,7 @@ export function JobsScreen({ s, C, onBack, show, accountKind, jobs }: Props) {
   const [active, setActive] = useState<Job | null>(null);
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const canPost = can(accountKind, "jobs_post");
-  const canApply = can(accountKind, "jobs_apply") || can(accountKind, "feed_post");
+  const canApply = can(accountKind, "jobs_apply");
 
   const list = useMemo(() => {
     let rows = jobs ?? JOBS;
