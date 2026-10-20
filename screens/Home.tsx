@@ -92,6 +92,7 @@ export function HomeScreen({
 }: Props) {
   const [slide, setSlide] = useState(0);
   const [q, setQ] = useState("");
+  const [submittedSearch, setSubmittedSearch] = useState("");
   const carouselRef = useRef<ScrollView>(null);
 
   const heroMedia = news[0];
@@ -171,12 +172,62 @@ export function HomeScreen({
             placeholder="Search Kilode"
             placeholderTextColor={C.text3}
             style={{ flex: 1, marginLeft: 8, color: C.text, fontSize: 14 }}
-            onSubmitEditing={() => show(q.trim() ? "Search is not connected yet." : "Enter a search term")}
+            onSubmitEditing={() => {
+              const term = q.trim();
+              if (!term) { show("Enter a search term"); setSubmittedSearch(""); return; }
+              setSubmittedSearch(term);
+            }}
             returnKeyType="search"
           />
         </View>
       </View>
 
+      {submittedSearch ? (() => {
+        const term = submittedSearch.toLowerCase();
+        const results = [
+          ...news.filter((item: any) => `${item.title || ""} ${item.kicker || ""}`.toLowerCase().includes(term)).map((item: any) => ({
+            id: `media-${item.id}`, kind: "Media", title: item.title || "Story", subtitle: item.kicker || item.time || "Open story",
+            onPress: () => onOpenMedia(String(item.id)),
+          })),
+          ...tracks.filter((item: any) => `${item.title || ""} ${item.artist || ""}`.toLowerCase().includes(term)).map((item: any) => ({
+            id: `music-${item.id}`, kind: "Music", title: item.title || "Track", subtitle: item.artist || "Open track",
+            onPress: () => onPlayTrack(item),
+          })),
+          ...takes.filter((item: any) => `${item.name || ""} ${item.handle || ""} ${item.text || ""} ${item.body || ""}`.toLowerCase().includes(term)).map((item: any) => ({
+            id: `social-${item.id}`, kind: "Socials", title: item.name || item.author?.name || "Kilode member", subtitle: item.text || item.body || "Open post",
+            onPress: () => onOpenPost(item),
+          })),
+          ...events.filter((item: any) => `${item.title || ""} ${item.meta || ""}`.toLowerCase().includes(term)).map((item: any) => ({
+            id: `event-${item.id}`, kind: "Events", title: item.title || "Event", subtitle: item.meta || "Open events",
+            onPress: onOpenEvents,
+          })),
+          ...market.filter((item: any) => `${item.title || ""} ${item.price || ""} ${item.meta || ""}`.toLowerCase().includes(term)).map((item: any) => ({
+            id: `market-${item.id}`, kind: "Market", title: item.title || "Listing", subtitle: item.price || item.meta || "Open Market",
+            onPress: onOpenMarket,
+          })),
+          ...jobs.filter((item: any) => `${item.title || ""} ${item.company || ""} ${item.location || ""} ${item.meta || ""}`.toLowerCase().includes(term)).map((item: any) => ({
+            id: `job-${item.id}`, kind: "Jobs", title: item.title || "Role", subtitle: item.meta || [item.company, item.location].filter(Boolean).join(" · ") || "Open Jobs",
+            onPress: onOpenJobs,
+          })),
+        ].slice(0, 8);
+        return (
+          <View style={{ marginHorizontal: 16, marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <Text style={{ color: C.text, fontSize: 14, fontWeight: "800", flex: 1 }}>Results for “{submittedSearch}”</Text>
+              <TouchableOpacity onPress={() => { setSubmittedSearch(""); setQ(""); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close" size={18} color={C.text2} />
+              </TouchableOpacity>
+            </View>
+            {results.length ? results.map((item: any) => (
+              <TouchableOpacity key={item.id} onPress={item.onPress} style={{ paddingVertical: 9, borderTopWidth: 1, borderTopColor: C.border }}>
+                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800" }}>{item.kind}</Text>
+                <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginTop: 2 }} numberOfLines={1}>{item.title}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }} numberOfLines={2}>{item.subtitle}</Text>
+              </TouchableOpacity>
+            )) : <Text style={{ color: C.text2, fontSize: 12, paddingVertical: 8 }}>No matches in the content currently available on this preview.</Text>}
+          </View>
+        );
+      })() : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, gap: 6 }}>
         {RAIL.map((r) => {
           const on = r.id === "home";
