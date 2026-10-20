@@ -1,73 +1,89 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  Share,
   Image,
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import type { Palette } from "../themeStyles";
 
-export type MediaArticle = {
+const { width: W } = Dimensions.get("window");
+const CAROUSEL_W = W - 32;
+const GRID_GAP = 8;
+const GRID_CELL = (W - 32 - GRID_GAP * 2) / 3;
+
+type Article = {
   id: string;
   title: string;
   kicker?: string;
   time?: string;
-  tone?: string;
-  body?: string;
   author?: string;
   imageUrl?: string;
+  tone?: string;
+  body?: string;
 };
 
 type Props = {
   s: any;
-  C: Palette;
-  /** Preferred */
-  articles?: MediaArticle[];
-  /** Alias used by KilodeRoot */
-  news?: MediaArticle[];
+  C: any;
+  news: Article[];
+  initialArticleId?: string | null;
   onBack: () => void;
   show: (m: string) => void;
-  initialArticleId?: string | null;
 };
 
-const W = Dimensions.get("window").width;
-const CAROUSEL_W = W - 32;
-
-const GRID = [
-  { id: "politics", label: "Politics", icon: "business-outline" as const },
-  { id: "tech", label: "Tech", icon: "hardware-chip-outline" as const },
-  { id: "culture", label: "Culture", icon: "color-palette-outline" as const },
-  { id: "sport", label: "Sport", icon: "football-outline" as const },
-  { id: "business", label: "Business", icon: "briefcase-outline" as const },
-  { id: "more", label: "More", icon: "grid-outline" as const },
+const TRENDING = [
+  "Lagos nightlife rules",
+  "Naira tech raises",
+  "Afrobeats chart shake",
+  "Island traffic fix",
+  "Cinema Friday vote",
 ];
 
-const TICKER = [
-  "Trending: Lagos rains · governance",
-  "Oil spill probe · Akwa Ibom",
-  "Afrobeats charts · weekend drops",
-  "Kilode Media · top reads",
+const CATEGORIES = ["All", "News", "Culture", "Business", "Sports", "Tech"];
+
+/** Portrait ad placements (editorial, not real AdSense SDK). */
+const ADS = [
+  {
+    id: "ad1",
+    label: "Sponsored",
+    title: "Shop Lagos Fashion Week looks",
+    cta: "Shop now",
+    color: "#2A2218",
+    imageUrl: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80",
+  },
+  {
+    id: "ad2",
+    label: "Promoted",
+    title: "Stream Ojuelegba Nights",
+    cta: "Listen",
+    color: "#1A2430",
+    imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80",
+  },
 ];
 
-/** Full Media system: ticker → carousel → 3-col grid → list + ads */
-export function MediaScreen({ s, C, articles, news, onBack, show, initialArticleId }: Props) {
-  const data = articles?.length ? articles : news || [];
-  const [active, setActive] = useState<MediaArticle | null>(null);
+export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Props) {
+  const data = news?.length ? news : [];
+  const [active, setActive] = useState<Article | null>(null);
   const [slide, setSlide] = useState(0);
-  const [filter, setFilter] = useState<string | null>(null);
+  const [filter, setFilter] = useState("All");
+  const [listMode, setListMode] = useState<"grid" | "list">("grid");
+  const [showMore, setShowMore] = useState(false);
+  const carouselRef = useRef<ScrollView>(null);
 
-  const list = filter
-    ? data.filter((a) => (a.kicker || "").toLowerCase().includes(filter.toLowerCase()))
-    : data;
+  const filtered = useMemo(() => {
+    if (filter === "All") return data;
+    return data.filter((a) => (a.kicker || "").toLowerCase().includes(filter.toLowerCase()));
+  }, [data, filter]);
 
-  const hero = list.slice(0, 4);
-  const rest = list.slice(0, 12);
+  const hero = filtered.slice(0, 5);
+  const gridItems = filtered.slice(0, showMore ? 12 : 6);
+  const listItems = filtered.slice(0, showMore ? 15 : 8);
 
   useEffect(() => {
     if (!initialArticleId) return;
@@ -75,25 +91,35 @@ export function MediaScreen({ s, C, articles, news, onBack, show, initialArticle
     if (match) setActive(match);
   }, [initialArticleId, data]);
 
+  useEffect(() => {
+    if (hero.length < 2) return;
+    const id = setInterval(() => {
+      setSlide((prev) => {
+        const next = (prev + 1) % hero.length;
+        carouselRef.current?.scrollTo({ x: next * (CAROUSEL_W + 12), animated: true });
+        return next;
+      });
+    }, 4500);
+    return () => clearInterval(id);
+  }, [hero.length]);
+
   const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
     setSlide(Math.round(x / (CAROUSEL_W + 12)));
   };
 
+  // —— Article detail ——
   if (active) {
     const body =
       active.body ||
-      `${active.title}\n\nFull story loads when the editorial API is live.\n\n— ${active.author || "Kilode Editorial"}`;
+      `${active.title}\n\nFull editorial body loads when the Media API is live.\n\n— ${active.author || "Kilode Editorial"}`;
     return (
-      <ScrollView style={s.flex} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
-        <TouchableOpacity
-          onPress={() => setActive(null)}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 14, marginTop: 4 }}
-        >
+      <ScrollView style={s.flex} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <TouchableOpacity onPress={() => setActive(null)} style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 14, marginTop: 4 }}>
           <Ionicons name="chevron-back" size={20} color={C.accent} />
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>Media</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.6 }}>
+        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.8 }}>
           {(active.kicker || "MEDIA").toUpperCase()} · {active.time || "Today"}
         </Text>
         <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.4, marginTop: 8, lineHeight: 28 }}>
@@ -101,270 +127,303 @@ export function MediaScreen({ s, C, articles, news, onBack, show, initialArticle
         </Text>
         <Text style={{ color: C.text3, fontSize: 12, marginTop: 8 }}>{active.author || "Kilode Editorial"}</Text>
         {active.imageUrl ? (
-          <Image
-            source={{ uri: active.imageUrl }}
-            style={{ width: "100%", height: 200, borderRadius: 14, marginTop: 14, backgroundColor: C.elevated }}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: active.imageUrl }} style={{ width: "100%", height: 210, borderRadius: 14, marginTop: 14, backgroundColor: C.elevated }} resizeMode="cover" />
         ) : (
           <View style={{ height: 160, borderRadius: 14, marginTop: 14, backgroundColor: active.tone || C.elevated }} />
         )}
         <Text style={{ color: C.text2, fontSize: 15, lineHeight: 24, marginTop: 16 }}>{body}</Text>
+
+        {/* Inline ad */}
+        <View style={{ marginTop: 22, borderRadius: 14, overflow: "hidden", backgroundColor: ADS[0].color, borderWidth: 1, borderColor: C.border }}>
+          <Image source={{ uri: ADS[0].imageUrl }} style={{ width: "100%", height: 120 }} resizeMode="cover" />
+          <View style={{ padding: 12 }}>
+            <Text style={{ color: C.accent, fontSize: 10, fontWeight: "700", letterSpacing: 0.6 }}>{ADS[0].label.toUpperCase()}</Text>
+            <Text style={{ color: C.text, fontSize: 15, fontWeight: "700", marginTop: 4 }}>{ADS[0].title}</Text>
+            <TouchableOpacity onPress={() => show("Ad destination opens when ad network is connected.")} style={{ marginTop: 10, alignSelf: "flex-start", backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 }}>
+              <Text style={{ color: "#111", fontWeight: "800", fontSize: 13 }}>{ADS[0].cta}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <TouchableOpacity
-          style={{
-            marginTop: 20,
-            alignSelf: "flex-start",
-            paddingHorizontal: 14,
-            paddingVertical: 10,
-            borderRadius: 999,
-            borderWidth: 1,
-            borderColor: C.border,
-          }}
+          style={{ marginTop: 20, alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: C.border }}
           onPress={async () => {
             try {
+              const { Share } = await import("react-native");
               await Share.share({ message: active.title });
             } catch {
-              show("Could not share");
+              show("Could not open share sheet");
             }
           }}
         >
-          <Text style={{ color: C.text, fontWeight: "600", fontSize: 13 }}>Share</Text>
+          <Text style={{ color: C.text, fontWeight: "600" }}>Share story</Text>
         </TouchableOpacity>
       </ScrollView>
     );
   }
 
+  // —— Media landing ——
   return (
     <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 36 }} showsVerticalScrollIndicator={false}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center" }}>
-        <TouchableOpacity onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="chevron-back" size={22} color={C.text} />
+      {/* Header */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <TouchableOpacity onPress={onBack} accessibilityRole="button">
+          <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginLeft: 8, letterSpacing: -0.3 }}>Media</Text>
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity onPress={() => show("Search opens when catalogue API is live")}>
-          <Ionicons name="search-outline" size={20} color={C.text2} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ maxHeight: 32, marginBottom: 10 }}
-        contentContainerStyle={{ paddingHorizontal: 16, alignItems: "center", gap: 16 }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent }} />
-          <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800", letterSpacing: 0.5 }}>TRENDING</Text>
+        <Text style={{ color: C.text, fontSize: 17, fontWeight: "800", letterSpacing: -0.3 }}>Media</Text>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <TouchableOpacity onPress={() => setListMode(listMode === "grid" ? "list" : "grid")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name={listMode === "grid" ? "list-outline" : "grid-outline"} size={20} color={C.text2} />
+          </TouchableOpacity>
         </View>
-        {TICKER.map((t) => (
-          <Text key={t} style={{ color: C.text2, fontSize: 12 }} numberOfLines={1}>
-            {t}
-          </Text>
-        ))}
-      </ScrollView>
-
-      <ScrollView
-        horizontal
-        decelerationRate="fast"
-        snapToInterval={CAROUSEL_W + 12}
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={onCarouselScroll}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-      >
-        {(hero.length ? hero : [{ id: "empty", title: "Stories load when Media is connected", kicker: "MEDIA" } as MediaArticle]).map(
-          (n) => (
-            <TouchableOpacity
-              key={n.id}
-              activeOpacity={0.9}
-              onPress={() => (n.id !== "empty" ? setActive(n) : undefined)}
-              style={{
-                width: CAROUSEL_W,
-                height: 180,
-                borderRadius: 16,
-                overflow: "hidden",
-                backgroundColor: n.tone || C.elevated,
-              }}
-            >
-              {n.imageUrl ? (
-                <Image source={{ uri: n.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
-              ) : null}
-              <View
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  padding: 14,
-                  backgroundColor: "rgba(0,0,0,0.55)",
-                }}
-              >
-                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>
-                  {(n.kicker || "MEDIA").toUpperCase()}
-                </Text>
-                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 4 }} numberOfLines={2}>
-                  {n.title}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )
-        )}
-      </ScrollView>
-      <View style={{ flexDirection: "row", justifyContent: "center", gap: 5, marginTop: 10, marginBottom: 14 }}>
-        {Array.from({ length: Math.max(hero.length, 1) }).map((_, i) => (
-          <View
-            key={i}
-            style={{
-              width: i === slide ? 14 : 6,
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: i === slide ? C.accent : C.border,
-            }}
-          />
-        ))}
       </View>
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 12, marginBottom: 8 }}>
-        {GRID.map((g) => (
+      {/* Trending ticker */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, gap: 8 }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 4 }}>
+          <View style={{ backgroundColor: C.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
+            <Text style={{ color: "#111", fontSize: 10, fontWeight: "900", letterSpacing: 0.6 }}>TRENDING</Text>
+          </View>
+        </View>
+        {TRENDING.map((t) => (
           <TouchableOpacity
-            key={g.id}
-            onPress={() => {
-              if (g.id === "more") {
-                show("More sections when editorial catalogue expands");
-                return;
-              }
-              setFilter(filter === g.label ? null : g.label);
+            key={t}
+            onPress={() => show(`Search for “${t}” when Media search is live.`)}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 999,
+              backgroundColor: C.elevated,
+              borderWidth: 1,
+              borderColor: C.border,
             }}
-            style={{ width: "33.33%", paddingHorizontal: 4, paddingVertical: 6, alignItems: "center" }}
           >
-            <View
-              style={{
-                width: "100%",
-                aspectRatio: 1.15,
-                maxWidth: 104,
-                borderRadius: 14,
-                backgroundColor: filter === g.label ? C.accentSoft : C.card,
-                borderWidth: 1,
-                borderColor: filter === g.label ? C.accent : C.border,
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-              }}
-            >
-              <Ionicons name={g.icon} size={22} color={filter === g.label ? C.accent : C.text2} />
-              <Text style={{ color: filter === g.label ? C.accent : C.text, fontSize: 12, fontWeight: "700" }}>
-                {g.label}
-              </Text>
-            </View>
+            <Text style={{ color: C.text2, fontSize: 12, fontWeight: "600" }}>#{t.replace(/\s+/g, "")}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
-      <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 16 }}>
-        <View
-          style={{
-            borderRadius: 14,
-            overflow: "hidden",
-            backgroundColor: C.elevated,
-            borderWidth: 1,
-            borderColor: C.border,
-            flexDirection: "row",
-            minHeight: 110,
-          }}
-        >
-          <View style={{ width: 92, backgroundColor: "#2A2419", alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="megaphone-outline" size={28} color={C.accent} />
-          </View>
-          <View style={{ flex: 1, padding: 12, justifyContent: "center" }}>
-            <Text style={{ color: C.text3, fontSize: 10, fontWeight: "700", letterSpacing: 0.5 }}>SPONSORED</Text>
-            <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 4 }} numberOfLines={2}>
-              Promote on Kilode Media
-            </Text>
-            <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }} numberOfLines={1}>
-              Reach readers · Push Link
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", paddingHorizontal: 16, marginBottom: 10 }}>
-        Latest
-      </Text>
-      {rest.map((n, idx) => (
-        <React.Fragment key={n.id}>
+      {/* Category chips — minimal */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}>
+        {CATEGORIES.map((c) => (
           <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setActive(n)}
+            key={c}
+            onPress={() => setFilter(c)}
             style={{
-              flexDirection: "row",
-              gap: 12,
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              alignItems: "center",
+              paddingHorizontal: 14,
+              paddingVertical: 7,
+              borderRadius: 999,
+              backgroundColor: filter === c ? C.accentSoft : "transparent",
+              borderWidth: 1,
+              borderColor: filter === c ? C.accent : C.border,
             }}
           >
-            {n.imageUrl ? (
-              <Image
-                source={{ uri: n.imageUrl }}
-                style={{ width: 76, height: 64, borderRadius: 10, backgroundColor: C.elevated }}
-                resizeMode="cover"
+            <Text style={{ color: filter === c ? C.accent : C.text2, fontSize: 13, fontWeight: "700" }}>{c}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Carousel */}
+      {hero.length > 0 ? (
+        <View style={{ marginBottom: 16 }}>
+          <ScrollView
+            ref={carouselRef}
+            horizontal
+            pagingEnabled={false}
+            decelerationRate="fast"
+            snapToInterval={CAROUSEL_W + 12}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+            onScroll={onCarouselScroll}
+            scrollEventThrottle={16}
+          >
+            {hero.map((a) => (
+              <TouchableOpacity
+                key={a.id}
+                activeOpacity={0.9}
+                onPress={() => setActive(a)}
+                style={{
+                  width: CAROUSEL_W,
+                  height: 200,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  backgroundColor: a.tone || C.elevated,
+                }}
+              >
+                {a.imageUrl ? (
+                  <Image source={{ uri: a.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                ) : (
+                  <View style={{ flex: 1, backgroundColor: a.tone || C.elevated }} />
+                )}
+                <View
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    padding: 14,
+                    backgroundColor: "rgba(0,0,0,0.55)",
+                  }}
+                >
+                  <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.8 }}>
+                    {(a.kicker || "FEATURED").toUpperCase()}
+                  </Text>
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 4, lineHeight: 21 }} numberOfLines={2}>
+                    {a.title}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={{ flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 10 }}>
+            {hero.map((_, i) => (
+              <View
+                key={i}
+                style={{
+                  width: i === slide ? 16 : 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: i === slide ? C.accent : C.border,
+                }}
               />
-            ) : (
-              <View style={{ width: 76, height: 64, borderRadius: 10, backgroundColor: n.tone || C.elevated }} />
-            )}
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "700" }} numberOfLines={1}>
-                {(n.kicker || "MEDIA").toUpperCase()} · {n.time || ""}
-              </Text>
-              <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 3, lineHeight: 19 }} numberOfLines={2}>
-                {n.title}
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      {/* Portrait ad strip */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, marginBottom: 18 }}>
+        {ADS.map((ad) => (
+          <TouchableOpacity
+            key={ad.id}
+            activeOpacity={0.88}
+            onPress={() => show("Ad opens when the ad network is connected.")}
+            style={{
+              width: 140,
+              borderRadius: 14,
+              overflow: "hidden",
+              backgroundColor: ad.color,
+              borderWidth: 1,
+              borderColor: C.border,
+            }}
+          >
+            <Image source={{ uri: ad.imageUrl }} style={{ width: 140, height: 160 }} resizeMode="cover" />
+            <View style={{ padding: 10 }}>
+              <Text style={{ color: C.accent, fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>{ad.label.toUpperCase()}</Text>
+              <Text style={{ color: C.text, fontSize: 12, fontWeight: "700", marginTop: 3 }} numberOfLines={2}>
+                {ad.title}
               </Text>
             </View>
           </TouchableOpacity>
-          {idx === 3 ? (
-            <View
-              style={{
-                marginHorizontal: 16,
-                marginVertical: 10,
-                height: 72,
-                borderRadius: 12,
-                backgroundColor: C.card,
-                borderWidth: 1,
-                borderColor: C.border,
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 14,
-                gap: 12,
-              }}
+        ))}
+      </ScrollView>
+
+      {/* Section label + More */}
+      <View style={{ paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <Text style={{ color: C.text, fontSize: 15, fontWeight: "800" }}>Latest</Text>
+        <TouchableOpacity onPress={() => setShowMore((v) => !v)}>
+          <Text style={{ color: C.accent, fontSize: 13, fontWeight: "700" }}>{showMore ? "Less" : "More"}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 3-column grid */}
+      {listMode === "grid" ? (
+        <View style={{ paddingHorizontal: 16, flexDirection: "row", flexWrap: "wrap", gap: GRID_GAP }}>
+          {gridItems.map((a) => (
+            <TouchableOpacity
+              key={a.id}
+              activeOpacity={0.85}
+              onPress={() => setActive(a)}
+              style={{ width: GRID_CELL, marginBottom: 4 }}
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 10,
-                  backgroundColor: C.accentSoft,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Ionicons name="stats-chart-outline" size={20} color={C.accent} />
-              </View>
+              {a.imageUrl ? (
+                <Image
+                  source={{ uri: a.imageUrl }}
+                  style={{ width: GRID_CELL, height: GRID_CELL * 1.15, borderRadius: 10, backgroundColor: C.elevated }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={{ width: GRID_CELL, height: GRID_CELL * 1.15, borderRadius: 10, backgroundColor: a.tone || C.elevated }} />
+              )}
+              <Text style={{ color: C.text, fontSize: 11, fontWeight: "700", marginTop: 6, lineHeight: 14 }} numberOfLines={2}>
+                {a.title}
+              </Text>
+              <Text style={{ color: C.text3, fontSize: 10, marginTop: 2 }} numberOfLines={1}>
+                {(a.kicker || "Media").toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : (
+        /* Thumbnail list */
+        <View style={{ paddingHorizontal: 16 }}>
+          {listItems.map((a) => (
+            <TouchableOpacity
+              key={a.id}
+              activeOpacity={0.82}
+              onPress={() => setActive(a)}
+              style={{ flexDirection: "row", gap: 12, marginBottom: 14, alignItems: "center" }}
+            >
+              {a.imageUrl ? (
+                <Image
+                  source={{ uri: a.imageUrl }}
+                  style={{ width: 88, height: 72, borderRadius: 10, backgroundColor: C.elevated }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={{ width: 88, height: 72, borderRadius: 10, backgroundColor: a.tone || C.elevated }} />
+              )}
               <View style={{ flex: 1 }}>
-                <Text style={{ color: C.text3, fontSize: 10, fontWeight: "700" }}>AD</Text>
-                <Text style={{ color: C.text, fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
-                  Brand story · Kilode Ads
+                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 }}>
+                  {(a.kicker || "MEDIA").toUpperCase()} · {a.time || ""}
+                </Text>
+                <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 4, lineHeight: 19 }} numberOfLines={2}>
+                  {a.title}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={C.text3} />
-            </View>
-          ) : null}
-        </React.Fragment>
-      ))}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
-      {rest.length === 0 ? (
-        <Text style={{ color: C.text3, textAlign: "center", marginTop: 24, paddingHorizontal: 24 }}>
-          No stories in this section yet
-        </Text>
+      {/* Bottom AdSense-style card */}
+      <View
+        style={{
+          marginHorizontal: 16,
+          marginTop: 18,
+          borderRadius: 14,
+          borderWidth: 1,
+          borderColor: C.border,
+          backgroundColor: C.card,
+          padding: 14,
+          flexDirection: "row",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
+        <View style={{ width: 4, alignSelf: "stretch", borderRadius: 2, backgroundColor: C.accent }} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: C.text3, fontSize: 10, fontWeight: "700", letterSpacing: 0.6 }}>ADVERTISEMENT</Text>
+          <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 4 }}>Grow your brand on Kilode</Text>
+          <Text style={{ color: C.text2, fontSize: 12, marginTop: 2 }}>Portrait & feed placements · Push Link</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => show("Ads desk opens from More → Ads when connected.")}
+          style={{ backgroundColor: C.accentSoft, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 }}
+        >
+          <Text style={{ color: C.accent, fontWeight: "800", fontSize: 12 }}>Advertise</Text>
+        </TouchableOpacity>
+      </View>
+
+      {filtered.length === 0 ? (
+        <View style={{ padding: 32, alignItems: "center" }}>
+          <Text style={{ color: C.text2, fontSize: 14 }}>No stories in this category yet.</Text>
+        </View>
       ) : null}
     </ScrollView>
   );

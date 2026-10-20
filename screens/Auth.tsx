@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Platform,
   ScrollView,
   useWindowDimensions,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ACCOUNT_GROUPS, ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
@@ -28,9 +29,44 @@ type Props = {
   show: (m: string) => void;
 };
 
+const FLOAT = [
+  {
+    key: "music",
+    title: "Music",
+    sub: "New sounds. New vibes.",
+    icon: "musical-notes" as const,
+    style: { top: "12%" as const, left: 12 },
+    thumb: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&q=80",
+  },
+  {
+    key: "socials",
+    title: "Socials",
+    sub: "Connect. Share. Belong.",
+    icon: "people" as const,
+    style: { top: "18%" as const, right: 12 },
+    thumb: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&q=80",
+  },
+  {
+    key: "media",
+    title: "Media",
+    sub: "Real stories. Fresh takes.",
+    icon: "newspaper" as const,
+    style: { bottom: "22%" as const, left: 12 },
+    thumb: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=200&q=80",
+  },
+  {
+    key: "events",
+    title: "Events",
+    sub: "Be there. Feel it.",
+    icon: "calendar" as const,
+    style: { bottom: "16%" as const, right: 12 },
+    thumb: "https://images.unsplash.com/photo-1459749411175-047fc749d9b0?w=200&q=80",
+  },
+];
+
 export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const { height: windowHeight } = useWindowDimensions();
-  const compactWelcome = windowHeight < 760;
+  const compact = windowHeight < 760;
   const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
@@ -62,205 +98,203 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.root}>
-      <StatusBar barStyle="light-content" />
-      {mode === "welcome" ? (
-        <View style={[styles.welcomeRef, compactWelcome && { paddingTop: 4 }]}>
-          <View style={styles.refLogoWrap}>
+  if (mode === "welcome") {
+    return (
+      <SafeAreaView style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.welcome}>
+          <View style={styles.logoWrap}>
             <KilodeWordmark size="large" />
           </View>
 
-          <View style={[styles.refHero, compactWelcome && { minHeight: 220 }]}>
-            <View style={[styles.floatCard, styles.floatTL]}>
-              <Text style={styles.floatTitle}>♪  Music</Text>
-              <Text style={styles.floatSub}>New sounds. New vibes.</Text>
+          <View style={[styles.hero, compact && { height: 280 }]}>
+            {/* Soft gold arcs */}
+            <View style={styles.arc} />
+            {/* Center portrait placeholder matching brand mood */}
+            <View style={styles.portrait}>
+              <Image
+                source={{
+                  uri: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=600&q=80",
+                }}
+                style={styles.portraitImg}
+                resizeMode="cover"
+              />
+              <View style={styles.portraitFade} />
             </View>
-            <View style={[styles.floatCard, styles.floatTR]}>
-              <Text style={styles.floatTitle}>👤  Socials</Text>
-              <Text style={styles.floatSub}>Connect. Share. Belong.</Text>
-            </View>
-            <View style={[styles.floatCard, styles.floatBL]}>
-              <Text style={styles.floatTitle}>▣  Media</Text>
-              <Text style={styles.floatSub}>Real stories. Fresh takes.</Text>
-            </View>
-            <View style={[styles.floatCard, styles.floatBR]}>
-              <Text style={styles.floatTitle}>📅  Events</Text>
-              <Text style={styles.floatSub}>Be there. Feel it.</Text>
-            </View>
-            <View style={[styles.refPortrait, compactWelcome && { height: 200, width: 170 }]}>
-              <View style={styles.refPortraitInner}>
-                <Ionicons name="person" size={64} color="rgba(229,193,88,0.35)" />
+
+            {FLOAT.map((f) => (
+              <View key={f.key} style={[styles.floatCard, f.style as any]}>
+                <View style={styles.floatHead}>
+                  <Ionicons name={f.icon} size={12} color={GOLD} />
+                  <Text style={styles.floatTitle}>{f.title}</Text>
+                </View>
+                <Text style={styles.floatSub}>{f.sub}</Text>
+                <Image source={{ uri: f.thumb }} style={styles.floatThumb} resizeMode="cover" />
               </View>
-            </View>
+            ))}
           </View>
 
-          <View style={styles.refCopy}>
-            <Text style={styles.refHeadline}>Everything You Need.</Text>
-            <Text style={styles.refHeadlineGold}>One Platform.</Text>
-            <Text style={styles.refBody}>
-              Discover, create, connect and be part of something bigger.
+          <View style={styles.copy}>
+            <Text style={styles.headline}>Everything You Need.</Text>
+            <Text style={styles.headlineGold}>One Platform.</Text>
+            <Text style={styles.body}>
+              Discover, create, connect and be part of something bigger. Kilode brings your world together in one place.
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.refCta} onPress={() => setMode("up")} activeOpacity={0.9}>
-            <Text style={styles.refCtaText}>Get Started</Text>
+          <TouchableOpacity style={styles.cta} onPress={() => setMode("up")} activeOpacity={0.9}>
+            <Text style={styles.ctaText}>Get Started</Text>
             <Ionicons name="arrow-forward" size={18} color="#111" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setMode("in")} style={styles.refLoginRow}>
-            <Text style={styles.refLogin}>
-              Already have an account? <Text style={styles.refLoginLink}>Log In</Text>
+
+          <TouchableOpacity onPress={() => setMode("in")} style={styles.loginRow}>
+            <Text style={styles.loginMuted}>
+              Already have an account? <Text style={styles.loginLink}>Log In</Text>
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onGuest} style={{ marginTop: 8 }}>
-            <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, textAlign: "center" }}>
-              Continue as guest
-            </Text>
+
+          <TouchableOpacity onPress={onGuest} style={{ marginTop: 10 }}>
+            <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, textAlign: "center" }}>Continue as guest</Text>
           </TouchableOpacity>
         </View>
-      ) : (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-          <ScrollView contentContainerStyle={styles.authContent} keyboardShouldPersistTaps="handled">
-            <TouchableOpacity style={styles.back} onPress={() => setMode("welcome")}>
-              <Ionicons name="arrow-back" size={20} color="#F6F5F1" />
-            </TouchableOpacity>
-            <View style={styles.authBrand}>
-              <KilodeWordmark size="medium" />
-            </View>
-            <Text style={styles.authTitle}>{mode === "in" ? "Welcome back." : "Find your people."}</Text>
-            <Text style={styles.authSubtitle}>
-              {mode === "in" ? "Pick up where you left off." : "One account. Your whole world."}
-            </Text>
-            {mode === "up" ? (
-              <>
-                <Text style={styles.label}>YOUR KILODE ACCOUNT</Text>
-                <Text style={styles.kindIntro}>Choose the system you’re joining.</Text>
-                {ACCOUNT_GROUPS.map((group) => (
-                  <View key={group.title} style={styles.kindGroup}>
-                    <Text style={styles.kindGroupTitle}>{group.title}</Text>
-                    <View style={styles.kindGrid}>
-                      {group.kinds.map((id) => {
-                        const k = ACCOUNT_KINDS.find((item) => item.id === id)!;
-                        const selected = kind === k.id;
-                        return (
-                          <TouchableOpacity
-                            key={k.id}
-                            style={[styles.kindCell, selected && styles.kindCellOn]}
-                            onPress={() => setKind(k.id)}
-                          >
-                            <View style={styles.kindHeading}>
-                              <Text style={[styles.kindTitle, selected && styles.kindTitleOn]} numberOfLines={1}>
-                                {k.label}
-                              </Text>
-                              <View style={[styles.kindRadio, selected && styles.kindRadioOn]}>
-                                {selected ? <View style={styles.kindRadioDot} /> : null}
-                              </View>
-                            </View>
-                            <Text style={styles.kindHint} numberOfLines={2}>
-                              {k.hint}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.root}>
+      <StatusBar barStyle="light-content" />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView contentContainerStyle={styles.formPad} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity onPress={() => setMode("welcome")} style={{ marginBottom: 16 }}>
+            <Text style={{ color: GOLD, fontWeight: "600" }}>‹ Back</Text>
+          </TouchableOpacity>
+          <KilodeWordmark size="medium" />
+          <Text style={styles.formTitle}>{mode === "up" ? "Create account" : "Welcome back"}</Text>
+          <Text style={styles.formSub}>
+            {mode === "up" ? "Choose your path on Kilode" : "Sign in to continue"}
+          </Text>
+
+          {mode === "up" ? (
+            <>
+              <Text style={styles.label}>Account type</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {ACCOUNT_KINDS.map((k) => (
+                  <TouchableOpacity
+                    key={k.id}
+                    onPress={() => setKind(k.id)}
+                    style={[styles.kindChip, kind === k.id && styles.kindChipOn]}
+                  >
+                    <Text style={[styles.kindText, kind === k.id && styles.kindTextOn]}>{k.label}</Text>
+                  </TouchableOpacity>
                 ))}
-                <TextInput
-                  style={styles.field}
-                  placeholder="Display name"
-                  placeholderTextColor="#68665F"
-                  value={name}
-                  onChangeText={setName}
-                />
-              </>
-            ) : null}
-            <TextInput
-              style={styles.field}
-              placeholder="Username or email"
-              placeholderTextColor="#68665F"
-              autoCapitalize="none"
-              value={handle}
-              onChangeText={setHandle}
-            />
-            <TextInput
-              style={styles.field}
-              placeholder="Password"
-              placeholderTextColor="#68665F"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity
-              style={[styles.refCta, { opacity: busy ? 0.6 : 1 }]}
-              disabled={busy}
-              onPress={submit}
-            >
-              <Text style={styles.refCtaText}>{busy ? "Please wait…" : mode === "in" ? "Log In" : "Create account"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.switchRow}
-              onPress={() => setMode(mode === "in" ? "up" : "in")}
-            >
-              <Text style={styles.switchText}>
-                {mode === "in" ? "New here? " : "Have an account? "}
-                <Text style={styles.switchGold}>{mode === "in" ? "Sign up" : "Log in"}</Text>
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      )}
+              </ScrollView>
+              <Text style={styles.label}>Display name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Your name"
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                value={name}
+                onChangeText={setName}
+              />
+            </>
+          ) : null}
+
+          <Text style={styles.label}>Username</Text>
+          <TextInput
+            style={styles.input}
+            autoCapitalize="none"
+            placeholder="@handle"
+            placeholderTextColor="rgba(255,255,255,0.35)"
+            value={handle}
+            onChangeText={setHandle}
+          />
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            secureTextEntry
+            placeholder="••••••••"
+            placeholderTextColor="rgba(255,255,255,0.35)"
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          <TouchableOpacity style={[styles.cta, { marginTop: 20, opacity: busy ? 0.6 : 1 }]} onPress={submit} disabled={busy}>
+            <Text style={styles.ctaText}>{busy ? "Please wait…" : mode === "up" ? "Create account" : "Log In"}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setMode(mode === "up" ? "in" : "up")}
+            style={{ marginTop: 16, alignItems: "center" }}
+          >
+            <Text style={styles.loginMuted}>
+              {mode === "up" ? "Already have an account? " : "New here? "}
+              <Text style={styles.loginLink}>{mode === "up" ? "Log In" : "Get Started"}</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#0B0B0F" },
-  welcomeRef: {
-    flex: 1,
-    backgroundColor: "#0A0A0C",
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 28,
-  },
-  refLogoWrap: { alignItems: "center", marginTop: 8, marginBottom: 8 },
-  refHero: { flex: 1, minHeight: 260, justifyContent: "center", alignItems: "center" },
-  refPortrait: {
-    width: 200,
-    height: 240,
-    borderRadius: 24,
-    overflow: "hidden",
-    backgroundColor: "#1A1510",
-    alignItems: "center",
+  root: { flex: 1, backgroundColor: "#0A0A0B" },
+  welcome: { flex: 1, paddingHorizontal: 20, paddingBottom: 12 },
+  logoWrap: { alignItems: "center", paddingTop: 8, marginBottom: 4 },
+  hero: {
+    height: 340,
+    marginTop: 4,
+    marginBottom: 8,
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(229,193,88,0.2)",
+    alignItems: "center",
   },
-  refPortraitInner: { alignItems: "center", justifyContent: "center" },
+  arc: {
+    position: "absolute",
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    borderWidth: 1,
+    borderColor: "rgba(229,193,88,0.18)",
+  },
+  portrait: {
+    width: 200,
+    height: 260,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#1a1510",
+  },
+  portraitImg: { width: "100%", height: "100%" },
+  portraitFade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10,10,11,0.15)",
+  },
   floatCard: {
     position: "absolute",
     width: 132,
-    backgroundColor: "rgba(22,22,26,0.92)",
+    backgroundColor: "rgba(22,20,18,0.92)",
     borderRadius: 14,
-    padding: 10,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-    zIndex: 2,
+    borderColor: "rgba(229,193,88,0.22)",
+    padding: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
   },
-  floatTL: { top: "12%", left: 0 },
-  floatTR: { top: "18%", right: 0 },
-  floatBL: { bottom: "18%", left: 0 },
-  floatBR: { bottom: "12%", right: 0 },
-  floatTitle: { color: "#F5F5F5", fontSize: 13, fontWeight: "700" },
-  floatSub: { color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 3 },
-  refCopy: { marginTop: 8, marginBottom: 18 },
-  refHeadline: {
+  floatHead: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 2 },
+  floatTitle: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  floatSub: { color: "rgba(255,255,255,0.55)", fontSize: 10, marginBottom: 6 },
+  floatThumb: { width: "100%", height: 48, borderRadius: 8, backgroundColor: "#222" },
+  copy: { alignItems: "center", paddingHorizontal: 8, marginTop: 4 },
+  headline: {
     color: "#FFFFFF",
     fontSize: 28,
     fontWeight: "800",
     letterSpacing: -0.6,
     textAlign: "center",
   },
-  refHeadlineGold: {
+  headlineGold: {
     color: GOLD,
     fontSize: 28,
     fontWeight: "800",
@@ -268,15 +302,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 2,
   },
-  refBody: {
+  body: {
     color: "rgba(255,255,255,0.55)",
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
-    marginTop: 12,
+    marginTop: 10,
     paddingHorizontal: 12,
   },
-  refCta: {
+  cta: {
+    marginTop: 20,
     backgroundColor: GOLD,
     borderRadius: 999,
     paddingVertical: 16,
@@ -285,66 +320,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  refCtaText: { color: "#111111", fontSize: 16, fontWeight: "800" },
-  refLoginRow: { marginTop: 16, alignItems: "center" },
-  refLogin: { color: "rgba(255,255,255,0.55)", fontSize: 14 },
-  refLoginLink: { color: GOLD, fontWeight: "700" },
-  authContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 14, paddingBottom: 28 },
-  back: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 21,
-    backgroundColor: "#1B1B1D",
-    marginBottom: 22,
-  },
-  authBrand: { marginBottom: 26 },
-  authTitle: { color: "#F7F6F2", fontSize: 32, lineHeight: 38, fontWeight: "800", letterSpacing: -1.2 },
-  authSubtitle: { color: "#A7A49C", fontSize: 14, marginTop: 7, marginBottom: 28 },
-  label: { color: GOLD, fontSize: 10, fontWeight: "800", letterSpacing: 1.4, marginBottom: 9 },
-  kindIntro: { color: "#A7A49C", fontSize: 13, lineHeight: 19, marginTop: -3, marginBottom: 17 },
-  kindGroup: { marginBottom: 13 },
-  kindGroupTitle: { color: "#858178", fontSize: 10, fontWeight: "800", letterSpacing: 1.2, marginBottom: 8 },
-  kindGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 2 },
-  kindCell: {
-    width: "48%",
-    flexGrow: 1,
+  ctaText: { color: "#111", fontSize: 16, fontWeight: "800" },
+  loginRow: { marginTop: 16, alignItems: "center" },
+  loginMuted: { color: "rgba(255,255,255,0.5)", fontSize: 14 },
+  loginLink: { color: GOLD, fontWeight: "700" },
+  formPad: { padding: 20, paddingBottom: 40 },
+  formTitle: { color: "#fff", fontSize: 24, fontWeight: "800", marginTop: 16 },
+  formSub: { color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 6, marginBottom: 18 },
+  label: { color: "rgba(255,255,255,0.55)", fontSize: 12, fontWeight: "600", marginBottom: 6, marginTop: 10 },
+  input: {
+    backgroundColor: "rgba(255,255,255,0.06)",
     borderWidth: 1,
-    borderColor: "#303033",
-    backgroundColor: "#151517",
+    borderColor: "rgba(255,255,255,0.1)",
     borderRadius: 14,
-    padding: 12,
-    minHeight: 82,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    color: "#fff",
+    fontSize: 16,
   },
-  kindCellOn: { borderColor: GOLD, backgroundColor: "rgba(212,175,87,0.09)" },
-  kindHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 6 },
-  kindRadio: {
-    width: 15,
-    height: 15,
-    borderRadius: 8,
+  kindChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#66625A",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: "rgba(255,255,255,0.12)",
+    marginRight: 8,
   },
-  kindRadioOn: { borderColor: GOLD },
-  kindRadioDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: GOLD },
-  kindTitle: { color: "#F7F6F2", fontSize: 12, fontWeight: "800", flexShrink: 1 },
-  kindTitleOn: { color: GOLD },
-  kindHint: { color: "#858178", fontSize: 10, marginTop: 4, lineHeight: 13 },
-  field: {
-    minHeight: 54,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "#303033",
-    backgroundColor: "#151517",
-    paddingHorizontal: 16,
-    color: "#F7F6F2",
-    fontSize: 15,
-    marginBottom: 12,
-  },
-  switchRow: { alignItems: "center", paddingVertical: 17 },
-  switchText: { color: "#A7A49C", fontSize: 13 },
-  switchGold: { color: GOLD, fontWeight: "800" },
+  kindChipOn: { borderColor: GOLD, backgroundColor: "rgba(229,193,88,0.12)" },
+  kindText: { color: "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: "600" },
+  kindTextOn: { color: GOLD },
 });
