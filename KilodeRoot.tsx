@@ -173,13 +173,50 @@ function KilodeApp() {
     if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "activity") {
+      const chips = ["All", "Likes", "Comments", "Follows"];
       return (
-        <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
-          <View style={s.padH}><Text style={s.h1}>Notifications</Text></View>
-          {activity.map((a: any) => (
-            <TouchableOpacity key={a.id} style={[s.activityRow, a.unread && s.activityUnread]} onPress={() => go(a.lane || "home")}>
-              <Text style={s.activityIcon}>{a.icon}</Text>
-              <View style={s.flex}><Text style={s.activityText}>{a.text}</Text><Text style={s.meta}>{a.time}</Text></View>
+        <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 28 }} refreshControl={rc} showsVerticalScrollIndicator={false}>
+          <View style={{ paddingHorizontal: 16, paddingTop: 4, marginBottom: 8 }}>
+            <Text style={{ color: C.text, fontSize: 22, fontWeight: "800" }}>Notifications</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, marginBottom: 12 }}>
+            {chips.map((f, i) => (
+              <View key={f} style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: i === 0 ? C.accent : "transparent", borderWidth: 1, borderColor: i === 0 ? C.accent : C.border }}>
+                <Text style={{ color: i === 0 ? "#111" : C.text2, fontWeight: "700", fontSize: 13 }}>{f}</Text>
+              </View>
+            ))}
+          </ScrollView>
+          {(activity.length ? activity : [
+            { id: "n1", icon: "❤️", text: "Rema liked your post", time: "2m", unread: true, lane: "socials" },
+            { id: "n2", icon: "💬", text: "Ayra commented on your take", time: "18m", unread: true, lane: "socials" },
+            { id: "n3", icon: "👤", text: "Burna Boy started following you", time: "1h", unread: false, lane: "socials" },
+            { id: "n4", icon: "🎵", text: "New drop in Afrobeats charts", time: "3h", unread: false, lane: "music" },
+            { id: "n5", icon: "📅", text: "Lagos Music Festival is this weekend", time: "5h", unread: false, lane: "events" },
+          ]).map((a: any) => (
+            <TouchableOpacity
+              key={a.id}
+              onPress={() => go(a.lane || "home")}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                marginHorizontal: 12,
+                marginBottom: 8,
+                padding: 12,
+                borderRadius: 14,
+                backgroundColor: a.unread ? C.elevated : C.card,
+                borderWidth: 1,
+                borderColor: a.unread ? C.accent + "44" : C.border,
+              }}
+            >
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: C.card, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ fontSize: 18 }}>{a.icon}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontWeight: a.unread ? "700" : "600", fontSize: 14, lineHeight: 19 }}>{a.text}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{a.time}</Text>
+              </View>
+              {a.unread ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent }} /> : null}
             </TouchableOpacity>
           ))}
         </ScrollView>
