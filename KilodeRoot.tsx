@@ -459,6 +459,7 @@ function KilodeApp() {
             <View style={{ flex: 1 }}>
               <Text style={{ color: C.text, fontSize: 16, fontWeight: "600", letterSpacing: -0.15 }}>{displayName || session.name}</Text>
               <Text style={{ color: C.text2, marginTop: 2 }}>@{displayHandle || session.handle}</Text>
+              {profileBio ? <Text style={{ color: C.text2, fontSize: 12, lineHeight: 17, marginTop: 5 }} numberOfLines={3}>{profileBio}</Text> : null}
               <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700", marginTop: 4 }}>{accountKindLabel(session.kind)}</Text>
               <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
                 <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: deviceSession ? "rgba(229,193,88,0.15)" : "rgba(34,197,94,0.15)" }}>
