@@ -255,3 +255,24 @@ $$;
 create trigger protect_profile_authority_fields_before_update
   before update on public.profiles
   for each row execute function public.protect_profile_authority_fields();
+
+-- Realtime discovery: new rows can refresh Home and their owning system screen
+-- without rebuilding the app. This is safe to rerun if a table is already published.
+do $$
+declare
+  table_name text;
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    foreach table_name in array array['posts', 'articles', 'tracks', 'events', 'market_listings', 'jobs'] loop
+      if not exists (
+        select 1 from pg_publication_tables
+        where pubname = 'supabase_realtime'
+          and schemaname = 'public'
+          and tablename = table_name
+      ) then
+        execute format('alter publication supabase_realtime add table public.%I', table_name);
+      end if;
+    end loop;
+  end if;
+end;
+$$;
