@@ -431,6 +431,35 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         ))}
       </View> : null}
 
+      {tab === "Artists" ? (
+        <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>Artists to discover</Text>
+            <Text style={{ color: C.text3, fontSize: 11 }}>Curated</Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => onOpenArtist ? onOpenArtist(FEATURED.name) : show("Artist pages will open here when artist navigation is connected.")}
+            style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border }}
+          >
+            <Image source={{ uri: FEATURED.imageUrl }} style={{ width: 58, height: 58, borderRadius: 29, backgroundColor: C.elevated }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }}>{FEATURED.name}</Text>
+              <Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>Featured artist · Afrobeats</Text>
+            </View>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={following ? "Unfollow featured artist" : "Follow featured artist"}
+              onPress={() => { setFollowing((value) => !value); show(following ? `Unfollowed ${FEATURED.name}` : `Following ${FEATURED.name}`); }}
+              style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: following ? C.elevated : C.accent }}
+            >
+              <Text style={{ color: following ? C.text : "#111", fontWeight: "700", fontSize: 11 }}>{following ? "Following" : "Follow"}</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+          <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 12 }}>Artist discovery is currently a curated preview. Live artist search, verified profiles and follower counts will come from the Kilode catalogue.</Text>
+        </View>
+      ) : null}
+
       {(tab === "Home" || tab === "Discover") ? <>
       <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>From Kilode</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
