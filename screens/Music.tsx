@@ -331,31 +331,26 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         </View>
       ) : null}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 14, gap: 8 }}>
+      <View style={{ marginHorizontal: 16, marginTop: 14, padding: 4, flexDirection: "row", borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
         {TABS.map((t) => (
           <TouchableOpacity
             key={t}
             onPress={() => setTab(t)}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: tab === t ? C.accentSoft : "transparent",
-              borderWidth: 1,
-              borderColor: tab === t ? C.accent : C.border,
-            }}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === t }}
+            style={{ flex: 1, alignItems: "center", paddingVertical: 9, borderRadius: 9, backgroundColor: tab === t ? C.card : "transparent" }}
           >
-            <Text style={{ color: tab === t ? C.accent : C.text2, fontWeight: "600", fontSize: 13 }}>{t}</Text>
+            <Text style={{ color: tab === t ? C.text : C.text3, fontWeight: tab === t ? "700" : "500", fontSize: 12 }}>{t}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => (onOpenArtist ? onOpenArtist(FEATURED.name) : show(FEATURED.name))}
         style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 18, overflow: "hidden", backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
       >
-        <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 160 }} resizeMode="cover" />
+        <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 116 }} resizeMode="cover" />
         <View style={{ padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: C.text, fontWeight: "600", fontSize: 14, letterSpacing: -0.15 }}>{FEATURED.name}</Text>
@@ -401,15 +396,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               flexDirection: "row",
               alignItems: "center",
               gap: 12,
-              padding: 10,
-              borderRadius: 14,
-              backgroundColor: C.card,
-              borderWidth: 1,
-              borderColor: C.border,
+              paddingVertical: 7,
+              paddingHorizontal: 2,
+              borderBottomWidth: 1,
+              borderBottomColor: C.border,
             }}
           >
             <Text style={{ color: C.text3, fontWeight: "800", width: 20 }}>{row.rank}</Text>
-            <View style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: row.color, alignItems: "center", justifyContent: "center" }}>
+            <View style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: row.color, alignItems: "center", justifyContent: "center" }}>
               <Ionicons name="musical-notes" size={18} color="#fff" />
             </View>
             <View style={{ flex: 1 }}>
@@ -427,10 +421,12 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           <TouchableOpacity
             key={g.id}
             onPress={() => show(`${g.label} catalogue when Music API is live.`)}
-            style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
+            style={{ width: "48%", minHeight: 52, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 11, paddingVertical: 10, borderRadius: 11, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
           >
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: g.color }} />
-            <Text style={{ color: C.text, fontWeight: "600", fontSize: 13 }}>{g.label}</Text>
+            <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: g.color, opacity: 0.9, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="musical-note" size={14} color="#fff" />
+            </View>
+            <Text numberOfLines={1} style={{ color: C.text, fontWeight: "600", fontSize: 12 }}>{g.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -438,8 +434,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>From Kilode</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
         {tracks.map((t: any) => (
-          <TouchableOpacity key={t.id} onPress={() => openTrack(t)} style={{ width: 120 }}>
-            <View style={{ width: 120, height: 120, borderRadius: 14, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+          <TouchableOpacity key={t.id} onPress={() => openTrack(t)} style={{ width: 112 }}>
+            <View style={{ width: 112, height: 112, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
               <Ionicons name="musical-notes" size={28} color="rgba(255,255,255,0.9)" />
             </View>
             <Text style={{ color: C.text, fontWeight: "700", fontSize: 12, marginTop: 6 }} numberOfLines={1}>{t.title}</Text>
