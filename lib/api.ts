@@ -134,6 +134,34 @@ export function fetchActivity(token?: string) {
   return tryLiveJson("/api/mobile/activity", ACTIVITY as any[], "listNotes", token);
 }
 
+function normalizeList(payload: any, key: string): any[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload[key])) return payload[key];
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  return [];
+}
+
+export async function fetchEvents(): Promise<ApiResult<any[]>> {
+  const r = await tryLiveJson<any>("/api/mobile/events", [], "listEvents");
+  if (r.source === "mock") return { ...r, data: [] };
+  if (!r.ok) return { ok: false, data: [], source: "error", error: r.error, fn: "listEvents" };
+  return { ok: true, data: normalizeList(r.data, "events"), source: "live", fn: "listEvents" };
+}
+
+export async function fetchMarketListings(): Promise<ApiResult<any[]>> {
+  const r = await tryLiveJson<any>("/api/mobile/market", [], "listMarket");
+  if (r.source === "mock") return { ok: true, data: [], source: "mock", fn: "listMarket", error: r.error };
+  if (!r.ok) return { ok: false, data: [], source: "error", error: r.error, fn: "listMarket" };
+  return { ok: true, data: normalizeList(r.data, "listings"), source: "live", fn: "listMarket" };
+}
+
+export async function fetchJobs(): Promise<ApiResult<any[]>> {
+  const r = await tryLiveJson<any>("/api/mobile/jobs", [], "listJobs");
+  if (r.source === "mock") return { ok: true, data: [], source: "mock", fn: "listJobs", error: r.error };
+  if (!r.ok) return { ok: false, data: [], source: "error", error: r.error, fn: "listJobs" };
+  return { ok: true, data: normalizeList(r.data, "jobs"), source: "live", fn: "listJobs" };
+}
+
 export function fetchCarousel() {
   return tryLiveJson("/api/mobile/carousel", CAROUSEL as any[], "listCarousel");
 }
