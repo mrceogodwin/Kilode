@@ -1,5 +1,5 @@
 /**
- * Kilode native API client → Kilode-v2 mobile bridge
+ * Kilode native API client → dedicated Kilode API (configured explicitly)
  *
  * Live paths (when deployed on the v2 host):
  *   GET  /api/mobile/health
@@ -40,6 +40,9 @@ async function tryLiveJson<T>(
 ): Promise<ApiResult<T>> {
   if (FORCE_MOCK) {
     return { ok: true, data: fallback, source: "mock", fn: fnName };
+  }
+  if (!API_BASE) {
+    return { ok: false, data: fallback, source: "error", error: "Dedicated Kilode API is not configured", fn: fnName };
   }
   try {
     const ctrl = new AbortController();
@@ -166,6 +169,9 @@ export async function postTake(
   if (FORCE_MOCK) {
     return { ok: true, data: local, source: "mock", fn: "saveTake" };
   }
+  if (!API_BASE) {
+    return { ok: false, data: local, source: "error", error: "Dedicated Kilode API is not configured", fn: "saveTake" };
+  }
   try {
     const res = await fetch(`${API_BASE}/api/mobile/takes`, {
       method: "POST",
@@ -211,6 +217,9 @@ export async function postComment(
   const local = { id: `c-${Date.now()}`, text, takeId };
   if (FORCE_MOCK) {
     return { ok: true, data: local, source: "mock", fn: "replyTake" };
+  }
+  if (!API_BASE) {
+    return { ok: false, data: local, source: "error", error: "Dedicated Kilode API is not configured", fn: "replyTake" };
   }
   try {
     const res = await fetch(
