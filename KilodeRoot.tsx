@@ -10,7 +10,7 @@ import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY 
 import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
 import { getBackendMode } from "./lib/config";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, fetchEvents, fetchMarketListings, fetchJobs, postTake } from "./lib/api";
-import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs, togglePostLike, updateOwnProfile } from "./lib/supabase";
+import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs, togglePostLike, updateOwnProfile, fetchOwnProfile } from "./lib/supabase";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -134,6 +134,40 @@ function KilodeApp() {
   const [profileEditorOpen, setProfileEditorOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [blocked, setBlocked] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        if (session.userId && getBackendMode() === "supabase") {
+          const profile = await fetchOwnProfile(session.userId);
+          if (!active || !profile) return;
+          setDisplayName(profile.display_name || session.name || "");
+          setDisplayHandle(profile.handle || session.handle || "");
+          setProfileBio(profile.bio || "");
+          return;
+        }
+        const raw = await AsyncStorage.getItem("@kilode/profile:" + session.handle);
+        if (!active) return;
+        if (raw) {
+          const profile = JSON.parse(raw);
+          setDisplayName(profile.displayName || session.name || "");
+          setDisplayHandle(profile.handle || session.handle || "");
+          setProfileBio(profile.bio || "");
+        } else {
+          setDisplayName(session.name || "");
+          setDisplayHandle(session.handle || "");
+          setProfileBio("");
+        }
+      } catch {
+        if (active) {
+          setDisplayName(session.name || "");
+          setDisplayHandle(session.handle || "");
+        }
+      }
+    })();
+    return () => { active = false; };
+  }, [session.userId, session.handle, session.name]);
 
   const show = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); }, []);
 
