@@ -387,13 +387,17 @@ export async function listOwnSupportPages(artistId: string): Promise<{ ok: boole
   const sb = getSupabase();
   if (!sb) return { ok: false, data: [], error: "Kilode support backend is not configured." };
   if (!artistId) return { ok: false, data: [], error: "Sign in to your artist account first." };
-  const { data, error } = await sb.from("support_pages")
-    .select("id, title, message, currency, status, created_at")
-    .eq("recipient_id", artistId)
-    .order("created_at", { ascending: false })
-    .limit(20);
-  if (error) return { ok: false, data: [], error: error.message };
-  return { ok: true, data: data || [] };
+  try {
+    const { data, error } = await sb.from("support_pages")
+      .select("id, title, message, currency, status, created_at")
+      .eq("recipient_id", artistId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error) return { ok: false, data: [], error: error.message };
+    return { ok: true, data: data || [] };
+  } catch {
+    return { ok: false, data: [], error: "Could not load support pages. Check your connection and retry." };
+  }
 }
 
 /** Create an artist support page. This does not initiate or confirm a payment. */
@@ -410,10 +414,14 @@ export async function createArtistSupportPage(
   if (title.length < 2 || title.length > 100) return { ok: false, error: "Support page title must be 2–100 characters." };
   if (message.length > 500) return { ok: false, error: "Support message must be 500 characters or fewer." };
   if (!/^[A-Z]{3}$/.test(currency)) return { ok: false, error: "Use a valid three-letter currency code." };
-  const { data, error } = await sb.from("support_pages")
-    .insert({ recipient_id: artistId, title, message, currency, status: "active" })
-    .select("id, title, message, currency, status, created_at")
-    .single();
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, data };
+  try {
+    const { data, error } = await sb.from("support_pages")
+      .insert({ recipient_id: artistId, title, message, currency, status: "active" })
+      .select("id, title, message, currency, status, created_at")
+      .single();
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, data };
+  } catch {
+    return { ok: false, error: "Could not create your support page. Check your connection and retry." };
+  }
 }
