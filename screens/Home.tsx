@@ -83,7 +83,7 @@ export function HomeScreen({
       ...jobs.map((x) => ({ id: "job-" + x.id, kind: "Jobs", raw: x, date: timeOf(x), title: firstText(x.title, "Opportunity"), body: firstText(x.salary, x.salary_label, x.meta, x.location, x.location_label, "Open Jobs"), image: firstText(x.imageUrl, x.image_url, x.image), sub: firstText(x.company, x.location, x.location_label, "Jobs"), onPress: () => onOpenItem("Jobs", x) })),
     ];
     return rows.sort((a, b) => b.date - a.date);
-  }, [takes, news, tracks, events, market, jobs, onOpenPost, onOpenMedia, onPlayTrack, onOpenEvents, onOpenMarket, onOpenJobs]);
+  }, [takes, news, tracks, events, market, jobs, onOpenPost, onOpenMedia, onPlayTrack, onOpenItem, onOpenEvents, onOpenMarket, onOpenJobs]);
 
   const filtered = system === "all" ? feed : feed.filter((x) => x.kind.toLowerCase() === system.toLowerCase());
   const searchResults = submittedSearch ? feed.filter((x) => [x.title, x.body, x.kind, x.sub].join(" ").toLowerCase().includes(submittedSearch.toLowerCase())).slice(0, 8) : [];
