@@ -241,6 +241,31 @@ function KilodeApp() {
     return () => { cancelled = true; };
   }, [loadAll]);
 
+  // Refresh Home and dedicated system screens when connected content changes.
+  // Offline preview data stays local and is never presented as live content.
+  useEffect(() => {
+    if (getBackendMode() !== "supabase") return;
+    const sb = getSupabase();
+    if (!sb) return;
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleRefresh = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => { void loadAll(); }, 180);
+    };
+    const channel = sb.channel("kilode-discovery-feed")
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tracks" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "market_listings" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, scheduleRefresh)
+      .subscribe();
+    return () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      void sb.removeChannel(channel);
+    };
+  }, [loadAll]);
+
   // Realtime keeps the shared discovery feed current when content is published elsewhere.
   // If the project's Realtime publication is not enabled, pull-to-refresh still works.
   useEffect(() => {
@@ -288,7 +313,7 @@ function KilodeApp() {
   );
 
   const rc = <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} colors={[C.accent]} />;
-  const eventList = (LISTINGS.events || []).map((e: any) => ({ id: e.id, title: e.title, meta: e.meta, price: e.price, tag: e.tag }));
+  const eventList = (events || []).map((e: any) => ({ id: e.id, title: e.title, meta: e.meta, price: e.price, tag: e.tag, date: e.date, category: e.category }));
 
   const body = () => {
     if (settingsOpen) return <SettingsScreen s={s} C={C} isDark={isDark} sessionHandle={session.handle || ""} sessionKind={session.kind || "member"} localOnly={deviceSession} onBack={() => setSettingsOpen(false)} onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to the dedicated backend yet." })} show={show} />;
