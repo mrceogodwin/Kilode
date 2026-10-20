@@ -7,7 +7,7 @@
 ## Current checkpoint
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
-- **Latest commit:** `aaf9c6d5` — prevents Music library state from leaking across account changes when local storage fails.
+- **Latest commit:** `b27f83ea` — redesigns the header wordmark with a green raised signature treatment and orange dot; the same branch includes the Music library account-isolation fix.
 - **Previous checkpoint `f06f6e5f`:** native validation and web export checks both passed. This does not validate the newer `aaf9c6d5` change.
 - **Latest `aaf9c6d5` checks:** native validation and web export were observed running; final conclusions still need to be confirmed.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
@@ -28,6 +28,8 @@
 ## P1 — Native navigation and shell
 
 - [x] Premium solid header and five-item bottom dock direction implemented; central create action retained.
+- [x] Header-left Kilode wordmark redesigned: the exclamation stem forms the K upright, clean diagonals complete the K, tightly kerned upright green letters use layered highlight/depth, and the dot is orange.
+- [ ] Review wordmark sizing and legibility on iPhone and web export; the requested crayon-like raised effect is approximated with native text layers and shadows, not a custom textured font asset.
 - [x] Remove duplicate Socials top-left create button; contextual create CTA is used by system.
 - [x] Add tab history and edge-swipe back/forward logic; back closes selected transient overlays/details first.
 - [ ] Confirm latest CI on the latest commit.
