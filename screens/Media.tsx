@@ -86,7 +86,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.6 }}>
           {(active.kicker || "MEDIA").toUpperCase()} · {active.time || "Today"}
         </Text>
-        <Text style={{ color: C.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.55, marginTop: 8, lineHeight: 31 }}>
+        <Text style={{ color: C.text, fontSize: 22, fontWeight: "700", letterSpacing: -0.5, marginTop: 8, lineHeight: 27 }}>
           {active.title}
         </Text>
         <Text style={{ color: C.text3, fontSize: 12, marginTop: 8 }}>{active.author || "Kilode Editorial"}</Text>
@@ -122,7 +122,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
           <Ionicons name="chevron-back" size={18} color={C.accent} />
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.35, textAlign: "center", flex: 1 }}>Media</Text>
+        <Text style={{ color: C.text, fontSize: 16, fontWeight: "600", letterSpacing: -0.25, textAlign: "center", flex: 1 }}>Media</Text>
         <View style={{ width: 72 }} />
       </View>
 
@@ -191,7 +191,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                   <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.8 }}>
                     {(a.kicker || "FEATURED").toUpperCase()}
                   </Text>
-                  <Text style={{ color: "#fff", fontSize: 19, fontWeight: "800", marginTop: 5, lineHeight: 24, letterSpacing: -0.35 }} numberOfLines={2}>
+                  <Text style={{ color: "#fff", fontSize: 17, fontWeight: "700", marginTop: 5, lineHeight: 22, letterSpacing: -0.3 }} numberOfLines={2}>
                     {a.title}
                   </Text>
                 </View>
@@ -216,7 +216,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
 
       {/* Latest stories */}
       <View style={{ paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <Text style={{ color: C.text, fontSize: 15, fontWeight: "800" }}>Latest</Text>
+        <Text style={{ color: C.text, fontSize: 15, fontWeight: "600" }}>Latest</Text>
         <TouchableOpacity onPress={() => setShowMore((v) => !v)}>
           <Text style={{ color: C.accent, fontSize: 13, fontWeight: "700" }}>{showMore ? "Less" : "More"}</Text>
         </TouchableOpacity>
