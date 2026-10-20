@@ -377,14 +377,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         </View>
       </TouchableOpacity>
 
-      <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
-        <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>Top charts</Text>
-        <TouchableOpacity onPress={() => setTab("Charts")}>
-          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text>
-        </TouchableOpacity>
-      </View>
+      {(tab === "Home" || tab === "Charts" || tab === "Discover") ? (
+        <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Popular right now" : "Top charts"}</Text>
+          {tab !== "Charts" ? <TouchableOpacity onPress={() => setTab("Charts")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text></TouchableOpacity> : null}
+        </View>
+      ) : null}
 
-      {(tab === "Charts" || tab === "Home" ? CHARTS : CHARTS.slice(0, 3)).map((row) => {
+      {(tab === "Charts" || tab === "Home" ? CHARTS : tab === "Discover" ? CHARTS.slice(0, 3) : []).map((row) => {
         const payload = { id: `c${row.rank}`, title: row.title, artist: row.artist, color: row.color };
         return (
           <TouchableOpacity
@@ -415,8 +415,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         );
       })}
 
-      <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, paddingHorizontal: 16, marginTop: 18, marginBottom: 9 }}>Genres</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
+      {(tab === "Home" || tab === "Discover") ? <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, paddingHorizontal: 16, marginTop: 18, marginBottom: 9 }}>Genres</Text> : null}
+      {(tab === "Home" || tab === "Discover") ? <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
         {GENRES.map((g) => (
           <TouchableOpacity
             key={g.id}
@@ -429,8 +429,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             <Text numberOfLines={1} style={{ color: C.text, fontWeight: "600", fontSize: 12 }}>{g.label}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </View> : null}
 
+      {(tab === "Home" || tab === "Discover") ? <>
       <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>From Kilode</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
         {tracks.map((t: any) => (
@@ -443,6 +444,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           </TouchableOpacity>
         ))}
       </ScrollView>
+      </> : null}
     </ScrollView>
     </>
   );
