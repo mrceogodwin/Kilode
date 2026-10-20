@@ -146,6 +146,7 @@ function KilodeApp() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const soundRef = useRef<Audio.Sound | null>(null);
+  const playbackRequestIdRef = useRef(0);
   const playbackQueueRef = useRef<any[]>([]);
   const playbackQueueIndexRef = useRef(-1);
   const playTrackRef = useRef<((track: any, keepQueue?: boolean) => Promise<void>) | null>(null);
@@ -206,6 +207,7 @@ function KilodeApp() {
   const show = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); }, []);
 
   const playTrack = useCallback(async (track: any, keepQueue = false) => {
+    const requestId = ++playbackRequestIdRef.current;
     if (!keepQueue) {
       const index = tracks.findIndex((item: any) => String(item.id ?? item.title) === String(track?.id ?? track?.title));
       playbackQueueRef.current = index >= 0 ? tracks : [track];
@@ -218,14 +220,16 @@ function KilodeApp() {
         await soundRef.current.unloadAsync().catch(() => undefined);
         soundRef.current = null;
       }
+      if (requestId !== playbackRequestIdRef.current) return;
       if (!track?.previewUrl) {
         setIsPlaying(false);
         show("No playable audio preview is attached to this track yet.");
         return;
       }
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
+      if (requestId !== playbackRequestIdRef.current) return;
       const created = await Audio.Sound.createAsync({ uri: track.previewUrl }, { shouldPlay: true, volume: 1, progressUpdateIntervalMillis: 250 }, status => {
-        if (status.isLoaded) {
+        if (requestId === playbackRequestIdRef.current && status.isLoaded) {
           setIsPlaying(status.isPlaying);
           setPlaybackProgress(status.durationMillis ? status.positionMillis / status.durationMillis : 0);
           if (status.didJustFinish) {
@@ -242,11 +246,18 @@ function KilodeApp() {
           }
         }
       });
+      if (requestId !== playbackRequestIdRef.current) {
+        await created.sound.stopAsync().catch(() => undefined);
+        await created.sound.unloadAsync().catch(() => undefined);
+        return;
+      }
       soundRef.current = created.sound;
       setIsPlaying(created.status.isLoaded ? created.status.isPlaying : true);
     } catch {
-      setIsPlaying(false);
-      show("Audio preview could not load. Check your connection and try again.");
+      if (requestId === playbackRequestIdRef.current) {
+        setIsPlaying(false);
+        show("Audio preview could not load. Check your connection and try again.");
+      }
     }
   }, [tracks, show]);
 
