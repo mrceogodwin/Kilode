@@ -12,6 +12,7 @@ declare
   requested_handle text;
   safe_handle text;
   display_name_value text;
+  base_handle text;
   kind_value public.account_kind := 'member';
 begin
   requested_handle := coalesce(
@@ -24,9 +25,10 @@ begin
     safe_handle := 'user';
   end if;
 
-  -- Add a short stable suffix so two sign-ups choosing the same handle cannot
-  -- break account creation or accidentally claim another user's profile.
-  safe_handle := left(safe_handle, 24) || '_' || left(replace(new.id::text, '-', ''), 6);
+  -- Preserve the requested handle when available. If it is already taken,
+  -- append a stable suffix rather than failing auth sign-up or claiming it.
+  base_handle := left(safe_handle, 30);
+  safe_handle := base_handle;
   display_name_value := coalesce(
     nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''),
     requested_handle,
@@ -41,7 +43,14 @@ begin
 
   insert into public.profiles (id, handle, display_name, kind, role)
   values (new.id, safe_handle, display_name_value, kind_value, 'user')
-  on conflict (id) do nothing;
+  on conflict (handle) do nothing;
+
+  if not found then
+    safe_handle := left(base_handle, 23) || '_' || left(replace(new.id::text, '-', ''), 6);
+    insert into public.profiles (id, handle, display_name, kind, role)
+    values (new.id, safe_handle, display_name_value, kind_value, 'user')
+    on conflict (id) do nothing;
+  end if;
 
   return new;
 end;
