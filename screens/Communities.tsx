@@ -57,8 +57,7 @@ export function CommunitiesScreen({ s, C, onBack, show }: Props) {
         <TouchableOpacity onPress={onBack}>
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Communities</Text>
-        <TouchableOpacity onPress={() => show("Create community when backend is live.")}>
+                <TouchableOpacity onPress={() => show("Create community when backend is live.")}>
           <Ionicons name="add-circle-outline" size={22} color={C.accent} />
         </TouchableOpacity>
       </View>
