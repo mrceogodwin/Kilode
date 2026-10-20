@@ -485,6 +485,10 @@ function KilodeApp() {
             <TouchableOpacity style={[s.primaryBtn, { marginTop: 14, opacity: composeText.trim() && !posting ? 1 : 0.5 }]} disabled={!composeText.trim() || posting}
               onPress={async () => {
                 if (!session.token || session.token === "guest") { show("Sign in to publish."); return; }
+                if (getBackendMode() === "supabase" && !session.userId) {
+                  show("Sign in to your live Kilode account to publish to the shared feed.");
+                  return;
+                }
                 setPosting(true);
                 try {
                   if (session.userId && getBackendMode() === "supabase") {
