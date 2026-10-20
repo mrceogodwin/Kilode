@@ -58,8 +58,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         <TouchableOpacity onPress={onBack} accessibilityRole="button">
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Music</Text>
-        <TouchableOpacity
+                <TouchableOpacity
           onPress={() =>
             canList
               ? show("Track submit form opens when Music list API is live.")
