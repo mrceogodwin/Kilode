@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Share,
   useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
+import { Audio } from "expo-av";
 import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
 import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
 import { getBackendMode } from "./lib/config";
@@ -80,6 +81,8 @@ function KilodeApp() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const soundRef = useRef<Audio.Sound | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
@@ -93,6 +96,46 @@ function KilodeApp() {
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
+
+  const playTrack = useCallback(async (track: any) => {
+    setNowPlaying(track);
+    if (!track?.previewUrl) {
+      setIsPlaying(false);
+      show("No playable audio preview is attached to this track yet.");
+      return;
+    }
+    try {
+      if (soundRef.current) {
+        await soundRef.current.stopAsync().catch(() => undefined);
+        await soundRef.current.unloadAsync().catch(() => undefined);
+        soundRef.current = null;
+      }
+      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
+      const created = await Audio.Sound.createAsync({ uri: track.previewUrl }, { shouldPlay: true, volume: 1 }, status => {
+        if (status.isLoaded) setIsPlaying(status.isPlaying);
+      });
+      soundRef.current = created.sound;
+      setIsPlaying(true);
+    } catch {
+      setIsPlaying(false);
+      show("Audio preview could not load. Check your connection and try again.");
+    }
+  }, []);
+
+  const togglePlayback = useCallback(async () => {
+    if (!soundRef.current) {
+      if (nowPlaying?.previewUrl) await playTrack(nowPlaying);
+      else show("This track has no audio preview attached yet.");
+      return;
+    }
+    try {
+      const status = await soundRef.current.getStatusAsync();
+      if (status.isLoaded && status.isPlaying) await soundRef.current.pauseAsync();
+      else if (status.isLoaded) await soundRef.current.playAsync();
+    } catch {
+      show("Could not change playback state.");
+    }
+  }, [nowPlaying, playTrack]);
   const go = (t: string) => {
     setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
     setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null); setSelectedTrack(null); setSelectedArtist(null);
@@ -170,7 +213,7 @@ function KilodeApp() {
         onToggleFollow={() => setFollowing((p) => ({ ...p, [String(selectedProfile.handle || selectedProfile.name)]: !p[String(selectedProfile.handle || selectedProfile.name)] }))}
         onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }} />
     );
-    if (selectedTrack) return (<TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={setNowPlaying} onOpenArtist={(n) => { setSelectedTrack(null); setSelectedArtist(n); }} onOpenTrack={setSelectedTrack} show={show} />);
+    if (selectedTrack) return (<TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={playTrack} onOpenArtist={(n) => { setSelectedTrack(null); setSelectedArtist(n); }} onOpenTrack={setSelectedTrack} show={show} />);
     if (selectedArtist) return (<ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)} onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={setNowPlaying} show={show} />);
     if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
@@ -353,10 +396,17 @@ function KilodeApp() {
       {Platform.OS !== "web" ? <ConnectionBanner source={source} isDark={isDark} localOnly={deviceSession} /> : null}
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
-        <View style={s.player}>
-          <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
-          <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}</Text></View>
-          <TouchableOpacity onPress={() => setNowPlaying(null)}><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
+        <View style={[s.player, { gap: 10 }]}>
+          <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent, alignItems: "center", justifyContent: "center" }]}>
+            <Ionicons name="musical-notes" size={16} color="#fff" />
+          </View>
+          <View style={s.flex}>
+            <Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text>
+            <Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}{nowPlaying.previewKind === "sample" ? " · sample audio" : ""}</Text>
+            {isPlaying ? <View style={{ flexDirection: "row", gap: 3, marginTop: 4, alignItems: "flex-end" }}><View style={{ width: 3, height: 6, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 11, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 8, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 13, borderRadius: 2, backgroundColor: C.accent }} /></View> : null}
+          </View>
+          <TouchableOpacity onPress={togglePlayback} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}><Ionicons name={isPlaying ? "pause" : "play"} size={21} color={C.accent} /></TouchableOpacity>
+          <TouchableOpacity onPress={async () => { if (soundRef.current) { await soundRef.current.stopAsync().catch(() => undefined); await soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); }} accessibilityRole="button" accessibilityLabel="Close player"><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
         </View>
       ) : null}
       <KilodeTabBar
