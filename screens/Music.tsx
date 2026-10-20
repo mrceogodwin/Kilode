@@ -390,10 +390,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           {destination !== "Genres" && destination !== "Playlists" && destination !== "Push Link" ? (
             <>
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
-                <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>{destination === "Library" ? "Saved tracks" : destination === "Recently Played" ? "Recently played" : destination === "Albums" || destination === "Releases" ? "Available releases" : selectedGenre || destination}</Text>
-                <Text style={{ color: C.text3, fontSize: 11 }}>{destinationTracks.length} items</Text>
+                <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>{activePlaylist ? "Tracklist" : destination === "Library" ? "Saved tracks" : destination === "Recently Played" ? "Recently played" : destination === "Albums" || destination === "Releases" ? "Available releases" : selectedGenre || destination}</Text>
+                <Text style={{ color: C.text3, fontSize: 11 }}>{(activePlaylist ? activePlaylistTracks : destinationTracks).length} items</Text>
               </View>
-              {destinationTracks.map((track: any, index: number) => {
+              {(activePlaylist ? activePlaylistTracks : destinationTracks).map((track: any, index: number) => {
                 const id = String(track.id ?? track.title);
                 const title = String(track.title || "Untitled track");
                 const artistName = String(track.artist || track.artist_name || "Unknown artist");
