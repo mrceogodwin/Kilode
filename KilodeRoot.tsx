@@ -131,7 +131,7 @@ function KilodeApp() {
   const [displayHandle, setDisplayHandle] = useState("");
   const [blocked, setBlocked] = useState<string[]>([]);
 
-  const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
+  const show = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); }, []);
 
   const playTrack = useCallback(async (track: any) => {
     setNowPlaying(track);
