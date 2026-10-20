@@ -45,6 +45,12 @@ const RAIL = [
   { id: "music", label: "Music", icon: "musical-notes-outline" as const },
   { id: "events", label: "Events", icon: "calendar-outline" as const },
   { id: "market", label: "Market", icon: "bag-handle-outline" as const },
+  { id: "jobs", label: "Jobs", icon: "briefcase-outline" as const },
+  { id: "communities", label: "Communities", icon: "people-circle-outline" as const },
+  { id: "cinema", label: "Cinema", icon: "film-outline" as const },
+  { id: "creators", label: "Creators", icon: "videocam-outline" as const },
+  { id: "ads", label: "Ads & Business", icon: "megaphone-outline" as const },
+  { id: "myspace", label: "My Space", icon: "person-circle-outline" as const },
 ];
 
 const PYMK = [
@@ -136,6 +142,17 @@ export function HomeScreen({
     else if (id === "music") onOpenMusic();
     else if (id === "events") onOpenEvents();
     else if (id === "market") onOpenMarket();
+    else {
+      const labels: Record<string, string> = {
+        jobs: "Jobs",
+        communities: "Communities",
+        cinema: "Cinema",
+        creators: "Creators",
+        ads: "Ads & Business",
+        myspace: "My Space",
+      };
+      show(`${labels[id] || "This system"} is part of Kilode. Its dedicated screen needs to be connected before this shortcut can open it.`);
+    }
   };
 
   return (
