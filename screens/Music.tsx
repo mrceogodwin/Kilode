@@ -245,5 +245,6 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         ))}
       </ScrollView>
     </ScrollView>
+    </>
   );
 }
