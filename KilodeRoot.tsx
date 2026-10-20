@@ -146,6 +146,9 @@ function KilodeApp() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const soundRef = useRef<Audio.Sound | null>(null);
+  const playbackQueueRef = useRef<any[]>([]);
+  const playbackQueueIndexRef = useRef(-1);
+  const playTrackRef = useRef<((track: any, keepQueue?: boolean) => Promise<void>) | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
@@ -202,7 +205,12 @@ function KilodeApp() {
 
   const show = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); }, []);
 
-  const playTrack = useCallback(async (track: any) => {
+  const playTrack = useCallback(async (track: any, keepQueue = false) => {
+    if (!keepQueue) {
+      const index = tracks.findIndex((item: any) => String(item.id ?? item.title) === String(track?.id ?? track?.title));
+      playbackQueueRef.current = index >= 0 ? tracks : [track];
+      playbackQueueIndexRef.current = index >= 0 ? index : 0;
+    }
     setNowPlaying(track);
     try {
       if (soundRef.current) {
@@ -223,6 +231,13 @@ function KilodeApp() {
           if (status.didJustFinish) {
             setIsPlaying(false);
             setPlaybackProgress(0);
+            const queue = playbackQueueRef.current;
+            const nextIndex = playbackQueueIndexRef.current + 1;
+            if (nextIndex < queue.length) {
+              playbackQueueIndexRef.current = nextIndex;
+              const nextTrack = queue[nextIndex];
+              if (nextTrack?.previewUrl) void playTrackRef.current?.(nextTrack, true);
+            }
           }
         }
       });
@@ -232,7 +247,20 @@ function KilodeApp() {
       setIsPlaying(false);
       show("Audio preview could not load. Check your connection and try again.");
     }
-  }, []);
+  }, [tracks, show]);
+
+  playTrackRef.current = playTrack;
+
+  const stepPlaybackQueue = useCallback(async (direction: -1 | 1) => {
+    const queue = playbackQueueRef.current;
+    const nextIndex = playbackQueueIndexRef.current + direction;
+    if (nextIndex < 0 || nextIndex >= queue.length) {
+      show(direction < 0 ? "You are at the start of this queue." : "You are at the end of this queue.");
+      return;
+    }
+    playbackQueueIndexRef.current = nextIndex;
+    await playTrack(queue[nextIndex], true);
+  }, [playTrack, show]);
 
   const togglePlayback = useCallback(async () => {
     if (!soundRef.current) {
@@ -247,7 +275,7 @@ function KilodeApp() {
     } catch {
       show("Could not change playback state.");
     }
-  }, [nowPlaying, playTrack]);
+  }, [nowPlaying, playTrack, show]);
 
   useEffect(() => () => {
     if (soundRef.current) {
@@ -666,7 +694,9 @@ function KilodeApp() {
             </View>
             {isPlaying ? <View style={{ flexDirection: "row", gap: 3, marginTop: 4, alignItems: "flex-end" }}><View style={{ width: 3, height: 6, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 11, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 8, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 13, borderRadius: 2, backgroundColor: C.accent }} /></View> : null}
           </View>
+          <TouchableOpacity onPress={() => { void stepPlaybackQueue(-1); }} accessibilityRole="button" accessibilityLabel="Previous track"><Ionicons name="play-skip-back" size={17} color={playbackQueueIndexRef.current > 0 ? C.text : C.text3} /></TouchableOpacity>
           <TouchableOpacity onPress={togglePlayback} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}><Ionicons name={isPlaying ? "pause" : "play"} size={21} color={C.accent} /></TouchableOpacity>
+          <TouchableOpacity onPress={() => { void stepPlaybackQueue(1); }} accessibilityRole="button" accessibilityLabel="Next track"><Ionicons name="play-skip-forward" size={17} color={playbackQueueIndexRef.current >= 0 && playbackQueueIndexRef.current < playbackQueueRef.current.length - 1 ? C.text : C.text3} /></TouchableOpacity>
           <TouchableOpacity onPress={async () => { if (soundRef.current) { await soundRef.current.stopAsync().catch(() => undefined); await soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} accessibilityRole="button" accessibilityLabel="Close player"><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
         </View>
       ) : null}
