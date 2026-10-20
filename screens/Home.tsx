@@ -216,7 +216,7 @@ export function HomeScreen({
 
 
       {/* Compact discovery rails sit below Search; the mixed feed remains the main Home stream. */}
-      {!submittedSearch && <View style={{ marginTop: 2, marginBottom: 4 }}>
+      {system === "all" && !submittedSearch && <View style={{ marginTop: 2, marginBottom: 4 }}>
         {tracks.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 12, paddingTop: 12, paddingBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, marginBottom: 10 }}>
             <Ionicons name="musical-notes-outline" size={17} color={C.accent} />
