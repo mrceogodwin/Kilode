@@ -172,7 +172,7 @@ export function CommentsSheet({
               disabled={!draft.trim() || sending}
               onPress={async () => {
                 setSending(true);
-                const r = await postComment(takeId, draft, token);
+                const r = await postComment(takeId, draft, token ?? undefined);
                 setSending(false);
                 if (r.ok && r.data) {
                   const saved = r.data.comment || r.data.reply || r.data;
