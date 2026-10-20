@@ -1,7 +1,7 @@
 /**
  * Kilode native API client → dedicated Kilode API (configured explicitly)
  *
- * Live paths (when deployed on the v2 host):
+ * Live paths (when a dedicated Kilode API is configured):
  *   GET  /api/mobile/health
  *   GET  /api/mobile/takes
  *   POST /api/mobile/takes
