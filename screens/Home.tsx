@@ -284,7 +284,7 @@ export function HomeScreen({
             )}
             <LinearGradient colors={["transparent", "rgba(5,6,8,0.88)"]} locations={[0.05, 1]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 34, paddingBottom: 12 }}>
               <Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 10, fontWeight: "700", letterSpacing: 0.5 }}>{card.kind}</Text>
-              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700", letterSpacing: -0.25, marginTop: 3 }} numberOfLines={2}>
+              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", letterSpacing: -0.2, marginTop: 3 }} numberOfLines={2}>
                 {card.title}
               </Text>
             </LinearGradient>
@@ -487,7 +487,7 @@ export function HomeScreen({
 function SectionHead({ C, title, onSeeAll }: { C: any; title: string; onSeeAll: () => void }) {
   return (
     <View style={{ paddingHorizontal: 16, marginTop: 18, marginBottom: 10, flexDirection: "row", alignItems: "center" }}>
-      <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{title}</Text>
+      <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, flex: 1 }}>{title}</Text>
       <TouchableOpacity onPress={onSeeAll}>
         <Text style={{ color: C.accent, fontWeight: "600", fontSize: 12 }}>See all</Text>
       </TouchableOpacity>
