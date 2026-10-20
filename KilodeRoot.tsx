@@ -34,7 +34,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { EmptyState } from "./components/ui/EmptyState";
 import { ConnectionBanner } from "./components/ui/ConnectionBanner";
 import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
-import { primaryDesksFor, capabilitiesFor, can, toolsFor, accountKindLabel } from "./lib/permissions";
+import { primaryDesksFor, capabilitiesFor, can, toolsFor, accountKindLabel, workspaceFor } from "./lib/permissions";
 
 const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   "💼": "briefcase-outline", "🛍️": "bag-handle-outline", "🏠": "home-outline",
@@ -284,9 +284,11 @@ function KilodeApp() {
     }
     if (tab === "myspace") {
       const desks = primaryDesksFor(session.kind);
+      const workspace = workspaceFor(session.kind);
       return (
-        <ScrollView style={s.flex} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", marginBottom: 16 }}>My Space</Text>
+        <ScrollView style={s.flex} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          <Text style={{ color: C.text, fontSize: 19, fontWeight: "600", letterSpacing: -0.35 }}>{workspace.title}</Text>
+          <Text style={{ color: C.text2, fontSize: 12, lineHeight: 17, marginTop: 4, marginBottom: 16 }}>{workspace.subtitle}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
             <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: C.text, fontSize: 28, fontWeight: "800" }}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
@@ -313,7 +315,7 @@ function KilodeApp() {
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Following</Text></View>
           </View>
           <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, marginTop: 22, marginBottom: 10 }}>
-            {accountKindLabel(session.kind).toUpperCase()} TOOLS
+            {workspace.primaryLabel.toUpperCase()}
           </Text>
           <View style={{ gap: 8 }}>
             {toolsFor(session.kind).map((tool) => (
