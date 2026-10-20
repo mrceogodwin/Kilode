@@ -171,7 +171,7 @@ function KilodeApp() {
     );
     if (selectedTrack) return (<TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={setNowPlaying} onOpenArtist={(n) => { setSelectedTrack(null); setSelectedArtist(n); }} onOpenTrack={setSelectedTrack} show={show} />);
     if (selectedArtist) return (<ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)} onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={setNowPlaying} show={show} />);
-    if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
+    if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
     if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} onBack={() => go("home")} show={show} />;
     if (tab === "market") return <MarketScreen s={s} C={C} onBack={() => go("home")} show={show} />;
