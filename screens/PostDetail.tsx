@@ -42,7 +42,7 @@ export function PostDetailScreen({ s, C, post, liked, following, onBack, onLike,
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 18, marginBottom: 12 }}>
           <Text style={{ color: C.accent, fontSize: 12, fontWeight: "800" }}>FACT {post?.factPct ?? 50}%</Text>
           <View style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: C.elevated, overflow: "hidden", flexDirection: "row", marginHorizontal: 10 }}>
-            <View style={{ width: (post?.factPct ?? 50) + "%", backgroundColor: C.success }} />
+            <View style={{ width: `${post?.factPct ?? 50}%` as `${number}%`, backgroundColor: C.success }} />
             <View style={{ flex: 1, backgroundColor: C.danger }} />
           </View>
           <Text style={{ color: C.danger, fontSize: 12, fontWeight: "800" }}>CAP {100 - (post?.factPct ?? 50)}%</Text>
