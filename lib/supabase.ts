@@ -416,7 +416,7 @@ export async function createArtistSupportPage(
   if (!/^[A-Z]{3}$/.test(currency)) return { ok: false, error: "Use a valid three-letter currency code." };
   try {
     const { data, error } = await sb.from("support_pages")
-      .insert({ recipient_id: artistId, title, message, currency, status: "active" })
+      .insert({ recipient_id: artistId, title, message, currency, status: "draft" })
       .select("id, title, message, currency, status, created_at")
       .single();
     if (error) return { ok: false, error: error.message };
