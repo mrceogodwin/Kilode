@@ -77,6 +77,68 @@ export async function listRecentPosts(limit = 40): Promise<{ ok: boolean; data: 
   return { ok: true, data: rows };
 }
 
+/** Read-only catalogue queries used by the shared Home discovery feed and each system screen. */
+async function listRows(
+  table: string,
+  columns: string,
+  orderColumn = "created_at",
+  limit = 40
+): Promise<{ ok: boolean; data: any[]; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, data: [], error: "supabase not configured" };
+  const { data, error } = await sb.from(table).select(columns).order(orderColumn, { ascending: false }).limit(limit);
+  if (error) return { ok: false, data: [], error: error.message };
+  return { ok: true, data: (data || []) as any[] };
+}
+
+export async function listRecentArticles() {
+  const r = await listRows("articles", "id, title, kicker, body, image_url, published_at, created_at");
+  if (!r.ok) return r;
+  return { ok: true, data: r.data.map((row: any) => ({
+    id: row.id, title: row.title, kicker: row.kicker || "Media", body: row.body || "",
+    imageUrl: row.image_url || undefined, time: row.published_at || row.created_at,
+    author: "Kilode Editorial", previewOnly: false,
+  })) };
+}
+
+export async function listRecentTracks() {
+  const r = await listRows("tracks", "id, title, artist_name, cover_url, audio_url, created_at");
+  if (!r.ok) return r;
+  return { ok: true, data: r.data.map((row: any) => ({
+    id: row.id, title: row.title, artist: row.artist_name, imageUrl: row.cover_url || undefined,
+    previewUrl: row.audio_url || undefined, createdAt: row.created_at, previewOnly: false,
+  })) };
+}
+
+export async function listRecentEvents() {
+  const r = await listRows("events", "id, title, venue, starts_at, price_label, created_at");
+  if (!r.ok) return r;
+  return { ok: true, data: r.data.map((row: any) => ({
+    id: row.id, title: row.title, meta: [row.venue, row.starts_at].filter(Boolean).join(" · ") || "Details to be confirmed",
+    price: row.price_label || "See details", tag: "Event", category: "All", date: row.starts_at || undefined,
+    previewOnly: false,
+  })) };
+}
+
+export async function listRecentMarketListings() {
+  const r = await listRows("market_listings", "id, title, category, price_label, created_at");
+  if (!r.ok) return r;
+  return { ok: true, data: r.data.map((row: any) => ({
+    id: row.id, title: row.title, price: row.price_label || "Price on request",
+    category: row.category || "Other", previewOnly: false,
+  })) };
+}
+
+export async function listRecentJobs() {
+  const r = await listRows("jobs", "id, title, location_label, salary_label, created_at");
+  if (!r.ok) return r;
+  return { ok: true, data: r.data.map((row: any) => ({
+    id: row.id, title: row.title, company: "Employer not specified",
+    location: row.location_label || "Location not specified", type: "Not specified",
+    salary: row.salary_label || "Salary not specified", color: "#E6A94A", previewOnly: false,
+  })) };
+}
+
 export async function createPost(body: string, userId: string): Promise<{ ok: boolean; data?: any; error?: string }> {
   const sb = getSupabase();
   if (!sb) return { ok: false, error: "supabase not configured" };
