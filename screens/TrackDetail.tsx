@@ -8,6 +8,8 @@ export type TrackRecord = {
   artist: string;
   color?: string;
   plays?: string;
+  previewUrl?: string;
+  previewKind?: "sample";
 };
 
 type Props = {
