@@ -13,7 +13,7 @@ type Props = {
   show: (m: string) => void;
   onPlay: (track: any) => void;
   onOpenTrack?: (track: any) => void;
-  onOpenArtist?: (artistName: string) => void;
+  onOpenArtist?: (artist: any) => void;
   accountKind?: string;
   userId?: string;
   tracks?: any[];
@@ -476,7 +476,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                 )}
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={() => onOpenArtist ? onOpenArtist(artist.display_name || artist.handle) : show("Artist profile navigation is not connected yet.")}
+                  onPress={() => onOpenArtist ? onOpenArtist(artist) : show("Artist profile navigation is not connected yet.")}
                   style={{ flex: 1 }}
                 >
                   <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }} numberOfLines={1}>{artist.display_name || artist.handle}</Text>
