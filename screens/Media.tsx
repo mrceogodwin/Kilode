@@ -131,7 +131,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         {CATEGORIES.map((c) => (
           <TouchableOpacity
             key={c}
-            onPress={() => setFilter(c)}
+            onPress={() => { setFilter(c); setShowMore(false); }}
             style={{
               paddingHorizontal: 14,
               paddingVertical: 7,
@@ -167,7 +167,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                 onPress={() => setActive(a)}
                 style={{
                   width: CAROUSEL_W,
-                  height: 236,
+                  height: 210,
                   borderRadius: 16,
                   overflow: "hidden",
                   backgroundColor: a.tone || C.elevated,
@@ -191,7 +191,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                   <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.8 }}>
                     {(a.kicker || "FEATURED").toUpperCase()}
                   </Text>
-                  <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800", marginTop: 5, lineHeight: 25, letterSpacing: -0.45 }} numberOfLines={2}>
+                  <Text style={{ color: "#fff", fontSize: 19, fontWeight: "800", marginTop: 5, lineHeight: 24, letterSpacing: -0.35 }} numberOfLines={2}>
                     {a.title}
                   </Text>
                 </View>
