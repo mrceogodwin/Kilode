@@ -14,7 +14,7 @@ module.exports = ({ config }) => ({
         process.env.EAS_PROJECT_ID ||
         "",
     },
-    apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://kilode-nine.vercel.app",
+    apiUrl: process.env.EXPO_PUBLIC_API_URL || "",
     appEnv: process.env.EXPO_PUBLIC_APP_ENV || "production",
   },
 });
