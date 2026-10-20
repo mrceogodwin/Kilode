@@ -244,14 +244,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     };
     return score(b) - score(a);
   });
+  const destinationName = destination ?? "";
   const destinationTracks = destination === "Library"
     ? catalogueTracks.filter((track: any) => savedTrackIds[String(track.id ?? track.title)])
     : destination === "Recently Played"
       ? recentTrackIds.map((id) => catalogueTracks.find((track: any) => String(track.id ?? track.title) === id)).filter(Boolean)
-      : destination.startsWith("Album · ")
-        ? catalogueTracks.filter((track: any) => String(track.album || "").toLowerCase() === destination.slice(8).toLowerCase())
-        : destination.startsWith("Release · ")
-          ? catalogueTracks.filter((track: any) => String(track.release_title || track.release || track.album || "").toLowerCase() === destination.slice(10).toLowerCase())
+      : destinationName.startsWith("Album · ")
+        ? catalogueTracks.filter((track: any) => String(track.album || "").toLowerCase() === destinationName.slice(8).toLowerCase())
+        : destinationName.startsWith("Release · ")
+          ? catalogueTracks.filter((track: any) => String(track.release_title || track.release || track.album || "").toLowerCase() === destinationName.slice(10).toLowerCase())
           : destination === "Albums" || destination === "Releases"
             ? catalogueTracks.filter((track: any) => track.album || track.release_type || track.release_title)
             : destination === "Tailored to You"
@@ -272,8 +273,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const hasVerifiedChartSignals = destination === "Top 100" && destinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
   const albumGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.album).map((track: any) => [String(track.album), track])).entries()).map(([album, track]: any) => ({ title: String(album), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, trackCount: catalogueTracks.filter((item: any) => String(item.album) === String(album)).length }));
   const releaseGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.release_title || track.release || track.album).map((track: any) => [String(track.release_title || track.release || track.album), track])).entries()).map(([title, track]: any) => ({ title: String(title), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, type: String(track.release_type || "release"), trackCount: catalogueTracks.filter((item: any) => String(item.release_title || item.release || item.album) === String(title)).length }));
-  const activeAlbumTitle = destination.startsWith("Album · ") ? destination.slice(8) : null;
-  const activeReleaseTitle = destination.startsWith("Release · ") ? destination.slice(10) : null;
+  const activeAlbumTitle = destinationName.startsWith("Album · ") ? destinationName.slice(8) : null;
+  const activeReleaseTitle = destinationName.startsWith("Release · ") ? destinationName.slice(10) : null;
   const activeAlbum = activeAlbumTitle ? albumGroups.find((item) => item.title === activeAlbumTitle) : undefined;
   const activeRelease = activeReleaseTitle ? releaseGroups.find((item) => item.title === activeReleaseTitle) : undefined;
   const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
