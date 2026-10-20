@@ -60,6 +60,13 @@ export function SocialsScreen({
   const feed = takes.filter(
     (t) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))
   );
+  // Feed chips must change the actual posts shown, not only the selected styling.
+  const visibleFeed =
+    chip === "Following"
+      ? feed.filter((t) => !!following[String(t.handle || t.name)])
+      : chip === "Trending"
+        ? [...feed].sort((a, b) => Number(b.likes || 0) - Number(a.likes || 0))
+        : feed;
 
   return (
     <ScrollView
@@ -196,7 +203,7 @@ export function SocialsScreen({
         <Ionicons name="image-outline" size={18} color={C.accent} />
       </TouchableOpacity>
 
-      {feed.length === 0 ? (
+      {visibleFeed.length === 0 ? (
         <EmptyState
           C={C}
           icon="people-outline"
@@ -206,7 +213,7 @@ export function SocialsScreen({
           onAction={onCompose}
         />
       ) : (
-        feed.map((t) => {
+        visibleFeed.map((t) => {
           const id = String(t.id);
           const key = String(t.handle || t.name);
           const isLiked = !!liked[id];
