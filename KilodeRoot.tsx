@@ -19,39 +19,31 @@ import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
 import { SocialsScreen } from "./screens/Socials";
 import { EventsScreen } from "./screens/Events";
+import { MarketScreen } from "./screens/Market";
+import { JobsScreen } from "./screens/Jobs";
+import { CommunitiesScreen } from "./screens/Communities";
+import { CreatorsScreen } from "./screens/Creators";
 import { TrackDetailScreen } from "./screens/TrackDetail";
 import { ArtistDetailScreen } from "./screens/ArtistDetail";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
 import { Ionicons } from "@expo/vector-icons";
-import { PostActions } from "./components/ui/PostActions";
 import { EmptyState } from "./components/ui/EmptyState";
 import { ConnectionBanner } from "./components/ui/ConnectionBanner";
 import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
 
 const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
-  "💼": "briefcase-outline",
-  "🛍️": "bag-handle-outline",
-  "🏠": "home-outline",
-  "📅": "calendar-outline",
-  "🎬": "film-outline",
-  "🎵": "musical-notes-outline",
-  "💬": "chatbubble-ellipses-outline",
-  "📢": "megaphone-outline",
-  "📚": "book-outline",
-  "⚽": "football-outline",
-  "💻": "laptop-outline",
-  "▶️": "play-circle-outline",
-  "✏️": "create-outline",
+  "💼": "briefcase-outline", "🛍️": "bag-handle-outline", "🏠": "home-outline",
+  "📅": "calendar-outline", "🎬": "film-outline", "🎵": "musical-notes-outline",
+  "💬": "chatbubble-ellipses-outline", "📢": "megaphone-outline", "📚": "book-outline",
+  "⚽": "football-outline", "💻": "laptop-outline", "▶️": "play-circle-outline", "✏️": "create-outline",
 };
-const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap =>
-  SYSTEM_ICON[emoji] || "apps-outline";
+const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap => SYSTEM_ICON[emoji] || "apps-outline";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   useEffect(() => {
-    const homePreview = Platform.OS === "web" &&
-      typeof window !== "undefined" &&
+    const homePreview = Platform.OS === "web" && typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("preview") === "home";
     if (homePreview && !authLoading && !session) signInGuest("Guest");
   }, [authLoading, session, signInGuest]);
@@ -72,7 +64,6 @@ function KilodeApp() {
   const [posting, setPosting] = useState(false);
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
-  const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock" | "error">("mock");
@@ -91,13 +82,8 @@ function KilodeApp() {
   const [selectedTrack, setSelectedTrack] = useState<any | null>(null);
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
-  const [editOpen, setEditOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [displayHandle, setDisplayHandle] = useState("");
-  const [displayBio, setDisplayBio] = useState("");
-  const [profileName, setProfileName] = useState(session?.name || "");
-  const [profileHandle, setProfileHandle] = useState(session?.handle || "");
-  const [profileBio, setProfileBio] = useState("");
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
@@ -109,123 +95,94 @@ function KilodeApp() {
   const loadAll = useCallback(async () => {
     if (Platform.OS === "web") {
       setTakes(TAKES); setRooms(ROOMS); setNews(NEWS); setTracks(TRACKS); setActivity(ACTIVITY);
-      setSource("mock");
-      return "mock" as const;
+      setSource("mock"); return "mock" as const;
     }
-    const [t, r, n, tr, a] = await Promise.all([
-      fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token),
-    ]);
-    setTakes(Array.isArray(t.data) ? t.data : []);
-    setRooms(Array.isArray(r.data) ? r.data : []);
-    setNews(Array.isArray(n.data) ? n.data : []);
-    setTracks(Array.isArray(tr.data) ? tr.data : []);
+    const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token)]);
+    setTakes(Array.isArray(t.data) ? t.data : []); setRooms(Array.isArray(r.data) ? r.data : []);
+    setNews(Array.isArray(n.data) ? n.data : []); setTracks(Array.isArray(tr.data) ? tr.data : []);
     setActivity(Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
-    const nextSource: "live" | "mock" | "error" =
-      sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "live";
-    setSource(nextSource);
-    return nextSource;
+    const next = sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "live";
+    setSource(next as any); return next as any;
   }, [session?.token]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const b = await getBlockedUsers();
-      if (!cancelled) setBlocked(b);
-      await loadAll();
-      if (!cancelled) setBoot(false);
+      const b = await getBlockedUsers(); if (!cancelled) setBlocked(b);
+      await loadAll(); if (!cancelled) setBoot(false);
     })();
     return () => { cancelled = true; };
   }, [loadAll]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    try {
-      const result = await loadAll();
-      show(result === "error" ? "Some services unavailable." : result === "mock" ? "Preview refreshed" : "Refreshed");
-    } catch {
-      show("Could not refresh.");
-    } finally {
-      setRefreshing(false);
-    }
+    try { await loadAll(); show("Refreshed"); } catch { show("Could not refresh."); }
+    finally { setRefreshing(false); }
   };
 
   if (session && (authLoading || boot)) {
-    return (
-      <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
-        <ActivityIndicator color={C.accent} size="large" />
-        <Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text>
-      </SafeAreaView>
-    );
+    return (<SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}><ActivityIndicator color={C.accent} size="large" /><Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text></SafeAreaView>);
   }
-
   if (!session) {
-    return (
-      <AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp}
-        onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
-        onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />
-    );
+    return (<AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
   }
 
   const Header = ({ title }: { title?: string }) => (
     <View style={s.header}>
       <View style={s.headerLeft}>{title ? <Text style={s.headerTitle}>{title}</Text> : <KilodeWordmark size="small" />}</View>
       <View style={s.headerRight}>
-        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
-          <Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color={C.text} />
-        </TouchableOpacity>
-        <TouchableOpacity style={s.avatar} onPress={() => go("myspace")}>
-          <Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
-        </TouchableOpacity>
+        <TouchableOpacity style={s.iconBtn} onPress={() => go("activity")}><Ionicons name="notifications-outline" size={18} color={C.text} /></TouchableOpacity>
+        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}><Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color={C.text} /></TouchableOpacity>
+        <TouchableOpacity style={s.avatar} onPress={() => go("myspace")}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text></TouchableOpacity>
       </View>
     </View>
   );
 
   const rc = <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} colors={[C.accent]} />;
-  const eventList = (LISTINGS.events || []).map((e: any) => ({
-    id: e.id, title: e.title, meta: e.meta, price: e.price, tag: e.tag,
-  }));
+  const eventList = (LISTINGS.events || []).map((e: any) => ({ id: e.id, title: e.title, meta: e.meta, price: e.price, tag: e.tag }));
 
   const body = () => {
-    if (settingsOpen) return <SettingsScreen s={s} C={C} session={session} onBack={() => setSettingsOpen(false)} onSignOut={() => { signOut(); setSettingsOpen(false); }} show={show} />;
+    if (settingsOpen) return <SettingsScreen s={s} C={C} isDark={isDark} sessionHandle={session.handle || ""} onBack={() => setSettingsOpen(false)} onDeleteAccount={async () => { await signOut(); return { ok: true }; }} show={show} />;
     if (selectedPost) return (
       <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]}
         onBack={() => setSelectedPost(null)}
-        onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))}
+        onLike={() => setLiked((p) => ({ ...p, [String(selectedPost.id)]: !p[String(selectedPost.id)] }))}
         onComment={() => setCommentTake(selectedPost)}
-        onFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedPost.handle || selectedPost.name)]: !prev[String(selectedPost.handle || selectedPost.name)] }))}
+        onFollow={() => setFollowing((p) => ({ ...p, [String(selectedPost.handle || selectedPost.name)]: !p[String(selectedPost.handle || selectedPost.name)] }))}
         onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved."); }}
-        onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((prev) => prev.includes(h) ? prev : [...prev, h]); setSelectedPost(null); show("Blocked @" + h); }}
+        onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((p) => p.includes(h) ? p : [...p, h]); setSelectedPost(null); show("Blocked @" + h); }}
         show={show} />
     );
     if (selectedProfile) return (
       <UserProfileScreen s={s} C={C} user={selectedProfile} posts={takes.filter((p: any) => String(p.handle || p.name) === String(selectedProfile.handle || selectedProfile.name))}
         isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
         onBack={() => setSelectedProfile(null)}
-        onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))}
+        onToggleFollow={() => setFollowing((p) => ({ ...p, [String(selectedProfile.handle || selectedProfile.name)]: !p[String(selectedProfile.handle || selectedProfile.name)] }))}
         onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }} />
     );
-    if (selectedTrack) return (
-      <TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={setNowPlaying}
-        onOpenArtist={(name) => { setSelectedTrack(null); setSelectedArtist(name); }} onOpenTrack={(t) => setSelectedTrack(t)} show={show} />
-    );
-    if (selectedArtist) return (
-      <ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)}
-        onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={setNowPlaying} show={show} />
-    );
+    if (selectedTrack) return (<TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={setNowPlaying} onOpenArtist={(n) => { setSelectedTrack(null); setSelectedArtist(n); }} onOpenTrack={setSelectedTrack} show={show} />);
+    if (selectedArtist) return (<ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)} onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={setNowPlaying} show={show} />);
     if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
     if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return (
-      <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying}
-        onOpenTrack={(t) => setSelectedTrack(t)} onOpenArtist={(name) => setSelectedArtist(name)} />
-    );
+    if (tab === "market") return <MarketScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "jobs") return <JobsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "communities" || tab === "chat") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "creators") return <CreatorsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "activity") {
       return (
         <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
           <View style={s.padH}><Text style={s.h1}>Notifications</Text></View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, marginBottom: 12 }}>
+            {["All", "Likes", "Comments", "Follows"].map((f, i) => (
+              <View key={f} style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: i === 0 ? C.accent : "transparent", borderWidth: 1, borderColor: i === 0 ? C.accent : C.border }}>
+                <Text style={{ color: i === 0 ? "#111" : C.text2, fontWeight: "700", fontSize: 13 }}>{f}</Text>
+              </View>
+            ))}
+          </ScrollView>
           {activity.map((a: any) => (
             <TouchableOpacity key={a.id} style={[s.activityRow, a.unread && s.activityUnread]} onPress={() => go(a.lane || "home")}>
               <Text style={s.activityIcon}>{a.icon}</Text>
@@ -237,110 +194,132 @@ function KilodeApp() {
     }
     if (tab === "socials") {
       return (
-        <SocialsScreen
-          s={s} C={C} takes={takes} blocked={blocked} liked={liked} following={following}
-          sessionName={session.name || "K"} refreshing={refreshing} onRefresh={onRefresh}
-          onCompose={() => setComposeOpen(true)}
-          onOpenPost={(post) => setSelectedPost(post)}
-          onOpenProfile={(user) => setSelectedProfile(user)}
-          onLike={(id) => setLiked((prev) => ({ ...prev, [id]: !prev[id] }))}
-          onComment={(post) => setCommentTake(post)}
-          onFollow={(key, name) => {
-            setFollowing((prev) => ({ ...prev, [key]: !prev[key] }));
-            show(following[key] ? `Unfollowed ${name}` : `Following ${name}`);
-          }}
-          onReport={async (id) => { await submitReport("post", id, "other"); show("Reported · saved locally until moderation API is live"); }}
-          onBlock={async (handle) => {
-            await blockUser(handle);
-            setBlocked((prev) => (prev.includes(handle) ? prev : [...prev, handle]));
-            show(`Blocked @${handle} on this device`);
-          }}
-          show={show}
-        />
+        <SocialsScreen s={s} C={C} takes={takes} blocked={blocked} liked={liked} following={following} sessionName={session.name || "K"}
+          refreshing={refreshing} onRefresh={onRefresh} onCompose={() => setComposeOpen(true)}
+          onOpenPost={setSelectedPost} onOpenProfile={setSelectedProfile}
+          onLike={(id) => setLiked((p) => ({ ...p, [id]: !p[id] }))} onComment={setCommentTake}
+          onFollow={(key, name) => { setFollowing((p) => ({ ...p, [key]: !p[key] })); show(following[key] ? `Unfollowed ${name}` : `Following ${name}`); }}
+          onReport={async (id) => { await submitReport("post", id, "other"); show("Reported locally"); }}
+          onBlock={async (handle) => { await blockUser(handle); setBlocked((p) => p.includes(handle) ? p : [...p, handle]); show(`Blocked @${handle}`); }}
+          show={show} />
       );
     }
     if (tab === "myspace") {
       return (
-        <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
-          <View style={s.profileHead}>
-            <View style={s.profileAv}><Text style={s.profileAvText}>{(session.name || "K").slice(0, 2).toUpperCase()}</Text></View>
-            <Text style={s.h1}>{displayName || session.name}</Text>
-            <Text style={s.sub}>@{displayHandle || session.handle} · {session.kind}</Text>
-            <View style={s.rowGap}>
-              <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => setEditOpen(true)}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
-              <TouchableOpacity style={s.ghostBtn} onPress={() => setSettingsOpen(true)}><Text style={s.ghostBtnText}>Settings</Text></TouchableOpacity>
-              <TouchableOpacity style={s.ghostBtn} onPress={() => { signOut(); show("Signed out"); }}><Text style={s.ghostBtnText}>Sign out</Text></TouchableOpacity>
+        <ScrollView style={s.flex} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+          <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", marginBottom: 16 }}>My Space</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ color: C.text, fontSize: 28, fontWeight: "800" }}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
             </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>{displayName || session.name}</Text>
+              <Text style={{ color: C.text2, marginTop: 2 }}>@{displayHandle || session.handle}</Text>
+            </View>
+            <TouchableOpacity style={{ borderWidth: 1, borderColor: C.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 }} onPress={() => show("Profile editor opens next.")}>
+              <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>Edit Profile</Text>
+            </TouchableOpacity>
           </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 22, marginBottom: 8 }}>
+            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>{takes.length || 0}</Text><Text style={s.meta}>Posts</Text></View>
+            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Followers</Text></View>
+            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Following</Text></View>
+          </View>
+          <Text style={{ color: C.text2, marginTop: 8 }}>{session.kind || "Member"} · Nigeria</Text>
+          <View style={{ flexDirection: "row", marginTop: 20, gap: 10 }}>
+            {["Saved", "Activity", "Settings"].map((label) => (
+              <TouchableOpacity key={label} onPress={() => label === "Settings" ? setSettingsOpen(true) : label === "Activity" ? go("activity") : show("Saved items when sync is live.")}
+                style={{ flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: C.border, alignItems: "center" }}>
+                <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity style={{ marginTop: 20 }} onPress={() => { signOut(); show("Signed out"); }}>
+            <Text style={{ color: C.danger || "#ff6b6b", fontWeight: "700" }}>Sign out</Text>
+          </TouchableOpacity>
         </ScrollView>
       );
     }
-    if (DESKS.some((d) => d.id === tab) && tab !== "events") {
+    if (DESKS.some((d) => d.id === tab) && !["events", "market", "jobs", "chat", "creators"].includes(tab)) {
       const d = DESKS.find((x) => x.id === tab);
       const items = LISTINGS[tab] || [];
       return (
         <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
-          <View style={s.deskHero}>
-            <Text style={s.h1}>{d?.label || tab}</Text>
-            <Text style={s.sub}>{d?.blurb}</Text>
-          </View>
+          <View style={s.deskHero}><Text style={s.h1}>{d?.label || tab}</Text><Text style={s.sub}>{d?.blurb}</Text></View>
           {items.map((item: any) => (
             <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setSelectedDeskItem(item)}>
               <View style={s.flex}><Text style={s.roomName}>{item.title}</Text><Text style={s.meta}>{item.meta}</Text></View>
               {item.price ? <Text style={{ color: C.accent, fontWeight: "700" }}>{item.price}</Text> : null}
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={[s.ghostBtn, { margin: 14 }]} onPress={() => go("home")}><Text style={s.ghostBtnText}>Back home</Text></TouchableOpacity>
         </ScrollView>
       );
     }
-    // Home
+
+    // HOME — hybrid feed (media + social)
+    const chips = ["For You", "Trending", "Music", "Events", "Market"];
     return (
-      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
-        <View style={[s.padH, { paddingTop: 10 }]}>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: C.text, letterSpacing: -0.7 }}>Discover</Text>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-          {["For you", "Trending", "Rooms", "News"].map((c, i) => (
-            <TouchableOpacity key={c} style={[s.chip, homeChip === i && s.chipOn]} onPress={() => setHomeChip(i)}>
-              <Text style={[s.chipText, homeChip === i && s.chipTextOn]}>{c}</Text>
+      <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 28 }} refreshControl={rc} showsVerticalScrollIndicator={false}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, gap: 18 }}>
+          {chips.map((c, i) => (
+            <TouchableOpacity key={c} onPress={() => {
+              setHomeChip(i);
+              if (c === "Music") go("music");
+              if (c === "Events") go("events");
+              if (c === "Market") go("market");
+            }}>
+              <Text style={{ color: homeChip === i ? C.text : C.text3, fontWeight: homeChip === i ? "800" : "600", fontSize: 15 }}>{c}</Text>
+              {homeChip === i ? <View style={{ height: 2, backgroundColor: C.accent, marginTop: 6, borderRadius: 1 }} /> : <View style={{ height: 8 }} />}
             </TouchableOpacity>
           ))}
         </ScrollView>
-        {(homeChip === 0 || homeChip === 3) && news.slice(0, 4).map((n: any) => (
-          <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
-            <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
-            <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
+
+        {news[0] ? (
+          <TouchableOpacity activeOpacity={0.9} onPress={() => { setSelectedArticleId(String(news[0].id)); go("media"); }}
+            style={{ marginHorizontal: 16, borderRadius: 18, overflow: "hidden", backgroundColor: C.elevated, marginBottom: 14 }}>
+            {news[0].imageUrl ? <Image source={{ uri: news[0].imageUrl }} style={{ width: "100%", height: 200 }} resizeMode="cover" /> : <View style={{ height: 180, backgroundColor: C.elevated }} />}
+            <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: 14, backgroundColor: "rgba(0,0,0,0.55)" }}>
+              <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800" }} numberOfLines={2}>{news[0].title}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 8 }}>
+                <View style={{ backgroundColor: C.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}><Text style={{ color: "#111", fontSize: 10, fontWeight: "800" }}>Media</Text></View>
+                <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>{news[0].time}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ) : null}
+
+        {takes.slice(0, 6).map((t: any) => (
+          <TouchableOpacity key={t.id} activeOpacity={0.9} onPress={() => setSelectedPost(t)}
+            style={{ marginHorizontal: 16, marginBottom: 12, padding: 14, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              {t.avatarUrl ? <Image source={{ uri: t.avatarUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} /> :
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Text style={{ color: C.text, fontWeight: "700" }}>{(t.name || "?").slice(0, 1)}</Text></View>}
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontWeight: "700" }}>@{t.handle || t.name}</Text>
+                <Text style={{ color: C.text3, fontSize: 11 }}>{t.time}</Text>
+              </View>
+            </View>
+            <Text style={{ color: C.text, fontSize: 15, lineHeight: 21 }} numberOfLines={4}>{t.text}</Text>
+            {t.mediaUrl ? <Image source={{ uri: t.mediaUrl }} style={{ width: "100%", height: 160, borderRadius: 12, marginTop: 10 }} resizeMode="cover" /> : null}
+            <View style={{ flexDirection: "row", gap: 18, marginTop: 10 }}>
+              <Text style={{ color: C.text2, fontSize: 13 }}>♥ {(t.likes || 0) + (liked[t.id] ? 1 : 0)}</Text>
+              <Text style={{ color: C.text2, fontSize: 13 }}>💬 {t.comments || 0}</Text>
+            </View>
           </TouchableOpacity>
         ))}
-        {(homeChip === 0 || homeChip === 1) && takes.slice(0, 5).map((t: any) => (
-          <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => setSelectedPost(t)}>
-            <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
-            <View style={s.flex}><Text style={s.roomName}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
-          </TouchableOpacity>
-        ))}
-        {(homeChip === 0 || homeChip === 2) && rooms.map((r: any) => (
-          <TouchableOpacity key={r.id} style={s.roomRow} onPress={() => setDetailItem({ title: r.name, meta: r.meta, description: "Room preview · live audio not connected." })}>
-            <View style={s.roomAv}><Text style={s.roomAvText}>{r.av}</Text></View>
-            <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.meta}</Text></View>
-          </TouchableOpacity>
-        ))}
-        {homeChip === 0 && (
-          <ScrollView horizontal contentContainerStyle={s.tracksRow}>
-            {tracks.slice(0, 6).map((t: any) => (
-              <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => setSelectedTrack(t)}>
-                <Text style={s.trackTitle}>{t.title}</Text>
-                <Text style={s.trackArtist}>{t.artist}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-        <View style={{ height: 24 }} />
       </ScrollView>
     );
   };
 
-  const headerTitle = settingsOpen ? "Settings" : tab === "activity" ? "Notifications" : tab === "myspace" ? "My Space" : tab === "media" ? "Media" : tab === "events" ? "Events" : DESKS.find((d) => d.id === tab)?.label;
+  const headerTitle =
+    settingsOpen ? "Settings"
+    : tab === "activity" ? "Notifications"
+    : tab === "myspace" ? "My Space"
+    : tab === "media" ? "Media"
+    : tab === "events" ? "Events"
+    : tab === "market" ? "Market"
+    : tab === "jobs" ? "Jobs"
+    : DESKS.find((d) => d.id === tab)?.label;
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
@@ -356,8 +335,8 @@ function KilodeApp() {
         </View>
       ) : null}
       <KilodeTabBar
-        active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"}
-        onTab={(id) => go(id)}
+        active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
+        onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
         onCreate={() => setCreateOpen(true)}
         isDark={isDark}
       />
@@ -366,23 +345,28 @@ function KilodeApp() {
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setComposeOpen(false)} />
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>New take</Text><TouchableOpacity onPress={() => setComposeOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            <TextInput multiline autoFocus style={{ minHeight: 120, backgroundColor: C.input, borderRadius: 16, padding: 14, color: C.text, borderWidth: 1, borderColor: C.border, fontSize: 16, textAlignVertical: "top" }} placeholder="What is happening in Naija?" placeholderTextColor={C.text3} value={composeText} onChangeText={setComposeText} />
+            <View style={s.sheetHead}><Text style={s.sheetTitle}>Create Post</Text><TouchableOpacity onPress={() => setComposeOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
+            <Text style={{ color: C.text2, marginBottom: 8 }}>{session.name} · Public</Text>
+            <TextInput multiline autoFocus style={{ minHeight: 120, backgroundColor: C.input, borderRadius: 16, padding: 14, color: C.text, borderWidth: 1, borderColor: C.border, fontSize: 16, textAlignVertical: "top" }} placeholder="What's on your mind?" placeholderTextColor={C.text3} value={composeText} onChangeText={setComposeText} />
+            <View style={{ marginTop: 12, gap: 10 }}>
+              {["Add Photo/Video", "Add Location", "Tag People"].map((lab) => (
+                <TouchableOpacity key={lab} onPress={() => show(`${lab} when media permissions are connected.`)}>
+                  <Text style={{ color: C.text2, fontSize: 14 }}>{lab}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             <TouchableOpacity style={[s.primaryBtn, { marginTop: 14, opacity: composeText.trim() && !posting ? 1 : 0.5 }]} disabled={!composeText.trim() || posting}
               onPress={async () => {
-                if (!session.token) { show("Sign in to publish a take."); return; }
+                if (!session.token) { show("Sign in to publish."); return; }
                 setPosting(true);
                 try {
                   const r = await postTake(composeText, session.token);
-                  if (r.ok && (r as any).data) {
-                    setTakes((prev) => [(r as any).data, ...prev]);
-                    setComposeText(""); setComposeOpen(false); go("socials");
-                    show(r.source === "live" ? "Posted live" : "Added to preview");
-                  } else show((r as any).error || "Could not post.");
+                  if (r.ok && (r as any).data) { setTakes((p) => [(r as any).data, ...p]); setComposeText(""); setComposeOpen(false); go("socials"); show(r.source === "live" ? "Posted live" : "Added to preview"); }
+                  else show((r as any).error || "Could not post.");
                 } catch (e) { show(e instanceof Error ? e.message : "Could not post."); }
                 finally { setPosting(false); }
               }}>
-              <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post take"}</Text>
+              <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post"}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -393,12 +377,14 @@ function KilodeApp() {
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            <View style={s.deskGrid}>{DESKS.map((d) => (
-              <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
-                <Ionicons name={systemIconName(d.icon)} size={22} color={C.accent} />
-                <Text style={s.deskGridLabel}>{d.label}</Text>
-              </TouchableOpacity>
-            ))}</View>
+            <View style={s.deskGrid}>
+              {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "💬" }, { id: "myspace", label: "My Space", icon: "🏠" }].map((d) => (
+                <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
+                  <Ionicons name={systemIconName(d.icon)} size={22} color={C.accent} />
+                  <Text style={s.deskGridLabel}>{d.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
       </Modal>
@@ -413,17 +399,6 @@ function KilodeApp() {
                 <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
               </TouchableOpacity>
             ))}</View>
-          </View>
-        </View>
-      </Modal>
-      <Modal visible={!!detailItem} transparent animationType="slide" onRequestClose={() => setDetailItem(null)}>
-        <View style={s.modalRoot}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setDetailItem(null)} />
-          <View style={s.sheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>{detailItem?.title || "Details"}</Text><TouchableOpacity onPress={() => setDetailItem(null)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            {detailItem?.meta ? <Text style={s.meta}>{detailItem.meta}</Text> : null}
-            <Text style={{ color: C.text, fontSize: 15, lineHeight: 22, marginTop: 10 }}>{detailItem?.description || "More details when connected."}</Text>
           </View>
         </View>
       </Modal>
