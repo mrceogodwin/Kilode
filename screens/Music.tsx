@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from "react-native";
-import { createMusicReleaseDraft } from "../lib/supabase";
+import { createMusicReleaseDraft, listOwnMusicReleases } from "../lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { can } from "../lib/permissions";
@@ -47,9 +47,27 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [draftOpen, setDraftOpen] = useState(false);
   const [releaseTitle, setReleaseTitle] = useState("");
   const [releaseType, setReleaseType] = useState<"single" | "ep" | "album">("single");
-  const [savingDraft, setSavingDraft] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);\n  const [myReleases, setMyReleases] = useState<any[]>([]);\n  const [loadingReleases, setLoadingReleases] = useState(false);\n  const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
+
+  useEffect(() => {
+    let active = true;
+    if (!userId || !canList) {
+      setMyReleases([]);
+      setLoadingReleases(false);
+      return () => { active = false; };
+    }
+    setLoadingReleases(true);
+    listOwnMusicReleases(userId).then((result) => {
+      if (!active) return;
+      setMyReleases(result.ok ? result.data : []);
+      setLoadingReleases(false);
+    }).catch(() => {
+      if (active) { setMyReleases([]); setLoadingReleases(false); }
+    });
+    return () => { active = false; };
+  }, [userId, canList, releaseRefreshKey]);
 
   const openTrack = (t: any) => {
     if (onOpenTrack) onOpenTrack(t);
@@ -88,7 +106,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             setReleaseTitle("");
             setReleaseType("single");
             setDraftOpen(false);
-            show("Release draft saved privately. Audio upload is the next step.");
+            setReleaseRefreshKey((key) => key + 1);\n            show("Release draft saved privately. Audio upload is the next step.");
           }} style={{ backgroundColor: C.accent, borderRadius: 13, paddingVertical: 14, alignItems: "center", opacity: savingDraft ? 0.7 : 1 }}>
             {savingDraft ? <ActivityIndicator color="#111" /> : <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>Save private draft</Text>}
           </TouchableOpacity>
@@ -126,6 +144,29 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         >
           <Text style={{ color: C.accent, fontWeight: "700", fontSize: 14 }}>Drop a track</Text>
         </TouchableOpacity>
+      ) : null}
+
+      {canList ? (
+        <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>Your releases</Text>
+            {loadingReleases ? <ActivityIndicator size="small" color={C.accent} /> : null}
+          </View>
+          {myReleases.length ? myReleases.map((release) => (
+            <View key={release.id} style={{ flexDirection: "row", alignItems: "center", gap: 11, padding: 12, marginBottom: 8, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+              <View style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="musical-notes-outline" size={20} color={C.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }} numberOfLines={1}>{release.title}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 3, textTransform: "capitalize" }}>{release.release_type} · {release.status}</Text>
+              </View>
+              <Ionicons name={release.status === "published" ? "checkmark-circle" : "time-outline"} size={18} color={release.status === "published" ? C.accent : C.text3} />
+            </View>
+          )) : (
+            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{loadingReleases ? "Loading your releases…" : "Your private drafts and submissions will appear here."}</Text>
+          )}
+        </View>
       ) : null}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 14, gap: 8 }}>
