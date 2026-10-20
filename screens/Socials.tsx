@@ -86,8 +86,7 @@ export function SocialsScreen({
           justifyContent: "space-between",
         }}
       >
-        <Text style={{ color: C.text, fontSize: 20, fontWeight: "800" }}>Socials</Text>
-        <TouchableOpacity
+                <TouchableOpacity
           onPress={onCompose}
           style={{
             width: 36,
