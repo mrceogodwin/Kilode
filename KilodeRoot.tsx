@@ -272,7 +272,7 @@ function KilodeApp() {
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
         onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
-        onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
+        onOpenSystem={(id) => go(id)} onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
         onCompose={() => setComposeOpen(true)} onPlayTrack={(t) => setSelectedTrack(t)} show={show}
       />
     );
