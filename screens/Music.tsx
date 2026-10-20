@@ -754,10 +754,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         ))}
       </View>
 
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={() => (onOpenArtist ? onOpenArtist(FEATURED.name) : show(FEATURED.name))}
-        style={{ marginHorizontal:      {artistProfiles[0] ? (
+      {artistProfiles[0] ? (
         <TouchableOpacity
           activeOpacity={0.9}
           accessibilityRole="button"
@@ -788,7 +785,6 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           </View>
         </TouchableOpacity>
       ) : null}
-
 
       {(tab === "Home" || tab === "Charts" || tab === "Discover") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
