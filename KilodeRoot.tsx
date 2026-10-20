@@ -241,19 +241,20 @@ function KilodeApp() {
     return () => { cancelled = true; };
   }, [loadAll]);
 
-  // Refresh Home and dedicated system screens when connected content changes.
-  // Offline preview data stays local and is never presented as live content.
+  // One debounced Realtime subscription refreshes all currently supported
+  // backend-backed Home sources. Pull-to-refresh remains the fallback if Realtime
+  // is not enabled in the Supabase project.
   useEffect(() => {
-    if (getBackendMode() !== "supabase") return;
     const sb = getSupabase();
     if (!sb) return;
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleRefresh = () => {
       if (refreshTimer) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => { void loadAll(); }, 180);
+      refreshTimer = setTimeout(() => { void loadAll(); }, 220);
     };
-    const channel = sb.channel("kilode-discovery-feed")
+    const channel = sb.channel("kilode-shared-discovery")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, scheduleRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, scheduleRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "tracks" }, scheduleRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "events" }, scheduleRefresh)
@@ -264,25 +265,6 @@ function KilodeApp() {
       if (refreshTimer) clearTimeout(refreshTimer);
       void sb.removeChannel(channel);
     };
-  }, [loadAll]);
-
-  // Realtime keeps the shared discovery feed current when content is published elsewhere.
-  // If the project's Realtime publication is not enabled, pull-to-refresh still works.
-  useEffect(() => {
-    const sb = getSupabase();
-    if (!sb) return;
-    const refresh = () => { void loadAll(); };
-    const channel = sb
-      .channel("kilode-shared-discovery")
-      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "tracks" }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "market_listings" }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, refresh)
-      .subscribe();
-    return () => { void sb.removeChannel(channel); };
   }, [loadAll]);
 
   const onRefresh = async () => {
