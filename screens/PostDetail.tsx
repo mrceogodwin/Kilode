@@ -73,7 +73,7 @@ export function PostDetailScreen({
             <Text style={{ color: C.text, fontWeight: "800", fontSize: 16 }}>{name}</Text>
             {post?.verified ? <Ionicons name="checkmark-circle" size={15} color={C.accent} /> : null}
           </View>
-          <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}
+          <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>
             @{handle} · {post?.time || "recently"}
           </Text>
         </TouchableOpacity>
