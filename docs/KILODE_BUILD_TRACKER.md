@@ -8,7 +8,7 @@
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
 - **Latest work:** Music uses registered artist profiles for its carousel and featured artist card; removed the hardcoded third-party featured artist/image. Avatar failures fall back safely. Header wordmark redesign is also in the branch.
-- **Latest completed CI checkpoint `f89e2f4e`:** native validation passed, including TypeScript, Expo Doctor, and iOS JavaScript bundle export. Web Preview Check also passed. Newer source changes must pass CI separately. These are automated checks, not a compiled/installable iOS binary or device test.
+- **Latest completed CI checkpoint `e25f775f`:** native validation passed, including TypeScript, Expo Doctor, and iOS JavaScript bundle export. Web Preview Check also passed. This is source validation, not a compiled/installable iOS binary or physical-device test. These are automated checks, not a compiled/installable iOS binary or device test.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
@@ -24,7 +24,7 @@
 
 ## P0 — Release, safety and test gates
 
-- [x] Confirm native validation and web export CI results for current checkpoint `f89e2f4e` (both passed). Re-run after subsequent source changes.
+- [x] Confirm native validation and web export CI results for current checkpoint `e25f775f` (both passed).
 - [ ] Link the app to the owner's Expo project with `eas init` under the correct Expo account; never invent the project ID.
 - [ ] Produce and verify an installable iOS build; test on a physical iPhone.
 - [ ] Create/confirm the dedicated Supabase project; configure URL and publishable/anon key in build secrets (never client-side service-role keys).
@@ -45,6 +45,12 @@
 - [ ] Audit all modal/sheet/detail states so back consistently closes the topmost state before leaving its parent.
 - [ ] Confirm tab forward history semantics and restoration behaviour; detail screens are not yet verified as restorable through forward navigation.
 - [ ] Verify safe areas, keyboard, haptics, transitions and touch targets on actual iOS.
+
+## P1 — Music detail dock regression
+
+- [x] Remove duplicate bottom dock and duplicate mini-player from track/artist detail branches; these now rely on the shared app shell.
+- [x] Native validation (TypeScript, Expo Doctor, iOS JS bundle export) and web preview check passed on `e25f775f`.
+- [ ] Confirm the dock appears exactly once during track/artist detail navigation on a physical iPhone; automated checks cannot verify rendered runtime layout.
 
 ## P1 — Music system
 
