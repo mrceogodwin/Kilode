@@ -23,7 +23,7 @@ type Props = {
   isDark: boolean;
   C: any;
   onSignIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
-  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
+  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => Promise<{ ok: boolean; error?: string }>;
   onGuest: () => void;
   onGoogle: () => void;
   show: (m: string) => void;
