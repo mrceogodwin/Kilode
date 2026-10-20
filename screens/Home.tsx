@@ -12,6 +12,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width: W } = Dimensions.get("window");
 const CARD_W = W * 0.68;
@@ -274,12 +275,12 @@ export function HomeScreen({
                 <Ionicons name="musical-notes" size={32} color="rgba(255,255,255,0.85)" />
               </View>
             )}
-            <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: 10, backgroundColor: "rgba(0,0,0,0.55)" }}>
-              <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: "700" }}>{card.kind}</Text>
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "800", marginTop: 2 }} numberOfLines={2}>
+            <LinearGradient colors={["transparent", "rgba(5,6,8,0.88)"]} locations={[0.05, 1]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 34, paddingBottom: 12 }}>
+              <Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 10, fontWeight: "700", letterSpacing: 0.5 }}>{card.kind}</Text>
+              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700", letterSpacing: -0.25, marginTop: 3 }} numberOfLines={2}>
                 {card.title}
               </Text>
-            </View>
+            </LinearGradient>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -320,9 +321,9 @@ export function HomeScreen({
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
           {tracks.slice(0, 6).map((t: any) => (
             <TouchableOpacity key={t.id} activeOpacity={0.88} onPress={() => onPlayTrack(t)} style={{ width: 100 }}>
-              <View style={{ width: 100, height: 100, borderRadius: 12, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="musical-notes" size={24} color="rgba(255,255,255,0.9)" />
-              </View>
+              <LinearGradient colors={["#343946", t.color || "#17251E", "#0D0F13"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 100, height: 100, borderRadius: 12, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                <Ionicons name="musical-notes" size={24} color="rgba(255,255,255,0.92)" />
+              </LinearGradient>
               <Text style={{ color: C.text, fontSize: 11, fontWeight: "700", marginTop: 5 }} numberOfLines={1}>{t.title}</Text>
               <Text style={{ color: C.text3, fontSize: 10, marginTop: 1 }} numberOfLines={1}>{t.artist}</Text>
             </TouchableOpacity>
