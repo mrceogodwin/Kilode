@@ -22,12 +22,6 @@ type Props = {
 
 const TABS = ["Home", "Discover", "Charts", "Artists"] as const;
 
-const FEATURED = {
-  name: "Ayra Starr",
-  meta: "R&B · Afrobeats · Featured artist",
-  imageUrl: "https://images.unsplash.com/photo-1516280440614-6697288d5b28?w=800&q=80",
-};
-
 const TOP100_CATEGORIES = ["All", "Nigeria", "Afrobeats", "Hip Hop", "R&B", "Amapiano", "Emerging"];
 
 const PLAYLIST_CATEGORIES = [
@@ -763,19 +757,38 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => (onOpenArtist ? onOpenArtist(FEATURED.name) : show(FEATURED.name))}
-        style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 18, overflow: "hidden", backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
-      >
-        <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 116 }} resizeMode="cover" />
-        <View style={{ padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: C.text, fontWeight: "600", fontSize: 14, letterSpacing: -0.15 }}>{FEATURED.name}</Text>
-            <Text style={{ color: C.text3, fontSize: 12, marginTop: 3 }}>{FEATURED.meta}</Text>
+        style={{ marginHorizontal:      {artistProfiles[0] ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          accessibilityRole="button"
+          accessibilityLabel={`Open artist ${artistProfiles[0].display_name || artistProfiles[0].handle}`}
+          onPress={() => onOpenArtist ? onOpenArtist(artistProfiles[0]) : show("Artist profile navigation is not connected yet.")}
+          style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 18, overflow: "hidden", backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
+        >
+          {artistProfiles[0].avatar_url && !failedArtistAvatarIds[artistProfiles[0].id] ? (
+            <Image
+              source={{ uri: artistProfiles[0].avatar_url }}
+              onError={() => setFailedArtistAvatarIds((current) => ({ ...current, [artistProfiles[0].id]: true }))}
+              style={{ width: "100%", height: 116, backgroundColor: C.elevated }}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={{ height: 72, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="person-circle-outline" size={38} color={C.accent} />
+            </View>
+          )}
+          <View style={{ padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontWeight: "600", fontSize: 14, letterSpacing: -0.15 }}>{artistProfiles[0].display_name || artistProfiles[0].handle}</Text>
+              <Text style={{ color: C.text3, fontSize: 12, marginTop: 3 }}>{artistProfiles[0].bio || `@${artistProfiles[0].handle} · Kilode artist`}</Text>
+            </View>
+            <View style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
+              <Text style={{ color: C.text3, fontWeight: "700", fontSize: 10 }}>Artist</Text>
+            </View>
           </View>
-          <View style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
-            <Text style={{ color: C.text3, fontWeight: "700", fontSize: 10 }}>Featured preview</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      ) : null}
+
 
       {(tab === "Home" || tab === "Charts" || tab === "Discover") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
