@@ -101,8 +101,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       if (raw) {
         try {
           const saved = JSON.parse(raw);
-          setSavedTrackIds(saved.savedTrackIds && typeof saved.savedTrackIds === "object" ? saved.savedTrackIds : {});
-          setSavedPlaylistIds(saved.savedPlaylistIds && typeof saved.savedPlaylistIds === "object" ? saved.savedPlaylistIds : {});
+          setSavedTrackIds(saved.savedTrackIds && typeof saved.savedTrackIds === "object" && !Array.isArray(saved.savedTrackIds) ? saved.savedTrackIds : {});
+          setSavedPlaylistIds(saved.savedPlaylistIds && typeof saved.savedPlaylistIds === "object" && !Array.isArray(saved.savedPlaylistIds) ? saved.savedPlaylistIds : {});
           setRecentTrackIds(Array.isArray(saved.recentTrackIds) ? saved.recentTrackIds.filter((id: unknown) => typeof id === "string").slice(0, 30) : []);
         } catch {
           setSavedTrackIds({});
@@ -115,7 +115,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         setRecentTrackIds([]);
       }
       setLoadedLibraryStorageKey(libraryStorageKey);
-    }).catch(() => setLoadedLibraryStorageKey(libraryStorageKey));
+    }).catch(() => {
+      // Never carry another account's in-memory library into this account if storage fails.
+      if (!active) return;
+      setSavedTrackIds({});
+      setSavedPlaylistIds({});
+      setRecentTrackIds([]);
+      setLoadedLibraryStorageKey(libraryStorageKey);
+    });
     return () => { active = false; };
   }, [libraryStorageKey]);
 
