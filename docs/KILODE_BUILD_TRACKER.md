@@ -8,9 +8,8 @@
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
 - **Latest work:** Home floating create action is now a two-column native grid; music mini-player has a playback-aware animated equalizer and status label. Music artist carousel uses registered artist profiles; avatar failures fall back safely. Header wordmark redesign is also in the branch.
-- **Latest source checkpoint `de74e7e3`:** GitHub Actions `Kilode native validation` PASSED (TypeScript, Expo Doctor, and iOS JavaScript bundle export); `Kilode Web Preview Check` PASSED. This verifies source/export checks only—not an installable iOS binary, physical-device behaviour, or backend integration.
+- **Latest confirmed passing source checkpoint `88e5c966`:** GitHub Actions `Kilode native validation` PASSED (TypeScript, Expo Doctor, and iOS JavaScript bundle export); `Kilode Web Preview Check` PASSED. This verifies source/export checks only—not an installable iOS binary, physical-device behaviour, or backend integration. The latest workflow change `3c1ea8c5` adds upload of the real Expo `dist/` web export as a downloadable GitHub Actions artifact; its native and web validation runs are currently in progress.
 - **Vercel preview:** deployment attempt for this source was blocked by Vercel's `api-deployments-free-per-day` limit (retry after 24 hours). Do not claim the live preview has updated.
-- **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
@@ -27,7 +26,8 @@
 ## P0 — Release, safety and test gates
 
 - [x] Confirm native validation and web export CI results for checkpoint `d6c0e120` (both passed).
-- [ ] Confirm current source commit `b025484f` passes TypeScript, Expo Doctor, iOS JS bundle export and web preview checks.
+- [x] Confirm source checkpoint `88e5c966` passes TypeScript, Expo Doctor, iOS JS bundle export and web preview checks.
+- [ ] Confirm the latest workflow/artifact change `3c1ea8c5` passes; download and inspect the generated Expo web export artifact.
 - [ ] Link the app to the owner's Expo project with `eas init` under the correct Expo account; never invent the project ID.
 - [ ] Produce and verify an installable iOS build; test on a physical iPhone.
 - [ ] Create/confirm the dedicated Supabase project; configure URL and publishable/anon key in build secrets (never client-side service-role keys).
