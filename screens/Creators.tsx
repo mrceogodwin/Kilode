@@ -59,8 +59,7 @@ export function CreatorsScreen({ s, C, onBack, show }: Props) {
         <TouchableOpacity onPress={onBack}>
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Creators</Text>
-        <TouchableOpacity onPress={() => show("Creator search when index is live.")}>
+                <TouchableOpacity onPress={() => show("Creator search when index is live.")}>
           <Ionicons name="search" size={20} color={C.text2} />
         </TouchableOpacity>
       </View>
