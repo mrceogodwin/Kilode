@@ -1,4 +1,4 @@
-/** Kilode design tokens — forest green, layered charcoal, warm white and restrained gold. */
+/** Kilode design tokens — layered charcoal, warm white and a restrained amber-led accent palette. */
 export const ACCENT = "#E6A94A";
 export const ACCENT_LIGHT = "#F2C66D";
 
@@ -23,7 +23,7 @@ export const GRAY2 = "#737373";
 export const TYPE = {
   brand: { fontSize: 20, fontWeight: "700" as const, letterSpacing: -0.65 },
   h1: { fontSize: 23, fontWeight: "700" as const, letterSpacing: -0.65, lineHeight: 28 },
-  h2: { fontSize: 17, fontWeight: "650" as const, letterSpacing: -0.35, lineHeight: 22 },
+  h2: { fontSize: 17, fontWeight: "600" as const, letterSpacing: -0.35, lineHeight: 22 },
   section: { fontSize: 15, fontWeight: "600" as const, letterSpacing: -0.2 },
   body: { fontSize: 14, fontWeight: "400" as const, lineHeight: 21 },
   bodyStrong: { fontSize: 14, fontWeight: "600" as const },
