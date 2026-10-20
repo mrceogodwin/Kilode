@@ -10,6 +10,7 @@ type Props = {
   artist: any;
   tracks: TrackRecord[];
   userId?: string;
+  backLabel?: string;
   onBack: () => void;
   onOpenTrack: (track: TrackRecord) => void;
   onPlay: (track: TrackRecord) => void;
@@ -17,7 +18,7 @@ type Props = {
 };
 
 /** Artist destination. Only matching tracks are shown; never fill discography with unrelated content. */
-export function ArtistDetailScreen({ s, C, artist, tracks, userId, onBack, onOpenTrack, onPlay, show }: Props) {
+export function ArtistDetailScreen({ s, C, artist, tracks, userId, backLabel, onBack, onOpenTrack, onPlay, show }: Props) {
   const artistName = typeof artist === "string" ? artist : (artist?.display_name || artist?.handle || "Artist");
   const artistId = typeof artist === "object" && artist ? artist.id : undefined;
   const avatar = typeof artist === "object" && artist ? artist.avatar_url : undefined;
@@ -62,7 +63,7 @@ export function ArtistDetailScreen({ s, C, artist, tracks, userId, onBack, onOpe
   return (
     <ScrollView style={s.flex} contentContainerStyle={[s.scrollPad, { paddingHorizontal: 16 }]} showsVerticalScrollIndicator={false}>
       <TouchableOpacity onPress={onBack} style={{ marginBottom: 14 }} accessibilityRole="button">
-        <Text style={s.link}>‹ Music</Text>
+        <Text style={s.link}>‹ {backLabel || "Music"}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: "center", marginBottom: 20 }}>
         {avatar ? <Image source={{ uri: avatar }} style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.elevated, marginBottom: 12 }} /> : (
