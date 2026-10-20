@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from "react-native";
-import { createMusicReleaseDraft, listOwnMusicReleases } from "../lib/supabase";
+import * as DocumentPicker from "expo-document-picker";
+import { createMusicReleaseDraft, listOwnMusicReleases, uploadMusicReleaseAudio } from "../lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { can } from "../lib/permissions";
@@ -48,6 +49,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [releaseTitle, setReleaseTitle] = useState("");
   const [releaseType, setReleaseType] = useState<"single" | "ep" | "album">("single");
   const [savingDraft, setSavingDraft] = useState(false);
+  const [selectedAudio, setSelectedAudio] = useState<{ uri: string; name: string; mimeType?: string | null; size?: number | null } | null>(null);
   const [myReleases, setMyReleases] = useState<any[]>([]);
   const [loadingReleases, setLoadingReleases] = useState(false);
   const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
@@ -92,6 +94,30 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           <Text style={{ color: C.text2, fontSize: 13, lineHeight: 19, marginBottom: 16 }}>Start a private draft. Your music will not appear publicly until the release is submitted, reviewed and published.</Text>
           <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginBottom: 7 }}>Release title</Text>
           <TextInput value={releaseTitle} onChangeText={setReleaseTitle} placeholder="Enter release title" placeholderTextColor={C.text3} maxLength={120} style={{ color: C.text, backgroundColor: C.elevated, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 14 }} />
+          <TouchableOpacity
+            onPress={async () => {
+              const picked = await DocumentPicker.getDocumentAsync({
+                type: ["audio/mpeg", "audio/mp4", "audio/aac", "audio/wav", "audio/x-wav", "audio/flac", "audio/ogg"],
+                copyToCacheDirectory: true,
+                multiple: false,
+              });
+              if (picked.canceled || !picked.assets?.[0]) return;
+              const file = picked.assets[0];
+              if (file.size && file.size > 100 * 1024 * 1024) {
+                show("Audio files must be 100 MB or smaller.");
+                return;
+              }
+              setSelectedAudio({ uri: file.uri, name: file.name, mimeType: file.mimeType, size: file.size });
+            }}
+            style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 13, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated, marginBottom: 14 }}
+          >
+            <Ionicons name="cloud-upload-outline" size={20} color={C.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>{selectedAudio ? "Audio selected" : "Choose audio file"}</Text>
+              <Text numberOfLines={1} style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{selectedAudio ? selectedAudio.name : "MP3, M4A, AAC, WAV, FLAC or OGG · up to 100 MB"}</Text>
+            </View>
+            {selectedAudio ? <Ionicons name="checkmark-circle" size={19} color={C.accent} /> : null}
+          </TouchableOpacity>
           <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginBottom: 8 }}>Release type</Text>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 18 }}>
             {(["single", "ep", "album"] as const).map((kind) => (
@@ -104,17 +130,31 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             if (!userId) { show("Sign in to your live Artist account to save a release draft."); return; }
             setSavingDraft(true);
             const result = await createMusicReleaseDraft(userId, { title: releaseTitle, releaseType });
+            if (!result.ok || !result.id) {
+              setSavingDraft(false);
+              show(result.error || "Could not save release draft.");
+              return;
+            }
+            if (selectedAudio) {
+              const upload = await uploadMusicReleaseAudio(userId, result.id, selectedAudio);
+              if (!upload.ok) {
+                setSavingDraft(false);
+                setReleaseRefreshKey((key) => key + 1);
+                show(`Draft saved, but audio upload failed: ${upload.error || "Try again"}`);
+                return;
+              }
+            }
             setSavingDraft(false);
-            if (!result.ok) { show(result.error || "Could not save release draft."); return; }
             setReleaseTitle("");
             setReleaseType("single");
+            setSelectedAudio(null);
             setDraftOpen(false);
             setReleaseRefreshKey((key) => key + 1);
-            show("Release draft saved privately. Audio upload is the next step.");
+            show(selectedAudio ? "Private release draft and audio saved. It is not public until reviewed and published." : "Release draft saved privately. You can attach audio by editing this draft later.");
           }} style={{ backgroundColor: C.accent, borderRadius: 13, paddingVertical: 14, alignItems: "center", opacity: savingDraft ? 0.7 : 1 }}>
             {savingDraft ? <ActivityIndicator color="#111" /> : <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>Save private draft</Text>}
           </TouchableOpacity>
-          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 10 }}>This creates release metadata only. Audio selection, upload progress and rights review are not yet connected.</Text>
+          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 10 }}>Audio is uploaded to private storage. Public streaming, rights review and release publishing still require the trusted review workflow.</Text>
         </View>
       </View>
     </Modal>
