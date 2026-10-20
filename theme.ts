@@ -1,28 +1,28 @@
-/** Kilode design tokens — muted gold accent, calm neutrals (preview/web identity). */
-export const ACCENT = "#D4AF37";
-export const ACCENT_LIGHT = "#E5C158";
+/** Kilode design tokens — forest green, layered charcoal, warm white and restrained gold. */
+export const ACCENT = "#2E8B57";
+export const ACCENT_LIGHT = "#46B978";
 
 // Compatibility tokens for older UI primitives; mapped to Kilode gold/neutrals.
 export const BLUE = ACCENT;
-export const BLUE_SOFT = "#2A2414";
-export const GREEN = ACCENT;
-export const BORDER = "#2A2A30";
+export const BLUE_SOFT = "#20362A";
+export const GREEN = "#46B978";
+export const BORDER = "#304238";
 export const TEXT = "#F5F5F5";
-export const TEXT2 = "#A3A3A3";
-export const TEXT3 = "#737373";
-export const WHITE = "#18181C";
-export const BG = "#0D0D10";
-export const BLACK = "#09090B";
+export const TEXT2 = "#A8B5AC";
+export const TEXT3 = "#7F9185";
+export const WHITE = "#1B2821";
+export const BG = "#101714";
+export const BLACK = "#0B100D";
 export const GRAY = "#A3A3A3";
 export const GRAY2 = "#737373";
 
 /** Type scale — hierarchy for headlines → meta */
 export const TYPE = {
-  brand: { fontSize: 22, fontWeight: "800" as const, letterSpacing: -0.6 },
-  h1: { fontSize: 24, fontWeight: "800" as const, letterSpacing: -0.5 },
-  h2: { fontSize: 18, fontWeight: "700" as const, letterSpacing: -0.3 },
-  section: { fontSize: 16, fontWeight: "700" as const, letterSpacing: -0.2 },
-  body: { fontSize: 15, fontWeight: "400" as const, lineHeight: 22 },
+  brand: { fontSize: 22, fontWeight: "800" as const, letterSpacing: -0.7 },
+  h1: { fontSize: 26, fontWeight: "800" as const, letterSpacing: -0.7, lineHeight: 31 },
+  h2: { fontSize: 19, fontWeight: "700" as const, letterSpacing: -0.4, lineHeight: 25 },
+  section: { fontSize: 16, fontWeight: "700" as const, letterSpacing: -0.25 },
+  body: { fontSize: 15, fontWeight: "400" as const, lineHeight: 23 },
   bodyStrong: { fontSize: 15, fontWeight: "600" as const },
   meta: { fontSize: 12, fontWeight: "500" as const },
   caption: { fontSize: 11, fontWeight: "600" as const },
