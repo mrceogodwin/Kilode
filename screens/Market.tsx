@@ -80,8 +80,8 @@ export function MarketScreen({ s, C, onBack, show, accountKind }: Props) {
             <Ionicons name={saved[active.id] ? "heart" : "heart-outline"} size={24} color={C.accent} />
           </TouchableOpacity>
         </View>
-        <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", marginTop: 6 }}>{active.title}</Text>
-        <Text style={{ color: C.accent, fontSize: 22, fontWeight: "800", marginTop: 8 }}>{active.price}</Text>
+        <Text style={{ color: C.text, fontSize: 19, fontWeight: "700", letterSpacing: -0.3, marginTop: 6 }}>{active.title}</Text>
+        <Text style={{ color: C.accent, fontSize: 18, fontWeight: "700", marginTop: 8 }}>{active.price}</Text>
         {active.rating ? (
           <Text style={{ color: C.text2, marginTop: 6, fontWeight: "600" }}>★ {active.rating} · Seller on Kilode Market</Text>
         ) : null}
@@ -89,7 +89,7 @@ export function MarketScreen({ s, C, onBack, show, accountKind }: Props) {
           style={{ marginTop: 22, backgroundColor: C.accent, borderRadius: 999, paddingVertical: 16, alignItems: "center" }}
           onPress={() => show("Checkout connects when Market payments are live. Nothing was charged.")}
         >
-          <Text style={{ color: "#111", fontWeight: "800", fontSize: 16 }}>Add to cart</Text>
+          <Text style={{ color: "#111", fontWeight: "700", fontSize: 14 }}>Add to cart</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={{ marginTop: 10, borderRadius: 999, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: C.border }}
