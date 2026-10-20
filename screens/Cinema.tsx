@@ -39,8 +39,7 @@ export function CinemaScreen({ s, C, onBack, show, accountKind }: Props) {
         <TouchableOpacity onPress={onBack}>
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Cinema</Text>
-        <TouchableOpacity
+                <TouchableOpacity
           onPress={() =>
             canSubmit
               ? show("Submit film URL when Cinema API is live.")
