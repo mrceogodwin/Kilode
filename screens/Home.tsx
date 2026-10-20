@@ -88,11 +88,13 @@ export function HomeScreen({
   const filtered = system === "all" ? feed : feed.filter((x) => x.kind.toLowerCase() === system.toLowerCase());
   const searchResults = submittedSearch ? feed.filter((x) => [x.title, x.body, x.kind, x.sub].join(" ").toLowerCase().includes(submittedSearch.toLowerCase())).slice(0, 8) : [];
 
-  const hero = news[0] || tracks[0] || events[0] || takes[0];
-  const heroKind = news[0] ? "Media" : tracks[0] ? "Music" : events[0] ? "Events" : "Socials";
-  const heroTitle = firstText(hero?.title, hero?.text, hero?.body, "Discover what’s happening on Kilode");
-  const heroSub = firstText(hero?.artist, hero?.artist_name, hero?.kicker, hero?.venue, "Featured across Kilode");
-  const heroImage = firstText(hero?.imageUrl, hero?.image_url, hero?.coverUrl, hero?.cover_url, hero?.mediaUrl, hero?.image);
+  // Four genuinely distinct feature slides; never render five decorative dots for one card.
+  const featuredCards = [
+    ...(tracks[0] ? [{ kind: "Music", raw: tracks[0], title: firstText(tracks[0].title, "New release"), sub: firstText(tracks[0].artist, tracks[0].artist_name, "Music on Kilode"), image: firstText(tracks[0].imageUrl, tracks[0].coverUrl, tracks[0].cover_url), onPress: () => onPlayTrack(tracks[0]) }] : []),
+    ...(news[0] ? [{ kind: "Media", raw: news[0], title: firstText(news[0].title, "Top story"), sub: firstText(news[0].kicker, news[0].author, "Latest from Media"), image: firstText(news[0].imageUrl, news[0].image_url, news[0].image), onPress: () => onOpenMedia(String(news[0].id)) }] : []),
+    ...(events[0] ? [{ kind: "Events", raw: events[0], title: firstText(events[0].title, "What's happening"), sub: firstText(events[0].venue, events[0].meta, "Discover events"), image: firstText(events[0].imageUrl, events[0].image_url, events[0].cover_url), onPress: () => onOpenItem("Events", events[0]) }] : []),
+    ...(takes[0] ? [{ kind: "Socials", raw: takes[0], title: firstText(takes[0].text, takes[0].body, takes[0].name, "What's happening on Socials"), sub: firstText(takes[0].handle, takes[0].author?.name, "Community post"), image: firstText(takes[0].mediaUrl, takes[0].imageUrl, takes[0].image_url), onPress: () => onOpenPost(takes[0]) }] : []),
+  ].slice(0, 4);
 
   const renderFeedCard = (item: any) => {
     const social = item.kind === "Socials";
@@ -151,26 +153,28 @@ export function HomeScreen({
   return (
     <ScrollView style={s.flex} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 22 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      {/* Featured slider: one mobile-width card, swipe horizontally. */}
+      {/* Four-card mobile feature carousel, each slide has a real destination. */}
       <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 4 }}>
-        <TouchableOpacity activeOpacity={0.9} onPress={() => heroKind === "Media" ? onOpenMedia(String(hero?.id)) : heroKind === "Music" ? onPlayTrack(hero) : heroKind === "Events" ? onOpenEvents() : onOpenPost(hero)}
-          style={{ width: 0.94 * require("react-native").Dimensions.get("window").width, height: 174, borderRadius: 15, overflow: "hidden", borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
-          {heroImage ? <Image source={{ uri: heroImage }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" /> : <LinearGradient colors={["#3C3517", "#17191D", "#101116"]} style={{ position: "absolute", width: "100%", height: "100%" }} />}
-          <LinearGradient colors={["rgba(0,0,0,0.04)", "rgba(0,0,0,0.86)"]} style={{ position: "absolute", width: "100%", height: "100%" }} />
-          <View style={{ flex: 1, justifyContent: "flex-end", padding: 16 }}>
-            <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{heroKind.toUpperCase()}  ·  FEATURED</Text>
-            <Text style={{ color: "#FFFFFF", fontSize: 23, lineHeight: 28, fontWeight: "800", marginTop: 5 }} numberOfLines={2}>{heroTitle}</Text>
-            <Text style={{ color: "#F0F0F0", fontSize: 12, marginTop: 3 }} numberOfLines={1}>{heroSub}</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 9 }}>
-              <View style={{ backgroundColor: C.accent, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Ionicons name={heroKind === "Music" ? "play" : "arrow-forward"} size={13} color="#171717" />
-                <Text style={{ color: "#171717", fontSize: 11, fontWeight: "800" }}>{heroKind === "Music" ? "Listen Now" : "Explore"}</Text>
+        {featuredCards.map((card, index) => (
+          <TouchableOpacity key={card.kind} activeOpacity={0.9} onPress={card.onPress}
+            style={{ width: 0.94 * require("react-native").Dimensions.get("window").width, height: 174, marginRight: 10, borderRadius: 15, overflow: "hidden", borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
+            {card.image ? <Image source={{ uri: card.image }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" /> : <LinearGradient colors={["#3C3517", "#17191D", "#101116"]} style={{ position: "absolute", width: "100%", height: "100%" }} />}
+            <LinearGradient colors={["rgba(0,0,0,0.04)", "rgba(0,0,0,0.86)"]} style={{ position: "absolute", width: "100%", height: "100%" }} />
+            <View style={{ flex: 1, justifyContent: "flex-end", padding: 16 }}>
+              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{card.kind.toUpperCase()}  ·  FEATURED</Text>
+              <Text style={{ color: "#FFFFFF", fontSize: 23, lineHeight: 28, fontWeight: "800", marginTop: 5 }} numberOfLines={2}>{card.title}</Text>
+              <Text style={{ color: "#F0F0F0", fontSize: 12, marginTop: 3 }} numberOfLines={1}>{card.sub}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 9 }}>
+                <View style={{ backgroundColor: C.accent, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name={card.kind === "Music" ? "play" : "arrow-forward"} size={13} color="#171717" />
+                  <Text style={{ color: "#171717", fontSize: 11, fontWeight: "800" }}>{card.kind === "Music" ? "Listen Now" : "Explore"}</Text>
+                </View>
+                <View style={{ flex: 1 }} />
+                <View style={{ flexDirection: "row", gap: 5 }}>{featuredCards.map((_, dot) => <View key={dot} style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dot === index ? C.accent : "#8C8C8C" }} />)}</View>
               </View>
-              <View style={{ flex: 1 }} />
-              <View style={{ flexDirection: "row", gap: 5 }}>{[0,1,2,3,4].map((n) => <View key={n} style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: n === 0 ? C.accent : "#8C8C8C" }} />)}</View>
             </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
       {/* One horizontal rail; the remaining systems are reachable by swiping. */}
