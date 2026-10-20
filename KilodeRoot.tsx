@@ -20,8 +20,8 @@ import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
 import { SocialsScreen } from "./screens/Socials";
 import { EventsScreen } from "./screens/Events";
-import { MarketScreen } from "./screens/Market";
-import { JobsScreen } from "./screens/Jobs";
+import { MarketScreen, PRODUCTS } from "./screens/Market";
+import { JobsScreen, JOBS } from "./screens/Jobs";
 import { CommunitiesScreen } from "./screens/Communities";
 import { CreatorsScreen } from "./screens/Creators";
 import { TrackDetailScreen } from "./screens/TrackDetail";
@@ -318,7 +318,7 @@ function KilodeApp() {
     return (
       <HomeScreen
         s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked}
-        events={LISTINGS.events || []} market={LISTINGS.market || []} jobs={LISTINGS.jobs || []}
+        events={LISTINGS.events || []} market={PRODUCTS} jobs={JOBS}
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
         onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
