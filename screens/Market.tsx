@@ -31,6 +31,7 @@ type Props = {
   onBack: () => void;
   show: (m: string) => void;
   accountKind?: string;
+  products?: Product[];
 };
 
 const CATS = ["All", "Electronics", "Fashion", "Home", "Beauty"];
@@ -46,7 +47,7 @@ export const PRODUCTS: Product[] = [
   { id: "p8", title: "Wireless charger", price: "₦18,500", rating: 4.3, category: "Electronics", imageUrl: "https://images.unsplash.com/photo-1591290619762-c588f7cba272?w=500&q=80" },
 ];
 
-export function MarketScreen({ s, C, onBack, show, accountKind }: Props) {
+export function MarketScreen({ s, C, onBack, show, accountKind, products }: Props) {
   const [cat, setCat] = useState("All");
   const [q, setQ] = useState("");
   const [saved, setSaved] = useState<Record<string, boolean>>({});
@@ -54,11 +55,11 @@ export function MarketScreen({ s, C, onBack, show, accountKind }: Props) {
   const canSell = can(accountKind, "market_sell");
 
   const list = useMemo(() => {
-    let rows = PRODUCTS;
+    let rows = products ?? PRODUCTS;
     if (cat !== "All") rows = rows.filter((p) => p.category === cat);
     if (q.trim()) rows = rows.filter((p) => p.title.toLowerCase().includes(q.toLowerCase()));
     return rows;
-  }, [cat, q]);
+  }, [cat, q, products]);
 
   if (active) {
     return (
