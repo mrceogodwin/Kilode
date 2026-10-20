@@ -16,7 +16,7 @@ This document records repository evidence, not a claim that a live Supabase proj
 ## Release blockers found
 
 1. **No verified live backend configuration.** The repository status document says the dedicated Supabase project, environment values, migration application, and sign-up → profile → post smoke test are not verified.
-2. **Migration ordering needs staging verification.** The repository migration filenames now have unique sequential versions (`001`–`017`); the Music platform migration is `017_music_platform.sql`. This fixes the repository filename collision, but does not prove a live database's migration history is reconciled. Inspect any existing project's migration history before applying migrations.
+2. **Migration ordering needs staging verification.** The repository migration filenames now have unique sequential versions (`001`–`017`) in dependency order: core schema, Music platform, auth profile bootstrap, then account policies and dependent migrations. This fixes the repository filename collision and restores the ordering required by migrations `004`–`016` (now `005`–`017`), but does not prove a live database's migration history is reconciled. Inspect any existing project's migration history before applying migrations.
 3. **Privileged workflows are intentionally incomplete.** The payment migration revokes client writes and explicitly says a trusted payment-intent Edge Function and verified provider webhook are not yet implemented. Campaign activation and analytics also require trusted server-side processing.
 4. **Storage and policies need live verification.** Source SQL is not proof that RLS, bucket policies, grants, and triggers were applied correctly in the dedicated project.
 5. **Native release configuration remains unverified.** The backend status notes that `app.json` has an empty EAS project ID; the installable iOS build and physical-device test are separate release gates.
@@ -24,7 +24,7 @@ This document records repository evidence, not a claim that a live Supabase proj
 ## Required implementation and verification order
 
 - [ ] Confirm ownership/access to the dedicated Supabase project; never put service-role keys in the app or chat.
-- [ ] Inspect the live migration history and apply the uniquely numbered migrations to a disposable staging project first.
+- [ ] Inspect the live migration history before applying the reordered files; apply the uniquely numbered migrations to a fresh disposable staging project first. If any migrations were previously applied to a live project, reconcile migration history rather than blindly reapplying.
 - [ ] Apply migrations in a deterministic order to a disposable staging project first.
 - [ ] Add automated SQL checks for RLS, grants, triggers, and account-kind privilege escalation.
 - [ ] Run end-to-end tests for signup, profile bootstrap, login/logout, feed read, post create/edit/delete, likes/replies, and cross-account access denial.
