@@ -250,14 +250,6 @@ function KilodeApp() {
           return;
         }
         setLiked((previous) => ({ ...previous, [id]: result.liked! }));
-        setTakes((previous) => previous.map((post: any) => String(post.id) === id
-          ? { ...post, likes: Math.max(0, Number(post.likes || 0) + (result.liked ? 1 : -1)), likedByMe: result.liked }
-          : post));
-        if (selectedPost && String(selectedPost.id) === id) {
-          setSelectedPost((previous: any) => previous ? {
-            ...previous, likes: Math.max(0, Number(previous.likes || 0) + (result.liked ? 1 : -1)), likedByMe: result.liked,
-          } : previous);
-        }
       } catch {
         show("Could not update like. Check your connection and try again.");
       }
