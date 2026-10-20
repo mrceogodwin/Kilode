@@ -46,6 +46,32 @@ const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap => SYSTEM_ICON[emoji] || "apps-outline";
 
+function DetailMiniPlayer({ s, C, track, isPlaying, progress, onToggle, onClose }: {
+  s: any; C: any; track: any; isPlaying: boolean; progress: number;
+  onToggle: () => void; onClose: () => void;
+}) {
+  return (
+    <View style={[s.player, { gap: 10, marginHorizontal: 12, marginBottom: 8 }]}>
+      <View style={[s.playerArt, { backgroundColor: track.color || C.accent, alignItems: "center", justifyContent: "center" }]}>
+        <Ionicons name="musical-notes" size={16} color="#fff" />
+      </View>
+      <View style={s.flex}>
+        <Text style={s.playerTitle} numberOfLines={1}>{track.title}</Text>
+        <Text style={s.playerSub} numberOfLines={1}>{track.artist}{track.previewKind === "sample" ? " · sample audio" : ""}</Text>
+        <View style={{ height: 2, backgroundColor: C.border, borderRadius: 2, marginTop: 5, overflow: "hidden" }}>
+          <View style={{ height: 2, width: (String(Math.round(progress * 100)) + "%") as `${number}%`, backgroundColor: C.accent }} />
+        </View>
+      </View>
+      <TouchableOpacity onPress={onToggle} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}>
+        <Ionicons name={isPlaying ? "pause" : "play"} size={21} color={C.accent} />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close player">
+        <Ionicons name="close" size={18} color={C.text2} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 const PREVIEW_POSTS_KEY = "@kilode/preview-posts";
 
 async function readPreviewPosts(): Promise<any[]> {
@@ -398,8 +424,8 @@ function KilodeApp() {
         onToggleFollow={() => setFollowing((p) => ({ ...p, [String(selectedProfile.handle || selectedProfile.name)]: !p[String(selectedProfile.handle || selectedProfile.name)] }))}
         onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }} />
     );
-    if (selectedArtist) return (<ArtistDetailScreen s={s} C={C} artist={selectedArtist} tracks={tracks} userId={deviceSession ? undefined : session.userId} backLabel={artistReturnToTrack ? "Track" : "Music"} onBack={() => { setSelectedArtist(null); setArtistReturnToTrack(false); }} onOpenTrack={(t) => { setArtistReturnToTrack(false); setSelectedArtist(null); setSelectedTrack(t); }} onPlay={playTrack} show={show} />);
-    if (selectedTrack) return (<TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={playTrack} onOpenArtist={(n) => { setArtistReturnToTrack(true); setSelectedArtist({ display_name: n, handle: n }); }} onOpenTrack={setSelectedTrack} show={show} />);
+    if (selectedArtist) return (<View style={s.flex}><ArtistDetailScreen s={s} C={C} artist={selectedArtist} tracks={tracks} userId={deviceSession ? undefined : session.userId} backLabel={artistReturnToTrack ? "Track" : "Music"} onBack={() => { setSelectedArtist(null); setArtistReturnToTrack(false); }} onOpenTrack={(t) => { setArtistReturnToTrack(false); setSelectedArtist(null); setSelectedTrack(t); }} onPlay={playTrack} show={show} />{nowPlaying ? <DetailMiniPlayer s={s} C={C} track={nowPlaying} isPlaying={isPlaying} progress={playbackProgress} onToggle={() => { void togglePlayback(); }} onClose={() => { if (soundRef.current) { void soundRef.current.stopAsync().catch(() => undefined); void soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} /> : null}</View>);
+    if (selectedTrack) return (<View style={s.flex}><TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={playTrack} onOpenArtist={(n) => { setArtistReturnToTrack(true); setSelectedArtist({ display_name: n, handle: n }); }} onOpenTrack={setSelectedTrack} show={show} />{nowPlaying ? <DetailMiniPlayer s={s} C={C} track={nowPlaying} isPlaying={isPlaying} progress={playbackProgress} onToggle={() => { void togglePlayback(); }} onClose={() => { if (soundRef.current) { void soundRef.current.stopAsync().catch(() => undefined); void soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} /> : null}</View>);
     if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
     if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} liveData={eventsLive} onBack={() => go("home")} show={show} />;
