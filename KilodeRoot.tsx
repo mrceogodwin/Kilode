@@ -141,13 +141,13 @@ function KilodeApp() {
       try {
         if (session.userId && getBackendMode() === "supabase") {
           const profile = await fetchOwnProfile(session.userId);
-          if (!active || !profile) return;
-          setDisplayName(profile.display_name || session.name || "");
-          setDisplayHandle(profile.handle || session.handle || "");
-          setProfileBio(profile.bio || "");
+          if (!active) return;
+          setDisplayName(profile?.display_name || session.name || "");
+          setDisplayHandle(profile?.handle || session.handle || "");
+          setProfileBio(profile?.bio || "");
           return;
         }
-        const raw = await AsyncStorage.getItem("@kilode/profile:" + session.handle);
+        const raw = await AsyncStorage.getItem("@kilode/profile:" + (session.userId || session.handle));
         if (!active) return;
         if (raw) {
           const profile = JSON.parse(raw);
@@ -742,7 +742,7 @@ function KilodeApp() {
                   const result = await updateOwnProfile(session.userId, { handle: nextHandle, display_name: nextName, bio: nextBio || null });
                   if (!result.ok) { show(result.error || "Could not save your profile."); return; }
                 } else {
-                  await AsyncStorage.setItem("@kilode/profile:" + session.handle, JSON.stringify({ displayName: nextName, handle: nextHandle, bio: nextBio }));
+                  await AsyncStorage.setItem("@kilode/profile:" + (session.userId || session.handle), JSON.stringify({ displayName: nextName, handle: nextHandle, bio: nextBio }));
                 }
                 setDisplayName(nextName);
                 setDisplayHandle(nextHandle);
