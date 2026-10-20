@@ -10,7 +10,7 @@ import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY 
 import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
 import { getBackendMode } from "./lib/config";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, fetchEvents, fetchMarketListings, fetchJobs, postTake } from "./lib/api";
-import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs, togglePostLike } from "./lib/supabase";
+import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs, togglePostLike, updateOwnProfile } from "./lib/supabase";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -130,6 +130,9 @@ function KilodeApp() {
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [displayName, setDisplayName] = useState("");
   const [displayHandle, setDisplayHandle] = useState("");
+  const [profileBio, setProfileBio] = useState("");
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); }, []);
@@ -431,7 +434,7 @@ function KilodeApp() {
                 </View>
               </View>
             </View>
-            <TouchableOpacity style={{ borderWidth: 1, borderColor: C.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 }} onPress={() => show("Profile editor opens next.")}>
+            <TouchableOpacity style={{ borderWidth: 1, borderColor: C.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 }} onPress={() => { setDisplayName(displayName || session.name || ""); setDisplayHandle(displayHandle || session.handle || ""); setProfileEditorOpen(true); }}>
               <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>Edit</Text>
             </TouchableOpacity>
           </View>
@@ -666,6 +669,60 @@ function KilodeApp() {
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal visible={profileEditorOpen} transparent animationType="slide" onRequestClose={() => setProfileEditorOpen(false)}>
+        <View style={s.modalRoot}>
+          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setProfileEditorOpen(false)} />
+          <View style={s.sheet}>
+            <View style={s.sheetHandle} />
+            <View style={s.sheetHead}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.sheetTitle}>Edit profile</Text>
+                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>Update how people see you on Kilode.</Text>
+              </View>
+              <TouchableOpacity onPress={() => setProfileEditorOpen(false)} accessibilityRole="button" accessibilityLabel="Close profile editor" style={s.iconBtn}>
+                <Ionicons name="close" size={20} color={C.text2} />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ color: C.text2, fontSize: 12, marginBottom: 6 }}>Display name</Text>
+            <TextInput value={displayName} onChangeText={setDisplayName} maxLength={60} placeholder="Your name" placeholderTextColor={C.text3}
+              returnKeyType="next" style={{ color: C.text, backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, marginBottom: 12 }} />
+            <Text style={{ color: C.text2, fontSize: 12, marginBottom: 6 }}>Username</Text>
+            <TextInput value={displayHandle} onChangeText={setDisplayHandle} autoCapitalize="none" autoCorrect={false} maxLength={30} placeholder="username" placeholderTextColor={C.text3}
+              returnKeyType="next" style={{ color: C.text, backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, marginBottom: 12 }} />
+            <Text style={{ color: C.text2, fontSize: 12, marginBottom: 6 }}>Bio · up to 160 characters</Text>
+            <TextInput value={profileBio} onChangeText={setProfileBio} maxLength={160} multiline placeholder="A little about you" placeholderTextColor={C.text3}
+              style={{ color: C.text, backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, minHeight: 78, textAlignVertical: "top", marginBottom: 14 }} />
+            <TouchableOpacity disabled={profileSaving} accessibilityRole="button" onPress={async () => {
+              const nextName = displayName.trim();
+              const nextHandle = displayHandle.trim().replace(/^@/, "").toLowerCase();
+              const nextBio = profileBio.trim();
+              if (nextName.length < 2 || nextName.length > 60) { show("Display name must be 2–60 characters."); return; }
+              if (!/^[a-z0-9_]{3,30}$/.test(nextHandle)) { show("Username must be 3–30 letters, numbers, or underscores."); return; }
+              if (nextBio.length > 160) { show("Bio must be 160 characters or fewer."); return; }
+              setProfileSaving(true);
+              try {
+                if (!deviceSession && session.userId && getBackendMode() === "supabase") {
+                  const result = await updateOwnProfile(session.userId, { handle: nextHandle, display_name: nextName, bio: nextBio || null });
+                  if (!result.ok) { show(result.error || "Could not save your profile."); return; }
+                } else {
+                  await AsyncStorage.setItem("@kilode/profile:" + session.handle, JSON.stringify({ displayName: nextName, handle: nextHandle, bio: nextBio }));
+                }
+                setDisplayName(nextName);
+                setDisplayHandle(nextHandle);
+                setProfileBio(nextBio);
+                setProfileEditorOpen(false);
+                show(getBackendMode() === "supabase" && !deviceSession ? "Profile updated." : "Profile saved on this device.");
+              } catch {
+                show("Could not save your profile. Please try again.");
+              } finally {
+                setProfileSaving(false);
+              }
+            }} style={{ alignItems: "center", justifyContent: "center", backgroundColor: C.accent, borderRadius: 13, paddingVertical: 13, opacity: profileSaving ? 0.65 : 1 }}>
+              <Text style={{ color: isDark ? "#101512" : "#FFFFFF", fontSize: 14, fontWeight: "800" }}>{profileSaving ? "Saving…" : "Save profile"}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
