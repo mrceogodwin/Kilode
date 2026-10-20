@@ -9,7 +9,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
 import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
 import { getBackendMode } from "./lib/config";
-import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
+import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, fetchEvents, fetchMarketListings, fetchJobs, postTake } from "./lib/api";
+import { listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs } from "./lib/supabase";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -108,6 +109,10 @@ function KilodeApp() {
   const [rooms, setRooms] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>(LISTINGS.events || []);
+  const [eventsLive, setEventsLive] = useState(false);
+  const [marketItems, setMarketItems] = useState<any[]>(PRODUCTS);
+  const [jobItems, setJobItems] = useState<any[]>(JOBS);
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -188,24 +193,41 @@ function KilodeApp() {
   };
 
   const loadAll = useCallback(async () => {
-    // Use the same feed loader on web preview and native. The UI is the container;
-    // backend rows fill it when configured, while seed/local-preview rows are explicit fallback.
-    const [t, r, n, tr, a, savedPreviewPosts] = await Promise.all([
-      getBackendMode() === "supabase" ? loadSocialsFeed() : fetchTakes(),
+    // One data-loading path feeds both the native screens and the web visual preview.
+    // Supabase reads are used when configured; the custom API is used otherwise.
+    const supabaseMode = getBackendMode() === "supabase";
+    const [t, r, n, tr, a, ev, market, jobs, savedPreviewPosts] = await Promise.all([
+      supabaseMode ? loadSocialsFeed() : fetchTakes(),
       fetchRooms(),
-      fetchNews(),
-      fetchTracks(),
+      supabaseMode
+        ? listRecentArticles().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
+        : fetchNews(),
+      supabaseMode
+        ? listRecentTracks().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
+        : fetchTracks(),
       fetchActivity(session?.token),
+      supabaseMode
+        ? listRecentEvents().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
+        : fetchEvents(),
+      supabaseMode
+        ? listRecentMarketListings().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
+        : fetchMarketListings(),
+      supabaseMode
+        ? listRecentJobs().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
+        : fetchJobs(),
       readPreviewPosts(),
     ]);
-    // A genuinely live empty feed stays empty. Preview posts are merged only into non-live
-    // mode so device-local examples can never be presented as server-published content.
+    // Live empty lists remain empty; seed data is only a fallback when a source is not live.
     setTakes(t.source === "live" && Array.isArray(t.data) ? t.data : mergePreviewPosts(TAKES, savedPreviewPosts));
     setRooms(r.source === "live" && Array.isArray(r.data) ? r.data : ROOMS);
     setNews(n.source === "live" && Array.isArray(n.data) ? n.data : NEWS);
     setTracks(tr.source === "live" && Array.isArray(tr.data) ? tr.data : TRACKS);
+    setEvents(ev.source === "live" && Array.isArray(ev.data) ? ev.data : (LISTINGS.events || []));
+    setEventsLive(ev.source === "live");
+    setMarketItems(market.source === "live" && Array.isArray(market.data) ? market.data : PRODUCTS);
+    setJobItems(jobs.source === "live" && Array.isArray(jobs.data) ? jobs.data : JOBS);
     setActivity(a.source === "live" && Array.isArray(a.data) ? a.data : ACTIVITY);
-    const sources = [t, r, n, tr].map((x) => x.source);
+    const sources = [t, n, tr, ev, market, jobs].map((x) => x.source);
     const next = sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "mock";
     setSource(next as any); return next as any;
   }, [session?.token]);
@@ -272,13 +294,13 @@ function KilodeApp() {
     if (selectedArtist) return (<ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)} onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={playTrack} show={show} />);
     if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
-    if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} onBack={() => go("home")} show={show} />;
-    if (tab === "market") return <MarketScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
-    if (tab === "jobs") return <JobsScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
+    if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} liveData={eventsLive} onBack={() => go("home")} show={show} />;
+    if (tab === "market") return <MarketScreen s={s} C={C} products={marketItems} onBack={() => go("home")} show={show} accountKind={session.kind} />;
+    if (tab === "jobs") return <JobsScreen s={s} C={C} jobs={jobItems} onBack={() => go("home")} show={show} accountKind={session.kind} />;
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "communities") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "creators") return <CreatorsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={playTrack} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} accountKind={session.kind} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={playTrack} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} accountKind={session.kind} tracks={tracks} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
     if (tab === "activity") {
       const chips = ["All", "Likes", "Comments", "Follows"];
@@ -419,7 +441,7 @@ function KilodeApp() {
     return (
       <HomeScreen
         s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked}
-        events={LISTINGS.events || []} market={PRODUCTS} jobs={JOBS}
+        events={events} market={marketItems} jobs={jobItems}
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
         onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
