@@ -10,7 +10,7 @@ import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY 
 import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
 import { getBackendMode } from "./lib/config";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, fetchEvents, fetchMarketListings, fetchJobs, postTake } from "./lib/api";
-import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs } from "./lib/supabase";
+import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs, togglePostLike } from "./lib/supabase";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -198,7 +198,7 @@ function KilodeApp() {
     // Supabase reads are used when configured; the custom API is used otherwise.
     const supabaseMode = getBackendMode() === "supabase";
     const [t, r, n, tr, a, ev, market, jobs, savedPreviewPosts] = await Promise.all([
-      supabaseMode ? loadSocialsFeed() : fetchTakes(),
+      supabaseMode ? loadSocialsFeed(session?.userId) : fetchTakes(),
       fetchRooms(),
       supabaseMode
         ? listRecentArticles().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
@@ -220,6 +220,9 @@ function KilodeApp() {
     ]);
     // Live empty lists remain empty; seed data is only a fallback when a source is not live.
     setTakes(t.source === "live" && Array.isArray(t.data) ? t.data : mergePreviewPosts(TAKES, savedPreviewPosts));
+    if (t.source === "live" && Array.isArray(t.data)) {
+      setLiked(Object.fromEntries(t.data.filter((post: any) => post.likedByMe).map((post: any) => [String(post.id), true])));
+    }
     setRooms(r.source === "live" && Array.isArray(r.data) ? r.data : ROOMS);
     setNews(n.source === "live" && Array.isArray(n.data) ? n.data : NEWS);
     setTracks(tr.source === "live" && Array.isArray(tr.data) ? tr.data : TRACKS);
@@ -232,6 +235,36 @@ function KilodeApp() {
     const next = sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "mock";
     setSource(next as any); return next as any;
   }, [session?.token]);
+
+  const handleLikePost = async (postId: string) => {
+    const id = String(postId);
+    if (getBackendMode() === "supabase") {
+      if (!session?.userId || session.localOnly || session.token === "guest") {
+        show("Sign in to your live Kilode account to like posts.");
+        return;
+      }
+      try {
+        const result = await togglePostLike(id, session.userId);
+        if (!result.ok || typeof result.liked !== "boolean") {
+          show(result.error || "Could not update like.");
+          return;
+        }
+        setLiked((previous) => ({ ...previous, [id]: result.liked! }));
+        setTakes((previous) => previous.map((post: any) => String(post.id) === id
+          ? { ...post, likes: Math.max(0, Number(post.likes || 0) + (result.liked ? 1 : -1)), likedByMe: result.liked }
+          : post));
+        if (selectedPost && String(selectedPost.id) === id) {
+          setSelectedPost((previous: any) => previous ? {
+            ...previous, likes: Math.max(0, Number(previous.likes || 0) + (result.liked ? 1 : -1)), likedByMe: result.liked,
+          } : previous);
+        }
+      } catch {
+        show("Could not update like. Check your connection and try again.");
+      }
+      return;
+    }
+    setLiked((previous) => ({ ...previous, [id]: !previous[id] }));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -303,7 +336,7 @@ function KilodeApp() {
     if (selectedPost) return (
       <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]}
         onBack={() => setSelectedPost(null)}
-        onLike={() => setLiked((p) => ({ ...p, [String(selectedPost.id)]: !p[String(selectedPost.id)] }))}
+        onLike={() => { void handleLikePost(String(selectedPost.id)); }}
         onComment={() => setCommentTake(selectedPost)}
         onFollow={() => setFollowing((p) => ({ ...p, [String(selectedPost.handle || selectedPost.name)]: !p[String(selectedPost.handle || selectedPost.name)] }))}
         onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved."); }}
@@ -362,7 +395,7 @@ function KilodeApp() {
         <SocialsScreen s={s} C={C} takes={takes} blocked={blocked} liked={liked} following={following} sessionName={session.name || "K"}
           refreshing={refreshing} onRefresh={onRefresh} onCompose={() => setComposeOpen(true)}
           onOpenPost={setSelectedPost} onOpenProfile={setSelectedProfile}
-          onLike={(id) => setLiked((p) => ({ ...p, [id]: !p[id] }))} onComment={setCommentTake}
+          onLike={(id) => { void handleLikePost(id); }} onComment={setCommentTake}
           onFollow={(key, name) => { setFollowing((p) => ({ ...p, [key]: !p[key] })); show(following[key] ? `Unfollowed ${name}` : `Following ${name}`); }}
           onReport={async (id) => { await submitReport("post", id, "other"); show("Reported locally"); }}
           onBlock={async (handle) => { await blockUser(handle); setBlocked((p) => p.includes(handle) ? p : [...p, handle]); show(`Blocked @${handle}`); }}
