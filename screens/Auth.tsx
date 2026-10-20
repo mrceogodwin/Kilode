@@ -13,7 +13,6 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { API_BASE } from "../lib/config";
 import { ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 
 type Props = {
@@ -26,7 +25,7 @@ type Props = {
   show: (m: string) => void;
 };
 
-export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Props) {
+export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
@@ -85,18 +84,6 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
               {mode === "in" ? "Sign in to continue" : "Choose account type · username + password"}
             </Text>
 
-            <TouchableOpacity
-              style={styles.google}
-              onPress={() => {
-                onGoogle();
-                show("Google · wire OAuth next");
-              }}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.googleG}>G</Text>
-              <Text style={styles.googleText}>Continue with Google</Text>
-            </TouchableOpacity>
-
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>or</Text>
@@ -151,17 +138,18 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
               style={[styles.primary, { opacity: busy ? 0.7 : 1 }]}
               disabled={busy}
               onPress={async () => {
+                if (busy) return;
                 setBusy(true);
-                if (mode === "up") {
-                  const r = await onSignUp(handle, password, kind, name || undefined);
+                try {
+                  const r = mode === "up"
+                    ? await onSignUp(handle, password, kind, name || undefined)
+                    : await onSignIn(handle, password);
+                  if (!r.ok) show(r.error || "Authentication failed");
+                  else show(mode === "up" ? `Welcome · ${kind}` : "Welcome");
+                } catch {
+                  show("Kilode could not complete authentication. Please try again.");
+                } finally {
                   setBusy(false);
-                  if (!r.ok) show(r.error || "Failed");
-                  else show(`Welcome · ${kind}`);
-                } else {
-                  const r = await onSignIn(handle, password);
-                  setBusy(false);
-                  if (!r.ok) show(r.error || "Failed");
-                  else show("Welcome");
                 }
               }}
             >
@@ -186,8 +174,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
             <TouchableOpacity style={styles.guest} onPress={onGuest}>
               <Text style={styles.guestText}>Continue as guest</Text>
             </TouchableOpacity>
-            <Text style={styles.api}>{API_BASE}</Text>
-          </View>
+            </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -214,8 +201,8 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: "#2563EB",
-    opacity: 0.12,
+    backgroundColor: "#D4AF37",
+    opacity: 0.08,
   },
   amberBlob: {
     position: "absolute",
@@ -284,9 +271,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 10,
   },
-  kindCellOn: { borderColor: "#3B82F6", backgroundColor: "rgba(59,130,246,0.12)" },
+  kindCellOn: { borderColor: "#D4AF37", backgroundColor: "rgba(212,175,55,0.10)" },
   kindTitle: { fontSize: 12, fontWeight: "700", color: "#F4F4F5" },
-  kindTitleOn: { color: "#93C5FD" },
+  kindTitleOn: { color: "#E5C158" },
   kindHint: { fontSize: 10, color: "#71717A", marginTop: 3, lineHeight: 13 },
   field: {
     backgroundColor: "#121214",
@@ -300,18 +287,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   primary: {
-    backgroundColor: "#2563EB",
+    backgroundColor: "#D4AF37",
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
     marginTop: 4,
   },
-  primaryText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  primaryText: { color: "#0D0D10", fontWeight: "800", fontSize: 15 },
   switchRow: { flexDirection: "row", justifyContent: "center", marginTop: 16 },
   switchMuted: { fontSize: 13, color: "#A1A1AA", marginRight: 6 },
-  switchLink: { fontSize: 13, fontWeight: "600", color: "#3B82F6" },
+  switchLink: { fontSize: 13, fontWeight: "600", color: "#E5C158" },
   legal: { textAlign: "center", fontSize: 11, color: "#52525B", marginTop: 12, lineHeight: 16 },
   guest: { alignItems: "center", marginTop: 14 },
-  guestText: { fontSize: 13, fontWeight: "600", color: "#3B82F6" },
-  api: { textAlign: "center", fontSize: 10, color: "#3f3f46", marginTop: 10 },
+  guestText: { fontSize: 13, fontWeight: "600", color: "#E5C158" },
 });
