@@ -44,7 +44,6 @@ const GENRES = [
 
 export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, userId, tracks: tracksProp }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Home");
-  const [following, setFollowing] = useState(false);
   const [artistProfiles, setArtistProfiles] = useState<any[]>([]);
   const [loadingArtists, setLoadingArtists] = useState(false);
   const [artistCatalogueError, setArtistCatalogueError] = useState("");
