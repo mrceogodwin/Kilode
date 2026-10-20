@@ -527,20 +527,8 @@ function KilodeApp() {
         onToggleFollow={() => setFollowing((p) => ({ ...p, [String(selectedProfile.handle || selectedProfile.name)]: !p[String(selectedProfile.handle || selectedProfile.name)] }))}
         onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }} />
     );
-    if (selectedArtist) return (<View style={s.flex}><ArtistDetailScreen s={s} C={C} artist={selectedArtist} tracks={tracks} userId={deviceSession ? undefined : session.userId} backLabel={artistReturnToTrack ? "Track" : "Music"} onBack={() => { setSelectedArtist(null); setArtistReturnToTrack(false); }} onOpenTrack={(t) => { setArtistReturnToTrack(false); setSelectedArtist(null); setSelectedTrack(t); }} onPlay={playTrack} show={show} />{nowPlaying ? <DetailMiniPlayer s={s} C={C} track={nowPlaying} isPlaying={isPlaying} progress={playbackProgress} onToggle={() => { void togglePlayback(); }} onClose={() => { if (soundRef.current) { void soundRef.current.stopAsync().catch(() => undefined); void soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} /> : null}<KilodeTabBar
-      active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
-      onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
-      onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
-      isDark={isDark}
-      accent={C.accent}
-    /></View>);
-    if (selectedTrack) return (<View style={s.flex}><TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={playTrack} onOpenArtist={(n) => { setArtistReturnToTrack(true); setSelectedArtist({ display_name: n, handle: n }); }} onOpenTrack={setSelectedTrack} show={show} />{nowPlaying ? <DetailMiniPlayer s={s} C={C} track={nowPlaying} isPlaying={isPlaying} progress={playbackProgress} onToggle={() => { void togglePlayback(); }} onClose={() => { if (soundRef.current) { void soundRef.current.stopAsync().catch(() => undefined); void soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} /> : null}<KilodeTabBar
-      active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
-      onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
-      onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
-      isDark={isDark}
-      accent={C.accent}
-    /></View>);
+    if (selectedArtist) return <View style={s.flex}><ArtistDetailScreen s={s} C={C} artist={selectedArtist} tracks={tracks} userId={deviceSession ? undefined : session.userId} backLabel={artistReturnToTrack ? "Track" : "Music"} onBack={() => { setSelectedArtist(null); setArtistReturnToTrack(false); }} onOpenTrack={(t) => { setArtistReturnToTrack(false); setSelectedArtist(null); setSelectedTrack(t); }} onPlay={playTrack} show={show} /></View>;
+    if (selectedTrack) return <View style={s.flex}><TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={playTrack} onOpenArtist={(n) => { setArtistReturnToTrack(true); setSelectedArtist({ display_name: n, handle: n }); }} onOpenTrack={setSelectedTrack} show={show} /></View>;
     if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
     if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} liveData={eventsLive} onBack={() => go("home")} show={show} />;
