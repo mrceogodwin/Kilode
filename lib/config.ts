@@ -11,7 +11,9 @@ const envName =
   typeof process !== "undefined" ? process.env?.EXPO_PUBLIC_APP_ENV : undefined;
 
 /** Dedicated Kilode API host; empty until explicitly configured. */
-export const API_BASE = (envUrl && envUrl.trim()) || "";
+export const API_BASE = (envUrl && envUrl.trim())
+  ? envUrl.trim().replace(/\\/+$/, "")
+  : "";
 
 /** development | preview | production */
 export const APP_ENV = (envName && envName.trim()) || "production";
