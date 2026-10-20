@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -27,7 +27,10 @@ export type MediaArticle = {
 type Props = {
   s: any;
   C: Palette;
-  articles: MediaArticle[];
+  /** Preferred */
+  articles?: MediaArticle[];
+  /** Alias used by KilodeRoot */
+  news?: MediaArticle[];
   onBack: () => void;
   show: (m: string) => void;
   initialArticleId?: string | null;
@@ -37,7 +40,7 @@ const W = Dimensions.get("window").width;
 const CAROUSEL_W = W - 32;
 
 const GRID = [
-  { id: "politics", label: "Politics", icon: "landmark-outline" as const },
+  { id: "politics", label: "Politics", icon: "business-outline" as const },
   { id: "tech", label: "Tech", icon: "hardware-chip-outline" as const },
   { id: "culture", label: "Culture", icon: "color-palette-outline" as const },
   { id: "sport", label: "Sport", icon: "football-outline" as const },
@@ -53,24 +56,24 @@ const TICKER = [
 ];
 
 /** Full Media system: ticker → carousel → 3-col grid → list + ads */
-export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: Props) {
+export function MediaScreen({ s, C, articles, news, onBack, show, initialArticleId }: Props) {
+  const data = articles?.length ? articles : news || [];
   const [active, setActive] = useState<MediaArticle | null>(null);
   const [slide, setSlide] = useState(0);
   const [filter, setFilter] = useState<string | null>(null);
-  const tickerX = useRef(0);
 
   const list = filter
-    ? articles.filter((a) => (a.kicker || "").toLowerCase().includes(filter.toLowerCase()))
-    : articles;
+    ? data.filter((a) => (a.kicker || "").toLowerCase().includes(filter.toLowerCase()))
+    : data;
 
   const hero = list.slice(0, 4);
   const rest = list.slice(0, 12);
 
   useEffect(() => {
     if (!initialArticleId) return;
-    const match = articles.find((a) => String(a.id) === String(initialArticleId));
+    const match = data.find((a) => String(a.id) === String(initialArticleId));
     if (match) setActive(match);
-  }, [initialArticleId, articles]);
+  }, [initialArticleId, data]);
 
   const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
@@ -133,7 +136,6 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
 
   return (
     <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 36 }} showsVerticalScrollIndicator={false}>
-      {/* Header */}
       <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center" }}>
         <TouchableOpacity onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={22} color={C.text} />
@@ -145,7 +147,6 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
         </TouchableOpacity>
       </View>
 
-      {/* Trending ticker */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -163,80 +164,67 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
         ))}
       </ScrollView>
 
-      {/* Carousel */}
       <ScrollView
         horizontal
-        pagingEnabled
         decelerationRate="fast"
         snapToInterval={CAROUSEL_W + 12}
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onCarouselScroll}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
       >
-        {(hero.length ? hero : [{ id: "empty", title: "Stories load when Media is connected", kicker: "MEDIA" }]).map((n) => (
-          <TouchableOpacity
-            key={n.id}
-            activeOpacity={0.9}
-            onPress={() => ("title" in n && n.id !== "empty" ? setActive(n as MediaArticle) : undefined)}
-            style={{
-              width: CAROUSEL_W,
-              height: 180,
-              borderRadius: 16,
-              overflow: "hidden",
-              backgroundColor: (n as MediaArticle).tone || C.elevated,
-            }}
-          >
-            {(n as MediaArticle).imageUrl ? (
-              <Image
-                source={{ uri: (n as MediaArticle).imageUrl }}
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
-              />
-            ) : null}
-            <View
+        {(hero.length ? hero : [{ id: "empty", title: "Stories load when Media is connected", kicker: "MEDIA" } as MediaArticle]).map(
+          (n) => (
+            <TouchableOpacity
+              key={n.id}
+              activeOpacity={0.9}
+              onPress={() => (n.id !== "empty" ? setActive(n) : undefined)}
               style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                padding: 14,
-                backgroundColor: "rgba(0,0,0,0.55)",
+                width: CAROUSEL_W,
+                height: 180,
+                borderRadius: 16,
+                overflow: "hidden",
+                backgroundColor: n.tone || C.elevated,
               }}
             >
-              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>
-                {((n as MediaArticle).kicker || "MEDIA").toUpperCase()}
-              </Text>
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 4 }} numberOfLines={2}>
-                {(n as MediaArticle).title}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+              {n.imageUrl ? (
+                <Image source={{ uri: n.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              ) : null}
+              <View
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  padding: 14,
+                  backgroundColor: "rgba(0,0,0,0.55)",
+                }}
+              >
+                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>
+                  {(n.kicker || "MEDIA").toUpperCase()}
+                </Text>
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 4 }} numberOfLines={2}>
+                  {n.title}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )
+        )}
       </ScrollView>
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 5, marginTop: 10, marginBottom: 14 }}>
-        {(hero.length || 1) > 0 &&
-          Array.from({ length: Math.max(hero.length, 1) }).map((_, i) => (
-            <View
-              key={i}
-              style={{
-                width: i === slide ? 14 : 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: i === slide ? C.accent : C.border,
-              }}
-            />
-          ))}
+        {Array.from({ length: Math.max(hero.length, 1) }).map((_, i) => (
+          <View
+            key={i}
+            style={{
+              width: i === slide ? 14 : 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: i === slide ? C.accent : C.border,
+            }}
+          />
+        ))}
       </View>
 
-      {/* 3-column roles + More */}
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          paddingHorizontal: 12,
-          marginBottom: 8,
-        }}
-      >
+      <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 12, marginBottom: 8 }}>
         {GRID.map((g) => (
           <TouchableOpacity
             key={g.id}
@@ -247,12 +235,7 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
               }
               setFilter(filter === g.label ? null : g.label);
             }}
-            style={{
-              width: "33.33%",
-              paddingHorizontal: 4,
-              paddingVertical: 6,
-              alignItems: "center",
-            }}
+            style={{ width: "33.33%", paddingHorizontal: 4, paddingVertical: 6, alignItems: "center" }}
           >
             <View
               style={{
@@ -277,7 +260,6 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
         ))}
       </View>
 
-      {/* Portrait ad */}
       <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 16 }}>
         <View
           style={{
@@ -305,7 +287,6 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
         </View>
       </View>
 
-      {/* Thumbnail list */}
       <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", paddingHorizontal: 16, marginBottom: 10 }}>
         Latest
       </Text>
@@ -340,7 +321,6 @@ export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: 
               </Text>
             </View>
           </TouchableOpacity>
-          {/* Inline ad every 4 items */}
           {idx === 3 ? (
             <View
               style={{
