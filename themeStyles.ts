@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-/** Kilode visual system — forest-green charcoal surfaces, warm white typography, restrained gold. */
+/** Kilode visual system — charcoal surfaces, warm white typography, amber brand accent with orange, yellow and coral details. */
 export const palettes = {
   dark: {
     bg: "#0B0C0F",
@@ -11,10 +11,10 @@ export const palettes = {
     text: "#F4F5F0",
     text2: "#A7ABB4",
     text3: "#777D88",
-    accent: "#39A875",
-    accentSoft: "#17251E",
+    accent: "#E6A94A",
+    accentSoft: "#2A2418",
     danger: "#F43F5E",
-    success: "#39A875",
+    success: "#58B88A",
     dock: "#0B0C0F",
   },
   light: {
@@ -26,8 +26,8 @@ export const palettes = {
     text: "#142019",
     text2: "#53645A",
     text3: "#7F9185",
-    accent: "#267548",
-    accentSoft: "#E1F0E5",
+    accent: "#B9822F",
+    accentSoft: "#F5EAD4",
     danger: "#E11D48",
     success: "#267548",
     dock: "#F7FAF7",
@@ -58,8 +58,8 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
     headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-    headerTitle: { fontSize: 18, fontWeight: "700", color: C.text, letterSpacing: -0.45 },
-    brand: { fontSize: 26, fontWeight: "900", color: C.text, letterSpacing: -1.35 },
+    headerTitle: { fontSize: 16, fontWeight: "600", color: C.text, letterSpacing: -0.35 },
+    brand: { fontSize: 23, fontWeight: "800", color: C.text, letterSpacing: -1.05 },
     brandAccent: { color: C.accent },
 
     livePill: {
@@ -140,7 +140,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
       padding: 18,
       justifyContent: "flex-end",
     },
-    slideTitle: { fontSize: 18, fontWeight: "800", color: "#fff" },
+    slideTitle: { fontSize: 16, fontWeight: "700", color: "#fff" },
     slideSub: { fontSize: 13, color: "rgba(255,255,255,0.9)", marginTop: 4 },
     slideCta: {
       marginTop: 10,
@@ -163,9 +163,9 @@ export function makeStyles(C: Palette, isDark: boolean) {
       marginTop: 20,
       marginBottom: 10,
     },
-    sectionTitle: { fontSize: 16, fontWeight: "700", color: C.text, letterSpacing: -0.3 },
+    sectionTitle: { fontSize: 15, fontWeight: "600", color: C.text, letterSpacing: -0.2 },
     link: { fontSize: 13, fontWeight: "600", color: C.accent },
-    h1: { fontSize: 26, fontWeight: "800", color: C.text, letterSpacing: -0.7, lineHeight: 31 },
+    h1: { fontSize: 23, fontWeight: "700", color: C.text, letterSpacing: -0.55, lineHeight: 28 },
     sub: { fontSize: 13, color: C.text2, marginTop: 3, lineHeight: 18 },
     meta: { fontSize: 12, color: C.text3, fontWeight: "500" },
 
