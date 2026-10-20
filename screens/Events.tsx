@@ -142,7 +142,7 @@ export function EventsScreen({ s, C, events, onBack, show }: Props) {
           </View>
         ) : null}
 
-        <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.4, marginTop: 10, lineHeight: 28 }}>
+        <Text style={{ color: C.text, fontSize: 19, fontWeight: "700", letterSpacing: -0.35, marginTop: 10, lineHeight: 25 }}>
           {active.title}
         </Text>
         <Text style={{ color: C.text2, fontSize: 14, marginTop: 8 }}>{active.meta}</Text>
