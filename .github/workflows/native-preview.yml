@@ -40,10 +40,6 @@ jobs:
           npx expo export --platform ios
           mv dist artifacts-ios
 
-      - name: Export visual web preview from the same React Native screens
-        run: |
-          npx expo export --platform web
-          mv dist artifacts-web
 
       - name: Save validation artifacts
         uses: actions/upload-artifact@v4
@@ -51,6 +47,5 @@ jobs:
           name: kilode-native-preview-${{ github.sha }}
           path: |
             artifacts-ios/
-            artifacts-web/
           if-no-files-found: error
           retention-days: 14
