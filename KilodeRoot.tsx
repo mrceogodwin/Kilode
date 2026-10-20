@@ -695,6 +695,9 @@ function KilodeApp() {
                   : o.label === "Job" ? "Open Jobs"
                   : o.label === "Market" ? "Open Market"
                   : o.label === "Event" ? "Open Events"
+                  : o.label === "Article" ? "Open Media publishing tools"
+                  : o.label === "Community" ? "Open Communities"
+                  : o.label === "Creator" ? "Open Creator tools"
                   : "Open Ads and campaign tools";
                 return (
                   <TouchableOpacity key={o.label} accessibilityRole="button" accessibilityLabel={`${o.label}. ${subtitle}`}
