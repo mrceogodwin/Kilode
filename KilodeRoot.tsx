@@ -32,6 +32,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { EmptyState } from "./components/ui/EmptyState";
 import { ConnectionBanner } from "./components/ui/ConnectionBanner";
 import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
+import { primaryDesksFor, capabilitiesFor } from "./lib/permissions";
 
 const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   "💼": "briefcase-outline", "🛍️": "bag-handle-outline", "🏠": "home-outline",
@@ -177,9 +178,7 @@ function KilodeApp() {
       const chips = ["All", "Likes", "Comments", "Follows"];
       return (
         <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 28 }} refreshControl={rc} showsVerticalScrollIndicator={false}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 4, marginBottom: 8 }}>
-            <Text style={{ color: C.text, fontSize: 22, fontWeight: "800" }}>Notifications</Text>
-          </View>
+          <View style={{ paddingHorizontal: 16, paddingTop: 4, marginBottom: 8 }}><Text style={{ color: C.text, fontSize: 22, fontWeight: "800" }}>Notifications</Text></View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, marginBottom: 12 }}>
             {chips.map((f, i) => (
               <View key={f} style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: i === 0 ? C.accent : "transparent", borderWidth: 1, borderColor: i === 0 ? C.accent : C.border }}>
@@ -216,8 +215,11 @@ function KilodeApp() {
       );
     }
     if (tab === "myspace") {
+      const kindLabel = session.kind || "member";
+      const desks = primaryDesksFor(session.kind);
+      const caps = capabilitiesFor(session.kind);
       return (
-        <ScrollView style={s.flex} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <ScrollView style={s.flex} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", marginBottom: 16 }}>My Space</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
             <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
@@ -226,9 +228,10 @@ function KilodeApp() {
             <View style={{ flex: 1 }}>
               <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>{displayName || session.name}</Text>
               <Text style={{ color: C.text2, marginTop: 2 }}>@{displayHandle || session.handle}</Text>
+              <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700", marginTop: 4 }}>{String(kindLabel).replace(/_/g, " ")}</Text>
             </View>
             <TouchableOpacity style={{ borderWidth: 1, borderColor: C.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 }} onPress={() => show("Profile editor opens next.")}>
-              <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>Edit Profile</Text>
+              <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>Edit</Text>
             </TouchableOpacity>
           </View>
           <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 22 }}>
@@ -236,6 +239,15 @@ function KilodeApp() {
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Followers</Text></View>
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Following</Text></View>
           </View>
+          <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, marginTop: 22, marginBottom: 10 }}>YOUR TOOLS</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {desks.map((d) => (
+              <TouchableOpacity key={d} onPress={() => go(d)} style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
+                <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>{d.charAt(0).toUpperCase() + d.slice(1)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={{ color: C.text3, fontSize: 11, marginTop: 8 }}>Capabilities: {caps.join(" · ") || "member"}</Text>
           <View style={{ flexDirection: "row", marginTop: 20, gap: 10 }}>
             {["Saved", "Activity", "Settings"].map((label) => (
               <TouchableOpacity key={label} onPress={() => label === "Settings" ? setSettingsOpen(true) : label === "Activity" ? go("activity") : show("Saved when sync is live.")}
@@ -272,7 +284,7 @@ function KilodeApp() {
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
         onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
-        onOpenSystem={(id) => go(id)} onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
+        onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
         onCompose={() => setComposeOpen(true)} onPlayTrack={(t) => setSelectedTrack(t)} show={show}
       />
     );
