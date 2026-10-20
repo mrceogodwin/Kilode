@@ -232,11 +232,12 @@ function KilodeApp() {
             setIsPlaying(false);
             setPlaybackProgress(0);
             const queue = playbackQueueRef.current;
-            const nextIndex = playbackQueueIndexRef.current + 1;
+            let nextIndex = playbackQueueIndexRef.current + 1;
+            // A catalogue item without a playable preview must not stall the queue.
+            while (nextIndex < queue.length && !queue[nextIndex]?.previewUrl) nextIndex += 1;
             if (nextIndex < queue.length) {
               playbackQueueIndexRef.current = nextIndex;
-              const nextTrack = queue[nextIndex];
-              if (nextTrack?.previewUrl) void playTrackRef.current?.(nextTrack, true);
+              void playTrackRef.current?.(queue[nextIndex], true);
             }
           }
         }
@@ -253,9 +254,12 @@ function KilodeApp() {
 
   const stepPlaybackQueue = useCallback(async (direction: -1 | 1) => {
     const queue = playbackQueueRef.current;
-    const nextIndex = playbackQueueIndexRef.current + direction;
+    let nextIndex = playbackQueueIndexRef.current + direction;
+    while (nextIndex >= 0 && nextIndex < queue.length && !queue[nextIndex]?.previewUrl) {
+      nextIndex += direction;
+    }
     if (nextIndex < 0 || nextIndex >= queue.length) {
-      show(direction < 0 ? "You are at the start of this queue." : "You are at the end of this queue.");
+      show(direction < 0 ? "No earlier playable track is available." : "No later playable track is available.");
       return;
     }
     playbackQueueIndexRef.current = nextIndex;
