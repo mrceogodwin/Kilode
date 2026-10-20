@@ -1,11 +1,14 @@
 /** Kilode design tokens — forest green, layered charcoal, warm white and restrained gold. */
-export const ACCENT = "#39A875";
-export const ACCENT_LIGHT = "#52C58B";
+export const ACCENT = "#E6A94A";
+export const ACCENT_LIGHT = "#F2C66D";
 
-// Compatibility names retained for older UI primitives; values follow Kilode green surfaces.
+// Compatibility names retained for older UI primitives; brand accent is warm amber, not green.
 export const BLUE = ACCENT;
-export const BLUE_SOFT = "#17251E";
-export const GREEN = "#52C58B";
+export const BLUE_SOFT = "#2A2418";
+export const GREEN = "#58B88A";
+export const ORANGE = "#F08A4B";
+export const YELLOW = "#F2C94C";
+export const RED = "#E56B6F";
 export const BORDER = "#2B2E35";
 export const TEXT = "#F4F5F0";
 export const TEXT2 = "#A7ABB4";
@@ -18,15 +21,15 @@ export const GRAY2 = "#737373";
 
 /** Type scale — hierarchy for headlines → meta */
 export const TYPE = {
-  brand: { fontSize: 22, fontWeight: "800" as const, letterSpacing: -0.7 },
-  h1: { fontSize: 26, fontWeight: "800" as const, letterSpacing: -0.7, lineHeight: 31 },
-  h2: { fontSize: 19, fontWeight: "700" as const, letterSpacing: -0.4, lineHeight: 25 },
-  section: { fontSize: 16, fontWeight: "700" as const, letterSpacing: -0.25 },
-  body: { fontSize: 15, fontWeight: "400" as const, lineHeight: 23 },
-  bodyStrong: { fontSize: 15, fontWeight: "600" as const },
+  brand: { fontSize: 20, fontWeight: "700" as const, letterSpacing: -0.65 },
+  h1: { fontSize: 23, fontWeight: "700" as const, letterSpacing: -0.65, lineHeight: 28 },
+  h2: { fontSize: 17, fontWeight: "650" as const, letterSpacing: -0.35, lineHeight: 22 },
+  section: { fontSize: 15, fontWeight: "600" as const, letterSpacing: -0.2 },
+  body: { fontSize: 14, fontWeight: "400" as const, lineHeight: 21 },
+  bodyStrong: { fontSize: 14, fontWeight: "600" as const },
   meta: { fontSize: 12, fontWeight: "500" as const },
   caption: { fontSize: 11, fontWeight: "600" as const },
-  button: { fontSize: 14, fontWeight: "700" as const },
+  button: { fontSize: 13, fontWeight: "600" as const },
   tab: { fontSize: 10, fontWeight: "600" as const },
 };
 
