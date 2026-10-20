@@ -1,17 +1,17 @@
 /** Kilode design tokens — muted gold accent, calm neutrals (preview/web identity). */
-export const ACCENT = "#C5A66A";
-export const ACCENT_LIGHT = "#A88A4E";
+export const ACCENT = "#D4AF37";
+export const ACCENT_LIGHT = "#E5C158";
 
 // Compatibility tokens for older UI primitives; mapped to Kilode gold/neutrals.
 export const BLUE = ACCENT;
-export const BLUE_SOFT = "#2A2419";
+export const BLUE_SOFT = "#2A2414";
 export const GREEN = ACCENT;
-export const BORDER = "#303030";
+export const BORDER = "#2A2A30";
 export const TEXT = "#F5F5F5";
 export const TEXT2 = "#A3A3A3";
 export const TEXT3 = "#737373";
-export const WHITE = "#191919";
-export const BG = "#101010";
+export const WHITE = "#18181C";
+export const BG = "#0D0D10";
 export const BLACK = "#09090B";
 export const GRAY = "#A3A3A3";
 export const GRAY2 = "#737373";
