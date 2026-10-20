@@ -8,7 +8,6 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -54,7 +53,7 @@ const ADS = [
     label: "Sponsored",
     title: "Shop Lagos Fashion Week looks",
     cta: "Shop now",
-    color: "#2A2218",
+    color: "#1B2821",
     imageUrl: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80",
   },
   {
@@ -62,7 +61,7 @@ const ADS = [
     label: "Promoted",
     title: "Stream Ojuelegba Nights",
     cta: "Listen",
-    color: "#1A2430",
+    color: "#24352B",
     imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80",
   },
 ];
@@ -72,7 +71,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
   const [active, setActive] = useState<Article | null>(null);
   const [slide, setSlide] = useState(0);
   const [filter, setFilter] = useState("All");
-  const [listMode, setListMode] = useState<"grid" | "list">("grid");
+  const [listMode, setListMode] = useState<"grid" | "list">("list");
   const [showMore, setShowMore] = useState(false);
   const carouselRef = useRef<ScrollView>(null);
 
@@ -119,7 +118,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
           <Ionicons name="chevron-back" size={20} color={C.accent} />
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>Media</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.8 }}>
+        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.6 }}>
           {(active.kicker || "MEDIA").toUpperCase()} · {active.time || "Today"}
         </Text>
         <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.4, marginTop: 8, lineHeight: 28 }}>
@@ -185,7 +184,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 4 }}>
           <View style={{ backgroundColor: C.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
-            <Text style={{ color: "#111", fontSize: 10, fontWeight: "900", letterSpacing: 0.6 }}>TRENDING</Text>
+            <Text style={{ color: "#F4F5F0", fontSize: 10, fontWeight: "800", letterSpacing: 0.7 }}>TRENDING</Text>
           </View>
         </View>
         {TRENDING.map((t) => (
@@ -247,7 +246,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                 onPress={() => setActive(a)}
                 style={{
                   width: CAROUSEL_W,
-                  height: 200,
+                  height: 224,
                   borderRadius: 16,
                   overflow: "hidden",
                   backgroundColor: a.tone || C.elevated,
@@ -265,13 +264,13 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                     right: 0,
                     bottom: 0,
                     padding: 14,
-                    backgroundColor: "rgba(0,0,0,0.55)",
+                    backgroundColor: "rgba(10,18,13,0.78)",
                   }}
                 >
                   <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.8 }}>
                     {(a.kicker || "FEATURED").toUpperCase()}
                   </Text>
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 4, lineHeight: 21 }} numberOfLines={2}>
+                  <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800", marginTop: 5, lineHeight: 25, letterSpacing: -0.45 }} numberOfLines={2}>
                     {a.title}
                   </Text>
                 </View>
@@ -348,10 +347,10 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
               ) : (
                 <View style={{ width: GRID_CELL, height: GRID_CELL * 1.15, borderRadius: 10, backgroundColor: a.tone || C.elevated }} />
               )}
-              <Text style={{ color: C.text, fontSize: 11, fontWeight: "700", marginTop: 6, lineHeight: 14 }} numberOfLines={2}>
+              <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginTop: 7, lineHeight: 17 }} numberOfLines={2}>
                 {a.title}
               </Text>
-              <Text style={{ color: C.text3, fontSize: 10, marginTop: 2 }} numberOfLines={1}>
+              <Text style={{ color: C.text3, fontSize: 10, marginTop: 3 }} numberOfLines={1}>
                 {(a.kicker || "Media").toUpperCase()}
               </Text>
             </TouchableOpacity>
