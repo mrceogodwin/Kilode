@@ -97,6 +97,7 @@ function KilodeApp() {
   const [homeSearchOpen, setHomeSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createContext, setCreateContext] = useState("home");
   const [composeOpen, setComposeOpen] = useState(false);
   const [commentTake, setCommentTake] = useState<any | null>(null);
   const [composeText, setComposeText] = useState("");
@@ -520,6 +521,12 @@ function KilodeApp() {
     );
   };
 
+  const contextCreateLabel: Record<string, string> = {
+    music: "Track", events: "Event", market: "Market", jobs: "Job", cinema: "Film", ads: "Ad",
+  };
+  const contextCreateAction = contextCreateLabel[createContext];
+  const createOptions = contextCreateAction ? CREATE.filter((option) => option.label === contextCreateAction) : CREATE;
+
   const headerTitle =
     settingsOpen ? "Settings"
     : tab === "activity" ? "Notifications"
@@ -544,6 +551,7 @@ function KilodeApp() {
         <TouchableOpacity
           onPress={() => {
             if (tab === "socials") { setComposeOpen(true); return; }
+            setCreateContext(tab);
             setCreateOpen(true);
           }}
           accessibilityRole="button"
@@ -596,7 +604,7 @@ function KilodeApp() {
       <KilodeTabBar
         active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
         onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
-        onCreate={() => setCreateOpen(true)}
+        onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
         isDark={isDark}
       />
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
@@ -667,13 +675,13 @@ function KilodeApp() {
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}>
               <View style={{ flex: 1 }}>
-                <Text style={s.sheetTitle}>Create on Kilode</Text>
-                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>Choose where to start.</Text>
+                <Text style={s.sheetTitle}>{createContext === "home" ? "Create on Kilode" : "Create in " + (headerTitle || createContext)}</Text>
+                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>{contextCreateAction ? "Quick action for this screen." : "Choose where to start."}</Text>
               </View>
               <TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu" style={s.iconBtn}><Ionicons name="close" size={20} color={C.text2} /></TouchableOpacity>
             </View>
             <View style={{ gap: 2 }}>
-              {CREATE.map((o) => {
+              {createOptions.map((o) => {
                 const allowed = !(o as any).capability || can(session.kind, (o as any).capability);
                 const iconName: keyof typeof Ionicons.glyphMap = ({
                   Post: "create-outline", Track: "musical-notes-outline", Film: "film-outline",
