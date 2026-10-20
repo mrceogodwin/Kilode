@@ -222,6 +222,28 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     const queryMatch = !query || [track.title, track.artist, track.album, track.genre].some((value) => String(value || "").toLowerCase().includes(query));
     return genreMatch && queryMatch;
   });
+
+  const locallyKnownTracks = [...recentTrackIds, ...Object.keys(savedTrackIds).filter((id) => savedTrackIds[id])]
+    .map((id) => tracks.find((track: any) => String(track.id ?? track.title) === id))
+    .filter(Boolean) as any[];
+  const preferredGenres = locallyKnownTracks.reduce((counts: Record<string, number>, track: any) => {
+    const raw = track.genre ?? track.genres;
+    const genres = (Array.isArray(raw) ? raw : String(raw || "").split(/[,/|]/)).map((genre: any) => String(genre).trim().toLowerCase()).filter(Boolean);
+    genres.forEach((genre: string) => { counts[genre] = (counts[genre] || 0) + 1; });
+    return counts;
+  }, {});
+  const topPreferredGenre = Object.entries(preferredGenres).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const tailoredTracks = [...catalogueTracks].sort((a: any, b: any) => {
+    const score = (track: any) => {
+      const id = String(track.id ?? track.title);
+      const genre = String(track.genre ?? track.genres ?? "").toLowerCase();
+      return (recentTrackIds.includes(id) ? 4 : 0)
+        + (savedTrackIds[id] ? 3 : 0)
+        + (topPreferredGenre && genre.includes(topPreferredGenre) ? 2 : 0)
+        + (track.is_emerging || track.emerging ? 1 : 0);
+    };
+    return score(b) - score(a);
+  });
   const destinationTracks = destination === "Library"
     ? catalogueTracks.filter((track: any) => savedTrackIds[String(track.id ?? track.title)])
     : destination === "Recently Played"
@@ -244,27 +266,6 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                       ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
                       : catalogueTracks;
   const hasVerifiedChartSignals = destination === "Top 100" && destinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
-  const locallyKnownTracks = [...recentTrackIds, ...Object.keys(savedTrackIds).filter((id) => savedTrackIds[id])]
-    .map((id) => tracks.find((track: any) => String(track.id ?? track.title) === id))
-    .filter(Boolean) as any[];
-  const preferredGenres = locallyKnownTracks.reduce((counts: Record<string, number>, track: any) => {
-    const raw = track.genre ?? track.genres;
-    const genres = (Array.isArray(raw) ? raw : String(raw || "").split(/[,/|]/)).map((genre: any) => String(genre).trim().toLowerCase()).filter(Boolean);
-    genres.forEach((genre: string) => { counts[genre] = (counts[genre] || 0) + 1; });
-    return counts;
-  }, {});
-  const topPreferredGenre = Object.entries(preferredGenres).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-  const tailoredTracks = [...catalogueTracks].sort((a: any, b: any) => {
-    const score = (track: any) => {
-      const id = String(track.id ?? track.title);
-      const genre = String(track.genre ?? track.genres ?? "").toLowerCase();
-      return (recentTrackIds.includes(id) ? 4 : 0)
-        + (savedTrackIds[id] ? 3 : 0)
-        + (topPreferredGenre && genre.includes(topPreferredGenre) ? 2 : 0)
-        + (track.is_emerging || track.emerging ? 1 : 0);
-    };
-    return score(b) - score(a);
-  });
   const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
   const activePlaylist = EDITORIAL_PLAYLISTS.find((playlist) => playlist.title === destination);
   const activePlaylistTracks = activePlaylist?.category === "tailored"
