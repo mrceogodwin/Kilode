@@ -335,6 +335,36 @@ export async function uploadMusicReleaseAudio(
   }
 }
 
+/** Submit an uploaded release for trusted review; the client cannot publish it. */
+export async function submitMusicReleaseForReview(
+  artistId: string,
+  releaseId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, error: "Kilode Music backend is not configured." };
+  if (!artistId || !releaseId) return { ok: false, error: "Sign in to your artist account first." };
+  const { data: release, error: readError } = await sb.from("music_releases")
+    .select("id, audio_path, status")
+    .eq("id", releaseId)
+    .eq("artist_id", artistId)
+    .maybeSingle();
+  if (readError) return { ok: false, error: readError.message };
+  if (!release) return { ok: false, error: "Release not found or you do not own it." };
+  if (release.status !== "draft") return { ok: false, error: "Only a draft can be submitted." };
+  if (!release.audio_path) return { ok: false, error: "Attach the audio file before submitting this release." };
+
+  const { data: updated, error: updateError } = await sb.from("music_releases")
+    .update({ status: "submitted" })
+    .eq("id", releaseId)
+    .eq("artist_id", artistId)
+    .eq("status", "draft")
+    .select("id")
+    .maybeSingle();
+  if (updateError) return { ok: false, error: updateError.message };
+  if (!updated) return { ok: false, error: "Could not submit this draft. Refresh and try again." };
+  return { ok: true };
+}
+
 /** List only the signed-in artist's own release drafts and submissions. */
 export async function listOwnMusicReleases(artistId: string): Promise<{ ok: boolean; data: any[]; error?: string }> {
   const sb = getSupabase();
@@ -342,7 +372,7 @@ export async function listOwnMusicReleases(artistId: string): Promise<{ ok: bool
   if (!artistId) return { ok: false, data: [], error: "Sign in to your artist account first." };
   const { data, error } = await sb
     .from("music_releases")
-    .select("id, title, release_type, status, cover_url, created_at, updated_at")
+    .select("id, title, release_type, status, cover_url, audio_path, created_at, updated_at")
     .eq("artist_id", artistId)
     .order("updated_at", { ascending: false })
     .limit(30);
