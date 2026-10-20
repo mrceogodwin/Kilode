@@ -171,7 +171,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
   useEffect(() => {
     let active = true;
-    if (tab !== "Artists") return () => { active = false; };
+    if (tab !== "Home" && tab !== "Discover" && tab !== "Artists") return () => { active = false; };
     setLoadingArtists(true);
     setArtistCatalogueError("");
     listArtistProfiles().then(async (result) => {
@@ -902,24 +902,49 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         </View>
       ) : null}
 
-      {(tab === "Home" || tab === "Discover") ? <>
-      <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>From Kilode</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
-        {tracks.map((t: any) => (
-          <TouchableOpacity key={t.id} onPress={() => openTrack(t)} style={{ width: 112 }}>
-            {t.imageUrl || t.coverUrl || t.cover_url || t.artworkUrl ? (
-              <Image source={{ uri: t.imageUrl || t.coverUrl || t.cover_url || t.artworkUrl }} style={{ width: 112, height: 112, borderRadius: 10, backgroundColor: t.color || C.elevated }} resizeMode="cover" />
-            ) : (
-              <View style={{ width: 112, height: 112, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="musical-notes" size={28} color="rgba(255,255,255,0.9)" />
-              </View>
-            )}
-            <Text style={{ color: C.text, fontWeight: "700", fontSize: 12, marginTop: 6 }} numberOfLines={1}>{t.title}</Text>
-            <Text style={{ color: C.text3, fontSize: 11 }} numberOfLines={1}>{t.artist}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      </> : null}
+      {(tab === "Home" || tab === "Discover") ? (
+        <View style={{ marginTop: 20 }}>
+          <View style={{ paddingHorizontal: 16, flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>Artists on Kilode</Text>
+            <TouchableOpacity onPress={() => setTab("Artists")} accessibilityRole="button" accessibilityLabel="See all registered artists">
+              <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700" }}>See all</Text>
+            </TouchableOpacity>
+          </View>
+          {loadingArtists ? (
+            <View style={{ height: 92, alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator size="small" color={C.accent} />
+            </View>
+          ) : artistProfiles.length ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}>
+              {artistProfiles.slice(0, 12).map((artist: any) => (
+                <TouchableOpacity
+                  key={artist.id}
+                  onPress={() => onOpenArtist ? onOpenArtist(artist) : setTab("Artists")}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open artist ${artist.display_name || artist.handle}`}
+                  activeOpacity={0.82}
+                  style={{ width: 68, alignItems: "center" }}
+                >
+                  {artist.avatar_url ? (
+                    <Image source={{ uri: artist.avatar_url }} style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }} />
+                  ) : (
+                    <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}>
+                      <Text style={{ color: C.accent, fontWeight: "800", fontSize: 18 }}>{String(artist.display_name || artist.handle || "A").trim().slice(0, 1).toUpperCase()}</Text>
+                    </View>
+                  )}
+                  <Text numberOfLines={1} style={{ color: C.text, fontSize: 11, fontWeight: "600", marginTop: 7, width: 68, textAlign: "center" }}>{artist.display_name || artist.handle}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            <TouchableOpacity onPress={() => setTab("Artists")} style={{ marginHorizontal: 16, paddingVertical: 13, paddingHorizontal: 14, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Ionicons name="people-outline" size={19} color={C.accent} />
+              <Text style={{ color: C.text3, fontSize: 12, lineHeight: 17, flex: 1 }}>{artistCatalogueError || "Browse registered artist profiles on Kilode."}</Text>
+              <Ionicons name="chevron-forward" size={17} color={C.text3} />
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : null}
     </ScrollView>
     </>
   );
