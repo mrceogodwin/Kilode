@@ -82,7 +82,7 @@ export function CinemaScreen({ s, C, onBack, show, accountKind }: Props) {
       <View style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 18, overflow: "hidden", backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
         <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
         <View style={{ padding: 14 }}>
-          <Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>{FEATURED.title}</Text>
+          <Text style={{ color: C.text, fontWeight: "600", fontSize: 17, letterSpacing: -0.2 }}>{FEATURED.title}</Text>
           <Text style={{ color: C.text3, marginTop: 4, fontSize: 13 }}>{FEATURED.meta}</Text>
           <TouchableOpacity
             onPress={() => show("Trailer plays when Cinema CDN is connected.")}
@@ -94,7 +94,7 @@ export function CinemaScreen({ s, C, onBack, show, accountKind }: Props) {
       </View>
 
       <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
-        <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>Trending</Text>
+        <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.1, flex: 1 }}>Trending</Text>
         <TouchableOpacity onPress={() => show("Full catalogue when Cinema API is live.")}>
           <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text>
         </TouchableOpacity>
