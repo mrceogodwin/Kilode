@@ -7,8 +7,9 @@
 ## Current checkpoint
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
-- **Latest work:** Music uses registered artist profiles for its carousel and featured artist card; removed the hardcoded third-party featured artist/image. Avatar failures fall back safely. Header wordmark redesign is also in the branch.
-- **Latest completed CI checkpoint `e25f775f`:** native validation passed, including TypeScript, Expo Doctor, and iOS JavaScript bundle export. Web Preview Check also passed. This is source validation, not a compiled/installable iOS binary or physical-device test. These are automated checks, not a compiled/installable iOS binary or device test.
+- **Latest work:** Home floating create action is being changed from list rows to a two-column native grid; music mini-player now has a playback-aware animated equalizer and status label. Music uses registered artist profiles for its carousel and featured artist card; removed the hardcoded third-party featured artist/image. Avatar failures fall back safely. Header wordmark redesign is also in the branch.
+- **Latest confirmed passing CI checkpoint `d6c0e120`:** native validation and Web Preview Check passed. This is source validation, not a compiled/installable iOS binary or physical-device test.
+- **Current source commit `b025484f`:** create-grid JSX corrected and pushed; native validation and web preview checks are queued. Do not mark this UI change verified until both complete.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
@@ -24,7 +25,8 @@
 
 ## P0 — Release, safety and test gates
 
-- [x] Confirm native validation and web export CI results for current checkpoint `e25f775f` (both passed).
+- [x] Confirm native validation and web export CI results for checkpoint `d6c0e120` (both passed).
+- [ ] Confirm current source commit `b025484f` passes TypeScript, Expo Doctor, iOS JS bundle export and web preview checks.
 - [ ] Link the app to the owner's Expo project with `eas init` under the correct Expo account; never invent the project ID.
 - [ ] Produce and verify an installable iOS build; test on a physical iPhone.
 - [ ] Create/confirm the dedicated Supabase project; configure URL and publishable/anon key in build secrets (never client-side service-role keys).
@@ -45,6 +47,13 @@
 - [ ] Audit all modal/sheet/detail states so back consistently closes the topmost state before leaving its parent.
 - [ ] Confirm tab forward history semantics and restoration behaviour; detail screens are not yet verified as restorable through forward navigation.
 - [ ] Verify safe areas, keyboard, haptics, transitions and touch targets on actual iOS.
+
+## P1 — Floating create action grid
+
+- [x] Replace Home create-sheet vertical rows with two-column native grid cards in source commit `b025484f`.
+- [x] Keep existing account-kind capability checks and action routing.
+- [ ] Confirm latest TypeScript/native bundle and web checks pass.
+- [ ] Verify card wrapping, sheet scrolling, VoiceOver labels and tap destinations on physical iPhone.
 
 ## P1 — Music detail dock regression
 
