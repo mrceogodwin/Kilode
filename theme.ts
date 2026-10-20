@@ -1,18 +1,18 @@
 /** Kilode design tokens — forest green, layered charcoal, warm white and restrained gold. */
-export const ACCENT = "#2E8B57";
-export const ACCENT_LIGHT = "#46B978";
+export const ACCENT = "#39A875";
+export const ACCENT_LIGHT = "#52C58B";
 
 // Compatibility names retained for older UI primitives; values follow Kilode green surfaces.
 export const BLUE = ACCENT;
-export const BLUE_SOFT = "#20362A";
-export const GREEN = "#46B978";
-export const BORDER = "#304238";
+export const BLUE_SOFT = "#17251E";
+export const GREEN = "#52C58B";
+export const BORDER = "#2B2E35";
 export const TEXT = "#F4F5F0";
-export const TEXT2 = "#A8B5AC";
-export const TEXT3 = "#7F9185";
-export const WHITE = "#1B2821";
-export const BG = "#101714";
-export const BLACK = "#0B100D";
+export const TEXT2 = "#A7ABB4";
+export const TEXT3 = "#777D88";
+export const WHITE = "#15171B";
+export const BG = "#0B0C0F";
+export const BLACK = "#07080A";
 export const GRAY = "#A3A3A3";
 export const GRAY2 = "#737373";
 
