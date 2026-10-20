@@ -236,7 +236,7 @@ export function HomeScreen({
                 borderColor: on ? C.accent : C.border,
               }}
             >
-              <Ionicons name={r.icon} size={13} color={on ? "#111" : C.text2} />
+              <Ionicons name={r.icon} size={13} color={on ? C.accent : C.text2} />
               <Text style={{ color: on ? C.accent : C.text2, fontWeight: "700", fontSize: 12 }}>{r.label}</Text>
             </TouchableOpacity>
           );
@@ -487,9 +487,9 @@ export function HomeScreen({
 function SectionHead({ C, title, onSeeAll }: { C: any; title: string; onSeeAll: () => void }) {
   return (
     <View style={{ paddingHorizontal: 16, marginTop: 18, marginBottom: 10, flexDirection: "row", alignItems: "center" }}>
-      <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>{title}</Text>
+      <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{title}</Text>
       <TouchableOpacity onPress={onSeeAll}>
-        <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text>
+        <Text style={{ color: C.accent, fontWeight: "600", fontSize: 12 }}>See all</Text>
       </TouchableOpacity>
     </View>
   );
