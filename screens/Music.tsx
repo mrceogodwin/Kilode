@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { createArtistSupportPage, createMusicReleaseDraft, listOwnMusicReleases, listOwnSupportPages, submitMusicReleaseForReview, uploadMusicReleaseAudio } from "../lib/supabase";
+import { createArtistSupportPage, createMusicReleaseDraft, isFollowingArtist, listArtistProfiles, listOwnMusicReleases, listOwnSupportPages, submitMusicReleaseForReview, toggleArtistFollow, uploadMusicReleaseAudio } from "../lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { can } from "../lib/permissions";
@@ -45,6 +45,11 @@ const GENRES = [
 export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, userId, tracks: tracksProp }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Home");
   const [following, setFollowing] = useState(false);
+  const [artistProfiles, setArtistProfiles] = useState<any[]>([]);
+  const [loadingArtists, setLoadingArtists] = useState(false);
+  const [artistCatalogueError, setArtistCatalogueError] = useState("");
+  const [followedArtists, setFollowedArtists] = useState<Record<string, boolean>>({});
+  const [busyArtistId, setBusyArtistId] = useState<string | null>(null);
   const [draftOpen, setDraftOpen] = useState(false);
   const [releaseTitle, setReleaseTitle] = useState("");
   const [releaseType, setReleaseType] = useState<"single" | "ep" | "album">("single");
@@ -96,6 +101,42 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     });
     return () => { active = false; };
   }, [userId, canList]);
+
+  useEffect(() => {
+    let active = true;
+    if (tab !== "Artists") return () => { active = false; };
+    setLoadingArtists(true);
+    setArtistCatalogueError("");
+    listArtistProfiles().then(async (result) => {
+      if (!active) return;
+      if (!result.ok) {
+        setArtistProfiles([]);
+        setArtistCatalogueError(result.error || "Artist catalogue is unavailable.");
+        setLoadingArtists(false);
+        return;
+      }
+      setArtistProfiles(result.data);
+      if (userId && result.data.length) {
+        const followResults = await Promise.all(result.data.map((artist) => isFollowingArtist(userId, artist.id)));
+        if (!active) return;
+        const next: Record<string, boolean> = {};
+        result.data.forEach((artist, index) => {
+          if (followResults[index].ok) next[artist.id] = followResults[index].following;
+        });
+        setFollowedArtists(next);
+      } else {
+        setFollowedArtists({});
+      }
+      setLoadingArtists(false);
+    }).catch(() => {
+      if (active) {
+        setArtistProfiles([]);
+        setArtistCatalogueError("Could not load the artist catalogue. Please try again.");
+        setLoadingArtists(false);
+      }
+    });
+    return () => { active = false; };
+  }, [tab, userId]);
 
   const openTrack = (t: any) => {
     if (onOpenTrack) onOpenTrack(t);
@@ -356,24 +397,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             <Text style={{ color: C.text, fontWeight: "600", fontSize: 14, letterSpacing: -0.15 }}>{FEATURED.name}</Text>
             <Text style={{ color: C.text3, fontSize: 12, marginTop: 3 }}>{FEATURED.meta}</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => {
-              setFollowing((f) => !f);
-              show(following ? `Unfollowed ${FEATURED.name}` : `Following ${FEATURED.name}`);
-            }}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: following ? C.elevated : C.accent,
-              borderWidth: 1,
-              borderColor: following ? C.border : C.accent,
-            }}
-          >
-            <Text style={{ color: following ? C.text : "#111", fontWeight: "800", fontSize: 12 }}>
-              {following ? "Following" : "Follow"}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
+            <Text style={{ color: C.text3, fontWeight: "700", fontSize: 10 }}>Featured preview</Text>
+          </View>
         </View>
       </TouchableOpacity>
 
@@ -434,29 +460,59 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       {tab === "Artists" ? (
         <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-            <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>Artists to discover</Text>
-            <Text style={{ color: C.text3, fontSize: 11 }}>Curated</Text>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>Artists</Text>
+            {loadingArtists ? <ActivityIndicator size="small" color={C.accent} /> : null}
           </View>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => onOpenArtist ? onOpenArtist(FEATURED.name) : show("Artist pages will open here when artist navigation is connected.")}
-            style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border }}
-          >
-            <Image source={{ uri: FEATURED.imageUrl }} style={{ width: 58, height: 58, borderRadius: 29, backgroundColor: C.elevated }} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }}>{FEATURED.name}</Text>
-              <Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>Featured artist · Afrobeats</Text>
-            </View>
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel={following ? "Unfollow featured artist" : "Follow featured artist"}
-              onPress={() => { setFollowing((value) => !value); show(following ? `Unfollowed ${FEATURED.name}` : `Following ${FEATURED.name}`); }}
-              style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: following ? C.elevated : C.accent }}
-            >
-              <Text style={{ color: following ? C.text : "#111", fontWeight: "700", fontSize: 11 }}>{following ? "Following" : "Follow"}</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-          <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 12 }}>Curated preview only. Artist search, verified profiles and follower counts will come from Kilode’s live catalogue; this screen does not show live rankings yet.</Text>
+          {artistProfiles.map((artist) => {
+            const isFollowing = Boolean(followedArtists[artist.id]);
+            const avatar = artist.avatar_url;
+            return (
+              <View key={artist.id} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                {avatar ? (
+                  <Image source={{ uri: avatar }} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: C.elevated }} />
+                ) : (
+                  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name="person-outline" size={21} color={C.text3} />
+                  </View>
+                )}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => onOpenArtist ? onOpenArtist(artist.display_name || artist.handle) : show("Artist profile navigation is not connected yet.")}
+                  style={{ flex: 1 }}
+                >
+                  <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }} numberOfLines={1}>{artist.display_name || artist.handle}</Text>
+                  <Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }} numberOfLines={1}>@{artist.handle}{artist.bio ? ` · ${artist.bio}` : ""}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={busyArtistId === artist.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={isFollowing ? `Unfollow ${artist.display_name || artist.handle}` : `Follow ${artist.display_name || artist.handle}`}
+                  onPress={async () => {
+                    if (!userId) { show("Sign in to follow artists."); return; }
+                    if (busyArtistId) return;
+                    setBusyArtistId(artist.id);
+                    const result = await toggleArtistFollow(userId, artist.id);
+                    setBusyArtistId(null);
+                    if (!result.ok || typeof result.following !== "boolean") {
+                      show(result.error || "Could not update your follow. Please try again.");
+                      return;
+                    }
+                    setFollowedArtists((current) => ({ ...current, [artist.id]: result.following as boolean }));
+                    show(result.following ? `Following ${artist.display_name || artist.handle}` : `Unfollowed ${artist.display_name || artist.handle}`);
+                  }}
+                  style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: isFollowing ? C.elevated : C.accent, borderWidth: 1, borderColor: isFollowing ? C.border : C.accent, opacity: busyArtistId === artist.id ? 0.6 : 1 }}
+                >
+                  <Text style={{ color: isFollowing ? C.text : "#111", fontWeight: "700", fontSize: 11 }}>{busyArtistId === artist.id ? "…" : isFollowing ? "Following" : "Follow"}</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+          {!loadingArtists && !artistProfiles.length ? (
+            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 4 }}>
+              {artistCatalogueError || "No artist profiles are available yet. Artist accounts will appear here when the Kilode backend is connected."}
+            </Text>
+          ) : null}
+          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 12 }}>Profiles and follow status come from Kilode's backend. Follower counts and rankings are not displayed until verified data is available.</Text>
         </View>
       ) : null}
 
