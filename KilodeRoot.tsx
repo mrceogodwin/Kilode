@@ -171,7 +171,7 @@ function KilodeApp() {
       }
     })();
     return () => { active = false; };
-  }, [session.userId, session.handle, session.name]);
+  }, [session?.userId, session?.handle, session?.name]);
 
   const show = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); }, []);
 
