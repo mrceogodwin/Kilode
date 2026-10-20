@@ -18,6 +18,8 @@ export const GRAY2 = "#737373";
  */
 export const BLUE = GOLD;
 export const BLUE_SOFT = GOLD_SOFT;
+export const GREEN = GOLD;
+export const GREEN_SOFT = GOLD_SOFT;
 export const BG = BG_DARK;
 
 export const RADIUS = { sm: 8, md: 12, lg: 16, xl: 20, full: 999 } as const;
