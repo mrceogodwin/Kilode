@@ -7,16 +7,15 @@
 ## Current checkpoint
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
-- **Latest commit:** `b27f83ea` — redesigns the header wordmark with a green raised signature treatment and orange dot; the same branch includes the Music library account-isolation fix.
-- **Previous checkpoint `f06f6e5f`:** native validation and web export checks both passed. This does not validate the newer `aaf9c6d5` change.
-- **Latest `aaf9c6d5` checks:** native validation and web export were observed running; final conclusions still need to be confirmed.
+- **Latest work:** native Music home now replaces the oversized “From Kilode” track row with a compact registered-artist carousel; header wordmark redesign is also in the branch. Exact current CI status must be checked against the branch HEAD.
+- **Previously verified checkpoint `aaf9c6d5`:** native validation and web export checks passed. Newer logo and Music carousel changes require their own final CI results.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
 
 ## P0 — Release, safety and test gates
 
-- [ ] Confirm native validation and web export CI results for `aaf9c6d5`; fix failures and rerun on the final commit.
+- [ ] Confirm native validation and web export CI results for the current branch HEAD; fix failures and rerun on the final commit.
 - [ ] Link the app to the owner's Expo project with `eas init` under the correct Expo account; never invent the project ID.
 - [ ] Produce and verify an installable iOS build; test on a physical iPhone.
 - [ ] Create/confirm the dedicated Supabase project; configure URL and publishable/anon key in build secrets (never client-side service-role keys).
@@ -40,11 +39,13 @@
 
 ## P1 — Music system
 
+- [x] Replace the oversized “From Kilode” track row with a compact round-thumbnail carousel sourced from registered artist profiles; “See all” opens the full Artists list.
+- [ ] Verify carousel, image fallbacks, loading/error/empty states and full artist list on iOS; backend must return registered profiles for the carousel to populate.
 - [x] Top 100/categories and tailored playlist foundations exist in Music screen code.
 - [x] Local saved tracks/playlists and recent listening are stored per user/device.
 - [x] Queue navigation and rapid track-switch safeguards have been implemented in prior commits.
 - [x] Latest change clears in-memory library state when storage read fails, instead of retaining another account's state.
-- [ ] Confirm CI for latest library isolation fix.
+- [ ] Confirm latest Music carousel and logo changes pass native validation and web export.
 - [ ] Test account switching, corrupt storage, storage rejection, save/unsave, and app restart on device.
 - [ ] Verify Top 100 uses trustworthy, server-ranked catalogue data when backend is configured; do not label seed catalogue as real rankings.
 - [ ] Verify category/genre matching with actual catalogue metadata and useful empty/error states.
