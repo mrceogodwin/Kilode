@@ -28,6 +28,8 @@ const FEATURED = {
   imageUrl: "https://images.unsplash.com/photo-1516280440614-6697288d5b28?w=800&q=80",
 };
 
+const TOP100_CATEGORIES = ["All", "Nigeria", "Afrobeats", "Hip Hop", "R&B", "Amapiano", "Emerging"];
+
 const PLAYLIST_CATEGORIES = [
   { id: "all", label: "All" },
   { id: "tailored", label: "Tailored to you" },
@@ -300,10 +302,19 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             </View>
           ) : null}
           {destination === "Top 100" ? (
-            <View style={{ backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 14 }}>
-              <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>Kilode Top 100</Text>
-              <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 4 }}>{hasVerifiedChartSignals ? "Ranked using available play-count signals. Official chart rules and verified listening aggregation still need backend enforcement." : "The Top 100 screen is in place. Until verified member listening data is connected, this is a catalogue preview—not an official popularity ranking."}</Text>
-            </View>
+            <>
+              <View style={{ backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 12 }}>
+                <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>Kilode Top 100</Text>
+                <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 4 }}>{hasVerifiedChartSignals ? "Ranked using available play-count signals. Official chart rules and verified listening aggregation still need backend enforcement." : "Until verified member listening data is connected, this is a catalogue preview—not an official popularity ranking."}</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 14 }}>
+                {TOP100_CATEGORIES.map((category) => (
+                  <TouchableOpacity key={category} onPress={() => setSelectedGenre(category === "All" ? null : category)} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: (selectedGenre || "All") === category ? C.accent : C.card, borderWidth: 1, borderColor: (selectedGenre || "All") === category ? C.accent : C.border }}>
+                    <Text style={{ color: (selectedGenre || "All") === category ? "#111" : C.text2, fontSize: 11, fontWeight: "700" }}>{category}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
           ) : null}
           {destination === "Tailored to You" ? (
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>Personalised locally from tracks you recently played and saved on this device. Cross-member trends and account-synced recommendations need privacy-safe, aggregated backend signals.</Text>
