@@ -505,7 +505,7 @@ function KilodeApp() {
 
     return (
       <HomeScreen
-        s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked} onLikePost={handleLikePost}
+        s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked} onLikePost={handleLikePost} onCommentPost={(post) => setCommentTake(post)} onSharePost={(post) => { void Share.share({ message: [post.text || post.body || "", post.handle ? `@${post.handle}` : ""].filter(Boolean).join("\n") || "Check out this post on Kilode." }).catch(() => show("Could not share this post.")); }}
         events={events} market={marketItems} jobs={jobItems}
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
