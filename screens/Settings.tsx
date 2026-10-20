@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   Modal,
   Linking,
-  Alert,
   Platform,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import type { Palette } from "../themeStyles";
 
 type Props = {
@@ -22,7 +22,7 @@ type Props = {
 };
 
 const SUPPORT_EMAIL = "support@kilode.ng";
-const PRIVACY_URL = "https://kilode.ng/privacy"; // publish before App Store submit
+const PRIVACY_URL = "https://kilode.ng/privacy";
 const TERMS_URL = "https://kilode.ng/terms";
 
 export function SettingsScreen({
@@ -39,117 +39,145 @@ export function SettingsScreen({
 
   const confirmDelete = async () => {
     setDeleting(true);
-    const r = await onDeleteAccount();
-    setDeleting(false);
-    setDeleteOpen(false);
-    if (r.ok) show("Account deleted");
-    else show(r.error || "Could not delete account");
+    try {
+      const r = await onDeleteAccount();
+      setDeleteOpen(false);
+      if (r.ok) show("Account deleted");
+      else show(r.error || "Could not delete account");
+    } catch {
+      show("Could not delete account");
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  const row = (label: string, onPress: () => void, danger?: boolean) => (
+  const openUrl = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      show("Could not open link");
+    }
+  };
+
+  const row = (label: string, onPress: () => void, opts?: { danger?: boolean; icon?: keyof typeof Ionicons.glyphMap }) => (
     <TouchableOpacity
-      style={[s.roomRow, danger && { borderColor: C.danger }]}
       onPress={onPress}
       accessibilityRole="button"
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: C.border,
+        gap: 12,
+      }}
     >
-      <Text style={[s.roomName, danger && { color: C.danger }]}>{label}</Text>
-      <Text style={s.meta}>›</Text>
+      {opts?.icon ? (
+        <Ionicons name={opts.icon} size={20} color={opts.danger ? C.danger || "#ff6b6b" : C.text2} />
+      ) : null}
+      <Text style={{ flex: 1, color: opts?.danger ? C.danger || "#ff6b6b" : C.text, fontWeight: "600", fontSize: 15 }}>
+        {label}
+      </Text>
+      <Ionicons name="chevron-forward" size={16} color={C.text3} />
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
-      <View style={s.padH}>
+    <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 4, flexDirection: "row", alignItems: "center", gap: 12 }}>
         <TouchableOpacity onPress={onBack}>
-          <Text style={[s.link, { marginBottom: 8 }]}>‹ Back</Text>
+          <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Back</Text>
         </TouchableOpacity>
-        <Text style={s.h1}>Settings</Text>
-        <Text style={s.sub}>@{sessionHandle}</Text>
+        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Settings</Text>
       </View>
 
-      <View style={s.sectionHead}>
-        <Text style={s.sectionTitle}>Support & legal</Text>
+      <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.6, paddingHorizontal: 16, marginTop: 20, marginBottom: 6 }}>
+        ACCOUNT
+      </Text>
+      <View style={{ marginHorizontal: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: "hidden" }}>
+        {row(`Signed in as @${sessionHandle || "guest"}`, () => show("Profile editor opens from My Space."), { icon: "person-outline" })}
+        {row("Notifications", () => show("Notification preferences sync when backend is live."), { icon: "notifications-outline" })}
+        {row("Privacy", () => openUrl(PRIVACY_URL), { icon: "shield-outline" })}
       </View>
-      {row("Community guidelines", () => setGuidelinesOpen(true))}
-      {row("Contact support", () => {
-        Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Kilode%20support`).catch(() =>
-          show(`Email ${SUPPORT_EMAIL}`)
-        );
-      })}
-      {row("Privacy policy", () => {
-        Linking.openURL(PRIVACY_URL).catch(() => show("Publish privacy URL before store submit"));
-      })}
-      {row("Terms of use", () => {
-        Linking.openURL(TERMS_URL).catch(() => show("Publish terms URL before store submit"));
-      })}
 
-      <View style={s.sectionHead}>
-        <Text style={s.sectionTitle}>Account</Text>
+      <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.6, paddingHorizontal: 16, marginTop: 20, marginBottom: 6 }}>
+        SUPPORT
+      </Text>
+      <View style={{ marginHorizontal: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: "hidden" }}>
+        {row("Help & support", () => openUrl(`mailto:${SUPPORT_EMAIL}`), { icon: "help-circle-outline" })}
+        {row("Community guidelines", () => setGuidelinesOpen(true), { icon: "document-text-outline" })}
+        {row("Terms of use", () => openUrl(TERMS_URL), { icon: "reader-outline" })}
       </View>
-      {row("Delete account", () => setDeleteOpen(true), true)}
 
-      <Text style={[s.meta, s.padH, { marginTop: 16, lineHeight: 18 }]}>
-        Deleting your account removes local session data immediately. Server-side deletion
-        requires a live backend endpoint — we never claim cloud wipe without a verified API.
+      <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.6, paddingHorizontal: 16, marginTop: 20, marginBottom: 6 }}>
+        DANGER ZONE
+      </Text>
+      <View style={{ marginHorizontal: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: "hidden" }}>
+        {row("Delete account", () => setDeleteOpen(true), { danger: true, icon: "trash-outline" })}
+      </View>
+
+      <Text style={{ color: C.text3, fontSize: 11, textAlign: "center", marginTop: 24 }}>
+        Kilode · {Platform.OS} · v1.0
       </Text>
 
+      {/* Guidelines modal */}
       <Modal visible={guidelinesOpen} transparent animationType="slide" onRequestClose={() => setGuidelinesOpen(false)}>
-        <View style={s.modalRoot}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setGuidelinesOpen(false)} />
-          <View style={[s.sheet, { maxHeight: "80%" }]}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHead}>
-              <Text style={s.sheetTitle}>Community guidelines</Text>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" }}>
+          <View style={{ backgroundColor: C.bg, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: "70%" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Community guidelines</Text>
               <TouchableOpacity onPress={() => setGuidelinesOpen(false)}>
-                <Text style={s.sheetClose}>✕</Text>
+                <Ionicons name="close" size={22} color={C.text2} />
               </TouchableOpacity>
             </View>
             <ScrollView>
-              {[
-                "Be respectful. No harassment, hate, or threats.",
-                "No spam, scams, or impersonation.",
-                "No illegal content or non-consensual intimate imagery.",
-                "Credit creators. Do not steal work.",
-                "Use Report on posts or profiles that break these rules.",
-                "Blocked users cannot interact with you on this device.",
-              ].map((line) => (
-                <Text key={line} style={[s.body || s.sub, { marginBottom: 10, color: C.text, fontSize: 14, lineHeight: 20 }]}>
-                  • {line}
-                </Text>
-              ))}
+              <Text style={{ color: C.text2, lineHeight: 22, fontSize: 14 }}>
+                Be respectful. No hate speech, harassment, scams, or illegal content. Report posts that break the rules. Kilode moderators may remove content and suspend accounts that violate these guidelines.
+              </Text>
             </ScrollView>
           </View>
         </View>
       </Modal>
 
-      <Modal visible={deleteOpen} transparent animationType="fade" onRequestClose={() => setDeleteOpen(false)}>
-        <View style={[s.modalRoot, { justifyContent: "center", padding: 24 }]}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setDeleteOpen(false)} />
-          <View style={[s.sheet, { borderRadius: 16, maxHeight: undefined }]}>
-            <Text style={s.sheetTitle}>Delete account?</Text>
-            <Text style={[s.sub, { marginVertical: 12 }]}>
-              This signs you out and clears local data for @{sessionHandle}. Backend account wipe
-              runs only when the server supports it.
+      {/* Delete account confirmation — required for App Store */}
+      <Modal visible={deleteOpen} transparent animationType="fade" onRequestClose={() => !deleting && setDeleteOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", padding: 24 }}>
+          <View style={{ backgroundColor: C.card, borderRadius: 18, padding: 20, borderWidth: 1, borderColor: C.border }}>
+            <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Delete account?</Text>
+            <Text style={{ color: C.text2, marginTop: 10, lineHeight: 21, fontSize: 14 }}>
+              This permanently removes your Kilode account and associated data where required. This action cannot be undone.
             </Text>
-            <TouchableOpacity
-              style={[s.primaryBtn, { backgroundColor: C.danger, marginBottom: 10 }]}
-              disabled={deleting}
-              onPress={() => {
-                if (Platform.OS === "web") {
-                  confirmDelete();
-                  return;
-                }
-                Alert.alert("Confirm deletion", "This cannot be undone from this device.", [
-                  { text: "Cancel", style: "cancel" },
-                  { text: "Delete", style: "destructive", onPress: confirmDelete },
-                ]);
-              }}
-            >
-              <Text style={s.primaryBtnText}>{deleting ? "Deleting…" : "Delete account"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.ghostBtn} onPress={() => setDeleteOpen(false)}>
-              <Text style={[s.ghostBtnText, { textAlign: "center" }]}>Cancel</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
+              <TouchableOpacity
+                disabled={deleting}
+                onPress={() => setDeleteOpen(false)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 14,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: C.border,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: C.text, fontWeight: "700" }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={deleting}
+                onPress={confirmDelete}
+                style={{
+                  flex: 1,
+                  paddingVertical: 14,
+                  borderRadius: 999,
+                  backgroundColor: C.danger || "#ff6b6b",
+                  alignItems: "center",
+                  opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "800" }}>{deleting ? "Deleting…" : "Delete"}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
