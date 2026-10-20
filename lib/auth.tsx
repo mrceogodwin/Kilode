@@ -278,6 +278,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // A custom API URL is not enough to assume its sign-up contract exists.
+    // Never silently create a device-only account when a server was configured.
+    if (API_BASE) {
+      setLoading(false);
+      return {
+        ok: false,
+        error: "Sign-up for this custom API is not connected yet. Configure Supabase Auth or implement the dedicated API sign-up endpoint.",
+      };
+    }
+
     // Offline / no dedicated backend — explicit local-only account
     const s: Session = {
       token: localToken(h),
