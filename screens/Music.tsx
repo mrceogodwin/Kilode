@@ -50,6 +50,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [releaseType, setReleaseType] = useState<"single" | "ep" | "album">("single");
   const [savingDraft, setSavingDraft] = useState(false);
   const [selectedAudio, setSelectedAudio] = useState<{ uri: string; name: string; mimeType?: string | null; size?: number | null } | null>(null);
+  const [editingReleaseId, setEditingReleaseId] = useState<string | null>(null);
   const [myReleases, setMyReleases] = useState<any[]>([]);
   const [loadingReleases, setLoadingReleases] = useState(false);
   const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
@@ -128,19 +129,32 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           </View>
           <TouchableOpacity disabled={savingDraft} onPress={async () => {
             if (!userId) { show("Sign in to your live Artist account to save a release draft."); return; }
-            setSavingDraft(true);
-            const result = await createMusicReleaseDraft(userId, { title: releaseTitle, releaseType });
-            if (!result.ok || !result.id) {
-              setSavingDraft(false);
-              show(result.error || "Could not save release draft.");
+            if (!editingReleaseId && !releaseTitle.trim()) {
+              show("Enter a release title first.");
               return;
             }
+            if (editingReleaseId && !selectedAudio) {
+              show("Choose the audio file you want to upload.");
+              return;
+            }
+            setSavingDraft(true);
+            let releaseId = editingReleaseId;
+            if (!releaseId) {
+              const result = await createMusicReleaseDraft(userId, { title: releaseTitle, releaseType });
+              if (!result.ok || !result.id) {
+                setSavingDraft(false);
+                show(result.error || "Could not save release draft.");
+                return;
+              }
+              releaseId = result.id;
+              setEditingReleaseId(releaseId);
+            }
             if (selectedAudio) {
-              const upload = await uploadMusicReleaseAudio(userId, result.id, selectedAudio);
+              const upload = await uploadMusicReleaseAudio(userId, releaseId, selectedAudio);
               if (!upload.ok) {
                 setSavingDraft(false);
                 setReleaseRefreshKey((key) => key + 1);
-                show(`Draft saved, but audio upload failed: ${upload.error || "Try again"}`);
+                show(`Draft saved. Audio upload failed: ${upload.error || "Choose the file again and retry"}`);
                 return;
               }
             }
@@ -148,13 +162,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             setReleaseTitle("");
             setReleaseType("single");
             setSelectedAudio(null);
+            setEditingReleaseId(null);
             setDraftOpen(false);
             setReleaseRefreshKey((key) => key + 1);
-            show(selectedAudio ? "Private release draft and audio saved. It is not public until reviewed and published." : "Release draft saved privately. You can attach audio by editing this draft later.");
+            show(selectedAudio ? "Private release draft and audio saved. It is not public until reviewed and published." : "Release draft saved privately. You can attach audio later.");
           }} style={{ backgroundColor: C.accent, borderRadius: 13, paddingVertical: 14, alignItems: "center", opacity: savingDraft ? 0.7 : 1 }}>
-            {savingDraft ? <ActivityIndicator color="#111" /> : <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>Save private draft</Text>}
+            {savingDraft ? <ActivityIndicator color="#111" /> : <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>{editingReleaseId ? "Retry audio upload" : "Save private draft"}</Text>}
           </TouchableOpacity>
-          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 10 }}>Audio is uploaded to private storage. Public streaming, rights review and release publishing still require the trusted review workflow.</Text>
+          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 10 }}>Audio is uploaded to private storage. If upload fails, choose the file again and retry without creating another release. Public streaming and publishing require the trusted review workflow.</Text>
         </View>
       </View>
     </Modal>
