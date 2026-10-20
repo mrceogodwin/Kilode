@@ -80,10 +80,14 @@ export async function listRecentPosts(limit = 40): Promise<{ ok: boolean; data: 
 export async function createPost(body: string, userId: string): Promise<{ ok: boolean; data?: any; error?: string }> {
   const sb = getSupabase();
   if (!sb) return { ok: false, error: "supabase not configured" };
+  const normalizedBody = body.trim();
+  if (!normalizedBody) return { ok: false, error: "Write something before posting." };
+  if (!userId) return { ok: false, error: "Sign in before posting." };
+
   const { data, error } = await sb
     .from("posts")
-    .insert({ body, author_id: userId })
-    .select("id, body, media_url, created_at")
+    .insert({ body: normalizedBody, author_id: userId })
+    .select("id, body, media_url, created_at, author:profiles(handle, display_name, kind)")
     .single();
   if (error) return { ok: false, error: error.message };
   return {
@@ -94,8 +98,9 @@ export async function createPost(body: string, userId: string): Promise<{ ok: bo
       body: data.body,
       mediaUrl: data.media_url,
       time: data.created_at,
-      name: "You",
-      handle: "you",
+      name: data.author?.display_name || "Member",
+      handle: data.author?.handle || "member",
+      role: data.author?.kind || "member",
       likes: 0,
       comments: 0,
       reposts: 0,
