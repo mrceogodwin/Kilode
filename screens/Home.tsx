@@ -335,7 +335,7 @@ export function HomeScreen({
               <View style={{ width: 28, height: 28, borderRadius: 9, backgroundColor: card.color + "20", alignItems: "center", justifyContent: "center" }}>
                 <Ionicons name={card.icon} size={15} color={card.color} />
               </View>
-              <Ionicons name="arrow-up-forward-outline" size={13} color={C.text3} />
+              <Ionicons name="arrow-forward-outline" size={13} color={C.text3} />
             </View>
             <View style={{ marginTop: 9 }}>
               <Text style={{ color: card.color, fontSize: 9, fontWeight: "700", letterSpacing: 0.45 }}>{card.kind.toUpperCase()}</Text>
