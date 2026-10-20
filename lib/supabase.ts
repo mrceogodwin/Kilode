@@ -292,3 +292,19 @@ export async function createMusicReleaseDraft(
   if (error) return { ok: false, error: error.message };
   return { ok: true, id: String(data.id) };
 }
+
+/** List only the signed-in artist's own release drafts and submissions. */
+export async function listOwnMusicReleases(artistId: string): Promise<{ ok: boolean; data: any[]; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, data: [], error: "Kilode Music backend is not configured." };
+  if (!artistId) return { ok: false, data: [], error: "Sign in to your artist account first." };
+  const { data, error } = await sb
+    .from("music_releases")
+    .select("id, title, release_type, status, cover_url, created_at, updated_at")
+    .eq("artist_id", artistId)
+    .order("updated_at", { ascending: false })
+    .limit(30);
+  if (error) return { ok: false, data: [], error: error.message };
+  return { ok: true, data: data || [] };
+}
+
