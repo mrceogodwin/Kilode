@@ -10,7 +10,7 @@ import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY 
 import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
 import { getBackendMode } from "./lib/config";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, fetchEvents, fetchMarketListings, fetchJobs, postTake } from "./lib/api";
-import { listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs } from "./lib/supabase";
+import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs } from "./lib/supabase";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -239,6 +239,25 @@ function KilodeApp() {
       await loadAll(); if (!cancelled) setBoot(false);
     })();
     return () => { cancelled = true; };
+  }, [loadAll]);
+
+  // Realtime keeps the shared discovery feed current when content is published elsewhere.
+  // If the project's Realtime publication is not enabled, pull-to-refresh still works.
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) return;
+    const refresh = () => { void loadAll(); };
+    const channel = sb
+      .channel("kilode-shared-discovery")
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tracks" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "market_listings" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, refresh)
+      .subscribe();
+    return () => { void sb.removeChannel(channel); };
   }, [loadAll]);
 
   const onRefresh = async () => {
