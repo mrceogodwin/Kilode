@@ -79,6 +79,17 @@ export const TAKES = [
     likes: 56,
     comments: 18,
   },
+  {
+    id: "4",
+    name: "Tunde Bakare",
+    handle: "tundebuilds",
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&h=120&q=80",
+    time: "8h",
+    role: "Creator",
+    text: "Spent the weekend building a tiny tool for Nigerian freelancers to track invoices. What would you want in a first version?",
+    likes: 43,
+    comments: 9,
+  },
 ];
 
 export const ROOMS = [
