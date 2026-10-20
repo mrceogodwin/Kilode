@@ -36,26 +36,6 @@ type Props = {
 
 const CATEGORIES = ["All", "News", "Culture", "Business", "Sports", "Tech"];
 
-/** Portrait ad placements (editorial, not real AdSense SDK). */
-const ADS = [
-  {
-    id: "ad1",
-    label: "Sponsored",
-    title: "Shop Lagos Fashion Week looks",
-    cta: "Shop now",
-    color: "#1B2821",
-    imageUrl: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&q=80",
-  },
-  {
-    id: "ad2",
-    label: "Promoted",
-    title: "Stream Ojuelegba Nights",
-    cta: "Listen",
-    color: "#24352B",
-    imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80",
-  },
-];
-
 export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Props) {
   const data = news?.length ? news : [];
   const [active, setActive] = useState<Article | null>(null);
@@ -66,7 +46,15 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
 
   const filtered = useMemo(() => {
     if (filter === "All") return data;
-    return data.filter((a) => (a.kicker || "").toLowerCase().includes(filter.toLowerCase()));
+    const terms: Record<string, RegExp> = {
+      News: /news|headline|politic|government|community|incident|report/i,
+      Culture: /culture|fashion|art|film|music|afrobeats|creator|entertainment/i,
+      Business: /business|market|money|finance|startup|company|econom|brand/i,
+      Sports: /sport|football|basketball|athlete|match|league|team/i,
+      Tech: /tech|technology|digital|app|software|ai|startup|device/i,
+    };
+    const matcher = terms[filter];
+    return data.filter((a) => matcher?.test(`${a.kicker || ""} ${a.title || ""}`));
   }, [data, filter]);
 
   const hero = filtered.slice(0, 5);
@@ -129,11 +117,13 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
   return (
     <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 36 }} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <TouchableOpacity onPress={onBack} accessibilityRole="button">
-          <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
+      <View style={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12, flexDirection: "row", alignItems: "center" }}>
+        <TouchableOpacity onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Home" style={{ flexDirection: "row", alignItems: "center", gap: 3, minWidth: 72 }}>
+          <Ionicons name="chevron-back" size={18} color={C.accent} />
+          <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>Home</Text>
         </TouchableOpacity>
-        <View style={{ width: 20 }} />
+        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.35, textAlign: "center", flex: 1 }}>Media</Text>
+        <View style={{ width: 72 }} />
       </View>
 
       {/* Category navigation */}
