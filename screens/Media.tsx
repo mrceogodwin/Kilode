@@ -13,8 +13,6 @@ import { Ionicons } from "@expo/vector-icons";
 
 const { width: W } = Dimensions.get("window");
 const CAROUSEL_W = W - 32;
-const GRID_GAP = 8;
-const GRID_CELL = (W - 32 - GRID_GAP * 2) / 3;
 
 type Article = {
   id: string;
@@ -71,7 +69,6 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
   const [active, setActive] = useState<Article | null>(null);
   const [slide, setSlide] = useState(0);
   const [filter, setFilter] = useState("All");
-  const [listMode, setListMode] = useState<"grid" | "list">("list");
   const [showMore, setShowMore] = useState(false);
   const carouselRef = useRef<ScrollView>(null);
 
@@ -81,7 +78,6 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
   }, [data, filter]);
 
   const hero = filtered.slice(0, 5);
-  const gridItems = filtered.slice(0, showMore ? 12 : 6);
   const listItems = filtered.slice(0, showMore ? 15 : 8);
 
   useEffect(() => {
@@ -119,18 +115,6 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
           <View style={{ height: 160, borderRadius: 14, marginTop: 14, backgroundColor: active.tone || C.elevated }} />
         )}
         <Text style={{ color: C.text2, fontSize: 15, lineHeight: 24, marginTop: 16 }}>{body}</Text>
-
-        {/* Inline ad */}
-        <View style={{ marginTop: 22, borderRadius: 14, overflow: "hidden", backgroundColor: ADS[0].color, borderWidth: 1, borderColor: C.border }}>
-          <Image source={{ uri: ADS[0].imageUrl }} style={{ width: "100%", height: 120 }} resizeMode="cover" />
-          <View style={{ padding: 12 }}>
-            <Text style={{ color: C.accent, fontSize: 10, fontWeight: "700", letterSpacing: 0.6 }}>{ADS[0].label.toUpperCase()}</Text>
-            <Text style={{ color: C.text, fontSize: 15, fontWeight: "700", marginTop: 4 }}>{ADS[0].title}</Text>
-            <TouchableOpacity onPress={() => show("Ad destination opens when ad network is connected.")} style={{ marginTop: 10, alignSelf: "flex-start", backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 }}>
-              <Text style={{ color: "#F4F5F0", fontWeight: "800", fontSize: 13 }}>{ADS[0].cta}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
         <TouchableOpacity
           style={{ marginTop: 20, alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: C.border }}
@@ -315,9 +299,8 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
             </TouchableOpacity>
           ))}
         </View>
-      )}
 
-      {/* Bottom AdSense-style card */}
+      {/* Single clearly labelled sponsored placement */}
       <View
         style={{
           marginHorizontal: 16,
