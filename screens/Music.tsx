@@ -114,7 +114,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 160 }} resizeMode="cover" />
         <View style={{ padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: C.text, fontWeight: "800", fontSize: 15 }}>{FEATURED.name}</Text>
+            <Text style={{ color: C.text, fontWeight: "600", fontSize: 14, letterSpacing: -0.15 }}>{FEATURED.name}</Text>
             <Text style={{ color: C.text3, fontSize: 12, marginTop: 3 }}>{FEATURED.meta}</Text>
           </View>
           <TouchableOpacity
@@ -169,7 +169,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Ionicons name="musical-notes" size={18} color="#fff" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{row.title}</Text>
+              <Text style={{ color: C.text, fontWeight: "600", fontSize: 13, letterSpacing: -0.1 }}>{row.title}</Text>
               <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{row.artist}</Text>
             </View>
             <Ionicons name="play-circle" size={28} color={C.accent} />
