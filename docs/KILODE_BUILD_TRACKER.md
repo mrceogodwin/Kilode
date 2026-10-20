@@ -7,11 +7,20 @@
 ## Current checkpoint
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
-- **Latest work:** Music replaces the oversized “From Kilode” row with a registered-artist carousel; broken avatar URLs fall back to initials/icons in the carousel and full Artists list. Header wordmark redesign is also in the branch.
-- **Latest CI checkpoint `f89e2f4e`:** native validation passed, including TypeScript, Expo Doctor, and iOS JavaScript bundle export. Web Preview Check also passed. These are automated checks, not a compiled/installable iOS binary or device test.
+- **Latest work:** Music uses registered artist profiles for its carousel and featured artist card; removed the hardcoded third-party featured artist/image. Avatar failures fall back safely. Header wordmark redesign is also in the branch.
+- **Latest completed CI checkpoint `f89e2f4e`:** native validation passed, including TypeScript, Expo Doctor, and iOS JavaScript bundle export. Web Preview Check also passed. Newer source changes must pass CI separately. These are automated checks, not a compiled/installable iOS binary or device test.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
+
+## Overall completion estimate (honest, not a test result)
+
+- **Estimated whole-product completion: 25%** toward the requested 100% production-grade platform. This is a planning estimate, not a measured metric or release certification.
+- **UI/native source foundations:** substantial screens and navigation exist, but many interactions and device behaviours remain unverified.
+- **Production backend and real data:** incomplete; dedicated Supabase configuration, migration/RLS verification and end-to-end auth/data workflows are still open.
+- **Installable iOS/release validation:** not achieved yet; EAS project ID is empty and no installable build or physical-iPhone test is confirmed.
+- **Payments, Push Link, moderation and publishing:** core production-safe server workflows and verification remain incomplete.
+- Do not increase the percentage for cosmetic commits or web-only checks. Reassess only when measurable end-to-end gates pass.
 
 ## P0 — Release, safety and test gates
 
@@ -41,7 +50,7 @@
 
 - [x] Replace the oversized “From Kilode” track row with a compact round-thumbnail carousel sourced from registered artist profiles; “See all” opens the full Artists list.
 - [x] Add runtime image-error fallbacks for broken artist avatar URLs in the carousel and full Artists list.
-- [ ] Verify carousel, image fallbacks, loading/error/empty states and full artist list on iOS; backend must return registered profiles for the carousel to populate.
+- [ ] Verify carousel, dynamic featured artist card, image fallbacks, loading/error/empty states and full artist list on iOS; backend must return registered profiles for the catalogue to populate.
 - [x] Top 100/categories and tailored playlist foundations exist in Music screen code.
 - [x] Local saved tracks/playlists and recent listening are stored per user/device.
 - [x] Queue navigation and rapid track-switch safeguards have been implemented in prior commits.
