@@ -345,6 +345,18 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           {destination === "Library" ? (
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 14 }}>Your saved tracks on this device are shown here. Account-synced library and purchases require the connected Music backend.</Text>
           ) : null}
+          {destination === "Library" && Object.keys(savedPlaylistIds).some((id) => savedPlaylistIds[id]) ? (
+            <View style={{ marginBottom: 18 }}>
+              <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", marginBottom: 10 }}>Saved playlists</Text>
+              {EDITORIAL_PLAYLISTS.filter((playlist) => savedPlaylistIds[playlist.title]).map((playlist) => (
+                <TouchableOpacity key={playlist.title} onPress={() => openMusicDestination(playlist.title)} style={{ flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name={playlist.icon as any} size={21} color={C.accent} /></View>
+                  <View style={{ flex: 1 }}><Text style={{ color: C.text, fontSize: 13, fontWeight: "700" }}>{playlist.title}</Text><Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>Saved on this device</Text></View>
+                  <Ionicons name="chevron-forward" size={17} color={C.text3} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
           {destination === "Albums" ? (
             <View style={{ gap: 10, marginBottom: 16 }}>
               {albumGroups.map((album) => (
