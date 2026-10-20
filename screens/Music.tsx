@@ -47,7 +47,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [draftOpen, setDraftOpen] = useState(false);
   const [releaseTitle, setReleaseTitle] = useState("");
   const [releaseType, setReleaseType] = useState<"single" | "ep" | "album">("single");
-  const [savingDraft, setSavingDraft] = useState(false);\n  const [myReleases, setMyReleases] = useState<any[]>([]);\n  const [loadingReleases, setLoadingReleases] = useState(false);\n  const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [myReleases, setMyReleases] = useState<any[]>([]);
+  const [loadingReleases, setLoadingReleases] = useState(false);
+  const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
 
@@ -106,7 +109,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             setReleaseTitle("");
             setReleaseType("single");
             setDraftOpen(false);
-            setReleaseRefreshKey((key) => key + 1);\n            show("Release draft saved privately. Audio upload is the next step.");
+            setReleaseRefreshKey((key) => key + 1);
+            show("Release draft saved privately. Audio upload is the next step.");
           }} style={{ backgroundColor: C.accent, borderRadius: 13, paddingVertical: 14, alignItems: "center", opacity: savingDraft ? 0.7 : 1 }}>
             {savingDraft ? <ActivityIndicator color="#111" /> : <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>Save private draft</Text>}
           </TouchableOpacity>
