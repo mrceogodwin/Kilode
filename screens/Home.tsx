@@ -376,9 +376,9 @@ export function HomeScreen({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }} numberOfLines={1}>{j.title}</Text>
-                <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }} numberOfLines={1}>{j.meta}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }} numberOfLines={1}>{j.meta || [j.company, j.location].filter(Boolean).join(" · ")}</Text>
               </View>
-              {j.price ? <Text style={{ color: C.accent, fontWeight: "700", fontSize: 11 }}>{j.price}</Text> : null}
+              {(j.price || j.salary) ? <Text style={{ color: C.accent, fontWeight: "700", fontSize: 11 }}>{j.price || j.salary}</Text> : null}
             </TouchableOpacity>
           ))}
         </View>
