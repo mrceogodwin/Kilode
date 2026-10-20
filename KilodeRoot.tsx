@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Share,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform, PanResponder, Dimensions,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { Audio } from "expo-av";
@@ -120,6 +120,47 @@ function KilodeApp() {
   const s = useMemo(() => makeStyles(C, isDark), [C, isDark]);
 
   const [tab, setTab] = useState("home");
+  const navigationHistoryRef = useRef<string[]>(["home"]);
+  const navigationForwardRef = useRef<string[]>([]);
+  const swipeStartXRef = useRef(0);
+  const navigateBack = useCallback(() => {
+    if (composeOpen) { setComposeOpen(false); return; }
+    if (createOpen) { setCreateOpen(false); return; }
+    if (moreOpen) { setMoreOpen(false); return; }
+    if (settingsOpen) { setSettingsOpen(false); return; }
+    if (selectedPost) { setSelectedPost(null); return; }
+    if (selectedProfile) { setSelectedProfile(null); return; }
+    if (selectedTrack) { setSelectedTrack(null); return; }
+    if (selectedArtist) { setSelectedArtist(null); setArtistReturnToTrack(false); return; }
+    if (selectedDeskItem) { setSelectedDeskItem(null); return; }
+    if (selectedArticleId) { setSelectedArticleId(null); return; }
+    const history = navigationHistoryRef.current;
+    if (history.length > 1) {
+      navigationForwardRef.current.unshift(history.pop()!);
+      setTab(history[history.length - 1]);
+    }
+  }, [composeOpen, createOpen, moreOpen, settingsOpen, selectedPost, selectedProfile, selectedTrack, selectedArtist, selectedDeskItem, selectedArticleId]);
+  const navigateForward = useCallback(() => {
+    const next = navigationForwardRef.current.shift();
+    if (next) {
+      navigationHistoryRef.current.push(next);
+      setTab(next);
+    }
+  }, []);
+  const edgeSwipeResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_evt, gesture) => {
+      const width = Dimensions.get("window").width;
+      const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.3;
+      return horizontal && ((swipeStartXRef.current <= 24 && gesture.dx > 18) || (swipeStartXRef.current >= width - 24 && gesture.dx < -18));
+    },
+    onPanResponderRelease: (_evt, gesture) => {
+      if (gesture.dx > 70) navigateBack();
+      else if (gesture.dx < -70) navigateForward();
+    },
+    onPanResponderTerminationRequest: () => true,
+  })).current;
+
   const [homeSearchOpen, setHomeSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -301,6 +342,11 @@ function KilodeApp() {
   }, []);
 
   const go = (t: string) => {
+    if (navigationHistoryRef.current[navigationHistoryRef.current.length - 1] !== t) {
+      navigationHistoryRef.current.push(t);
+      if (navigationHistoryRef.current.length > 30) navigationHistoryRef.current.shift();
+      navigationForwardRef.current = [];
+    }
     setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
     setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null); setSelectedTrack(null); setSelectedArtist(null); setArtistReturnToTrack(false);
   };
@@ -667,7 +713,11 @@ function KilodeApp() {
     : DESKS.find((d) => d.id === tab)?.label;
 
   return (
-    <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
+    <SafeAreaView
+      style={[s.root, { backgroundColor: C.bg }]}
+      {...edgeSwipeResponder.panHandlers}
+      onTouchStart={(event) => { swipeStartXRef.current = event.nativeEvent.pageX; }}
+    >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
       <View style={s.flex}>{body()}</View>
