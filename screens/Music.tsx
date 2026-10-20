@@ -345,6 +345,44 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           {destination === "Library" ? (
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 14 }}>Your saved tracks on this device are shown here. Account-synced library and purchases require the connected Music backend.</Text>
           ) : null}
+          {destination === "Albums" ? (
+            <View style={{ gap: 10, marginBottom: 16 }}>
+              {albumGroups.map((album) => (
+                <TouchableOpacity key={album.title} onPress={() => openMusicDestination("Album · " + album.title)} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 13, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+                  {album.artwork ? <Image source={{ uri: album.artwork }} style={{ width: 58, height: 58, borderRadius: 9, backgroundColor: C.elevated }} /> : <View style={{ width: 58, height: 58, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="disc-outline" size={24} color={C.accent} /></View>}
+                  <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{album.title}</Text><Text numberOfLines={1} style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{album.artist}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>{album.trackCount} tracks</Text></View>
+                  <Ionicons name="chevron-forward" size={18} color={C.text3} />
+                </TouchableOpacity>
+              ))}
+              {!albumGroups.length ? <Text style={{ color: C.text3, fontSize: 12, paddingVertical: 24, textAlign: "center" }}>Albums will appear here when album metadata is available in the catalogue.</Text> : null}
+            </View>
+          ) : null}
+          {destination === "Releases" ? (
+            <View style={{ gap: 10, marginBottom: 16 }}>
+              {releaseGroups.map((release) => (
+                <TouchableOpacity key={release.title} onPress={() => openMusicDestination("Release · " + release.title)} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 13, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+                  {release.artwork ? <Image source={{ uri: release.artwork }} style={{ width: 58, height: 58, borderRadius: 9, backgroundColor: C.elevated }} /> : <View style={{ width: 58, height: 58, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="albums-outline" size={24} color={C.accent} /></View>}
+                  <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{release.title}</Text><Text numberOfLines={1} style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{release.artist}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>{release.type.toUpperCase()} · {release.trackCount} tracks</Text></View>
+                  <Ionicons name="chevron-forward" size={18} color={C.text3} />
+                </TouchableOpacity>
+              ))}
+              {!releaseGroups.length ? <Text style={{ color: C.text3, fontSize: 12, paddingVertical: 24, textAlign: "center" }}>Releases will appear here when release metadata is available in the catalogue.</Text> : null}
+            </View>
+          ) : null}
+          {activeAlbum || activeRelease ? (
+            <View style={{ marginBottom: 18, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+              <View style={{ alignItems: "center", marginBottom: 14 }}>
+                {(activeAlbum?.artwork || activeRelease?.artwork) ? <Image source={{ uri: (activeAlbum?.artwork || activeRelease?.artwork) as string }} style={{ width: 184, height: 184, borderRadius: 13, backgroundColor: C.elevated }} /> : <View style={{ width: 184, height: 184, borderRadius: 13, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="disc-outline" size={54} color={C.accent} /></View>}
+              </View>
+              <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{activeAlbum ? "ALBUM" : "RELEASE"}</Text>
+              <Text style={{ color: C.text, fontSize: 23, fontWeight: "900", marginTop: 4 }}>{activeAlbum?.title || activeRelease?.title}</Text>
+              <Text style={{ color: C.text2, fontSize: 13, marginTop: 5 }}>{activeAlbum?.artist || activeRelease?.artist}</Text>
+              <Text style={{ color: C.text3, fontSize: 11, marginTop: 6 }}>{activeAlbum?.trackCount || activeRelease?.trackCount || 0} tracks · Catalogue metadata</Text>
+              <TouchableOpacity onPress={() => destinationTracks[0] ? openTrack(destinationTracks[0]) : show("No tracks are available for this release yet.")} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingVertical: 12, borderRadius: 11, backgroundColor: C.accent, marginTop: 14 }}>
+                <Ionicons name="play" size={17} color="#111" /><Text style={{ color: "#111", fontSize: 12, fontWeight: "800" }}>Play {activeAlbum ? "album" : "release"}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
           {destination === "Push Link" ? (
             <View style={{ padding: 16, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, marginBottom: 16 }}>
               <Ionicons name="megaphone-outline" size={26} color={C.accent} />
