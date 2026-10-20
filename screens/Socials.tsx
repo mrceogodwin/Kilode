@@ -196,7 +196,7 @@ export function SocialsScreen({
             justifyContent: "center",
           }}
         >
-          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{(sessionName || "K").slice(0, 1)}</Text>
+          <Text style={{ color: C.text, fontWeight: "700", fontSize: 12 }}>{(sessionName || "K").slice(0, 1)}</Text>
         </View>
         <Text style={{ color: C.text3, fontSize: 14, flex: 1 }}>What's on your mind?</Text>
         <Ionicons name="image-outline" size={18} color={C.accent} />
@@ -257,12 +257,12 @@ export function SocialsScreen({
                         justifyContent: "center",
                       }}
                     >
-                      <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{String(t.name || "K").slice(0, 1)}</Text>
+                      <Text style={{ color: C.text, fontWeight: "700", fontSize: 12 }}>{String(t.name || "K").slice(0, 1)}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }} numberOfLines={1}>
+                  <Text style={{ color: C.text, fontWeight: "600", fontSize: 13 }} numberOfLines={1}>
                     {t.name}
                   </Text>
                   <Text style={{ color: C.text3, fontSize: 11, marginTop: 1 }}>
