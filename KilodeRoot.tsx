@@ -590,19 +590,45 @@ function KilodeApp() {
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            <View style={s.deskGrid}>{CREATE.map((o) => {
-              const allowed = !(o as any).capability || can(session.kind, (o as any).capability);
-              return (
-              <TouchableOpacity key={o.label} style={[s.deskGridItem, !allowed && { opacity: 0.4 }]} onPress={() => {
-                if (!allowed) { show(`Your account type cannot ${o.label.toLowerCase()} yet.`); return; }
-                if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; }
-                setCreateOpen(false); go(o.tab);
-              }}>
-                <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
-              </TouchableOpacity>
-              );
-            })}</View>
+            <View style={s.sheetHead}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.sheetTitle}>Create on Kilode</Text>
+                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>Choose where to start.</Text>
+              </View>
+              <TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu" style={s.iconBtn}><Ionicons name="close" size={20} color={C.text2} /></TouchableOpacity>
+            </View>
+            <View style={{ gap: 2 }}>
+              {CREATE.map((o) => {
+                const allowed = !(o as any).capability || can(session.kind, (o as any).capability);
+                const iconName: keyof typeof Ionicons.glyphMap = ({
+                  Post: "create-outline", Track: "musical-notes-outline", Film: "film-outline",
+                  Job: "briefcase-outline", Market: "bag-handle-outline", Event: "calendar-outline", Ad: "megaphone-outline",
+                } as Record<string, keyof typeof Ionicons.glyphMap>)[o.label] || "add-circle-outline";
+                const subtitle = o.label === "Post" ? "Share something with your feed"
+                  : o.label === "Track" ? "Open Music and its track tools"
+                  : o.label === "Film" ? "Open Cinema"
+                  : o.label === "Job" ? "Open Jobs"
+                  : o.label === "Market" ? "Open Market"
+                  : o.label === "Event" ? "Open Events"
+                  : "Open Ads and campaign tools";
+                return (
+                  <TouchableOpacity key={o.label} accessibilityRole="button" accessibilityLabel={`${o.label}. ${subtitle}`}
+                    style={[s.createActionRow, !allowed && { opacity: 0.45 }]}
+                    onPress={() => {
+                      if (!allowed) { show(`Your account type cannot ${o.label.toLowerCase()} yet.`); return; }
+                      if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; }
+                      setCreateOpen(false); go(o.tab);
+                    }}>
+                    <View style={s.createActionIcon}><Ionicons name={iconName} size={21} color={C.accent} /></View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{o.label}</Text>
+                      <Text numberOfLines={1} style={{ color: C.text2, fontSize: 11, marginTop: 3 }}>{subtitle}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={C.text3} />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         </View>
       </Modal>
