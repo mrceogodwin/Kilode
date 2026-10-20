@@ -229,3 +229,29 @@ $$;
 
 -- NOTE: Granting super_admin must be done manually in the SQL editor by a project owner.
 -- Never expose a public "register as admin" path.
+
+-- Prevent self-service privilege escalation through profiles_update_own.
+-- Account kind and app role are authorization fields; change them only through
+-- a trusted admin/server workflow, never through ordinary client profile updates.
+create or replace function public.protect_profile_authority_fields()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is not null
+     and not public.is_super_admin()
+     and (
+       new.role is distinct from old.role
+       or new.kind is distinct from old.kind
+     ) then
+    raise exception 'Account kind and role can only be changed by an authorized administrator';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger protect_profile_authority_fields_before_update
+  before update on public.profiles
+  for each row execute function public.protect_profile_authority_fields();
