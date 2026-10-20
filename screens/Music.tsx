@@ -61,6 +61,7 @@ const GENRES = [
 export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, userId, tracks: tracksProp }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Home");
   const [destination, setDestination] = useState<string | null>(null);
+  const [destinationHistory, setDestinationHistory] = useState<string[]>([]);
   const [musicQuery, setMusicQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [playlistCategory, setPlaylistCategory] = useState("all");
@@ -207,9 +208,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   };
 
   const openMusicDestination = (name: string, genre?: string) => {
-    setDestination(name);
+    setDestination((current) => {
+      if (current && current !== name) setDestinationHistory((history) => [...history, current]);
+      return name;
+    });
     setSelectedGenre(genre ?? null);
     setMusicQuery("");
+  };
+
+  const goBackMusicDestination = () => {
+    setDestinationHistory((history) => {
+      if (history.length) {
+        setDestination(history[history.length - 1]);
+        return history.slice(0, -1);
+      }
+      setDestination(null);
+      return [];
+    });
   };
 
   const catalogueTracks = tracks.filter((track: any) => {
@@ -298,10 +313,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
   return (
     <>
-    <Modal visible={Boolean(destination)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDestination(null)}>
+    <Modal visible={Boolean(destination)} animationType="slide" presentationStyle="pageSheet" onRequestClose={goBackMusicDestination}>
       <View style={{ flex: 1, backgroundColor: C.bg || C.background || "#111114" }}>
         <View style={{ paddingTop: 14, paddingHorizontal: 18, paddingBottom: 12, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <TouchableOpacity onPress={() => setDestination(null)} accessibilityRole="button" accessibilityLabel="Back to Music" style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: C.elevated }}>
+          <TouchableOpacity onPress={goBackMusicDestination} accessibilityRole="button" accessibilityLabel={destinationHistory.length ? "Go back" : "Back to Music"} style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: C.elevated }}>
             <Ionicons name="chevron-back" size={21} color={C.text} />
           </TouchableOpacity>
           <Text style={{ color: C.text, fontSize: 19, fontWeight: "800", flex: 1, marginLeft: 10 }}>{destination}</Text>
@@ -316,7 +331,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           {destination === "Genres" ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 9, marginBottom: 18 }}>
               {GENRES.map((genre) => (
-                <TouchableOpacity key={genre.id} onPress={() => { setSelectedGenre(genre.label); setDestination(genre.label); }} style={{ width: "48%", minHeight: 76, borderRadius: 14, padding: 13, justifyContent: "flex-end", backgroundColor: genre.color }}>
+                <TouchableOpacity key={genre.id} onPress={() => openMusicDestination(genre.label, genre.label)} style={{ width: "48%", minHeight: 76, borderRadius: 14, padding: 13, justifyContent: "flex-end", backgroundColor: genre.color }}>
                   <Ionicons name="musical-notes" size={20} color="#fff" />
                   <Text style={{ color: "#fff", fontWeight: "800", fontSize: 14, marginTop: 8 }}>{genre.label}</Text>
                 </TouchableOpacity>
@@ -334,7 +349,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               </ScrollView>
               <View style={{ gap: 10, marginBottom: 18 }}>
                 {playlistItems.map((playlist) => (
-                  <TouchableOpacity key={playlist.title} onPress={() => { setDestination(playlist.title); setMusicQuery(""); }} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, backgroundColor: C.card, borderRadius: 13, borderWidth: 1, borderColor: C.border }}>
+                  <TouchableOpacity key={playlist.title} onPress={() => openMusicDestination(playlist.title)} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, backgroundColor: C.card, borderRadius: 13, borderWidth: 1, borderColor: C.border }}>
                     <View style={{ width: 52, height: 52, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name={playlist.icon as any} size={24} color={C.accent} /></View>
                     <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{playlist.title}</Text><Text style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{playlist.subtitle}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>{playlist.category === "tailored" ? "Uses your on-device listening history and saved tracks" : "Editorial category · live catalogue dependent"}</Text></View>
                     <Ionicons name="chevron-forward" size={18} color={C.text3} />
