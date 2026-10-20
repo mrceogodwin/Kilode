@@ -281,7 +281,7 @@ export function EventsScreen({ s, C, events, onBack, show }: Props) {
                 </View>
               ) : null}
               <View style={{ position: "absolute", left: 14, right: 14, bottom: 14 }}>
-                <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800" }} numberOfLines={2}>
+                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600", letterSpacing: -0.2 }} numberOfLines={2}>
                   {e.title}
                 </Text>
                 <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 4 }} numberOfLines={1}>
