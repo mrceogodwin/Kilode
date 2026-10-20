@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "rgba(70,185,120,0.24)",
+    borderColor: "rgba(230,169,74,0.24)",
     maxWidth: 130,
   },
   floatHead: { flexDirection: "row", alignItems: "center", gap: 4 },
@@ -346,8 +346,8 @@ const styles = StyleSheet.create({
   floatSub: { color: "rgba(255,255,255,0.55)", fontSize: 10, marginTop: 2 },
   tagline: {
     color: "#fff",
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "700",
     textAlign: "center",
     letterSpacing: -0.3,
   },
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   googleText: { color: "rgba(255,255,255,0.75)", fontWeight: "600", fontSize: 13 },
   formPad: { padding: 20, paddingBottom: 48 },
-  formTitle: { color: "#fff", fontSize: 24, fontWeight: "800", marginTop: 12 },
+  formTitle: { color: "#fff", fontSize: 21, fontWeight: "700", marginTop: 12 },
   formSub: { color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 6, marginBottom: 16, lineHeight: 20 },
   label: {
     color: "rgba(255,255,255,0.55)",
