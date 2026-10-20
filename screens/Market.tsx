@@ -35,7 +35,7 @@ type Props = {
 
 const CATS = ["All", "Electronics", "Fashion", "Home", "Beauty"];
 
-const PRODUCTS: Product[] = [
+export const PRODUCTS: Product[] = [
   { id: "p1", title: "Nike Air Force 1", price: "₦85,000", rating: 4.8, category: "Fashion", imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80" },
   { id: "p2", title: "iPhone 15 Pro", price: "₦1,250,000", rating: 4.9, category: "Electronics", imageUrl: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500&q=80" },
   { id: "p3", title: "Galaxy Buds", price: "₦120,000", rating: 4.7, category: "Electronics", imageUrl: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&q=80" },
