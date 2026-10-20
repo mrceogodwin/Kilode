@@ -131,7 +131,7 @@ export function SocialsScreen({
                 overflow: "hidden",
               }}
             >
-              {st.imageUrl ? (
+              {st.avatarUrl ? (
                 <Image source={{ uri: st.imageUrl }} style={{ width: 52, height: 52, borderRadius: 26 }} />
               ) : (
                 <Ionicons name={st.id === "s0" ? "add" : "person"} size={22} color={C.text2} />
@@ -204,7 +204,9 @@ export function SocialsScreen({
 
       {visibleFeed.length === 0 ? (
         <EmptyState
-          C={C}
+          textColor={C.text}
+          mutedColor={C.text2}
+          accentColor={C.accent}
           icon="people-outline"
           title="No posts yet"
           body="Be the first to share something on Kilode."
@@ -306,10 +308,12 @@ export function SocialsScreen({
               {/* Actions */}
               <View style={{ paddingHorizontal: 4, paddingVertical: 4 }}>
                 <PostActions
-                  C={C}
+                  accent={C.accent}
+                  danger={C.danger}
+                  muted={C.text2}
                   liked={isLiked}
-                  likes={typeof t.likes === "number" ? t.likes + (isLiked ? 1 : 0) : undefined}
-                  comments={t.comments}
+                  likes={Number(t.likes || 0) + (isLiked ? 1 : 0)}
+                  comments={Number(t.comments || 0)}
                   onLike={() => onLike(id)}
                   onComment={() => onComment(t)}
                   onShare={async () => {
