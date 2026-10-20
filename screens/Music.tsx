@@ -75,6 +75,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [artistProfiles, setArtistProfiles] = useState<any[]>([]);
   const [loadingArtists, setLoadingArtists] = useState(false);
   const [artistCatalogueError, setArtistCatalogueError] = useState("");
+  const [failedArtistAvatarIds, setFailedArtistAvatarIds] = useState<Record<string, boolean>>({});
   const [followedArtists, setFollowedArtists] = useState<Record<string, boolean>>({});
   const [busyArtistId, setBusyArtistId] = useState<string | null>(null);
   const [draftOpen, setDraftOpen] = useState(false);
@@ -183,6 +184,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         return;
       }
       setArtistProfiles(result.data);
+      setFailedArtistAvatarIds({});
       if (userId && result.data.length) {
         const followResults = await Promise.all(result.data.map((artist) => isFollowingArtist(userId, artist.id)));
         if (!active) return;
@@ -854,8 +856,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             const avatar = artist.avatar_url;
             return (
               <View key={artist.id} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.border }}>
-                {avatar ? (
-                  <Image source={{ uri: avatar }} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: C.elevated }} />
+                {avatar && !failedArtistAvatarIds[artist.id] ? (
+                  <Image source={{ uri: avatar }} onError={() => setFailedArtistAvatarIds((current) => ({ ...current, [artist.id]: true }))} style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: C.elevated }} />
                 ) : (
                   <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
                     <Ionicons name="person-outline" size={21} color={C.text3} />
@@ -925,8 +927,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                   activeOpacity={0.82}
                   style={{ width: 68, alignItems: "center" }}
                 >
-                  {artist.avatar_url ? (
-                    <Image source={{ uri: artist.avatar_url }} style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }} />
+                  {artist.avatar_url && !failedArtistAvatarIds[artist.id] ? (
+                    <Image source={{ uri: artist.avatar_url }} onError={() => setFailedArtistAvatarIds((current) => ({ ...current, [artist.id]: true }))} style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }} />
                   ) : (
                     <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}>
                       <Text style={{ color: C.accent, fontWeight: "800", fontSize: 18 }}>{String(artist.display_name || artist.handle || "A").trim().slice(0, 1).toUpperCase()}</Text>
