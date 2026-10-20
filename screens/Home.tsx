@@ -100,7 +100,7 @@ export function HomeScreen({
     const social = item.kind === "Socials";
     const wideImage = social && !!item.image;
     const compactImage = !wideImage && !!item.image;
-    const tint = item.kind === "Music" ? "#C66BFF" : item.kind === "Events" ? "#D5B94A" : item.kind === "Market" ? "#E6B94A" : item.kind === "Jobs" ? "#69A9FF" : C.accent;
+    const tint = C.accent;
     return (
       <TouchableOpacity key={item.id} activeOpacity={0.9} onPress={item.onPress}
         style={{ marginHorizontal: 12, marginBottom: 10, padding: 12, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
@@ -158,7 +158,7 @@ export function HomeScreen({
         {featuredCards.map((card, index) => (
           <TouchableOpacity key={card.kind} activeOpacity={0.9} onPress={card.onPress}
             style={{ width: 0.94 * require("react-native").Dimensions.get("window").width, height: 174, marginRight: 10, borderRadius: 15, overflow: "hidden", borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
-            {card.image ? <Image source={{ uri: card.image }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" /> : <LinearGradient colors={["#3C3517", "#17191D", "#101116"]} style={{ position: "absolute", width: "100%", height: "100%" }} />}
+            {card.image ? <Image source={{ uri: card.image }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" /> : <LinearGradient colors={["#20392B", "#17191D", "#101116"]} style={{ position: "absolute", width: "100%", height: "100%" }} />}
             <LinearGradient colors={["rgba(0,0,0,0.04)", "rgba(0,0,0,0.86)"]} style={{ position: "absolute", width: "100%", height: "100%" }} />
             <View style={{ flex: 1, justifyContent: "flex-end", padding: 16 }}>
               <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{card.kind.toUpperCase()}  ·  FEATURED</Text>
@@ -183,7 +183,7 @@ export function HomeScreen({
           const active = item.id === system;
           return <TouchableOpacity key={item.id} onPress={() => goSystem(item.id)}
             style={{ width: 66, alignItems: "center", gap: 5 }}>
-            <View style={{ width: 56, height: 56, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: active ? C.accent + "20" : C.card, borderWidth: active ? 2 : 1, borderColor: active ? C.accent : C.border }}>
+            <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", backgroundColor: active ? C.accent + "20" : C.elevated, borderWidth: active ? 2 : 1, borderColor: active ? C.accent : C.border }}>
               <Ionicons name={item.icon} size={23} color={active ? C.accent : C.text2} />
             </View>
             <Text style={{ color: active ? C.accent : C.text2, fontSize: 10, fontWeight: active ? "800" : "500" }} numberOfLines={1}>{item.label}</Text>
@@ -217,7 +217,7 @@ export function HomeScreen({
 
       {/* Compact discovery rails sit below Search; the mixed feed remains the main Home stream. */}
       {system === "all" && !submittedSearch && <View style={{ marginTop: 2, marginBottom: 4 }}>
-        {tracks.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 12, paddingTop: 12, paddingBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+        {tracks.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 10, paddingTop: 4, paddingBottom: 4 }}>
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, marginBottom: 10 }}>
             <Ionicons name="musical-notes-outline" size={17} color={C.accent} />
             <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", marginLeft: 7, flex: 1 }}>Music</Text>
