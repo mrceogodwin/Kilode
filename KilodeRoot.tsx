@@ -174,13 +174,13 @@ function KilodeApp() {
     if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
     if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} onBack={() => go("home")} show={show} />;
-    if (tab === "market") return <MarketScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "jobs") return <JobsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "market") return <MarketScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
+    if (tab === "jobs") return <JobsScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "communities") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "creators") return <CreatorsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} />;
-    if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} accountKind={session.kind} />;
+    if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
     if (tab === "activity") {
       const chips = ["All", "Likes", "Comments", "Follows"];
       return (
