@@ -107,8 +107,7 @@ export function MarketScreen({ s, C, onBack, show, accountKind }: Props) {
         <TouchableOpacity onPress={onBack}>
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Market</Text>
-        <TouchableOpacity onPress={() => show("Cart opens when payments are live.")}>
+                <TouchableOpacity onPress={() => show("Cart opens when payments are live.")}>
           <Ionicons name="bag-handle-outline" size={22} color={C.text2} />
         </TouchableOpacity>
       </View>
