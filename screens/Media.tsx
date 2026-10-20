@@ -8,6 +8,7 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Share,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -100,7 +101,6 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
           style={{ marginTop: 20, alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: C.border }}
           onPress={async () => {
             try {
-              const { Share } = await import("react-native");
               await Share.share({ message: active.title });
             } catch {
               show("Could not open share sheet");
