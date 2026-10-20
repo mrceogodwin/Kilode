@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Palette } from "../themeStyles";
+import { ACCOUNT_KINDS } from "../lib/accountKinds";
+import { capabilitiesFor } from "../lib/permissions";
 
 type Props = {
   s: any;
@@ -19,6 +21,8 @@ type Props = {
   onDeleteAccount: () => Promise<{ ok: boolean; error?: string }>;
   show: (m: string) => void;
   sessionHandle: string;
+  sessionKind?: string;
+  localOnly?: boolean;
 };
 
 const SUPPORT_EMAIL = "support@kilode.ng";
@@ -32,10 +36,15 @@ export function SettingsScreen({
   onDeleteAccount,
   show,
   sessionHandle,
+  sessionKind = "member",
+  localOnly = false,
 }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const kindMeta = ACCOUNT_KINDS.find((k) => k.id === sessionKind);
+  const caps = capabilitiesFor(sessionKind);
 
   const confirmDelete = async () => {
     setDeleting(true);
@@ -59,7 +68,11 @@ export function SettingsScreen({
     }
   };
 
-  const row = (label: string, onPress: () => void, opts?: { danger?: boolean; icon?: keyof typeof Ionicons.glyphMap }) => (
+  const row = (
+    label: string,
+    onPress: () => void,
+    opts?: { danger?: boolean; icon?: keyof typeof Ionicons.glyphMap; sub?: string }
+  ) => (
     <TouchableOpacity
       onPress={onPress}
       accessibilityRole="button"
@@ -76,9 +89,14 @@ export function SettingsScreen({
       {opts?.icon ? (
         <Ionicons name={opts.icon} size={20} color={opts.danger ? C.danger || "#ff6b6b" : C.text2} />
       ) : null}
-      <Text style={{ flex: 1, color: opts?.danger ? C.danger || "#ff6b6b" : C.text, fontWeight: "600", fontSize: 15 }}>
-        {label}
-      </Text>
+      <View style={{ flex: 1 }}>
+        <Text style={{ color: opts?.danger ? C.danger || "#ff6b6b" : C.text, fontWeight: "600", fontSize: 15 }}>
+          {label}
+        </Text>
+        {opts?.sub ? (
+          <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{opts.sub}</Text>
+        ) : null}
+      </View>
       <Ionicons name="chevron-forward" size={16} color={C.text3} />
     </TouchableOpacity>
   );
@@ -96,8 +114,30 @@ export function SettingsScreen({
         ACCOUNT
       </Text>
       <View style={{ marginHorizontal: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: "hidden" }}>
-        {row(`Signed in as @${sessionHandle || "guest"}`, () => show("Profile editor opens from My Space."), { icon: "person-outline" })}
-        {row("Notifications", () => show("Notification preferences sync when backend is live."), { icon: "notifications-outline" })}
+        {row(`Signed in as @${sessionHandle || "guest"}`, () => show("Profile editor opens from My Space."), {
+          icon: "person-outline",
+          sub: localOnly ? "Device session — not a live server account" : "Live account",
+        })}
+        {row(
+          kindMeta?.label || sessionKind,
+          () =>
+            show(
+              localOnly
+                ? "Account type is stored on this device. Live role sync needs the mobile API."
+                : "Account type is managed by Kilode when the profile API is available."
+            ),
+          {
+            icon: "ribbon-outline",
+            sub: kindMeta?.hint || "Account type",
+          }
+        )}
+        {row("Your tools", () => show(caps.length ? caps.join(" · ") : "member"), {
+          icon: "construct-outline",
+          sub: caps.slice(0, 4).join(" · ") + (caps.length > 4 ? "…" : ""),
+        })}
+        {row("Notifications", () => show("Notification preferences sync when backend is live."), {
+          icon: "notifications-outline",
+        })}
         {row("Privacy", () => openUrl(PRIVACY_URL), { icon: "shield-outline" })}
       </View>
 
@@ -121,7 +161,6 @@ export function SettingsScreen({
         Kilode · {Platform.OS} · v1.0
       </Text>
 
-      {/* Guidelines modal */}
       <Modal visible={guidelinesOpen} transparent animationType="slide" onRequestClose={() => setGuidelinesOpen(false)}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" }}>
           <View style={{ backgroundColor: C.bg, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: "70%" }}>
@@ -140,13 +179,13 @@ export function SettingsScreen({
         </View>
       </Modal>
 
-      {/* Delete account confirmation — required for App Store */}
       <Modal visible={deleteOpen} transparent animationType="fade" onRequestClose={() => !deleting && setDeleteOpen(false)}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", padding: 24 }}>
           <View style={{ backgroundColor: C.card, borderRadius: 18, padding: 20, borderWidth: 1, borderColor: C.border }}>
             <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Delete account?</Text>
             <Text style={{ color: C.text2, marginTop: 10, lineHeight: 21, fontSize: 14 }}>
               This permanently removes your Kilode account and associated data where required. This action cannot be undone.
+              {localOnly ? " Device sessions are cleared from this phone only." : ""}
             </Text>
             <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
               <TouchableOpacity

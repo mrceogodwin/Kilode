@@ -7,43 +7,47 @@ type Source = "live" | "mock" | "error";
 type Props = {
   source: Source;
   isDark: boolean;
+  /** True when auth is guest or local-only (API did not issue a live token). */
+  localOnly?: boolean;
 };
 
 /**
- * Honest network status — never hide offline/seed as if production API is healthy.
- * Live = no banner. mock/error = visible disclaimer.
+ * Honest network + session status for native.
+ * Never hide offline/seed as if production API is healthy.
  */
-export function ConnectionBanner({ source, isDark }: Props) {
-  if (source === "live") return null;
+export function ConnectionBanner({ source, isDark, localOnly }: Props) {
+  // Prefer the strongest disclaimer available.
+  if (source === "live" && !localOnly) return null;
 
   const offline = source === "error";
-  const bg = offline
-    ? isDark
-      ? "#3F1D1D"
-      : "#FEF2F2"
-    : isDark
-      ? "#2A2419"
-      : "#F1E9D8";
-  const fg = offline
-    ? isDark
-      ? "#FCA5A5"
-      : "#991B1B"
-    : isDark
-      ? "#E8D5A3"
-      : "#7A5C1E";
+  const device = !!localOnly;
+
+  let bg: string;
+  let fg: string;
+  let icon: keyof typeof Ionicons.glyphMap;
+  let message: string;
+
+  if (offline) {
+    bg = isDark ? "#3F1D1D" : "#FEF2F2";
+    fg = isDark ? "#FCA5A5" : "#991B1B";
+    icon = "cloud-offline-outline";
+    message = "Some Kilode services are unavailable · live actions may fail";
+  } else if (device) {
+    bg = isDark ? "#2A2419" : "#F1E9D8";
+    fg = isDark ? "#E8D5A3" : "#7A5C1E";
+    icon = "phone-portrait-outline";
+    message = "Device session · account type saved on this phone only";
+  } else {
+    bg = isDark ? "#2A2419" : "#F1E9D8";
+    fg = isDark ? "#E8D5A3" : "#7A5C1E";
+    icon = "flask-outline";
+    message = "Preview content · not live server data";
+  }
 
   return (
     <View style={[styles.wrap, { backgroundColor: bg }]} accessibilityRole="text">
-      <Ionicons
-        name={offline ? "cloud-offline-outline" : "flask-outline"}
-        size={14}
-        color={fg}
-      />
-      <Text style={[styles.text, { color: fg }]}>
-        {offline
-          ? "Some Kilode services are unavailable · live actions may fail"
-          : "Preview content · not live server data"}
-      </Text>
+      <Ionicons name={icon} size={14} color={fg} />
+      <Text style={[styles.text, { color: fg }]}>{message}</Text>
     </View>
   );
 }
