@@ -82,7 +82,7 @@ export function ArtistDetailScreen({ s, C, artist, tracks, userId, onBack, onOpe
       {discography.map((t) => (
         <View key={t.id} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 }}>
           <TouchableOpacity onPress={() => onOpenTrack(t)} style={{ flexDirection: "row", alignItems: "center", gap: 12, flex: 1 }}>
-            {t.imageUrl || (t as any).cover_url ? <Image source={{ uri: t.imageUrl || (t as any).cover_url }} style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: t.color || C.elevated }} /> : (
+            {(t as any).imageUrl || (t as any).cover_url ? <Image source={{ uri: (t as any).imageUrl || (t as any).cover_url }} style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: t.color || C.elevated }} /> : (
               <View style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="musical-notes" size={20} color="#fff" /></View>
             )}
             <View style={{ flex: 1 }}>
