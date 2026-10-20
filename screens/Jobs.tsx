@@ -18,7 +18,7 @@ type Props = { s: any; C: any; onBack: () => void; show: (m: string) => void; ac
 
 const FILTERS = ["All", "Full-time", "Part-time", "Remote"];
 
-const JOBS: Job[] = [
+export const JOBS: Job[] = [
   { id: "j1", title: "Frontend Developer", company: "Paystack Labs", location: "Lagos, Nigeria", type: "Full-time", salary: "₦250k – ₦400k/month", color: "#3B82F6", tags: ["React", "TypeScript"] },
   { id: "j2", title: "Marketing Executive", company: "Flutterwave", location: "Lagos, Nigeria", type: "Full-time", salary: "₦150k – ₦250k/month", color: "#A855F7", tags: ["Growth", "Brand"] },
   { id: "j3", title: "UI/UX Designer", company: "Kuda Bank", location: "Remote", type: "Full-time", salary: "₦200k – ₦350k/month", color: "#06B6D4", tags: ["Figma", "Product"] },
