@@ -214,7 +214,7 @@ function KilodeApp() {
         onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }} />
     );
     if (selectedTrack) return (<TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={playTrack} onOpenArtist={(n) => { setSelectedTrack(null); setSelectedArtist(n); }} onOpenTrack={setSelectedTrack} show={show} />);
-    if (selectedArtist) return (<ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)} onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={setNowPlaying} show={show} />);
+    if (selectedArtist) return (<ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)} onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={playTrack} show={show});
     if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
     if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
     if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} onBack={() => go("home")} show={show} />;
@@ -223,7 +223,7 @@ function KilodeApp() {
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "communities") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "creators") return <CreatorsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} accountKind={session.kind} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={playTrack} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} accountKind={session.kind} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
     if (tab === "activity") {
       const chips = ["All", "Likes", "Comments", "Follows"];
@@ -369,7 +369,7 @@ function KilodeApp() {
         onOpenJobs={() => go("jobs")}
         onOpenSystem={(id) => go(id)}
         onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
-        onCompose={() => setComposeOpen(true)} onPlayTrack={(t) => setSelectedTrack(t)} show={show}
+        onCompose={() => setComposeOpen(true)} onPlayTrack={playTrack} show={show}
       />
     );
   };
