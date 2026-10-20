@@ -214,6 +214,90 @@ export function HomeScreen({
         {!!q && <TouchableOpacity onPress={() => { setQ(""); setSubmittedSearch(""); }}><Ionicons name="close-circle" size={17} color={C.text3} /></TouchableOpacity>}
       </View>
 
+
+      {/* Compact discovery rails sit below Search; the mixed feed remains the main Home stream. */}
+      {!submittedSearch && <View style={{ marginTop: 2, marginBottom: 4 }}>
+        {tracks.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 12, paddingTop: 12, paddingBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, marginBottom: 10 }}>
+            <Ionicons name="musical-notes-outline" size={17} color={C.accent} />
+            <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", marginLeft: 7, flex: 1 }}>Music</Text>
+            <TouchableOpacity onPress={onOpenMusic} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 5, paddingLeft: 8 }}>
+              <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800" }}>MORE</Text><Ionicons name="arrow-forward" size={13} color={C.accent} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 10 }}>
+            {tracks.slice(0, 5).map((track, index) => {
+              const cover = firstText(track.imageUrl, track.coverUrl, track.cover_url, track.image_url);
+              return <TouchableOpacity key={String(track.id ?? index)} onPress={() => onPlayTrack(track)} activeOpacity={0.85} style={{ width: 112 }}>
+                {cover ? <Image source={{ uri: cover }} style={{ width: 112, height: 94, borderRadius: 10, backgroundColor: C.elevated }} resizeMode="cover" /> :
+                  <View style={{ width: 112, height: 94, borderRadius: 10, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="musical-notes" size={26} color={C.accent} /></View>}
+                <Text numberOfLines={1} style={{ color: C.text, fontSize: 12, fontWeight: "700", marginTop: 6 }}>{firstText(track.title, "Untitled track")}</Text>
+                <Text numberOfLines={1} style={{ color: C.text3, fontSize: 10, marginTop: 2 }}>{firstText(track.artist, track.artist_name, "Kilode Music")}</Text>
+              </TouchableOpacity>;
+            })}
+          </ScrollView>
+        </View>}
+        {news.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 12, paddingTop: 12, paddingBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, marginBottom: 10 }}>
+            <Ionicons name="newspaper-outline" size={17} color={C.accent} />
+            <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", marginLeft: 7, flex: 1 }}>Media</Text>
+            <TouchableOpacity onPress={() => onOpenMedia()} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 5, paddingLeft: 8 }}>
+              <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800" }}>MORE</Text><Ionicons name="arrow-forward" size={13} color={C.accent} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 10 }}>
+            {news.slice(0, 4).map((article, index) => {
+              const cover = firstText(article.imageUrl, article.image_url, article.image);
+              return <TouchableOpacity key={String(article.id ?? index)} onPress={() => onOpenMedia(String(article.id))} activeOpacity={0.85} style={{ width: 218, borderRadius: 11, overflow: "hidden", borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
+                {cover ? <Image source={{ uri: cover }} style={{ width: 218, height: 102, backgroundColor: C.elevated }} resizeMode="cover" /> : <View style={{ width: 218, height: 72, alignItems: "center", justifyContent: "center" }}><Ionicons name="newspaper-outline" size={23} color={C.accent} /></View>}
+                <View style={{ padding: 9 }}>
+                  <Text numberOfLines={2} style={{ color: C.text, fontSize: 12, lineHeight: 16, fontWeight: "800" }}>{firstText(article.title, "Latest story")}</Text>
+                  {!!firstText(article.kicker, article.summary) && <Text numberOfLines={2} style={{ color: C.text3, fontSize: 10, lineHeight: 14, marginTop: 4 }}>{firstText(article.kicker, article.summary)}</Text>}
+                </View>
+              </TouchableOpacity>;
+            })}
+          </ScrollView>
+        </View>}
+        {events.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 12, paddingTop: 12, paddingBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, marginBottom: 10 }}>
+            <Ionicons name="calendar-outline" size={17} color={C.accent} />
+            <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", marginLeft: 7, flex: 1 }}>Events</Text>
+            <TouchableOpacity onPress={onOpenEvents} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 5, paddingLeft: 8 }}>
+              <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800" }}>MORE</Text><Ionicons name="arrow-forward" size={13} color={C.accent} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 10 }}>
+            {events.slice(0, 4).map((event, index) => {
+              const cover = firstText(event.imageUrl, event.image_url, event.cover_url);
+              return <TouchableOpacity key={String(event.id ?? index)} onPress={() => onOpenItem("Events", event)} activeOpacity={0.85} style={{ width: 174, padding: 9, borderRadius: 11, borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
+                {!!cover && <Image source={{ uri: cover }} style={{ width: "100%", height: 82, borderRadius: 8, marginBottom: 7 }} resizeMode="cover" />}
+                <Text numberOfLines={2} style={{ color: C.text, fontSize: 12, lineHeight: 16, fontWeight: "800" }}>{firstText(event.title, "Upcoming event")}</Text>
+                <Text numberOfLines={1} style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>{firstText(event.venue, event.location, event.meta, event.date, "Explore event")}</Text>
+              </TouchableOpacity>;
+            })}
+          </ScrollView>
+        </View>}
+        {market.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 12, paddingTop: 12, paddingBottom: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, marginBottom: 10 }}>
+            <Ionicons name="bag-handle-outline" size={17} color={C.accent} />
+            <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", marginLeft: 7, flex: 1 }}>Market</Text>
+            <TouchableOpacity onPress={onOpenMarket} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 5, paddingLeft: 8 }}>
+              <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800" }}>MORE</Text><Ionicons name="arrow-forward" size={13} color={C.accent} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 10 }}>
+            {market.slice(0, 5).map((product, index) => {
+              const cover = firstText(product.imageUrl, product.image_url, product.image, product.cover_url);
+              return <TouchableOpacity key={String(product.id ?? index)} onPress={() => onOpenItem("Market", product)} activeOpacity={0.85} style={{ width: 132 }}>
+                {cover ? <Image source={{ uri: cover }} style={{ width: 132, height: 94, borderRadius: 10, backgroundColor: C.elevated }} resizeMode="cover" /> : <View style={{ width: 132, height: 94, borderRadius: 10, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="bag-handle-outline" size={25} color={C.accent} /></View>}
+                <Text numberOfLines={1} style={{ color: C.text, fontSize: 12, fontWeight: "700", marginTop: 6 }}>{firstText(product.title, "Market listing")}</Text>
+                <Text numberOfLines={1} style={{ color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 2 }}>{firstText(product.price, product.price_label, product.category, "View listing")}</Text>
+              </TouchableOpacity>;
+            })}
+          </ScrollView>
+        </View>}
+      </View>}
+
       {(submittedSearch ? searchResults : filtered).length ? (submittedSearch ? searchResults : filtered).map(renderFeedCard) : (
         <View style={{ marginHorizontal: 12, padding: 20, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, alignItems: "center" }}>
           <Ionicons name="sparkles-outline" size={25} color={C.accent} />
