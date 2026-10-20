@@ -59,7 +59,7 @@ export function JobsScreen({ s, C, onBack, show, accountKind }: Props) {
         <Text style={{ color: C.text, fontSize: 19, fontWeight: "700", letterSpacing: -0.3, marginTop: 14 }}>{active.title}</Text>
         <Text style={{ color: C.text2, marginTop: 6, fontSize: 15 }}>{active.company}</Text>
         <Text style={{ color: C.text3, marginTop: 4 }}>{active.location} · {active.type}</Text>
-        <Text style={{ color: C.accent, fontWeight: "800", marginTop: 14, fontSize: 17 }}>{active.salary}</Text>
+        <Text style={{ color: C.accent, fontWeight: "600", marginTop: 14, fontSize: 16 }}>{active.salary}</Text>
         {active.tags ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
             {active.tags.map((t) => (
@@ -149,7 +149,7 @@ export function JobsScreen({ s, C, onBack, show, accountKind }: Props) {
             <Text style={{ color: "#fff", fontWeight: "900", fontSize: 18 }}>{j.company.slice(0, 1)}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: C.text, fontWeight: "800", fontSize: 15 }}>{j.title}</Text>
+            <Text style={{ color: C.text, fontWeight: "600", fontSize: 14, letterSpacing: -0.1 }}>{j.title}</Text>
             <Text style={{ color: C.text2, fontSize: 13, marginTop: 3 }}>{j.company}</Text>
             <Text style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{j.location} · {j.type}</Text>
             <Text style={{ color: C.accent, fontWeight: "700", fontSize: 13, marginTop: 6 }}>{j.salary}</Text>
