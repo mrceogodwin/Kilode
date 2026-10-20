@@ -52,7 +52,7 @@ export async function fetchOwnProfile(userId: string): Promise<ProfileRow | null
   return data as ProfileRow;
 }
 
-export async function listRecentPosts(limit = 40): Promise<{ ok: boolean; data: any[]; error?: string }> {
+export async function listRecentPosts(limit = 40, userId?: string): Promise<{ ok: boolean; data: any[]; error?: string }> {
   const sb = getSupabase();
   if (!sb) return { ok: false, data: [], error: "supabase not configured" };
   const { data, error } = await sb
@@ -61,6 +61,20 @@ export async function listRecentPosts(limit = 40): Promise<{ ok: boolean; data: 
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) return { ok: false, data: [], error: error.message };
+
+  const postIds = (data || []).map((row: any) => String(row.id));
+  const likesByPost = new Map<string, number>();
+  const likedByMe = new Set<string>();
+  if (postIds.length) {
+    const likesResult = await sb.from("post_likes").select("post_id,user_id").in("post_id", postIds);
+    if (likesResult.error) return { ok: false, data: [], error: likesResult.error.message };
+    for (const like of likesResult.data || []) {
+      const postId = String(like.post_id);
+      likesByPost.set(postId, (likesByPost.get(postId) || 0) + 1);
+      if (userId && String(like.user_id) === userId) likedByMe.add(postId);
+    }
+  }
+
   const rows = (data || []).map((row: any) => ({
     id: row.id,
     text: row.body,
@@ -70,11 +84,32 @@ export async function listRecentPosts(limit = 40): Promise<{ ok: boolean; data: 
     handle: row.author?.handle || "member",
     time: row.created_at,
     role: row.author?.kind || "member",
-    likes: 0,
+    likes: likesByPost.get(String(row.id)) || 0,
+    likedByMe: likedByMe.has(String(row.id)),
     comments: 0,
     reposts: 0,
   }));
   return { ok: true, data: rows };
+}
+
+export async function togglePostLike(postId: string, userId: string): Promise<{ ok: boolean; liked?: boolean; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, error: "Supabase is not configured." };
+  if (!postId || !userId) return { ok: false, error: "Sign in to like posts." };
+
+  const { data: existing, error: readError } = await sb
+    .from("post_likes").select("post_id").eq("post_id", postId).eq("user_id", userId).maybeSingle();
+  if (readError) return { ok: false, error: readError.message };
+
+  if (existing) {
+    const { error } = await sb.from("post_likes").delete().eq("post_id", postId).eq("user_id", userId);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, liked: false };
+  }
+
+  const { error } = await sb.from("post_likes").insert({ post_id: postId, user_id: userId });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, liked: true };
 }
 
 /** Read-only catalogue queries used by the shared Home discovery feed and each system screen. */
