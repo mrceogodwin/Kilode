@@ -472,7 +472,7 @@ function KilodeApp() {
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
-      {Platform.OS !== "web" ? <ConnectionBanner source={source} isDark={isDark} localOnly={deviceSession} /> : null}
+      <ConnectionBanner source={source} isDark={isDark} localOnly={deviceSession} />
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
         <View style={[s.player, { gap: 10 }]}>
