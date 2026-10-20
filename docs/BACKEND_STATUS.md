@@ -1,38 +1,46 @@
 # Kilode native ↔ backend status
 
-**Last verified:** 2026-10-20
+**Last updated:** 2026-10-20
 
-Native client default API host (`lib/config.ts`): `https://kilode-v2.vercel.app`
+## Product policy
 
-## Probes
+| Layer | Role |
+|-------|------|
+| **Dedicated backend** | System of record for Kilode iOS/Android (recommended: **new Supabase project**) |
+| **Vercel preview** | Visual export of the Expo web build only |
+| **Kilode-v2 / kilode-nine** | **Not** the application backend for this native app |
 
-| Host | Endpoint | Accept | HTTP | Body (summary) |
-|------|----------|--------|------|----------------|
-| **kilode-v2.vercel.app** | `/api/mobile/health` | `application/json` | **503** | JSON: `ready:false`, `database:"missing"`, `auth:"production_credentials_missing"` |
-| **kilode-nine.vercel.app** | `/api/mobile/health` | `application/json` | **406** | `Only HTML requests are supported here` |
+See `docs/BACKEND_DEDICATED.md` and `supabase/migrations/001_kilode_core.sql`.
 
-## Meaning
+## Client configuration
 
-- **v2:** Mobile bridge route exists and returns JSON, but the service is **not production-ready** (no database / production auth credentials).
-- **nine:** Rejects non-HTML requests; not a mobile JSON API host.
+`lib/config.ts`:
 
-Native client behaviour (`lib/api.ts`):
+- `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` → intended live mode
+- `EXPO_PUBLIC_API_URL` → optional custom BFF only (empty by default)
+- **No default** pointing at kilode-v2 or kilode-nine
 
-- Attempts live fetch.
-- On failure / non-OK: `source: "error"` with seed **fallback for layout only**.
-- `FORCE_MOCK` defaults to **false**.
-- UI must show `ConnectionBanner` when `source !== "live"` or session is device-only.
+When neither Supabase nor `API_BASE` is set, `lib/api.ts` stays in **offline/seed** mode (`source: mock`).
+
+## Historical probes (legacy hosts — not product backends)
+
+| Host | Path | Result |
+|------|------|--------|
+| kilode-v2.vercel.app | `/api/mobile/health` | 503 `ready:false` |
+| kilode-nine.vercel.app | `/api/mobile/health` | 406 HTML-only |
+
+These hosts are documented only so we do not reconnect to them by accident.
 
 ## Auth
 
-`lib/auth.tsx` falls back to a **device session** (`localOnly`) when sign-in/sign-up cannot complete against a live host. Guest is explicit only.
+`lib/auth.tsx` may still attempt Better Auth paths if `API_BASE` is set. Prefer migrating auth to Supabase Auth after the project exists. Device-local sessions remain `localOnly: true`.
 
-## Required to go live
+## Operational checklist
 
-1. Provision database + production auth credentials on Kilode-v2 (or the chosen API host).
-2. Confirm `/api/mobile/health` returns **200** with `ready:true`.
-3. Point `EXPO_PUBLIC_API_URL` at that host if it differs from the default.
+1. Create dedicated Supabase project.
+2. Run `001_kilode_core.sql`.
+3. Put URL + anon key in local `.env`.
+4. Add Supabase JS client and wire Socials/profile (next engineering phase).
+5. Super Admin = SQL role only; never public registration.
 
-Do **not** treat HTML website success as mobile API success.
-
-See also: `docs/KILODE_REQUIREMENTS_AUDIT.md`.
+**Dedicated backend readiness: not operational until owner project + migration + client keys are in place.**
