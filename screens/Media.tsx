@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   Share,
-  Platform,
   Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Palette } from "../themeStyles";
@@ -31,119 +33,358 @@ type Props = {
   initialArticleId?: string | null;
 };
 
-/** Dedicated Media experience — article list + reader (seed body until CMS API). */
+const W = Dimensions.get("window").width;
+const CAROUSEL_W = W - 32;
+
+const GRID = [
+  { id: "politics", label: "Politics", icon: "landmark-outline" as const },
+  { id: "tech", label: "Tech", icon: "hardware-chip-outline" as const },
+  { id: "culture", label: "Culture", icon: "color-palette-outline" as const },
+  { id: "sport", label: "Sport", icon: "football-outline" as const },
+  { id: "business", label: "Business", icon: "briefcase-outline" as const },
+  { id: "more", label: "More", icon: "grid-outline" as const },
+];
+
+const TICKER = [
+  "Trending: Lagos rains · governance",
+  "Oil spill probe · Akwa Ibom",
+  "Afrobeats charts · weekend drops",
+  "Kilode Media · top reads",
+];
+
+/** Full Media system: ticker → carousel → 3-col grid → list + ads */
 export function MediaScreen({ s, C, articles, onBack, show, initialArticleId }: Props) {
   const [active, setActive] = useState<MediaArticle | null>(null);
-  const [category, setCategory] = useState("For you");
-  const categories = ["For you", "Politics", "Tech", "Culture", "Sport"];
-  const visibleArticles = category === "For you"
-    ? articles
-    : articles.filter((article) => (article.kicker || "").toLowerCase().includes(category.toLowerCase()));
+  const [slide, setSlide] = useState(0);
+  const [filter, setFilter] = useState<string | null>(null);
+  const tickerX = useRef(0);
+
+  const list = filter
+    ? articles.filter((a) => (a.kicker || "").toLowerCase().includes(filter.toLowerCase()))
+    : articles;
+
+  const hero = list.slice(0, 4);
+  const rest = list.slice(0, 12);
 
   useEffect(() => {
     if (!initialArticleId) return;
-    const match = articles.find((article) => String(article.id) === String(initialArticleId));
+    const match = articles.find((a) => String(a.id) === String(initialArticleId));
     if (match) setActive(match);
-  }, [initialArticleId]);
+  }, [initialArticleId, articles]);
+
+  const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const x = e.nativeEvent.contentOffset.x;
+    setSlide(Math.round(x / (CAROUSEL_W + 12)));
+  };
 
   if (active) {
     const body =
       active.body ||
-      `${active.title}\n\nFull story coming soon.\n\n— ${active.author || "Kilode Editorial"}`;
-
+      `${active.title}\n\nFull story loads when the editorial API is live.\n\n— ${active.author || "Kilode Editorial"}`;
     return (
-      <ScrollView style={s.flex} contentContainerStyle={[s.scrollPad, { paddingHorizontal: 16 }]}>
+      <ScrollView style={s.flex} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
         <TouchableOpacity
-          activeOpacity={0.72}
           onPress={() => setActive(null)}
-          style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 12 }}
-          accessibilityRole="button"
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 14, marginTop: 4 }}
         >
-          <Ionicons name="chevron-back" size={22} color={C.accent} />
-          <Text style={s.link}>All stories</Text>
+          <Ionicons name="chevron-back" size={20} color={C.accent} />
+          <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>Media</Text>
         </TouchableOpacity>
-        <Text style={[s.meta, { color: C.accent, fontWeight: "700", marginBottom: 6 }]}>
-          {(active.kicker || "Media").toUpperCase()} · {active.time || "Today"}
+        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.6 }}>
+          {(active.kicker || "MEDIA").toUpperCase()} · {active.time || "Today"}
         </Text>
-        <Text style={[s.h1, { marginBottom: 8 }]}>{active.title}</Text>
-        <Text style={[s.sub, { marginBottom: 16 }]}>{active.author || "Kilode Editorial"}</Text>
+        <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.4, marginTop: 8, lineHeight: 28 }}>
+          {active.title}
+        </Text>
+        <Text style={{ color: C.text3, fontSize: 12, marginTop: 8 }}>{active.author || "Kilode Editorial"}</Text>
         {active.imageUrl ? (
-          <Image source={{ uri: active.imageUrl }} style={{ height: 190, borderRadius: 16, backgroundColor: active.tone || C.elevated, marginBottom: 16 }} resizeMode="cover" />
+          <Image
+            source={{ uri: active.imageUrl }}
+            style={{ width: "100%", height: 200, borderRadius: 14, marginTop: 14, backgroundColor: C.elevated }}
+            resizeMode="cover"
+          />
         ) : (
-          <View style={{ height: 160, borderRadius: 16, backgroundColor: active.tone || C.elevated, marginBottom: 16 }} />
+          <View style={{ height: 160, borderRadius: 14, marginTop: 14, backgroundColor: active.tone || C.elevated }} />
         )}
-        <Text style={{ fontSize: 16, lineHeight: 26, color: C.text }}>{body}</Text>
-        <View style={{ flexDirection: "row", gap: 12, marginTop: 24 }}>
-          <TouchableOpacity
-            style={[s.primaryBtn, { flex: 1 }]}
-            onPress={async () => {
-              try {
-                await Share.share({
-                  message: `${active.title} — via Kilode`,
-                  title: active.title,
-                });
-              } catch {
-                show("Share unavailable");
-              }
-            }}
-          >
-            <Text style={s.primaryBtnText}>Share</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.ghostBtn, { flex: 1, alignItems: "center" }]} onPress={onBack}>
-            <Text style={s.ghostBtnText}>Home</Text>
-          </TouchableOpacity>
-        </View>
-        
+        <Text style={{ color: C.text2, fontSize: 15, lineHeight: 24, marginTop: 16 }}>{body}</Text>
+        <TouchableOpacity
+          style={{
+            marginTop: 20,
+            alignSelf: "flex-start",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: C.border,
+          }}
+          onPress={async () => {
+            try {
+              await Share.share({ message: active.title });
+            } catch {
+              show("Could not share");
+            }
+          }}
+        >
+          <Text style={{ color: C.text, fontWeight: "600", fontSize: 13 }}>Share</Text>
+        </TouchableOpacity>
       </ScrollView>
     );
   }
 
   return (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
-      <View style={s.padH}>
-        <TouchableOpacity activeOpacity={0.72} onPress={onBack} style={{ marginBottom: 8 }}>
-          <Text style={s.link}>‹ Home</Text>
+    <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 36 }} showsVerticalScrollIndicator={false}>
+      {/* Header */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center" }}>
+        <TouchableOpacity onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Ionicons name="chevron-back" size={22} color={C.text} />
         </TouchableOpacity>
-        <Text style={s.h1}>Media</Text>
-        <Text style={s.sub}>Stories worth your time.</Text>
+        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginLeft: 8, letterSpacing: -0.3 }}>Media</Text>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity onPress={() => show("Search opens when catalogue API is live")}>
+          <Ionicons name="search-outline" size={20} color={C.text2} />
+        </TouchableOpacity>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-        {categories.map((item) => (
-          <TouchableOpacity key={item} activeOpacity={0.72} accessibilityRole="button" accessibilityState={{ selected: category === item }} onPress={() => setCategory(item)} style={[s.chip, category === item && s.chipOn]}>
-            <Text style={[s.chipText, category === item && s.chipTextOn]}>{item}</Text>
+
+      {/* Trending ticker */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ maxHeight: 32, marginBottom: 10 }}
+        contentContainerStyle={{ paddingHorizontal: 16, alignItems: "center", gap: 16 }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent }} />
+          <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800", letterSpacing: 0.5 }}>TRENDING</Text>
+        </View>
+        {TICKER.map((t) => (
+          <Text key={t} style={{ color: C.text2, fontSize: 12 }} numberOfLines={1}>
+            {t}
+          </Text>
+        ))}
+      </ScrollView>
+
+      {/* Carousel */}
+      <ScrollView
+        horizontal
+        pagingEnabled
+        decelerationRate="fast"
+        snapToInterval={CAROUSEL_W + 12}
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onCarouselScroll}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+      >
+        {(hero.length ? hero : [{ id: "empty", title: "Stories load when Media is connected", kicker: "MEDIA" }]).map((n) => (
+          <TouchableOpacity
+            key={n.id}
+            activeOpacity={0.9}
+            onPress={() => ("title" in n && n.id !== "empty" ? setActive(n as MediaArticle) : undefined)}
+            style={{
+              width: CAROUSEL_W,
+              height: 180,
+              borderRadius: 16,
+              overflow: "hidden",
+              backgroundColor: (n as MediaArticle).tone || C.elevated,
+            }}
+          >
+            {(n as MediaArticle).imageUrl ? (
+              <Image
+                source={{ uri: (n as MediaArticle).imageUrl }}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="cover"
+              />
+            ) : null}
+            <View
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                padding: 14,
+                backgroundColor: "rgba(0,0,0,0.55)",
+              }}
+            >
+              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>
+                {((n as MediaArticle).kicker || "MEDIA").toUpperCase()}
+              </Text>
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800", marginTop: 4 }} numberOfLines={2}>
+                {(n as MediaArticle).title}
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
-      {visibleArticles[0] ? (
-        <View style={{ marginTop: 4, marginBottom: 20 }}>
-          <TouchableOpacity key={visibleArticles[0].id} activeOpacity={0.9} onPress={() => setActive(visibleArticles[0])} accessibilityRole="button" style={{ marginHorizontal: 16, overflow: "hidden", borderRadius: 18, backgroundColor: C.card }}>
-            {visibleArticles[0].imageUrl ? <Image source={{ uri: visibleArticles[0].imageUrl }} style={{ width: "100%", height: 164, backgroundColor: visibleArticles[0].tone || C.elevated }} resizeMode="cover" /> : <View style={{ height: 164, backgroundColor: visibleArticles[0].tone || C.elevated }} />}
-            <View style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 }}>
-              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.9 }}>{(visibleArticles[0].kicker || "MEDIA").toUpperCase()} · {visibleArticles[0].time || "LATEST"}</Text>
-              <Text style={{ color: C.text, fontSize: 17, lineHeight: 22, fontWeight: "700", letterSpacing: -0.3, marginTop: 6 }}>{visibleArticles[0].title}</Text>
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 11 }}>
-                <Text style={{ color: C.text2, fontSize: 11 }}>Kilode Media</Text>
-                <View style={{ flex: 1 }} />
-                <Ionicons name="arrow-forward" size={18} color={C.accent} />
-              </View>
+      <View style={{ flexDirection: "row", justifyContent: "center", gap: 5, marginTop: 10, marginBottom: 14 }}>
+        {(hero.length || 1) > 0 &&
+          Array.from({ length: Math.max(hero.length, 1) }).map((_, i) => (
+            <View
+              key={i}
+              style={{
+                width: i === slide ? 14 : 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: i === slide ? C.accent : C.border,
+              }}
+            />
+          ))}
+      </View>
+
+      {/* 3-column roles + More */}
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          paddingHorizontal: 12,
+          marginBottom: 8,
+        }}
+      >
+        {GRID.map((g) => (
+          <TouchableOpacity
+            key={g.id}
+            onPress={() => {
+              if (g.id === "more") {
+                show("More sections when editorial catalogue expands");
+                return;
+              }
+              setFilter(filter === g.label ? null : g.label);
+            }}
+            style={{
+              width: "33.33%",
+              paddingHorizontal: 4,
+              paddingVertical: 6,
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                width: "100%",
+                aspectRatio: 1.15,
+                maxWidth: 104,
+                borderRadius: 14,
+                backgroundColor: filter === g.label ? C.accentSoft : C.card,
+                borderWidth: 1,
+                borderColor: filter === g.label ? C.accent : C.border,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              <Ionicons name={g.icon} size={22} color={filter === g.label ? C.accent : C.text2} />
+              <Text style={{ color: filter === g.label ? C.accent : C.text, fontSize: 12, fontWeight: "700" }}>
+                {g.label}
+              </Text>
             </View>
           </TouchableOpacity>
-          {visibleArticles.slice(1).map((n) => (
-            <TouchableOpacity key={n.id} activeOpacity={0.78} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginTop: 14 }} onPress={() => setActive(n)} accessibilityRole="button">
-              {n.imageUrl ? <Image source={{ uri: n.imageUrl }} style={{ width: 92, height: 78, borderRadius: 10, backgroundColor: n.tone || C.elevated }} resizeMode="cover" /> : <View style={{ width: 92, height: 78, borderRadius: 10, backgroundColor: n.tone || C.elevated }} />}
+        ))}
+      </View>
+
+      {/* Portrait ad */}
+      <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 16 }}>
+        <View
+          style={{
+            borderRadius: 14,
+            overflow: "hidden",
+            backgroundColor: C.elevated,
+            borderWidth: 1,
+            borderColor: C.border,
+            flexDirection: "row",
+            minHeight: 110,
+          }}
+        >
+          <View style={{ width: 92, backgroundColor: "#2A2419", alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="megaphone-outline" size={28} color={C.accent} />
+          </View>
+          <View style={{ flex: 1, padding: 12, justifyContent: "center" }}>
+            <Text style={{ color: C.text3, fontSize: 10, fontWeight: "700", letterSpacing: 0.5 }}>SPONSORED</Text>
+            <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 4 }} numberOfLines={2}>
+              Promote on Kilode Media
+            </Text>
+            <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }} numberOfLines={1}>
+              Reach readers · Push Link
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Thumbnail list */}
+      <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", paddingHorizontal: 16, marginBottom: 10 }}>
+        Latest
+      </Text>
+      {rest.map((n, idx) => (
+        <React.Fragment key={n.id}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setActive(n)}
+            style={{
+              flexDirection: "row",
+              gap: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              alignItems: "center",
+            }}
+          >
+            {n.imageUrl ? (
+              <Image
+                source={{ uri: n.imageUrl }}
+                style={{ width: 76, height: 64, borderRadius: 10, backgroundColor: C.elevated }}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={{ width: 76, height: 64, borderRadius: 10, backgroundColor: n.tone || C.elevated }} />
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.accent, fontSize: 10, fontWeight: "700" }} numberOfLines={1}>
+                {(n.kicker || "MEDIA").toUpperCase()} · {n.time || ""}
+              </Text>
+              <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 3, lineHeight: 19 }} numberOfLines={2}>
+                {n.title}
+              </Text>
+            </View>
+          </TouchableOpacity>
+          {/* Inline ad every 4 items */}
+          {idx === 3 ? (
+            <View
+              style={{
+                marginHorizontal: 16,
+                marginVertical: 10,
+                height: 72,
+                borderRadius: 12,
+                backgroundColor: C.card,
+                borderWidth: 1,
+                borderColor: C.border,
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 14,
+                gap: 12,
+              }}
+            >
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 10,
+                  backgroundColor: C.accentSoft,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="stats-chart-outline" size={20} color={C.accent} />
+              </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.6 }}>{(n.kicker || "MEDIA").toUpperCase()} · {n.time || ""}</Text>
-                <Text style={{ color: C.text, fontSize: 14, lineHeight: 19, fontWeight: "700", marginTop: 5 }} numberOfLines={3}>{n.title}</Text>
+                <Text style={{ color: C.text3, fontSize: 10, fontWeight: "700" }}>AD</Text>
+                <Text style={{ color: C.text, fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
+                  Brand story · Kilode Ads
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={C.text3} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : null}
-      {visibleArticles.length === 0 ? (
-        <View style={[s.center, { padding: 40 }]}>
-          <Text style={s.sub}>{category === "For you" ? "No stories yet" : `No ${category.toLowerCase()} stories yet`}</Text>
-        </View>
+            </View>
+          ) : null}
+        </React.Fragment>
+      ))}
+
+      {rest.length === 0 ? (
+        <Text style={{ color: C.text3, textAlign: "center", marginTop: 24, paddingHorizontal: 24 }}>
+          No stories in this section yet
+        </Text>
       ) : null}
     </ScrollView>
   );
