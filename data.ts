@@ -45,6 +45,9 @@ export const CREATE = [
   { label: "Market", sub: "List a product", icon: "🛍️", tab: "market", capability: "market_sell" as const },
   { label: "Event", sub: "Host something", icon: "📅", tab: "events", capability: "feed_post" as const },
   { label: "Ad", sub: "Place a campaign", icon: "📢", tab: "ads", capability: "ads_place" as const },
+  { label: "Article", sub: "Open Media publishing tools", icon: "📰", tab: "media" },
+  { label: "Community", sub: "Open Communities", icon: "👥", tab: "communities" },
+  { label: "Creator", sub: "Open Creator tools", icon: "🎥", tab: "creators" },
 ];
 
 export const TAKES = [
