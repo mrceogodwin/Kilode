@@ -47,14 +47,14 @@ export function makeStyles(C: Palette, isDark: boolean) {
     rowGap: { flexDirection: "row", gap: 10, paddingHorizontal: 16, marginTop: 14 },
 
     header: {
-      height: 54,
+      height: 58,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 14,
-      borderBottomWidth: 0,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: C.border,
-      backgroundColor: C.bg,
+      backgroundColor: C.card,
     },
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
     headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
