@@ -132,7 +132,7 @@ export function SocialsScreen({
               }}
             >
               {st.avatarUrl ? (
-                <Image source={{ uri: st.imageUrl }} style={{ width: 52, height: 52, borderRadius: 26 }} />
+                <Image source={{ uri: st.avatarUrl }} style={{ width: 52, height: 52, borderRadius: 26 }} />
               ) : (
                 <Ionicons name={st.id === "s0" ? "add" : "person"} size={22} color={C.text2} />
               )}
