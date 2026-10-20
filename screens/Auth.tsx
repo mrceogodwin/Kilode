@@ -55,7 +55,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
       return;
     }
     if (!handle.trim() || !password) {
-      show("Enter your username and password.");
+      show(mode === "in" ? "Enter your email address and password." : "Enter your username and password.");
       return;
     }
     setBusy(true);
@@ -243,12 +243,12 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
               />
             </>
           ) : null}
-          <Text style={styles.label}>{mode === "in" ? "Email or username" : "Username"}</Text>
+          <Text style={styles.label}>{mode === "in" ? "Email address" : "Username"}</Text>
           <TextInput
             style={styles.input}
             autoCapitalize="none"
             autoCorrect={false}
-            placeholder="@handle"
+            placeholder={mode === "in" ? "you@example.com" : "@handle"}
             placeholderTextColor="rgba(255,255,255,0.35)"
             value={handle}
             onChangeText={setHandle}
