@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -88,6 +88,54 @@ export function HomeScreen({
   const [q, setQ] = useState("");
   const [submittedSearch, setSubmittedSearch] = useState("");
   const carouselRef = useRef<ScrollView>(null);
+
+  const discoveryFeed = useMemo(() => {
+    const stamp = (item: any) => {
+      const raw = item.createdAt || item.created_at || item.published_at || item.date || item.time;
+      const parsed = raw ? Date.parse(String(raw)) : 0;
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const lanes = [
+      takes.map((item: any) => ({
+        id: `social-${item.id}`, kind: "Socials", title: item.name || item.handle || "Kilode member",
+        subtitle: item.text || item.body || "Shared a post", icon: "people-outline" as const, accent: "#E56B6F",
+        date: stamp(item), onPress: () => onOpenPost(item),
+      })),
+      news.map((item: any) => ({
+        id: `media-${item.id}`, kind: "Media", title: item.title || "Story",
+        subtitle: item.kicker || item.author || "Open article", icon: "newspaper-outline" as const, accent: "#E56B6F",
+        date: stamp(item), onPress: () => onOpenMedia(String(item.id)),
+      })),
+      tracks.map((item: any) => ({
+        id: `music-${item.id}`, kind: "Music", title: item.title || "Track",
+        subtitle: item.artist || "Open music", icon: "musical-notes-outline" as const, accent: "#F08A4B",
+        date: stamp(item), onPress: () => onPlayTrack(item),
+      })),
+      events.map((item: any) => ({
+        id: `event-${item.id}`, kind: "Events", title: item.title || "Event",
+        subtitle: item.meta || item.venue || "Open events", icon: "calendar-outline" as const, accent: "#F2C94C",
+        date: stamp(item), onPress: onOpenEvents,
+      })),
+      market.map((item: any) => ({
+        id: `market-${item.id}`, kind: "Market", title: item.title || "Listing",
+        subtitle: item.price || item.meta || "Open Market", icon: "bag-handle-outline" as const, accent: "#F08A4B",
+        date: stamp(item), onPress: onOpenMarket,
+      })),
+      jobs.map((item: any) => ({
+        id: `job-${item.id}`, kind: "Jobs", title: item.title || "Role",
+        subtitle: item.meta || [item.company, item.location].filter(Boolean).join(" · ") || "Open Jobs",
+        icon: "briefcase-outline" as const, accent: "#F2C94C", date: stamp(item), onPress: onOpenJobs,
+      })),
+    ];
+    const interleaved: any[] = [];
+    const max = Math.max(0, ...lanes.map((lane) => lane.length));
+    for (let i = 0; i < max; i += 1) {
+      for (const lane of lanes) if (lane[i]) interleaved.push(lane[i]);
+    }
+    return interleaved
+      .sort((a, b) => b.date - a.date)
+      .slice(0, 8);
+  }, [takes, news, tracks, events, market, jobs, onOpenPost, onOpenMedia, onPlayTrack, onOpenEvents, onOpenMarket, onOpenJobs]);
 
   const heroMedia = news[0];
   const heroTrack = tracks[0];
@@ -295,6 +343,30 @@ export function HomeScreen({
         {carousel.map((_, i) => (
           <View key={i} style={{ width: i === slide ? 12 : 4, height: 4, borderRadius: 2, backgroundColor: i === slide ? C.accent : C.border }} />
         ))}
+      </View>
+
+      <View style={{ paddingHorizontal: 16, marginTop: 18, marginBottom: 10, flexDirection: "row", alignItems: "center" }}>
+        <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, flex: 1 }}>Across Kilode</Text>
+        <Text style={{ color: C.text3, fontSize: 11 }}>For You</Text>
+      </View>
+      <View style={{ marginHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, overflow: "hidden" }}>
+        {discoveryFeed.length ? discoveryFeed.map((item: any, index: number) => (
+          <TouchableOpacity key={item.id} activeOpacity={0.78} onPress={item.onPress} style={{ minHeight: 66, paddingHorizontal: 12, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10, borderBottomWidth: index === discoveryFeed.length - 1 ? 0 : 1, borderBottomColor: C.border }}>
+            <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: item.accent + "18", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name={item.icon} size={16} color={item.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: item.accent, fontSize: 10, fontWeight: "700", letterSpacing: 0.35 }}>{item.kind}</Text>
+              <Text style={{ color: C.text, fontSize: 13, fontWeight: "600", marginTop: 2 }} numberOfLines={1}>{item.title}</Text>
+              <Text style={{ color: C.text2, fontSize: 11, lineHeight: 15, marginTop: 2 }} numberOfLines={2}>{item.subtitle}</Text>
+            </View>
+            <Ionicons name={item.kind === "Music" ? "play-circle-outline" : "chevron-forward"} size={18} color={C.text3} />
+          </TouchableOpacity>
+        )) : (
+          <View style={{ padding: 16 }}>
+            <Text style={{ color: C.text2, fontSize: 13 }}>New content will appear here as Kilode systems publish it.</Text>
+          </View>
+        )}
       </View>
 
       <SectionHead C={C} title="Media" onSeeAll={() => onOpenMedia()} />
