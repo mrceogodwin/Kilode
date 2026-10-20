@@ -2,168 +2,119 @@
 
 **Repository:** `mrceogodwin/Kilode`  
 **Primary product:** Expo React Native (iOS first)  
-**Working branch:** `preview/web`  
+**Working branch inspected:** `preview/web`  
 **Audit date:** 2026-10-20  
-**Baseline commit at audit:** `2f8617092f42ae4a323a645ba0c4cbb8be5664ee`
+**Latest commit visible in repository history:** `721d38ea0f733e6b95dd0532d00f9a79c9e2e805` — `refine socials into a cleaner, media-first native feed`
 
-Source briefs:
-
-1. Master Product Architecture, Functionality & Engineering Brief
-2. Interaction Map, Screen Flows, Backend Wiring & Super Admin Audit
-
-This document records **verified code facts**, not aspirations. Update after each major stage.
+This document records verified source-code findings, not assumptions about what works on a device. Update it after each milestone.
 
 ---
 
 ## 1. Source of truth
 
-| Item | Value |
-|------|--------|
-| Native repo | `mrceogodwin/Kilode` |
-| Default branch | `main` @ `721d38ea` |
-| Active work branch | `preview/web` |
-| Website / API (separate) | Kilode-v2 (`https://kilode-v2.vercel.app` per `lib/config.ts`) |
-| Legacy web reference | `https://kilode-nine.vercel.app` (HTML-oriented; JSON mobile APIs return 406) |
-| Expo owner | `mudino` |
-| Bundle ID | `ng.kilode.app` |
-| EAS projectId | **empty** — requires `eas init` on owner machine |
+| Item | Verified value / status |
+|---|---|
+| Native repository | `mrceogodwin/Kilode` |
+| Branch inspected | `preview/web` |
+| App entry | `App.tsx` renders `KilodeRoot` from `KilodeRoot.tsx` |
+| App stack | Expo / React Native; `package.json` has Expo ~51 and RN 0.74.5 |
+| Web preview | Vercel export of this code is not proof of a successful native iOS build |
+| Current source baseline | `721d38ea0f733e6b95dd0532d00f9a79c9e2e805` |
 
----
+Do not connect the native app to an unverified legacy host or claim backend readiness without a current health check and successful end-to-end test.
 
 ## 2. Product systems map
 
-| System | Entry | Screen files | Status |
-|--------|--------|--------------|--------|
-| Home | Dock | `screens/Home.tsx` | Partial — discovery rails; seed when API not ready |
-| Media | Dock / Home | `screens/Media.tsx` | Partial UI |
-| Socials | Dock | `Socials`, `PostDetail`, `UserProfile`, `Comments` | Partial; local likes/follow |
-| Music | More / Home | `Music`, `TrackDetail`, `ArtistDetail` | Partial UI; no proven licensed streaming |
-| Events | More / rail | `Events.tsx` | Partial UI |
-| Market | More / rail | `Market.tsx` | Partial UI; no checkout |
-| Jobs | More / rail | `Jobs.tsx` | Partial UI |
-| Communities | More | `Communities.tsx` | Partial UI |
-| Cinema | More | `Cinema.tsx` | Partial UI |
-| Creators | More | `Creators.tsx` | Partial UI |
-| Chat | More | `Chat.tsx` | Partial UI |
-| My Space | Avatar / More | Inline in `KilodeRoot.tsx` | Partial — kind chips, not full per-type dashboards |
-| Settings | My Space | `Settings.tsx` | Partial — delete is client sign-out path |
-| Ads & Business | Create / desks | No dedicated screen | Capability `ads_place` only |
-| Push Link | — | **Not found in native code** | Missing |
-| Super Admin | — | **Not found in native code** | Missing |
+| System | Current evidence / status |
+|---|---|
+| Home | `screens/Home.tsx`; discovery rails exist, but Home content is limited to Media, Music and one Socials post |
+| Media | Dedicated screen and article selection route exist |
+| Socials | Dedicated feed, post detail and profile navigation have recent commits; some actions still use local client state |
+| Music | Dedicated screen plus track and artist detail routes exist |
+| Events | Dedicated screen route exists; live data and full actions need verification |
+| Market | Dedicated screen route exists; checkout is not verified |
+| Jobs | Dedicated screen route exists; apply/post workflows need verification |
+| Communities | Dedicated screen route exists; membership flows need verification |
+| Cinema | Dedicated screen route exists; submissions/streaming rights not verified |
+| Creators | Dedicated screen route exists; creator tools need verification |
+| Ads & Business | Home rail can route to a system ID; a complete dedicated business dashboard was not verified |
+| My Space | Inline screen in `KilodeRoot.tsx`; shows account kind and kind-specific tool descriptors, but is not yet a proven distinct full dashboard per kind |
+| Push Link | No working end-to-end implementation verified in this pass |
+| Super Admin | No secure, working Super Admin flow verified in this pass |
 
-Bottom dock (`KilodeTabBar`): **Home · Media · + · Socials · More**. My Space is not a dock tab.
+The app uses a custom tab/state model in `KilodeRoot.tsx`, rather than React Navigation. Device-level back/gesture behavior still needs testing.
 
----
+## 3. Home screen findings (source inspected)
 
-## 3. Account-type matrix (from `lib/accountKinds.ts` + `lib/permissions.ts`)
+### Confirmed issues
+1. **Search is disconnected.** In `screens/Home.tsx`, submitting a non-empty query displays “Search is not connected yet.” It does not navigate to or execute search.
+2. **Home discovery is incomplete.** The visible feed sections are Media, Music and Socials. Other systems appear as a horizontal rail, not as discovery content in the feed.
+3. **Socials preview is capped at one post.** Home renders `takes[0]` only, despite the Socials system having its own feed.
+4. **The hero carousel can contain only two cards**: the first Media story and first Music track. It is not a cross-system discovery carousel.
+5. **The Home rail contains all major system destinations**, and the callbacks route to dedicated tabs or system IDs. This is useful navigation, but does not by itself satisfy the hybrid discovery-feed requirement.
+6. **No fake event/people recommendations should be reintroduced.** Use real API data or an honest empty state.
 
-| Kind ID | Label | Client capabilities | My Space tools (current) |
-|---------|--------|---------------------|---------------------------|
-| `member` | Normal user | feed_post, jobs_apply | socials, media, jobs |
-| `artist` | Artist | feed_post, music_list | socials, media, music |
-| `writer` | Writer | feed_post, news_write | socials, media |
-| `advertiser` | Ads Poster | feed_post, ads_place | socials, media, creators |
-| `cinema` | Cinema Poster | feed_post, cinema_submit | socials, media, cinema |
-| `job_poster` | Job Poster | feed_post, jobs_post | socials, media, jobs |
-| `job_seeker` | Job Seeker | feed_post, jobs_apply | socials, media, jobs |
-| `vendor` | Marketplace seller | feed_post, market_sell | socials, media, market |
-| `renter` | Rent / space lister | feed_post, rent_list | socials, media, market |
-| `brand` | Brand / business | feed_post, brand_page, ads_place | socials, media, creators |
+### Next Home implementation requirements
+- Preserve the existing charcoal-and-gold theme and compact native layout.
+- Add cross-system discovery only where real data contracts exist; never fabricate events, users, posts, jobs or listings.
+- Make search a real, clearly scoped search flow, or keep it explicitly disabled with an accessible reason until a backend route exists.
+- Keep cards compact; avoid a stack of large boxed widgets and oversized headings.
+- Provide loading, empty, error and refresh states for each data-backed section.
+- Test every Home tap target and verify it opens the intended system/detail screen.
 
-**Registration:** multi-step Auth (welcome → account type → credentials). Kind stored on session / AsyncStorage.
+## 4. Account types and dashboards
 
-**Gaps vs master brief:**
+The existing audit/source identifies these account kinds: `member`, `artist`, `writer`, `advertiser`, `cinema`, `job_poster`, `job_seeker`, `vendor`, `renter`, and `brand`. Re-verify against the current account-kind source before changing the list.
 
-- No distinct full dashboard layouts per type (chips + Create gates only).
-- No post-registration type-specific onboarding beyond kind selection.
-- Capabilities are **client-side**; server enforcement not present in this repo.
+Registration has an account-type step according to the existing source audit. My Space uses account-kind labels/tool descriptors, but distinct full dashboard architectures and post-registration onboarding remain unverified/incomplete.
 
----
+**Security requirement:** Client capability gates are UI behavior only. Permissions must be validated by the backend for every protected action. Never allow public self-promotion to admin.
 
-## 4. Navigation model
+## 5. Interaction/navigation findings
 
-State machine in `KilodeRoot.tsx` (not React Navigation):
+- `App.tsx` directly renders `KilodeRoot`.
+- `KilodeRoot.tsx` holds tab state and selected-detail state for articles, posts, profiles, tracks, artists and desk items.
+- Compose posting checks for a token and reports whether the response came from live or preview; this distinction must remain honest.
+- My Space “Edit” currently shows a message that the profile editor opens next; it is not a working editor.
+- “Saved” currently shows a message that sync is not live; it is not a working saved-items screen.
+- Some likes/follows are managed in local React state; persistence across devices/users is not verified.
+- Notification UI has a local sample fallback when the activity list is empty. Do not present sample notifications as real user activity in production.
+- Report/block flows require verification that reports reach a protected backend moderation queue and blocks persist server-side. A local toast alone is not proof of moderation.
+- Screen transitions, iOS swipe-back, Android hardware back, keyboard/safe-area behavior, and every visible button have not been device-tested in this audit.
 
-- `tab` selects system screens.
-- Detail overlays: post, profile, track, artist, desk item, settings.
-- Modals: compose, create, more, comments.
+## 6. Backend and release readiness
 
-Back navigation is mostly explicit `onBack` / clear selection. Full journey testing on device **not verified** in this audit cycle.
+This source inspection did not perform a new live backend health probe or a native build. Therefore the following remain **unverified in this pass**:
+- Live auth and durable sessions
+- Live feed/post/comment/like/follow persistence
+- Real search across supported systems
+- Real Market checkout or job application
+- Report/block moderation persistence
+- Account deletion with server-side data removal
+- Server-enforced role/capability checks and admin audit logs
+- EAS project linking, iOS build, TestFlight, and on-device QA
 
----
+Never mark these as complete based only on a web deployment marked READY.
 
-## 5. Backend integration matrix
+## 7. Visual requirements (preserve)
 
-| Endpoint (client) | Host config | Live probe 2026-10-20 | Native behaviour |
-|-------------------|-------------|------------------------|------------------|
-| `GET /api/mobile/health` | kilode-v2 | **503** JSON `ready:false`, DB missing, auth credentials missing | Treated as not ready |
-| Same | kilode-nine | **406** HTML-only | Not usable for JSON |
-| takes / tracks / news / rooms / activity | v2 | Not production-ready when health not ready | Seed/error path; banner shown |
-| `POST /api/mobile/takes` | v2 | Not verified success | Client returns error + local fallback object |
-| Better Auth sign-in/up | v2 | Not live production | Local device session (`localOnly`) |
+- Background `#0D0D10`; cards `#18181C`; border `#2A2A30`
+- Gold `#D4AF37` / `#E5C158`; text `#F5F5F5`; muted text `#9A9A9E`
+- Premium, compact, iOS-native interaction; preserve Kilode identity.
+- No blue-and-white rebrand, pitch-black empty layouts, generic SaaS look, excessive text, or oversized boxed Home sections.
 
-`FORCE_MOCK` = false. Never report seed as `live`.
+## 8. Prioritised work queue
 
-See also: `docs/BACKEND_STATUS.md` (Nine 406 notes; host may lag config).
+1. Home: real cross-system discovery contracts, compact layout, working/disabled search decision, empty/error/loading states.
+2. Navigation audit: list every interactive element and confirm route/action, permission, backend call, and back behavior.
+3. Account architecture: validate supported account kinds; implement genuinely distinct dashboards/onboarding based on verified capabilities.
+4. Backend verification: health probe, auth, real data, durable writes, authorization and moderation.
+5. Super Admin: locate any existing secure implementation; if absent, design server-enforced roles, protected entry, moderation queue and audit logs before exposing UI.
+6. App Store readiness: account deletion, privacy, UGC report/block/moderation, payment classification, media rights, icon/splash/versioning.
+7. Native verification: link EAS project, run typecheck/tests/build and test on a real iPhone. Keep Vercel preview as a secondary visual check.
 
----
+## 9. Change log
 
-## 6. Super Admin
-
-| Requirement | Status |
-|-------------|--------|
-| Separate protected entry | **Missing** in native |
-| Server-enforced admin role | **Not in this repo** |
-| Moderation queue UI | Local report/block helpers only |
-| Public self-promote to admin | Must never exist |
-
-**Decision needed:** Confirm Super Admin lives only on Kilode-v2 web `/ops` vs native companion. Do not expose admin in user dock.
-
----
-
-## 7. Brand tokens (preserve)
-
-From `theme.ts`:
-
-- BG `#0D0D10`, card `#18181C`, border `#2A2A30`
-- Gold `#D4AF37` / `#E5C158`
-- Text `#F5F5F5`
-
-Do not introduce blue-and-white redesign.
-
----
-
-## 8. Interaction / readiness checklist (summary)
-
-| Area | Label |
-|------|--------|
-| Auth UI + kind selection | Partially implemented |
-| Local session when API down | Implemented (labelled) |
-| Live session | Blocked on v2 ready |
-| Per-type dashboards | Incomplete |
-| Create capability gates | Partially implemented |
-| Moderation report/block | Local-only |
-| Account deletion (App Store) | UI only; server wipe unverified |
-| Payments / Push Link | Missing |
-| EAS / TestFlight | Blocked on empty projectId |
-| Device QA | Not run in CI/agent environment |
-
----
-
-## 9. Prioritised work queue
-
-1. Keep this audit current after each milestone.
-2. Strengthen **account-type My Space** tool panels (real different tools, same brand).
-3. Navigation dead-end pass on `KilodeRoot` + system screens.
-4. Backend: wait for v2 `ready:true`; keep honest banners.
-5. Super Admin: product decision + server roles before any native admin UI.
-6. EAS: owner runs `eas login` / `eas init` / build.
-7. Web preview: secondary only.
-
----
-
-## 10. Change log
-
-| Date | Commit | Note |
-|------|--------|------|
-| 2026-10-20 | (this file) | Initial master audit document |
+| Date | Source | Note |
+|---|---|---|
+| 2026-10-20 | Source review at `721d38ea` | Added specific Home, interaction and verification findings; no code behavior changed by this audit document |
