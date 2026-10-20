@@ -35,7 +35,7 @@
     "assetBundlePatterns": ["**/*"],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "b9f2e786-665d-46e5-9a7c-7af7ab25e0ea"
       }
     }
   }
