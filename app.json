@@ -9,7 +9,7 @@
     "scheme": "kilode",
     "platforms": ["ios", "android", "web"],
     "splash": {
-      "backgroundColor": "#101714",
+      "backgroundColor": "#0B0C0F",
       "resizeMode": "contain"
     },
     "ios": {
