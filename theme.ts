@@ -1,14 +1,14 @@
 /** Kilode design tokens — layered charcoal, warm white and a restrained amber-led accent palette. */
-export const ACCENT = "#E6A94A";
-export const ACCENT_LIGHT = "#F2C66D";
+export const ACCENT = "#D8B36A";
+export const ACCENT_LIGHT = "#E4C98E";
 
 // Compatibility names retained for older UI primitives; brand accent is warm amber, not green.
 export const BLUE = ACCENT;
 export const BLUE_SOFT = "#2A2418";
 export const GREEN = "#58B88A";
-export const ORANGE = "#F08A4B";
-export const YELLOW = "#F2C94C";
-export const RED = "#E56B6F";
+export const ORANGE = "#D98E62";
+export const YELLOW = "#D7C56F";
+export const RED = "#CF7D82";
 export const BORDER = "#2B2E35";
 export const TEXT = "#F4F5F0";
 export const TEXT2 = "#A7ABB4";
