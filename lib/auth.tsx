@@ -326,11 +326,11 @@ export function useAuth() {
 }
 
 /** Socials feed helper used by root when Supabase is live. */
-export async function loadSocialsFeed(): Promise<{ source: "live" | "mock" | "error"; data: any[]; error?: string }> {
+export async function loadSocialsFeed(userId?: string): Promise<{ source: "live" | "mock" | "error"; data: any[]; error?: string }> {
   if (getBackendMode() !== "supabase") {
     return { source: "mock", data: [] };
   }
-  const r = await listRecentPosts(40);
+  const r = await listRecentPosts(40, userId);
   if (!r.ok) return { source: "error", data: [], error: r.error };
   return { source: "live", data: r.data };
 }
