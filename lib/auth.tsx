@@ -24,7 +24,7 @@ type AuthCtx = {
   loading: boolean;
   signInGuest: (name?: string) => void;
   signIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
-  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => void;
   setAccountKind: (kind: AccountKind) => Promise<void>;
 };
