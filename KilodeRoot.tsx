@@ -32,7 +32,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { EmptyState } from "./components/ui/EmptyState";
 import { ConnectionBanner } from "./components/ui/ConnectionBanner";
 import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
-import { primaryDesksFor, capabilitiesFor, can } from "./lib/permissions";
+import { primaryDesksFor, capabilitiesFor, can, toolsFor, accountKindLabel } from "./lib/permissions";
 
 const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   "💼": "briefcase-outline", "🛍️": "bag-handle-outline", "🏠": "home-outline",
@@ -222,9 +222,7 @@ function KilodeApp() {
       );
     }
     if (tab === "myspace") {
-      const kindLabel = session.kind || "member";
       const desks = primaryDesksFor(session.kind);
-      const caps = capabilitiesFor(session.kind);
       return (
         <ScrollView style={s.flex} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", marginBottom: 16 }}>My Space</Text>
@@ -235,7 +233,7 @@ function KilodeApp() {
             <View style={{ flex: 1 }}>
               <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>{displayName || session.name}</Text>
               <Text style={{ color: C.text2, marginTop: 2 }}>@{displayHandle || session.handle}</Text>
-              <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700", marginTop: 4 }}>{String(kindLabel).replace(/_/g, " ")}</Text>
+              <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700", marginTop: 4 }}>{accountKindLabel(session.kind)}</Text>
               <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
                 <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: deviceSession ? "rgba(229,193,88,0.15)" : "rgba(34,197,94,0.15)" }}>
                   <Text style={{ color: deviceSession ? C.accent : "#22C55E", fontSize: 10, fontWeight: "800" }}>
@@ -253,15 +251,40 @@ function KilodeApp() {
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Followers</Text></View>
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Following</Text></View>
           </View>
-          <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, marginTop: 22, marginBottom: 10 }}>YOUR TOOLS</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {desks.map((d) => (
-              <TouchableOpacity key={d} onPress={() => go(d)} style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
-                <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>{d.charAt(0).toUpperCase() + d.slice(1)}</Text>
+          <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, marginTop: 22, marginBottom: 10 }}>
+            {accountKindLabel(session.kind).toUpperCase()} TOOLS
+          </Text>
+          <View style={{ gap: 8 }}>
+            {toolsFor(session.kind).map((tool) => (
+              <TouchableOpacity
+                key={tool.id}
+                onPress={() => {
+                  if (tool.tab === "compose") { setComposeOpen(true); return; }
+                  go(tool.tab);
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  borderRadius: 14,
+                  backgroundColor: C.elevated,
+                  borderWidth: 1,
+                  borderColor: C.border,
+                  gap: 12,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }}>{tool.label}</Text>
+                  <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{tool.hint}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={C.text3} />
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={{ color: C.text3, fontSize: 11, marginTop: 8 }}>Capabilities: {caps.join(" · ") || "member"}</Text>
+          <Text style={{ color: C.text3, fontSize: 11, marginTop: 10 }}>
+            Open systems: {desks.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(" · ") || "—"}
+          </Text>
           <View style={{ flexDirection: "row", marginTop: 20, gap: 10 }}>
             {["Saved", "Activity", "Settings"].map((label) => (
               <TouchableOpacity key={label} onPress={() => label === "Settings" ? setSettingsOpen(true) : label === "Activity" ? go("activity") : show("Saved when sync is live.")}
