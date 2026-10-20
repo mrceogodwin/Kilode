@@ -152,6 +152,33 @@ export async function togglePostLike(postId: string, userId: string): Promise<{ 
   return { ok: true, liked: true };
 }
 
+/** Update only the signed-in user's editable profile fields. Authority fields are never accepted here. */
+export async function updateOwnProfile(
+  userId: string,
+  input: { handle: string; display_name: string; bio: string | null }
+): Promise<{ ok: boolean; data?: ProfileRow; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, error: "Supabase is not configured." };
+  if (!userId) return { ok: false, error: "Sign in to update your live profile." };
+  const handle = input.handle.trim().replace(/^@/, "").toLowerCase();
+  const display_name = input.display_name.trim();
+  const bio = input.bio?.trim() || null;
+  if (!/^[a-z0-9_]{3,30}$/.test(handle)) {
+    return { ok: false, error: "Handle must be 3–30 characters using letters, numbers, or underscores." };
+  }
+  if (display_name.length < 2 || display_name.length > 60) {
+    return { ok: false, error: "Display name must be 2–60 characters." };
+  }
+  if (bio && bio.length > 160) return { ok: false, error: "Bio must be 160 characters or fewer." };
+  const { data, error } = await sb.from("profiles")
+    .update({ handle, display_name, bio })
+    .eq("id", userId)
+    .select("id, handle, display_name, kind, role, bio, avatar_url")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data: data as ProfileRow };
+}
+
 /** Read-only catalogue queries used by the shared Home discovery feed and each system screen. */
 async function listRows(
   table: string,
