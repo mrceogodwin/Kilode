@@ -94,6 +94,7 @@ function KilodeApp() {
   const s = useMemo(() => makeStyles(C, isDark), [C, isDark]);
 
   const [tab, setTab] = useState("home");
+  const [homeSearchOpen, setHomeSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
@@ -286,7 +287,7 @@ function KilodeApp() {
     <View style={s.header}>
       <View style={s.headerLeft}>{title ? <Text style={s.headerTitle}>{title}</Text> : <KilodeWordmark size="small" />}</View>
       <View style={[s.headerRight, { gap: 6 }]}>
-        <TouchableOpacity style={s.iconBtn} onPress={() => show("Search from Home search bar.")} accessibilityLabel="Search"><Ionicons name="search-outline" size={18} color={C.text} /></TouchableOpacity>
+        <TouchableOpacity style={s.iconBtn} onPress={() => { if (tab !== "home") go("home"); setHomeSearchOpen((open) => !open); }} accessibilityRole="button" accessibilityLabel="Search"><Ionicons name="search-outline" size={18} color={C.text} /></TouchableOpacity>
         <TouchableOpacity style={s.iconBtn} onPress={() => go("activity")} accessibilityLabel="Notifications"><Ionicons name="notifications-outline" size={18} color={C.text} /></TouchableOpacity>
         <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")} accessibilityLabel="Theme"><Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color={C.text} /></TouchableOpacity>
         <TouchableOpacity style={s.avatar} onPress={() => go("myspace")} accessibilityLabel="Profile"><Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text></TouchableOpacity>
@@ -476,6 +477,7 @@ function KilodeApp() {
         onOpenItem={(system, item) => setSelectedDeskItem({ ...item, system })}
         onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
         onCompose={() => setComposeOpen(true)} onPlayTrack={playTrack} show={show}
+        searchOpen={homeSearchOpen} onCloseSearch={() => setHomeSearchOpen(false)}
       />
     );
   };
