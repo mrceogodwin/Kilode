@@ -49,7 +49,7 @@ export function KilodeTabBar({
       {LEFT.map(item)}
       <TouchableOpacity accessibilityLabel="Create" style={styles.plusWrap} onPress={onCreate} activeOpacity={0.9}>
         <View style={[styles.plus, { backgroundColor: accent }]}>
-          <Ionicons name="add" size={30} color="#111" />
+          <Ionicons name="add" size={30} color={isDark ? "#101512" : "#FFFFFF"} />
         </View>
       </TouchableOpacity>
       {RIGHT.map(item)}
