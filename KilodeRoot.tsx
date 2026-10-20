@@ -83,8 +83,8 @@ function KilodeApp() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
-  const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<any | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [displayName, setDisplayName] = useState("");
@@ -318,9 +318,11 @@ function KilodeApp() {
     return (
       <HomeScreen
         s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked}
+        events={LISTINGS.events || []} market={LISTINGS.market || []} jobs={LISTINGS.jobs || []}
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
         onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
+        onOpenJobs={() => go("jobs")}
         onOpenSystem={(id) => go(id)}
         onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
         onCompose={() => setComposeOpen(true)} onPlayTrack={(t) => setSelectedTrack(t)} show={show}
