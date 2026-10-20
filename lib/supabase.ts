@@ -179,6 +179,48 @@ export async function updateOwnProfile(
   return { ok: true, data: data as ProfileRow };
 }
 
+/** Read the signed-in user's follow state for an artist profile. */
+export async function isFollowingArtist(followerId: string, artistId: string): Promise<{ ok: boolean; following: boolean; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, following: false, error: "Artist following requires the Kilode backend." };
+  if (!followerId || !artistId) return { ok: false, following: false, error: "Sign in to follow artists." };
+  const { data, error } = await sb.from("artist_follows")
+    .select("artist_id")
+    .eq("follower_id", followerId)
+    .eq("artist_id", artistId)
+    .maybeSingle();
+  if (error) return { ok: false, following: false, error: error.message };
+  return { ok: true, following: Boolean(data) };
+}
+
+/** Toggle a persisted follow. RLS verifies the caller and that the target is an artist. */
+export async function toggleArtistFollow(followerId: string, artistId: string): Promise<{ ok: boolean; following?: boolean; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, error: "Artist following requires the Kilode backend." };
+  if (!followerId || !artistId) return { ok: false, error: "Sign in to follow artists." };
+  if (followerId === artistId) return { ok: false, error: "You cannot follow your own artist profile." };
+
+  const { data: existing, error: readError } = await sb.from("artist_follows")
+    .select("artist_id")
+    .eq("follower_id", followerId)
+    .eq("artist_id", artistId)
+    .maybeSingle();
+  if (readError) return { ok: false, error: readError.message };
+
+  if (existing) {
+    const { error } = await sb.from("artist_follows")
+      .delete()
+      .eq("follower_id", followerId)
+      .eq("artist_id", artistId);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, following: false };
+  }
+
+  const { error } = await sb.from("artist_follows").insert({ follower_id: followerId, artist_id: artistId });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, following: true };
+}
+
 /** Read-only catalogue queries used by the shared Home discovery feed and each system screen. */
 async function listRows(
   table: string,
