@@ -96,7 +96,7 @@ export async function listRecentArticles() {
   if (!r.ok) return r;
   return { ok: true, data: r.data.map((row: any) => ({
     id: row.id, title: row.title, kicker: row.kicker || "Media", body: row.body || "",
-    imageUrl: row.image_url || undefined, time: row.published_at || row.created_at,
+    imageUrl: row.image_url || undefined, time: row.published_at || row.created_at, createdAt: row.created_at,
     author: "Kilode Editorial", previewOnly: false,
   })) };
 }
@@ -115,7 +115,7 @@ export async function listRecentEvents() {
   if (!r.ok) return r;
   return { ok: true, data: r.data.map((row: any) => ({
     id: row.id, title: row.title, meta: [row.venue, row.starts_at].filter(Boolean).join(" · ") || "Details to be confirmed",
-    price: row.price_label || "See details", tag: "Event", category: "All", date: row.starts_at || undefined,
+    price: row.price_label || "See details", tag: "Event", category: "All", date: row.starts_at || undefined, createdAt: row.created_at,
     previewOnly: false,
   })) };
 }
@@ -125,7 +125,7 @@ export async function listRecentMarketListings() {
   if (!r.ok) return r;
   return { ok: true, data: r.data.map((row: any) => ({
     id: row.id, title: row.title, price: row.price_label || "Price on request",
-    category: row.category || "Other", previewOnly: false,
+    category: row.category || "Other", createdAt: row.created_at, previewOnly: false,
   })) };
 }
 
@@ -135,7 +135,7 @@ export async function listRecentJobs() {
   return { ok: true, data: r.data.map((row: any) => ({
     id: row.id, title: row.title, company: "Employer not specified",
     location: row.location_label || "Location not specified", type: "Not specified",
-    salary: row.salary_label || "Salary not specified", color: "#E6A94A", previewOnly: false,
+    salary: row.salary_label || "Salary not specified", color: "#E6A94A", createdAt: row.created_at, previewOnly: false,
   })) };
 }
 
