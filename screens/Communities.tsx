@@ -118,7 +118,7 @@ export function CommunitiesScreen({ s, C, onBack, show }: Props) {
               </View>
               <View style={{ padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.text, fontWeight: "800", fontSize: 16 }}>{g.name}</Text>
+                  <Text style={{ color: C.text, fontWeight: "600", fontSize: 15, letterSpacing: -0.1 }}>{g.name}</Text>
                   <Text style={{ color: C.text3, fontSize: 12, marginTop: 3 }}>{g.meta}</Text>
                 </View>
                 <TouchableOpacity
