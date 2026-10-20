@@ -75,32 +75,6 @@ export function SocialsScreen({
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
     >
-      {/* Header row */}
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingTop: 4,
-          paddingBottom: 8,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-                <TouchableOpacity
-          onPress={onCompose}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: C.accent,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons name="add" size={20} color="#111" />
-        </TouchableOpacity>
-      </View>
-
       {/* Stories — compact */}
       <ScrollView
         horizontal
