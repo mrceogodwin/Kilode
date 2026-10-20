@@ -143,7 +143,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { ok: false, error: "Supabase is not configured." };
       }
       try {
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (!handle.includes("@")) {
+          setLoading(false);
+          return { ok: false, error: "Use the email address associated with your Kilode account to sign in." };
+        }
+        const { data, error } = await sb.auth.signInWithPassword({ email: handle.trim(), password });
         if (error || !data.session?.user) {
           setLoading(false);
           return { ok: false, error: error?.message || "Those login details were not accepted." };
@@ -229,16 +233,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = useCallback(async (handle: string, password: string, kind: AccountKind, displayName?: string) => {
+  const signUp = useCallback(async (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => {
     const h = handle.replace(/^@/, "").trim();
     if (h.length < 3) return { ok: false, error: "Username needs 3+ letters or numbers." };
     if (password.length < 8) return { ok: false, error: "Password needs 8+ characters." };
     if (!kind) return { ok: false, error: "Choose an account type." };
 
     setLoading(true);
-    const email = `${h}@users.kilode.ng`;
+    const email = (emailAddress || "").trim().toLowerCase();
 
     if (getBackendMode() === "supabase") {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setLoading(false);
+        return { ok: false, error: "Enter a valid email address so you can verify and recover your account." };
+      }
       const sb = getSupabase();
       if (!sb) {
         setLoading(false);
