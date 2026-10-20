@@ -9,7 +9,7 @@
     "scheme": "kilode",
     "platforms": ["ios", "android", "web"],
     "splash": {
-      "backgroundColor": "#0D0D10",
+      "backgroundColor": "#101714",
       "resizeMode": "contain"
     },
     "ios": {
@@ -26,7 +26,7 @@
       "package": "ng.kilode.app",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#0B0B0F"
+        "backgroundColor": "#101714"
       }
     },
     "updates": {
