@@ -1,14 +1,11 @@
 /**
- * Kilode native API client → Kilode-v2 mobile bridge
+ * Kilode native data client.
  *
- * Live paths (when deployed on the v2 host):
- *   GET  /api/mobile/health
- *   GET  /api/mobile/takes
- *   POST /api/mobile/takes
- *   GET  /api/mobile/tracks
+ * Dedicated backend policy: do not use Kilode-v2 or kilode-nine as the app backend.
+ * When EXPO_PUBLIC_API_URL is unset, all calls stay offline/seed (source mock|error).
+ * Supabase client wiring is separate (see docs/BACKEND_DEDICATED.md).
  *
- * Production truth: if the network call fails, source is "error".
- * Seed data may fill the UI for layout only — never reported as "live".
+ * Seed data is for layout only — never reported as "live".
  */
 
 import { API_BASE, FORCE_MOCK } from "./config";
@@ -39,8 +36,14 @@ async function tryLiveJson<T>(
   fnName: string,
   token?: string
 ): Promise<ApiResult<T>> {
-  if (FORCE_MOCK) {
-    return { ok: true, data: fallback, source: "mock", fn: fnName };
+  if (FORCE_MOCK || !API_BASE) {
+    return {
+      ok: true,
+      data: fallback,
+      source: "mock",
+      fn: fnName,
+      error: !API_BASE ? "dedicated backend not configured" : undefined,
+    };
   }
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 7000);
@@ -93,22 +96,14 @@ function normalizeTakes(payload: any): any[] {
 
 export async function fetchTakes(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/takes", { takes: TAKES }, "listTakes");
+  if (r.source === "mock") {
+    return { ok: true, data: TAKES, source: "mock", fn: "listTakes", error: r.error };
+  }
   if (r.ok) {
     const list = normalizeTakes(r.data);
-    return {
-      ok: true,
-      data: list,
-      source: "live",
-      fn: "listTakes",
-    };
+    return { ok: true, data: list, source: "live", fn: "listTakes" };
   }
-  return {
-    ok: false,
-    data: [],
-    source: "error",
-    error: r.error,
-    fn: "listTakes",
-  };
+  return { ok: false, data: [], source: "error", error: r.error, fn: "listTakes" };
 }
 
 export function fetchRooms() {
@@ -121,6 +116,9 @@ export function fetchNews() {
 
 export async function fetchTracks(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/tracks", { tracks: TRACKS }, "listTracks");
+  if (r.source === "mock") {
+    return { ok: true, data: TRACKS, source: "mock", fn: "listTracks", error: r.error };
+  }
   if (r.ok) {
     const list = Array.isArray(r.data)
       ? r.data
@@ -129,13 +127,7 @@ export async function fetchTracks(): Promise<ApiResult<any[]>> {
         : [];
     return { ok: true, data: list, source: "live", fn: "listTracks" };
   }
-  return {
-    ok: false,
-    data: [],
-    source: "error",
-    error: r.error,
-    fn: "listTracks",
-  };
+  return { ok: false, data: [], source: "error", error: r.error, fn: "listTracks" };
 }
 
 export function fetchActivity(token?: string) {
@@ -147,6 +139,9 @@ export function fetchCarousel() {
 }
 
 export async function fetchHealth(): Promise<ApiResult<{ ok: boolean }>> {
+  if (!API_BASE) {
+    return { ok: false, data: { ok: false }, source: "mock", error: "dedicated backend not configured", fn: "health" };
+  }
   return tryLiveJson("/api/mobile/health", { ok: false }, "health");
 }
 
@@ -168,8 +163,8 @@ export async function postTake(
     tags: ["take"],
     factPct: 50,
   };
-  if (FORCE_MOCK) {
-    return { ok: true, data: local, source: "mock", fn: "saveTake" };
+  if (FORCE_MOCK || !API_BASE) {
+    return { ok: true, data: local, source: "mock", fn: "saveTake", error: !API_BASE ? "dedicated backend not configured" : undefined };
   }
   try {
     const res = await fetch(`${API_BASE}/api/mobile/takes`, {
@@ -214,8 +209,8 @@ export async function postComment(
   token?: string
 ): Promise<ApiResult<any>> {
   const local = { id: `c-${Date.now()}`, text, takeId };
-  if (FORCE_MOCK) {
-    return { ok: true, data: local, source: "mock", fn: "replyTake" };
+  if (FORCE_MOCK || !API_BASE) {
+    return { ok: true, data: local, source: "mock", fn: "replyTake", error: !API_BASE ? "dedicated backend not configured" : undefined };
   }
   try {
     const res = await fetch(
