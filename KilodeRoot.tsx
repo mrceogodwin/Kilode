@@ -5,7 +5,8 @@ import {
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
-import { AuthProvider, useAuth } from "./lib/auth";
+import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
+import { getBackendMode } from "./lib/config";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
@@ -102,7 +103,7 @@ function KilodeApp() {
       setTakes(TAKES); setRooms(ROOMS); setNews(NEWS); setTracks(TRACKS); setActivity(ACTIVITY);
       setSource("mock"); return "mock" as const;
     }
-    const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token)]);
+    const [t, r, n, tr, a] = await Promise.all([getBackendMode() === "supabase" ? loadSocialsFeed() : fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token)]);
     setTakes(Array.isArray(t.data) ? t.data : []); setRooms(Array.isArray(r.data) ? r.data : []);
     setNews(Array.isArray(n.data) ? n.data : []); setTracks(Array.isArray(tr.data) ? tr.data : []);
     setActivity(Array.isArray(a.data) ? a.data : []);
@@ -376,9 +377,22 @@ function KilodeApp() {
                 if (!session.token || session.token === "guest") { show("Sign in to publish."); return; }
                 setPosting(true);
                 try {
-                  const r = await postTake(composeText, session.token);
-                  if (r.ok && (r as any).data) { setTakes((p) => [(r as any).data, ...p]); setComposeText(""); setComposeOpen(false); go("socials"); show(r.source === "live" ? "Posted live" : "Added to preview"); }
-                  else show((r as any).error || "Could not post.");
+                  if (session.userId && getBackendMode() === "supabase") {
+                    const r = await publishSocialPost(composeText, session.userId);
+                    if (r.source === "live" && r.data) {
+                      setTakes((p) => [r.data, ...p]);
+                      setComposeText(""); setComposeOpen(false); go("socials"); show("Posted live");
+                    } else {
+                      show(r.error || "Could not publish to the live feed.");
+                    }
+                  } else {
+                    const r = await postTake(composeText, session.token);
+                    if (r.ok && (r as any).data) {
+                      setTakes((p) => [(r as any).data, ...p]);
+                      setComposeText(""); setComposeOpen(false); go("socials");
+                      show(r.source === "live" ? "Posted live" : "Added to preview");
+                    } else show((r as any).error || "Could not post.");
+                  }
                 } catch (e) { show(e instanceof Error ? e.message : "Could not post."); }
                 finally { setPosting(false); }
               }}>
