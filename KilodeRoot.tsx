@@ -42,6 +42,11 @@ const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap => SYSTEM_ICON[emoji] || "apps-outline";
 
+function isDeviceSession(session: { token?: string; localOnly?: boolean } | null | undefined) {
+  if (!session) return false;
+  return !!session.localOnly || session.token === "guest" || (session.token || "").startsWith("local:");
+}
+
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   useEffect(() => {
@@ -128,6 +133,8 @@ function KilodeApp() {
     return (<AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
   }
 
+  const deviceSession = isDeviceSession(session as any);
+
   const Header = ({ title }: { title?: string }) => (
     <View style={s.header}>
       <View style={s.headerLeft}>{title ? <Text style={s.headerTitle}>{title}</Text> : <KilodeWordmark size="small" />}</View>
@@ -144,7 +151,7 @@ function KilodeApp() {
   const eventList = (LISTINGS.events || []).map((e: any) => ({ id: e.id, title: e.title, meta: e.meta, price: e.price, tag: e.tag }));
 
   const body = () => {
-    if (settingsOpen) return <SettingsScreen s={s} C={C} isDark={isDark} sessionHandle={session.handle || ""} onBack={() => setSettingsOpen(false)} onDeleteAccount={async () => { await signOut(); return { ok: true }; }} show={show} />;
+    if (settingsOpen) return <SettingsScreen s={s} C={C} isDark={isDark} sessionHandle={session.handle || ""} sessionKind={session.kind || "member"} localOnly={deviceSession} onBack={() => setSettingsOpen(false)} onDeleteAccount={async () => { await signOut(); return { ok: true }; }} show={show} />;
     if (selectedPost) return (
       <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]}
         onBack={() => setSelectedPost(null)}
@@ -229,6 +236,13 @@ function KilodeApp() {
               <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>{displayName || session.name}</Text>
               <Text style={{ color: C.text2, marginTop: 2 }}>@{displayHandle || session.handle}</Text>
               <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700", marginTop: 4 }}>{String(kindLabel).replace(/_/g, " ")}</Text>
+              <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
+                <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: deviceSession ? "rgba(229,193,88,0.15)" : "rgba(34,197,94,0.15)" }}>
+                  <Text style={{ color: deviceSession ? C.accent : "#22C55E", fontSize: 10, fontWeight: "800" }}>
+                    {deviceSession ? "Device session" : "Live account"}
+                  </Text>
+                </View>
+              </View>
             </View>
             <TouchableOpacity style={{ borderWidth: 1, borderColor: C.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 }} onPress={() => show("Profile editor opens next.")}>
               <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>Edit</Text>
@@ -310,7 +324,7 @@ function KilodeApp() {
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
-      <ConnectionBanner source={source} isDark={isDark} />
+      <ConnectionBanner source={source} isDark={isDark} localOnly={deviceSession} />
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
         <View style={s.player}>
@@ -334,7 +348,7 @@ function KilodeApp() {
             <TextInput multiline autoFocus style={{ minHeight: 120, backgroundColor: C.input, borderRadius: 16, padding: 14, color: C.text, borderWidth: 1, borderColor: C.border, fontSize: 16, textAlignVertical: "top" }} placeholder="What's on your mind?" placeholderTextColor={C.text3} value={composeText} onChangeText={setComposeText} />
             <TouchableOpacity style={[s.primaryBtn, { marginTop: 14, opacity: composeText.trim() && !posting ? 1 : 0.5 }]} disabled={!composeText.trim() || posting}
               onPress={async () => {
-                if (!session.token) { show("Sign in to publish."); return; }
+                if (!session.token || session.token === "guest") { show("Sign in to publish."); return; }
                 setPosting(true);
                 try {
                   const r = await postTake(composeText, session.token);
