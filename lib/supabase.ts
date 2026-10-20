@@ -64,14 +64,23 @@ export async function listRecentPosts(limit = 40, userId?: string): Promise<{ ok
 
   const postIds = (data || []).map((row: any) => String(row.id));
   const likesByPost = new Map<string, number>();
+  const commentsByPost = new Map<string, number>();
   const likedByMe = new Set<string>();
   if (postIds.length) {
-    const likesResult = await sb.from("post_likes").select("post_id,user_id").in("post_id", postIds);
+    const [likesResult, repliesResult] = await Promise.all([
+      sb.from("post_likes").select("post_id,user_id").in("post_id", postIds),
+      sb.from("post_replies").select("post_id").in("post_id", postIds),
+    ]);
     if (likesResult.error) return { ok: false, data: [], error: likesResult.error.message };
+    if (repliesResult.error) return { ok: false, data: [], error: repliesResult.error.message };
     for (const like of likesResult.data || []) {
       const postId = String(like.post_id);
       likesByPost.set(postId, (likesByPost.get(postId) || 0) + 1);
       if (userId && String(like.user_id) === userId) likedByMe.add(postId);
+    }
+    for (const reply of repliesResult.data || []) {
+      const postId = String(reply.post_id);
+      commentsByPost.set(postId, (commentsByPost.get(postId) || 0) + 1);
     }
   }
 
@@ -86,10 +95,41 @@ export async function listRecentPosts(limit = 40, userId?: string): Promise<{ ok
     role: row.author?.kind || "member",
     likes: Math.max(0, (likesByPost.get(String(row.id)) || 0) - (likedByMe.has(String(row.id)) ? 1 : 0)),
     likedByMe: likedByMe.has(String(row.id)),
-    comments: 0,
+    comments: commentsByPost.get(String(row.id)) || 0,
     reposts: 0,
   }));
   return { ok: true, data: rows };
+}
+
+export async function listPostReplies(postId: string): Promise<{ ok: boolean; data: any[]; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, data: [], error: "Supabase is not configured." };
+  const { data, error } = await sb.from("post_replies")
+    .select("id, post_id, body, created_at, author:profiles(handle, display_name)")
+    .eq("post_id", postId).order("created_at", { ascending: true }).limit(200);
+  if (error) return { ok: false, data: [], error: error.message };
+  return { ok: true, data: (data || []).map((row: any) => ({
+    id: String(row.id), takeId: String(row.post_id), text: row.body,
+    name: row.author?.display_name || row.author?.handle || "Member",
+    time: row.created_at,
+  })) };
+}
+
+export async function createPostReply(postId: string, body: string, userId: string): Promise<{ ok: boolean; data?: any; error?: string }> {
+  const sb = getSupabase();
+  const normalizedBody = body.trim();
+  if (!sb) return { ok: false, error: "Supabase is not configured." };
+  if (!postId || !userId) return { ok: false, error: "Sign in to your live Kilode account to comment." };
+  if (!normalizedBody) return { ok: false, error: "Write a comment first." };
+  const { data, error } = await sb.from("post_replies")
+    .insert({ post_id: postId, author_id: userId, body: normalizedBody })
+    .select("id, post_id, body, created_at, author:profiles(handle, display_name)").single();
+  if (error) return { ok: false, error: error.message };
+  const author = Array.isArray(data.author) ? data.author[0] : data.author;
+  return { ok: true, data: {
+    id: String(data.id), takeId: String(data.post_id), text: data.body,
+    name: author?.display_name || author?.handle || "You", time: data.created_at,
+  } };
 }
 
 export async function togglePostLike(postId: string, userId: string): Promise<{ ok: boolean; liked?: boolean; error?: string }> {
