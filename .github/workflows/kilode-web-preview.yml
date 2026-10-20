@@ -39,3 +39,10 @@ jobs:
         run: npm run build:web
       - name: Verify exported entry point
         run: test -s dist/index.html
+      - name: Upload actual Expo web preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: kilode-expo-web-preview-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
