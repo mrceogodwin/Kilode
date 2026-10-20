@@ -18,8 +18,8 @@ EAS / TestFlight = native build readiness (separate).
 | Account kinds | `lib/accountKinds.ts` + client `lib/permissions.ts` |
 | Seed data | `data.ts` — layout only when offline |
 | Moderation | `lib/moderation.ts` — largely local AsyncStorage |
-| Schema (new) | `supabase/migrations/001_kilode_core.sql` |
-| Supabase JS SDK | **Not** in `package.json` yet |
+| Schema | `supabase/migrations/001_kilode_core.sql` — includes posts/catalogue tables, RLS and Realtime publication setup |
+| Supabase JS SDK | Installed in `package.json`; `lib/supabase.ts` provides the client and queries |
 | Super Admin UI | **Missing** in native |
 
 ---
