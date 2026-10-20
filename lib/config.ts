@@ -12,7 +12,7 @@ const envName =
 
 /** Dedicated Kilode API host; empty until explicitly configured. */
 export const API_BASE = (envUrl && envUrl.trim())
-  ? envUrl.trim().replace(/\\/+$/, "")
+  ? envUrl.trim().replace(/\/+$/, "")
   : "";
 
 /** development | preview | production */
