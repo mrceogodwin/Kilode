@@ -225,8 +225,18 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               ...catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)) && !savedTrackIds[String(track.id ?? track.title)]),
             ].filter((track: any, index: number, list: any[]) => list.findIndex((other: any) => String(other.id ?? other.title) === String(track.id ?? track.title)) === index)
           : destination === "Top 100"
-            ? [...catalogueTracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0))
-            : catalogueTracks;
+            ? [...catalogueTracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, 100)
+            : destination === "The Discovery List"
+              ? catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)))
+              : destination === "New & Noted"
+                ? [...catalogueTracks].sort((a: any, b: any) => new Date(b.release_date ?? b.created_at ?? 0).getTime() - new Date(a.release_date ?? a.created_at ?? 0).getTime())
+                : destination === "Afrobeats Essentials"
+                  ? catalogueTracks.filter((track: any) => String(track.genre ?? track.genres ?? "").toLowerCase().includes("afro"))
+                  : destination === "Focus Mode"
+                    ? catalogueTracks.filter((track: any) => /r&b|ambient|acoustic|chill|lo.?fi|instrumental/i.test(String(track.genre ?? track.genres ?? track.mood ?? "")))
+                    : destination === "Naija Now"
+                      ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
+                      : catalogueTracks;
   const hasVerifiedChartSignals = destination === "Top 100" && destinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
   const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
 
