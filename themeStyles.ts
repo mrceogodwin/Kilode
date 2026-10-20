@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-/** Kilode visual system — charcoal surfaces, warm white typography, amber brand accent with orange, yellow and coral details. */
+/** Kilode visual system — charcoal and warm-white surfaces with one restrained green brand accent. */
 export const palettes = {
   dark: {
     bg: "#0B0C0F",
@@ -11,8 +11,8 @@ export const palettes = {
     text: "#F4F5F0",
     text2: "#A7ABB4",
     text3: "#777D88",
-    accent: "#D8B36A",
-    accentSoft: "#2A2418",
+    accent: "#91C7A0",
+    accentSoft: "#1B2B22",
     danger: "#F43F5E",
     success: "#58B88A",
     dock: "#0B0C0F",
@@ -26,8 +26,8 @@ export const palettes = {
     text: "#211F1A",
     text2: "#716A5D",
     text3: "#938A7B",
-    accent: "#A87D3F",
-    accentSoft: "#F5EAD4",
+    accent: "#347A4F",
+    accentSoft: "#E4F0E7",
     danger: "#E11D48",
     success: "#267548",
     dock: "#F8F6F0",
