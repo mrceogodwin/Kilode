@@ -32,7 +32,7 @@ EAS / TestFlight = native build readiness (separate).
 4. Configure Storage buckets for avatars/media with RLS.
 5. Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`; the SDK and thin client are already in the repo.
 6. Verify profile bootstrap, Socials post creation, and feed reads against a real Supabase user. The shared client now includes read queries for Media, Music, Events, Market and Jobs.
-7. Build the missing create forms and write handlers for Media, Music, Events, Market and Jobs, then enforce account-kind permissions server-side. Use Edge Functions/RPC for privileged moderation and admin operations.
+7. Build and wire the missing create forms and write handlers. Migration 003 enforces writer-only article inserts, artist-only track inserts, vendor-only market listings, and job_poster-only job posts at the database layer; Events stays read-only until its publisher role is decided. Use Edge Functions/RPC for privileged moderation and admin operations.
 8. Super Admin: `profiles.role = super_admin` set **only** by project owner in SQL — never via public signup.
 9. Migration 003 now enforces Market and Jobs write roles server-side. Other account-type capabilities still need database/Edge Function policies before those systems accept writes.
 
