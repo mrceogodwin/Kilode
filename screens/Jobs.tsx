@@ -101,7 +101,6 @@ export function JobsScreen({ s, C, onBack, show, accountKind }: Props) {
         <TouchableOpacity onPress={onBack}>
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Jobs</Text>
         <TouchableOpacity
           onPress={() =>
             canPost
