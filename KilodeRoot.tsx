@@ -323,20 +323,27 @@ function KilodeApp() {
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
       if (requestId !== playbackRequestIdRef.current) return;
       const created = await Audio.Sound.createAsync({ uri: track.previewUrl }, { shouldPlay: true, volume: 1, progressUpdateIntervalMillis: 250 }, status => {
-        if (requestId === playbackRequestIdRef.current && status.isLoaded) {
-          setIsPlaying(status.isPlaying);
-          setPlaybackProgress(status.durationMillis ? status.positionMillis / status.durationMillis : 0);
-          if (status.didJustFinish) {
-            setIsPlaying(false);
-            setPlaybackProgress(0);
-            const queue = playbackQueueRef.current;
-            let nextIndex = playbackQueueIndexRef.current + 1;
-            // A catalogue item without a playable preview must not stall the queue.
-            while (nextIndex < queue.length && !queue[nextIndex]?.previewUrl) nextIndex += 1;
-            if (nextIndex < queue.length) {
-              playbackQueueIndexRef.current = nextIndex;
-              void playTrackRef.current?.(queue[nextIndex], true);
-            }
+        if (requestId !== playbackRequestIdRef.current) return;
+        if (!status.isLoaded) {
+          // Expo AV can report a failed/unloaded status after the sound was created.
+          // Clear stale playing/progress UI instead of leaving the mini-player "playing".
+          setIsPlaying(false);
+          setPlaybackProgress(0);
+          if (status.error) show("Audio preview stopped unexpectedly. Try playing the track again.");
+          return;
+        }
+        setIsPlaying(status.isPlaying);
+        setPlaybackProgress(status.durationMillis ? status.positionMillis / status.durationMillis : 0);
+        if (status.didJustFinish) {
+          setIsPlaying(false);
+          setPlaybackProgress(0);
+          const queue = playbackQueueRef.current;
+          let nextIndex = playbackQueueIndexRef.current + 1;
+          // A catalogue item without a playable preview must not stall the queue.
+          while (nextIndex < queue.length && !queue[nextIndex]?.previewUrl) nextIndex += 1;
+          if (nextIndex < queue.length) {
+            playbackQueueIndexRef.current = nextIndex;
+            void playTrackRef.current?.(queue[nextIndex], true);
           }
         }
       });
