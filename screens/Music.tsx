@@ -275,14 +275,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             {loadingSupportPages ? <ActivityIndicator size="small" color={C.accent} /> : null}
           </View>
           <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 10 }}>
-            Let members support you voluntarily. Kilode does not pay for streams. Payment checkout is not connected yet.
+            Members can support artists voluntarily. Kilode does not pay for streams. New pages stay private drafts until Kilode review; payment checkout is not connected yet.
           </Text>
           {supportPages.map((page) => (
             <View key={page.id} style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, marginBottom: 8, borderRadius: 13, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
               <Ionicons name="heart-outline" size={20} color={C.accent} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: C.text, fontSize: 13, fontWeight: "700" }} numberOfLines={1}>{page.title}</Text>
-                <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{page.currency} · {page.status === "active" ? "Visible to members" : page.status}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{page.currency} · {page.status === "active" ? "Visible to members" : page.status === "draft" ? "Private · awaiting review" : page.status}</Text>
               </View>
               <Ionicons name="checkmark-circle-outline" size={18} color={C.accent} />
             </View>
@@ -297,7 +297,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                 setCreatingSupportPage(false);
                 if (!result.ok) { show(result.error || "Could not create your support page."); return; }
                 setSupportPages((pages) => [result.data, ...pages]);
-                show("Your artist support page is created. Member payments are not enabled yet.");
+                show("Private support page draft created. It will not be visible to members until reviewed; payments are not enabled yet.");
               }}
               style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.border, opacity: creatingSupportPage ? 0.6 : 1 }}
             >
