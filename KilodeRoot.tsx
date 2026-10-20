@@ -421,7 +421,7 @@ function KilodeApp() {
             <Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text>
             <Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}{nowPlaying.previewKind === "sample" ? " · sample audio" : ""}</Text>
             <View style={{ height: 2, backgroundColor: C.border, borderRadius: 2, marginTop: 5, overflow: "hidden" }}>
-              <View style={{ height: 2, width: String(Math.round(playbackProgress * 100)) + "%", backgroundColor: C.accent }} />
+              <View style={{ height: 2, width: (String(Math.round(playbackProgress * 100)) + "%") as `${number}%`, backgroundColor: C.accent }} />
             </View>
             {isPlaying ? <View style={{ flexDirection: "row", gap: 3, marginTop: 4, alignItems: "flex-end" }}><View style={{ width: 3, height: 6, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 11, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 8, borderRadius: 2, backgroundColor: C.accent }} /><View style={{ width: 3, height: 13, borderRadius: 2, backgroundColor: C.accent }} /></View> : null}
           </View>
