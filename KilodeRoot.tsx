@@ -170,10 +170,14 @@ function KilodeApp() {
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const navigateBack = useCallback(() => {
+    // Close transient UI before changing the underlying destination.
+    if (commentTake) { setCommentTake(null); return; }
     if (composeOpen) { setComposeOpen(false); return; }
     if (createOpen) { setCreateOpen(false); return; }
     if (moreOpen) { setMoreOpen(false); return; }
     if (settingsOpen) { setSettingsOpen(false); return; }
+    if (profileEditorOpen) { setProfileEditorOpen(false); return; }
+    if (homeSearchOpen) { setHomeSearchOpen(false); return; }
     if (selectedPost) { setSelectedPost(null); return; }
     if (selectedProfile) { setSelectedProfile(null); return; }
     if (selectedTrack) { setSelectedTrack(null); return; }
@@ -185,7 +189,7 @@ function KilodeApp() {
       navigationForwardRef.current.unshift(history.pop()!);
       setTab(history[history.length - 1]);
     }
-  }, [composeOpen, createOpen, moreOpen, settingsOpen, selectedPost, selectedProfile, selectedTrack, selectedArtist, selectedDeskItem, selectedArticleId]);
+  }, [commentTake, composeOpen, createOpen, moreOpen, settingsOpen, profileEditorOpen, homeSearchOpen, selectedPost, selectedProfile, selectedTrack, selectedArtist, selectedDeskItem, selectedArticleId]);
   const navigateForward = useCallback(() => {
     const next = navigationForwardRef.current.shift();
     if (next) {
