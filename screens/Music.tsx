@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { createArtistSupportPage, createMusicReleaseDraft, isFollowingArtist, listArtistProfiles, listOwnMusicReleases, listOwnSupportPages, submitMusicReleaseForReview, toggleArtistFollow, uploadMusicReleaseAudio } from "../lib/supabase";
@@ -49,6 +50,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [savedTrackIds, setSavedTrackIds] = useState<Record<string, boolean>>({});
   const [recentTrackIds, setRecentTrackIds] = useState<string[]>([]);
+  const [libraryReady, setLibraryReady] = useState(false);
+  const libraryStorageKey = `kilode.music.library.v1.${userId || "guest"}`;
+
 
   const [artistProfiles, setArtistProfiles] = useState<any[]>([]);
   const [loadingArtists, setLoadingArtists] = useState(false);
@@ -70,6 +74,36 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [creatingSupportPage, setCreatingSupportPage] = useState(false);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
+
+  useEffect(() => {
+    let active = true;
+    setLibraryReady(false);
+    AsyncStorage.getItem(libraryStorageKey).then((raw) => {
+      if (!active) return;
+      if (raw) {
+        try {
+          const saved = JSON.parse(raw);
+          setSavedTrackIds(saved.savedTrackIds && typeof saved.savedTrackIds === "object" ? saved.savedTrackIds : {});
+          setRecentTrackIds(Array.isArray(saved.recentTrackIds) ? saved.recentTrackIds.filter((id: unknown) => typeof id === "string").slice(0, 30) : []);
+        } catch {
+          setSavedTrackIds({});
+          setRecentTrackIds([]);
+        }
+      } else {
+        setSavedTrackIds({});
+        setRecentTrackIds([]);
+      }
+      setLibraryReady(true);
+    }).catch(() => setLibraryReady(true));
+    return () => { active = false; };
+  }, [libraryStorageKey]);
+
+  useEffect(() => {
+    if (!libraryReady) return;
+    AsyncStorage.setItem(libraryStorageKey, JSON.stringify({ savedTrackIds, recentTrackIds })).catch(() => {
+      show("Couldn't save your Music library on this device.");
+    });
+  }, [libraryReady, libraryStorageKey, savedTrackIds, recentTrackIds]);
 
   useEffect(() => {
     let active = true;
@@ -248,7 +282,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                       <Text numberOfLines={1} style={{ color: C.text, fontSize: 13, fontWeight: "700" }}>{title}</Text>
                       <Text numberOfLines={1} style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>{artistName}{track.album ? " · " + track.album : ""}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setSavedTrackIds((current) => ({ ...current, [id]: !current[id] }))} accessibilityRole="button" accessibilityLabel={savedTrackIds[id] ? "Remove saved track" : "Save track"} style={{ padding: 7 }}>
+                    <TouchableOpacity onPress={() => setSavedTrackIds((current) => { const next = { ...current, [id]: !current[id] }; if (!next[id]) delete next[id]; return next; })} accessibilityRole="button" accessibilityLabel={savedTrackIds[id] ? "Remove saved track" : "Save track"} style={{ padding: 7 }}>
                       <Ionicons name={savedTrackIds[id] ? "heart" : "heart-outline"} size={19} color={savedTrackIds[id] ? C.accent : C.text3} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => openTrack(track)} accessibilityRole="button" accessibilityLabel={"Play " + title} style={{ padding: 4 }}>
@@ -491,6 +525,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         {[
           { label: "Search", icon: "search-outline" },
           { label: "Releases", icon: "albums-outline" },
+          { label: "Albums", icon: "disc-outline" },
           { label: "Playlists", icon: "list-outline" },
           { label: "Genres", icon: "grid-outline" },
           { label: "Library", icon: "heart-outline" },
