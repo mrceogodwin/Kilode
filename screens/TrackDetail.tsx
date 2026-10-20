@@ -53,6 +53,7 @@ export function TrackDetailScreen({
         <Ionicons name="musical-notes" size={48} color="rgba(255,255,255,0.9)" />
       </View>
 
+      {track.previewKind === "sample" ? <Text style={{ color: C.accent, fontSize: 10, fontWeight: "700", letterSpacing: 0.7, marginBottom: 6 }}>SAMPLE AUDIO · PREVIEW ONLY</Text> : null}
       <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.4 }}>{track.title}</Text>
       <TouchableOpacity onPress={() => onOpenArtist(track.artist)} accessibilityRole="button">
         <Text style={{ color: C.accent, fontSize: 15, fontWeight: "700", marginTop: 6 }}>{track.artist}</Text>
@@ -64,11 +65,11 @@ export function TrackDetailScreen({
           style={[s.primaryBtn, { flex: 1 }]}
           onPress={() => {
             onPlay(track);
-            show(`Selected ${track.title}. Streaming is not connected yet.`);
+            show(track.previewUrl ? "Playing sample audio for " + track.title : "No audio preview attached to " + track.title + " yet.");
           }}
           accessibilityRole="button"
         >
-          <Text style={s.primaryBtnText}>Select track</Text>
+          <Text style={s.primaryBtnText}>{track.previewUrl ? "Play preview" : "Select track"}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[s.ghostBtn, { paddingHorizontal: 16 }]}
@@ -113,7 +114,7 @@ export function TrackDetailScreen({
         ))}
 
       <Text style={[s.meta, { marginTop: 16, marginBottom: 24 }]}>
-        Audio streams and charts require the live music catalogue API.
+        {track.previewKind === "sample" ? "This is sample audio for checking the player UI, not the official track master. Real releases will use artist-authorised audio." : "Official audio streams and charts require the live music catalogue API."}
       </Text>
     </ScrollView>
   );
