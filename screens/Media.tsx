@@ -34,14 +34,6 @@ type Props = {
   show: (m: string) => void;
 };
 
-const TRENDING = [
-  "Lagos nightlife rules",
-  "Naira tech raises",
-  "Afrobeats chart shake",
-  "Island traffic fix",
-  "Cinema Friday vote",
-];
-
 const CATEGORIES = ["All", "News", "Culture", "Business", "Sports", "Tech"];
 
 /** Portrait ad placements (editorial, not real AdSense SDK). */
