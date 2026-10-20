@@ -28,12 +28,25 @@ const FEATURED = {
   imageUrl: "https://images.unsplash.com/photo-1516280440614-6697288d5b28?w=800&q=80",
 };
 
-const CHARTS = [
-  { rank: 1, title: "Calm Down", artist: "Rema", color: "#D97706" },
-  { rank: 2, title: "Beautiful Things", artist: "Burna Boy", color: "#4B5563" },
-  { rank: 3, title: "Lonely At The Top", artist: "Asake", color: "#B45309" },
-  { rank: 4, title: "Ojuelegba Nights", artist: "Simi Sola", color: "#7C3AED" },
-  { rank: 5, title: "Water & Light", artist: "Ayo Blue", color: "#2563EB" },
+const PLAYLIST_CATEGORIES = [
+  { id: "all", label: "All" },
+  { id: "tailored", label: "Tailored to you" },
+  { id: "naija", label: "Naija sounds" },
+  { id: "mood", label: "Moods" },
+  { id: "genre", label: "By genre" },
+  { id: "new", label: "New & rising" },
+  { id: "focus", label: "Focus & chill" },
+  { id: "community", label: "Kilode community" },
+];
+
+const EDITORIAL_PLAYLISTS = [
+  { title: "Tailored to You", subtitle: "Shaped by your listening on this device", icon: "sparkles-outline", category: "tailored" },
+  { title: "Naija Now", subtitle: "Nigerian sounds from the available catalogue", icon: "headset-outline", category: "naija" },
+  { title: "Late Night Rotation", subtitle: "A calmer after-hours selection", icon: "moon-outline", category: "mood" },
+  { title: "New & Noted", subtitle: "Recent releases when catalogue dates are available", icon: "albums-outline", category: "new" },
+  { title: "The Discovery List", subtitle: "Find artists and tracks you have not played yet", icon: "compass-outline", category: "community" },
+  { title: "Focus Mode", subtitle: "A lighter background-listening selection", icon: "headset-outline", category: "focus" },
+  { title: "Afrobeats Essentials", subtitle: "Explore tracks tagged Afrobeats", icon: "musical-notes-outline", category: "genre" },
 ];
 
 const GENRES = [
@@ -48,6 +61,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [destination, setDestination] = useState<string | null>(null);
   const [musicQuery, setMusicQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [playlistCategory, setPlaylistCategory] = useState("all");
   const [savedTrackIds, setSavedTrackIds] = useState<Record<string, boolean>>({});
   const [recentTrackIds, setRecentTrackIds] = useState<string[]>([]);
   const [loadedLibraryStorageKey, setLoadedLibraryStorageKey] = useState<string | null>(null);
@@ -204,7 +218,17 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       ? recentTrackIds.map((id) => catalogueTracks.find((track: any) => String(track.id ?? track.title) === id)).filter(Boolean)
       : destination === "Albums" || destination === "Releases"
         ? catalogueTracks.filter((track: any) => track.album || track.release_type)
-        : catalogueTracks;
+        : destination === "Tailored to You"
+          ? [
+              ...recentTrackIds.map((id) => catalogueTracks.find((track: any) => String(track.id ?? track.title) === id)).filter(Boolean),
+              ...catalogueTracks.filter((track: any) => savedTrackIds[String(track.id ?? track.title)]),
+              ...catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)) && !savedTrackIds[String(track.id ?? track.title)]),
+            ].filter((track: any, index: number, list: any[]) => list.findIndex((other: any) => String(other.id ?? other.title) === String(track.id ?? track.title)) === index)
+          : destination === "Top 100"
+            ? [...catalogueTracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0))
+            : catalogueTracks;
+  const hasVerifiedChartSignals = destination === "Top 100" && destinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
+  const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
 
 
   return (
@@ -235,20 +259,24 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             </View>
           ) : null}
           {destination === "Playlists" ? (
-            <View style={{ gap: 10, marginBottom: 18 }}>
-              {[
-                { title: "Naija Now", subtitle: "Contemporary Nigerian sounds", icon: "headset-outline" },
-                { title: "Late Night Rotation", subtitle: "Smooth tracks for after hours", icon: "moon-outline" },
-                { title: "New & Noted", subtitle: "Recently added music", icon: "sparkles-outline" },
-                { title: "The Discovery List", subtitle: "Find your next favourite", icon: "compass-outline" },
-              ].map((playlist) => (
-                <TouchableOpacity key={playlist.title} onPress={() => { setDestination("Playlist · " + playlist.title); setMusicQuery(""); }} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, backgroundColor: C.card, borderRadius: 13, borderWidth: 1, borderColor: C.border }}>
-                  <View style={{ width: 52, height: 52, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name={playlist.icon as any} size={24} color={C.accent} /></View>
-                  <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{playlist.title}</Text><Text style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{playlist.subtitle}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>Curated collection · catalogue-dependent</Text></View>
-                  <Ionicons name="chevron-forward" size={18} color={C.text3} />
-                </TouchableOpacity>
-              ))}
-            </View>
+            <>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 14 }}>
+                {PLAYLIST_CATEGORIES.map((category) => (
+                  <TouchableOpacity key={category.id} onPress={() => setPlaylistCategory(category.id)} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: playlistCategory === category.id ? C.accent : C.card, borderWidth: 1, borderColor: playlistCategory === category.id ? C.accent : C.border }}>
+                    <Text style={{ color: playlistCategory === category.id ? "#111" : C.text2, fontSize: 11, fontWeight: "700" }}>{category.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <View style={{ gap: 10, marginBottom: 18 }}>
+                {playlistItems.map((playlist) => (
+                  <TouchableOpacity key={playlist.title} onPress={() => { setDestination(playlist.title); setMusicQuery(""); }} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, backgroundColor: C.card, borderRadius: 13, borderWidth: 1, borderColor: C.border }}>
+                    <View style={{ width: 52, height: 52, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name={playlist.icon as any} size={24} color={C.accent} /></View>
+                    <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{playlist.title}</Text><Text style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{playlist.subtitle}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>{playlist.category === "tailored" ? "Uses your on-device listening history and saved tracks" : "Editorial category · live catalogue dependent"}</Text></View>
+                    <Ionicons name="chevron-forward" size={18} color={C.text3} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
           ) : null}
           {destination === "Library" ? (
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 14 }}>Your saved tracks on this device are shown here. Account-synced library and purchases require the connected Music backend.</Text>
@@ -261,8 +289,17 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <TouchableOpacity onPress={() => show(canList ? "Artist campaign setup requires the trusted Push Link payment and activation workflow." : "Push Link campaign creation is available to eligible artist accounts.")} style={{ alignSelf: "flex-start", marginTop: 13, backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 }}><Text style={{ color: "#111", fontWeight: "800", fontSize: 12 }}>Explore promotion</Text></TouchableOpacity>
             </View>
           ) : null}
-          {destination?.startsWith("Playlist · ") ? (
-            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>This is a curated playlist concept. Tracks below come from the currently available catalogue; playlist persistence and editorial publishing need backend support.</Text>
+          {destination === "Top 100" ? (
+            <View style={{ backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 14 }}>
+              <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>Kilode Top 100</Text>
+              <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 4 }}>{hasVerifiedChartSignals ? "Ranked using available play-count signals. Official chart rules and verified listening aggregation still need backend enforcement." : "The Top 100 screen is in place. Until verified member listening data is connected, this is a catalogue preview—not an official popularity ranking."}</Text>
+            </View>
+          ) : null}
+          {destination === "Tailored to You" ? (
+            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>Personalised locally from tracks you recently played and saved on this device. Cross-member trends and account-synced recommendations need privacy-safe, aggregated backend signals.</Text>
+          ) : null}
+          {destination?.startsWith("Playlist · ") || EDITORIAL_PLAYLISTS.some((playlist) => playlist.title === destination) ? (
+            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>Playlist collection preview. Track selection uses the available catalogue; saved playlists, editorial publishing and member-wide trends require backend support.</Text>
           ) : null}
           {destination !== "Genres" && destination !== "Playlists" && destination !== "Push Link" ? (
             <>
@@ -524,6 +561,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 14, gap: 8 }}>
         {[
           { label: "Search", icon: "search-outline" },
+          { label: "Top 100", icon: "podium-outline" },
           { label: "Releases", icon: "albums-outline" },
           { label: "Albums", icon: "disc-outline" },
           { label: "Playlists", icon: "list-outline" },
@@ -572,41 +610,35 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
       {(tab === "Home" || tab === "Charts" || tab === "Discover") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Popular picks" : "Chart preview"}</Text>
-          {tab !== "Charts" ? <TouchableOpacity onPress={() => setTab("Charts")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text></TouchableOpacity> : null}
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Picked for discovery" : "Kilode Top 100"}</Text>
+          <TouchableOpacity onPress={() => openMusicDestination("Top 100")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Open Top 100</Text></TouchableOpacity>
         </View>
       ) : null}
 
-      {(tab === "Charts" || tab === "Home" ? CHARTS : tab === "Discover" ? CHARTS.slice(0, 3) : []).map((row) => {
-        const payload = { id: `c${row.rank}`, title: row.title, artist: row.artist, color: row.color };
+      {(tab === "Charts" || tab === "Home" || tab === "Discover" ? [...tracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, tab === "Charts" ? 100 : 5) : []).map((track: any, index: number) => {
+        const id = String(track.id ?? track.title);
+        const title = String(track.title || "Untitled track");
+        const artistName = String(track.artist || track.artist_name || "Unknown artist");
+        const artwork = track.imageUrl || track.cover_url || track.artwork_url;
         return (
-          <TouchableOpacity
-            key={row.rank}
-            onPress={() => openTrack(payload)}
-            style={{
-              marginHorizontal: 16,
-              marginTop: 10,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              paddingVertical: 7,
-              paddingHorizontal: 2,
-              borderBottomWidth: 1,
-              borderBottomColor: C.border,
-            }}
-          >
-            <Text style={{ color: C.text3, fontWeight: "800", width: 20 }}>{row.rank}</Text>
-            <View style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: row.color, alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="musical-notes" size={18} color="#fff" />
-            </View>
+          <TouchableOpacity key={id} onPress={() => openTrack(track)} style={{ marginHorizontal: 16, marginTop: 10, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 7, paddingHorizontal: 2, borderBottomWidth: 1, borderBottomColor: C.border }}>
+            <Text style={{ color: C.text3, fontWeight: "800", width: 20 }}>{index + 1}</Text>
+            {artwork ? <Image source={{ uri: artwork }} style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: C.elevated }} /> : <View style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="musical-notes" size={18} color={C.text3} /></View>}
             <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontWeight: "600", fontSize: 13, letterSpacing: -0.1 }}>{row.title}</Text>
-              <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{row.artist}</Text>
+              <Text numberOfLines={1} style={{ color: C.text, fontWeight: "600", fontSize: 13, letterSpacing: -0.1 }}>{title}</Text>
+              <Text numberOfLines={1} style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{artistName}</Text>
             </View>
             <Ionicons name="play-circle" size={28} color={C.accent} />
           </TouchableOpacity>
         );
       })}
+      {(tab === "Home" || tab === "Discover") ? (
+        <TouchableOpacity onPress={() => openMusicDestination("Tailored to You")} style={{ marginHorizontal: 16, marginTop: 18, padding: 14, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="sparkles-outline" size={22} color={C.accent} /></View>
+          <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>Tailored to You</Text><Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>Adapts to what you save and play on this device</Text></View>
+          <Ionicons name="chevron-forward" size={18} color={C.text3} />
+        </TouchableOpacity>
+      ) : null}
 
       {(tab === "Home" || tab === "Discover") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
@@ -616,6 +648,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       ) : null}
       {(tab === "Home" || tab === "Discover") ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 10 }}>
         {[
+          { title: "Kilode Top 100", detail: "Kilode's own chart destination", icon: "podium-outline", target: "Top 100" },
+          { title: "Playlists for every mood", detail: "Browse collections and categories", icon: "list-outline", target: "Playlists" },
           { title: "New Releases", detail: "Fresh singles, EPs & albums", icon: "disc-outline", target: "Releases" },
           { title: "Your Library", detail: "Saved music in one place", icon: "heart-outline", target: "Library" },
           { title: "Recently Played", detail: "Pick up where you left off", icon: "time-outline", target: "Recently Played" },
