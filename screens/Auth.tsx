@@ -21,7 +21,6 @@ type Props = {
   onSignIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
   onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
   onGuest: () => void;
-  onGoogle: () => void;
   show: (m: string) => void;
 };
 
@@ -61,7 +60,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
       <View style={StyleSheet.absoluteFill}>
         <Animated.View style={[styles.bgPlate, { transform: [{ scale }] }]}>
           <View style={styles.warmBlob} />
-          <View style={styles.blueBlob} />
+          <View style={styles.goldBlob} />
           <View style={styles.amberBlob} />
         </Animated.View>
         <View style={styles.veil} />
@@ -83,12 +82,6 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
             <Text style={styles.hint}>
               {mode === "in" ? "Sign in to continue" : "Choose account type · username + password"}
             </Text>
-
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
 
             {mode === "up" ? (
               <>
@@ -191,18 +184,18 @@ const styles = StyleSheet.create({
     width: 320,
     height: 320,
     borderRadius: 160,
-    backgroundColor: "#c27a2e",
-    opacity: 0.28,
+    backgroundColor: "#D4AF37",
+    opacity: 0.16,
   },
-  blueBlob: {
+  goldBlob: {
     position: "absolute",
     top: 160,
     right: -80,
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: "#D4AF37",
-    opacity: 0.08,
+    backgroundColor: "#E5C158",
+    opacity: 0.10,
   },
   amberBlob: {
     position: "absolute",
@@ -211,8 +204,8 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: "#ea580c",
-    opacity: 0.12,
+    backgroundColor: "#8F6D24",
+    opacity: 0.10,
   },
   veil: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,10,12,0.5)" },
   content: {
@@ -246,20 +239,6 @@ const styles = StyleSheet.create({
   tabTextOn: { color: "#F4F4F5" },
   title: { fontSize: 20, fontWeight: "700", color: "#F4F4F5", letterSpacing: -0.3 },
   hint: { fontSize: 13, color: "#A1A1AA", marginTop: 4, marginBottom: 16, lineHeight: 18 },
-  google: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    paddingVertical: 14,
-    marginBottom: 12,
-  },
-  googleG: { fontSize: 16, fontWeight: "800", color: "#4285F4", marginRight: 10 },
-  googleText: { color: "#0A0A0C", fontWeight: "700", fontSize: 14 },
-  dividerRow: { flexDirection: "row", alignItems: "center", marginVertical: 12 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "#2A2A30" },
-  dividerText: { fontSize: 12, fontWeight: "600", color: "#52525B", marginHorizontal: 12 },
   kindLabel: { fontSize: 12, fontWeight: "700", color: "#A1A1AA", marginBottom: 8 },
   kindGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
   kindCell: {
