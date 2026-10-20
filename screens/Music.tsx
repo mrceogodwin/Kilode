@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { createMusicReleaseDraft, listOwnMusicReleases, submitMusicReleaseForReview, uploadMusicReleaseAudio } from "../lib/supabase";
+import { createArtistSupportPage, createMusicReleaseDraft, listOwnMusicReleases, listOwnSupportPages, submitMusicReleaseForReview, uploadMusicReleaseAudio } from "../lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { can } from "../lib/permissions";
@@ -55,6 +55,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [loadingReleases, setLoadingReleases] = useState(false);
   const [submittingReleaseId, setSubmittingReleaseId] = useState<string | null>(null);
   const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
+  const [supportPages, setSupportPages] = useState<any[]>([]);
+  const [loadingSupportPages, setLoadingSupportPages] = useState(false);
+  const [creatingSupportPage, setCreatingSupportPage] = useState(false);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
 
@@ -75,6 +78,24 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     });
     return () => { active = false; };
   }, [userId, canList, releaseRefreshKey]);
+
+  useEffect(() => {
+    let active = true;
+    if (!userId || !canList) {
+      setSupportPages([]);
+      setLoadingSupportPages(false);
+      return () => { active = false; };
+    }
+    setLoadingSupportPages(true);
+    listOwnSupportPages(userId).then((result) => {
+      if (!active) return;
+      setSupportPages(result.ok ? result.data : []);
+      setLoadingSupportPages(false);
+    }).catch(() => {
+      if (active) { setSupportPages([]); setLoadingSupportPages(false); }
+    });
+    return () => { active = false; };
+  }, [userId, canList]);
 
   const openTrack = (t: any) => {
     if (onOpenTrack) onOpenTrack(t);
@@ -244,6 +265,46 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           )) : (
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{loadingReleases ? "Loading your releases…" : "Your private drafts and submissions will appear here."}</Text>
           )}
+        </View>
+      ) : null}
+
+      {canList ? (
+        <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>Support your music</Text>
+            {loadingSupportPages ? <ActivityIndicator size="small" color={C.accent} /> : null}
+          </View>
+          <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 10 }}>
+            Let members support you voluntarily. Kilode does not pay for streams. Payment checkout is not connected yet.
+          </Text>
+          {supportPages.map((page) => (
+            <View key={page.id} style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12, marginBottom: 8, borderRadius: 13, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+              <Ionicons name="heart-outline" size={20} color={C.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontSize: 13, fontWeight: "700" }} numberOfLines={1}>{page.title}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{page.currency} · {page.status === "active" ? "Visible to members" : page.status}</Text>
+              </View>
+              <Ionicons name="checkmark-circle-outline" size={18} color={C.accent} />
+            </View>
+          ))}
+          {!supportPages.length ? (
+            <TouchableOpacity
+              disabled={creatingSupportPage}
+              onPress={async () => {
+                if (!userId) { show("Sign in to your Artist account first."); return; }
+                setCreatingSupportPage(true);
+                const result = await createArtistSupportPage(userId, {});
+                setCreatingSupportPage(false);
+                if (!result.ok) { show(result.error || "Could not create your support page."); return; }
+                setSupportPages((pages) => [result.data, ...pages]);
+                show("Your artist support page is created. Member payments are not enabled yet.");
+              }}
+              style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.border, opacity: creatingSupportPage ? 0.6 : 1 }}
+            >
+              {creatingSupportPage ? <ActivityIndicator size="small" color={C.accent} /> : <Ionicons name="heart-outline" size={18} color={C.accent} />}
+              <Text style={{ color: C.accent, fontWeight: "700", fontSize: 13 }}>{creatingSupportPage ? "Creating…" : "Create artist support page"}</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
 
