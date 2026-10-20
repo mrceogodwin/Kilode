@@ -54,13 +54,6 @@ const RAIL = [
   { id: "myspace", label: "My Space", icon: "person-circle-outline" as const },
 ];
 
-const PYMK = [
-  { id: "z1", name: "Zino_king", meta: "12 mutual", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80" },
-  { id: "z2", name: "Lollyblaq", meta: "8 mutual", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80" },
-  { id: "z3", name: "Baddest_tee", meta: "5 mutual", avatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80" },
-  { id: "z4", name: "TundeFlex", meta: "3 mutual", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80" },
-];
-
 function hourGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -91,7 +84,6 @@ export function HomeScreen({
 }: Props) {
   const [slide, setSlide] = useState(0);
   const [q, setQ] = useState("");
-  const [following, setFollowing] = useState<Record<string, boolean>>({});
   const carouselRef = useRef<ScrollView>(null);
 
   const heroMedia = news[0];
@@ -120,15 +112,6 @@ export function HomeScreen({
           onPress: () => onPlayTrack(heroTrack),
         }
       : null,
-    {
-      key: "e",
-      kind: "Events" as const,
-      title: "Lagos Summer Fest",
-      sub: "Muri Okunola Park",
-      imageUrl: "https://images.unsplash.com/photo-1459749411175-047fc749d9b0?w=600&q=80",
-      meta: "Nov 15",
-      onPress: onOpenEvents,
-    },
   ].filter(Boolean) as any[];
 
   const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -179,7 +162,8 @@ export function HomeScreen({
             placeholder="Search Kilode"
             placeholderTextColor={C.text3}
             style={{ flex: 1, marginLeft: 8, color: C.text, fontSize: 14 }}
-            onSubmitEditing={() => show(q.trim() ? `Search “${q.trim()}” when index is live.` : "Type to search")}
+            onSubmitEditing={() => show(q.trim() ? "Search is not connected yet." : "Enter a search term")}
+            returnKeyType="search"
           />
         </View>
       </View>
@@ -308,34 +292,6 @@ export function HomeScreen({
         </View>
         <Text style={{ color: C.text3, fontSize: 13, flex: 1 }}>What's on your mind?</Text>
       </TouchableOpacity>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12, marginBottom: 12 }}>
-        {PYMK.map((p) => (
-          <View key={p.id} style={{ alignItems: "center", width: 68 }}>
-            <Image source={{ uri: p.avatar }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: C.elevated }} />
-            <Text style={{ color: C.text, fontSize: 10, fontWeight: "700", marginTop: 4 }} numberOfLines={1}>{p.name}</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setFollowing((f) => ({ ...f, [p.id]: !f[p.id] }));
-                show(following[p.id] ? `Unfollowed ${p.name}` : `Following ${p.name}`);
-              }}
-              style={{
-                marginTop: 4,
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 999,
-                backgroundColor: following[p.id] ? C.elevated : C.accent,
-                borderWidth: 1,
-                borderColor: following[p.id] ? C.border : C.accent,
-              }}
-            >
-              <Text style={{ color: following[p.id] ? C.text : "#111", fontSize: 10, fontWeight: "800" }}>
-                {following[p.id] ? "Following" : "Follow"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </ScrollView>
 
       {takes[0] ? (
         <TouchableOpacity
