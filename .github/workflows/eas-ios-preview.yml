@@ -1,0 +1,52 @@
+name: Kilode iOS EAS preview build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kilode-eas-ios-preview
+  cancel-in-progress: false
+
+jobs:
+  build-ios-preview:
+    name: Build signed iOS preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout native app
+        uses: actions/checkout@v4
+
+      - name: Validate EAS credentials are configured
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+        run: |
+          test -n "$EXPO_TOKEN" || { echo "::error::Missing EXPO_TOKEN repository secret"; exit 1; }
+          test -n "$EAS_PROJECT_ID" || { echo "::error::Missing EAS_PROJECT_ID repository secret"; exit 1; }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify Expo config points to the linked EAS project
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+          EXPO_PUBLIC_APP_ENV: preview
+        run: |
+          npx expo config --type public > /tmp/kilode-expo-config.json
+          node -e 'const c=require("/tmp/kilode-expo-config.json"); const id=c.extra?.eas?.projectId; if (!id || id !== process.env.EAS_PROJECT_ID) { console.error("Expo project ID is missing or does not match EAS_PROJECT_ID"); process.exit(1); } if (c.ios?.bundleIdentifier !== "ng.kilode.app") { console.error("Unexpected iOS bundle identifier"); process.exit(1); } console.log("Expo project ID and iOS bundle identifier verified.");'
+
+      - name: Build iOS preview on EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+          EXPO_PUBLIC_APP_ENV: preview
+        run: npx eas-cli build --platform ios --profile preview --non-interactive
