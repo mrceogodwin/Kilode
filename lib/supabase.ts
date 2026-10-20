@@ -272,3 +272,23 @@ export async function createPost(body: string, userId: string): Promise<{ ok: bo
     },
   };
 }
+
+
+/** Create a private metadata-only release draft. Audio upload is a separate step. */
+export async function createMusicReleaseDraft(
+  artistId: string,
+  input: { title: string; releaseType: "single" | "ep" | "album" }
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const sb = getSupabase();
+  const title = input.title.trim();
+  if (!sb) return { ok: false, error: "Kilode Music backend is not configured." };
+  if (!artistId) return { ok: false, error: "Sign in to your artist account first." };
+  if (title.length < 1 || title.length > 120) return { ok: false, error: "Release title must be 1–120 characters." };
+  const { data, error } = await sb
+    .from("music_releases")
+    .insert({ artist_id: artistId, title, release_type: input.releaseType, status: "draft" })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, id: String(data.id) };
+}
