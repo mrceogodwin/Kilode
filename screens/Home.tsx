@@ -231,13 +231,13 @@ export function HomeScreen({
                 paddingHorizontal: 12,
                 paddingVertical: 7,
                 borderRadius: 999,
-                backgroundColor: on ? C.accent : C.elevated,
+                backgroundColor: on ? C.accentSoft : C.elevated,
                 borderWidth: 1,
                 borderColor: on ? C.accent : C.border,
               }}
             >
               <Ionicons name={r.icon} size={13} color={on ? "#111" : C.text2} />
-              <Text style={{ color: on ? "#111" : C.text2, fontWeight: "700", fontSize: 12 }}>{r.label}</Text>
+              <Text style={{ color: on ? C.accent : C.text2, fontWeight: "700", fontSize: 12 }}>{r.label}</Text>
             </TouchableOpacity>
           );
         })}
