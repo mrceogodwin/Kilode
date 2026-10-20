@@ -30,40 +30,17 @@ type Props = {
 };
 
 const FLOAT = [
-  {
-    key: "music",
-    title: "Music",
-    sub: "New sounds. New vibes.",
-    icon: "musical-notes" as const,
-    style: { top: "12%" as const, left: 12 },
-  },
-  {
-    key: "socials",
-    title: "Socials",
-    sub: "Real people. Real talk.",
-    icon: "people" as const,
-    style: { top: "18%" as const, right: 12 },
-  },
-  {
-    key: "media",
-    title: "Media",
-    sub: "Stories that matter.",
-    icon: "newspaper" as const,
-    style: { bottom: "22%" as const, left: 16 },
-  },
-  {
-    key: "events",
-    title: "Events",
-    sub: "What's on in the city.",
-    icon: "calendar" as const,
-    style: { bottom: "16%" as const, right: 16 },
-  },
+  { key: "music", title: "Music", sub: "New sounds", icon: "musical-notes" as const, style: { top: "12%" as const, left: 12 } },
+  { key: "socials", title: "Socials", sub: "Real people", icon: "people" as const, style: { top: "18%" as const, right: 12 } },
+  { key: "media", title: "Media", sub: "Stories", icon: "newspaper" as const, style: { bottom: "22%" as const, left: 16 } },
+  { key: "events", title: "Events", sub: "What's on", icon: "calendar" as const, style: { bottom: "16%" as const, right: 16 } },
 ];
 
 export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Props) {
   const { height: windowHeight } = useWindowDimensions();
   const compact = windowHeight < 760;
-  const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
+  // Multi-step: welcome → pick account type → credentials
+  const [mode, setMode] = useState<"welcome" | "kind" | "in" | "up">("welcome");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -73,6 +50,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
   const submit = async () => {
     if (mode === "up" && !kind) {
       show("Choose the account type that matches how you'll use Kilode.");
+      setMode("kind");
       return;
     }
     if (!handle.trim() || !password) {
@@ -84,7 +62,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
       const result =
         mode === "up"
           ? await onSignUp(handle.trim(), password, kind as AccountKind, name.trim() || undefined)
-          : await onSignIn(handle.trim(), password);
+          : await onSignIn(handle.trim(), password, kind || undefined);
       if (!result.ok) show(result.error || "Something went wrong. Try again.");
       else show(mode === "up" ? `Welcome to Kilode · ${kind}` : "Welcome back");
     } catch {
@@ -103,7 +81,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
             <KilodeWordmark size="large" />
           </View>
 
-          <View style={[styles.hero, compact && { height: 260 }]}>
+          <View style={[styles.hero, compact && { height: 240 }]}>
             <View style={styles.arc} />
             <View style={styles.portrait}>
               <Image
@@ -115,7 +93,6 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
               />
               <View style={styles.portraitFade} />
             </View>
-
             {FLOAT.map((f) => (
               <View key={f.key} style={[styles.floatCard, f.style as any]}>
                 <View style={styles.floatHead}>
@@ -128,9 +105,16 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
           </View>
 
           <Text style={styles.tagline}>Talk News. Real People.</Text>
-          <Text style={styles.tagSub}>Nigeria's hybrid home for media, music, socials & opportunity.</Text>
+          <Text style={styles.tagSub}>Media · Music · Socials · Opportunity</Text>
 
-          <TouchableOpacity style={styles.cta} onPress={() => setMode("up")} activeOpacity={0.9}>
+          <TouchableOpacity
+            style={styles.cta}
+            onPress={() => {
+              setKind(null);
+              setMode("kind");
+            }}
+            activeOpacity={0.9}
+          >
             <Text style={styles.ctaText}>Get Started</Text>
           </TouchableOpacity>
 
@@ -151,49 +135,85 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
     );
   }
 
+  // Step: choose account type (required before credentials on sign-up)
+  if (mode === "kind") {
+    return (
+      <SafeAreaView style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <ScrollView contentContainerStyle={styles.formPad} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity onPress={() => setMode("welcome")} style={{ marginBottom: 12 }}>
+            <Text style={{ color: GOLD, fontWeight: "600" }}>‹ Back</Text>
+          </TouchableOpacity>
+          <KilodeWordmark size="medium" />
+          <Text style={styles.formTitle}>Choose your path</Text>
+          <Text style={styles.formSub}>This sets your tools on Kilode. You can change it later in Settings when the server supports it.</Text>
+
+          {ACCOUNT_GROUPS.map((group) => (
+            <View key={group.title} style={{ marginBottom: 12 }}>
+              <Text style={styles.groupTitle}>{group.title}</Text>
+              {group.kinds.map((id) => {
+                const k = ACCOUNT_KINDS.find((x) => x.id === id)!;
+                const on = kind === k.id;
+                return (
+                  <TouchableOpacity
+                    key={k.id}
+                    onPress={() => setKind(k.id)}
+                    style={[styles.kindRow, on && styles.kindRowOn]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.kindRowLabel, on && { color: GOLD }]}>{k.label}</Text>
+                      <Text style={styles.kindRowHint}>{k.hint}</Text>
+                    </View>
+                    <View style={[styles.radio, on && styles.radioOn]}>{on ? <View style={styles.radioDot} /> : null}</View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
+
+          <TouchableOpacity
+            style={[styles.cta, { opacity: kind ? 1 : 0.45, marginTop: 8 }]}
+            disabled={!kind}
+            onPress={() => {
+              if (!kind) {
+                show("Select an account type to continue.");
+                return;
+              }
+              setMode("up");
+            }}
+          >
+            <Text style={styles.ctaText}>Continue</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.formPad} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => setMode("welcome")} style={{ marginBottom: 16 }}>
+          <TouchableOpacity
+            onPress={() => setMode(mode === "up" ? "kind" : "welcome")}
+            style={{ marginBottom: 16 }}
+          >
             <Text style={{ color: GOLD, fontWeight: "600" }}>‹ Back</Text>
           </TouchableOpacity>
           <KilodeWordmark size="medium" />
           <Text style={styles.formTitle}>{mode === "up" ? "Create account" : "Welcome back"}</Text>
           <Text style={styles.formSub}>
-            {mode === "up" ? "Pick how you'll use Kilode — this sets your tools." : "Sign in to continue"}
+            {mode === "up"
+              ? kind
+                ? `Account type: ${ACCOUNT_KINDS.find((k) => k.id === kind)?.label || kind}`
+                : "Complete your profile"
+              : "Sign in to continue"}
           </Text>
 
           {mode === "up" ? (
             <>
-              <Text style={styles.label}>Account type</Text>
-              {ACCOUNT_GROUPS.map((group) => (
-                <View key={group.title} style={{ marginBottom: 12 }}>
-                  <Text style={styles.groupTitle}>{group.title}</Text>
-                  {group.kinds.map((id) => {
-                    const k = ACCOUNT_KINDS.find((x) => x.id === id)!;
-                    const on = kind === k.id;
-                    return (
-                      <TouchableOpacity
-                        key={k.id}
-                        onPress={() => setKind(k.id)}
-                        style={[styles.kindRow, on && styles.kindRowOn]}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: on }}
-                      >
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.kindRowLabel, on && { color: GOLD }]}>{k.label}</Text>
-                          <Text style={styles.kindRowHint}>{k.hint}</Text>
-                        </View>
-                        <View style={[styles.radio, on && styles.radioOn]}>
-                          {on ? <View style={styles.radioDot} /> : null}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ))}
               <Text style={styles.label}>Display name</Text>
               <TextInput
                 style={styles.input}
@@ -234,7 +254,13 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setMode(mode === "up" ? "in" : "up")}
+            onPress={() => {
+              if (mode === "up") setMode("in");
+              else {
+                setKind(null);
+                setMode("kind");
+              }
+            }}
             style={{ marginTop: 16, alignItems: "center" }}
           >
             <Text style={styles.loginMuted}>
@@ -253,7 +279,7 @@ const styles = StyleSheet.create({
   welcome: { flex: 1, paddingHorizontal: 20, paddingBottom: 16 },
   logoWrap: { alignItems: "center", marginTop: 8, marginBottom: 8 },
   hero: {
-    height: 320,
+    height: 300,
     borderRadius: 24,
     backgroundColor: "#141418",
     overflow: "hidden",
@@ -275,7 +301,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: "50%",
     marginLeft: -70,
-    top: 48,
+    top: 40,
     width: 140,
     height: 180,
     borderRadius: 70,
@@ -295,7 +321,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: "rgba(229,193,88,0.2)",
-    maxWidth: 140,
+    maxWidth: 130,
   },
   floatHead: { flexDirection: "row", alignItems: "center", gap: 4 },
   floatTitle: { color: "#fff", fontWeight: "800", fontSize: 11 },
@@ -313,7 +339,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 6,
     marginBottom: 18,
-    lineHeight: 18,
   },
   cta: {
     backgroundColor: GOLD,
@@ -342,9 +367,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   googleText: { color: "rgba(255,255,255,0.75)", fontWeight: "600", fontSize: 13 },
-  formPad: { padding: 20, paddingBottom: 40 },
+  formPad: { padding: 20, paddingBottom: 48 },
   formTitle: { color: "#fff", fontSize: 24, fontWeight: "800", marginTop: 12 },
-  formSub: { color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 6, marginBottom: 16 },
+  formSub: { color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 6, marginBottom: 16, lineHeight: 20 },
   label: {
     color: "rgba(255,255,255,0.55)",
     fontSize: 12,

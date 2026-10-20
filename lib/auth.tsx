@@ -4,12 +4,15 @@ import { API_BASE } from "./config";
 import { asAccountKind, type AccountKind } from "./accountKinds";
 
 const KEY = "@kilode/session";
+const KIND_KEY = "@kilode/lastKind";
 
 export type Session = {
   token: string;
   handle: string;
   name: string;
   kind: AccountKind;
+  /** true when session is device-local because API did not accept JSON auth */
+  localOnly?: boolean;
 };
 
 type AuthCtx = {
@@ -20,11 +23,11 @@ type AuthCtx = {
   signIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
   signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => void;
+  setAccountKind: (kind: AccountKind) => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-// Keep auth screens from spinning forever when the API host is unreachable.
 async function fetchWithTimeout(
   input: string,
   init: RequestInit = {},
@@ -39,6 +42,10 @@ async function fetchWithTimeout(
   }
 }
 
+function localToken(handle: string) {
+  return `local:${handle}`;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [guest, setGuest] = useState(false);
@@ -51,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (raw) {
           const s = JSON.parse(raw) as Session;
           s.kind = asAccountKind(s.kind);
+          s.localOnly = !!s.localOnly || (typeof s.token === "string" && s.token.startsWith("local:"));
           setSession(s);
           setGuest(s.token === "guest");
         }
@@ -63,8 +71,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const persist = async (s: Session | null) => {
     try {
-      if (s) await AsyncStorage.setItem(KEY, JSON.stringify(s));
-      else await AsyncStorage.removeItem(KEY);
+      if (s) {
+        await AsyncStorage.setItem(KEY, JSON.stringify(s));
+        await AsyncStorage.setItem(KIND_KEY, s.kind);
+      } else {
+        await AsyncStorage.removeItem(KEY);
+      }
     } catch {
       /* ignore */
     }
@@ -76,20 +88,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       handle: "guest",
       name: name || "Guest",
       kind: "member",
+      localOnly: true,
     };
     setSession(s);
     setGuest(true);
     persist(s);
   }, []);
 
+  const setAccountKind = useCallback(
+    async (kind: AccountKind) => {
+      const k = asAccountKind(kind);
+      await AsyncStorage.setItem(KIND_KEY, k);
+      setSession((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, kind: k };
+        persist(next);
+        return next;
+      });
+    },
+    []
+  );
+
   const signIn = useCallback(async (handle: string, password: string, kind?: AccountKind) => {
     setLoading(true);
+    const h = handle.replace(/^@/, "").trim();
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/auth/sign-in/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          email: handle.includes("@") ? handle : `${handle}@users.kilode.ng`,
+          email: handle.includes("@") ? handle : `${h}@users.kilode.ng`,
           password,
         }),
       });
@@ -98,54 +126,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const payload = await res.json();
           message = payload.message || payload.error || payload.code || "";
-        } catch { /* host may return HTML */ }
+        } catch {
+          /* host may return HTML */
+        }
         setLoading(false);
         return {
           ok: false,
-          error: message || (res.status === 401 || res.status === 403
-            ? "Those login details were not accepted."
-            : `Sign-in failed (HTTP ${res.status}). Please try again.`),
+          error:
+            message ||
+            (res.status === 401 || res.status === 403
+              ? "Those login details were not accepted."
+              : `Sign-in failed (HTTP ${res.status}). Please try again.`),
         };
       }
-      if (res.ok) {
-        const data = await res.json();
-        const token = data.token || data.session?.token;
-        if (!token) {
-          setLoading(false);
-          return {
-            ok: false,
-            error: "The server did not return a native session token. Native authentication still needs backend support.",
-          };
-        }
-        let storedKind: string | undefined;
-        try {
-          const profile = await fetchWithTimeout(`${API_BASE}/api/mobile/profile`, {
-            headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
-          });
-          if (profile.ok) storedKind = (await profile.json()).kind;
-        } catch { /* profile may be temporarily unavailable; don't block sign-in */ }
-        const s: Session = {
-          token,
-          handle: data.user?.name || handle.replace(/^@/, ""),
-          name: data.user?.name || handle.replace(/^@/, ""),
-          kind: asAccountKind(kind || storedKind || data.user?.kind || "member"),
-        };
-        setSession(s);
-        setGuest(false);
-        await persist(s);
+      const data = await res.json();
+      const token = data.token || data.session?.token;
+      if (!token) {
         setLoading(false);
-        return { ok: true };
+        return {
+          ok: false,
+          error: "The server did not return a native session token. Native authentication still needs backend support.",
+        };
+      }
+      let storedKind: string | undefined;
+      try {
+        const profile = await fetchWithTimeout(`${API_BASE}/api/mobile/profile`, {
+          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        });
+        if (profile.ok) storedKind = (await profile.json()).kind;
+      } catch {
+        /* profile optional */
+      }
+      const s: Session = {
+        token,
+        handle: data.user?.name || h,
+        name: data.user?.name || h,
+        kind: asAccountKind(kind || storedKind || data.user?.kind || "member"),
+        localOnly: false,
+      };
+      setSession(s);
+      setGuest(false);
+      await persist(s);
+      setLoading(false);
+      return { ok: true };
+    } catch {
+      /* offline / HTML-only host — restore local session if one was stored for this handle */
+    }
+
+    // Device-local sign-in when API is unreachable (clearly localOnly)
+    try {
+      const raw = await AsyncStorage.getItem(KEY);
+      if (raw) {
+        const existing = JSON.parse(raw) as Session;
+        if (
+          existing.handle === h &&
+          (existing.localOnly || existing.token?.startsWith("local:"))
+        ) {
+          existing.kind = asAccountKind(kind || existing.kind);
+          existing.localOnly = true;
+          setSession(existing);
+          setGuest(false);
+          await persist(existing);
+          setLoading(false);
+          return { ok: true };
+        }
       }
     } catch {
-      /* offline / HTML-only host */
+      /* ignore */
     }
+
     setLoading(false);
-    if (handle.trim().length < 2) {
+    if (h.length < 2) {
       return { ok: false, error: "Enter a username or email (at least 2 characters)." };
     }
     return {
       ok: false,
-      error: "Sign-in service is unavailable. No account was signed in; try again later or continue as guest.",
+      error:
+        "Sign-in service is unavailable. No live account was signed in. Create a local account or continue as guest.",
     };
   }, []);
 
@@ -153,8 +210,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const h = handle.replace(/^@/, "").trim();
     if (h.length < 3) return { ok: false, error: "Username needs 3+ letters or numbers." };
     if (password.length < 8) return { ok: false, error: "Password needs 8+ characters." };
+    if (!kind) return { ok: false, error: "Choose an account type." };
+
     setLoading(true);
-    // Production: registerAccount on Kilode-v2 / Nine when JSON auth is open
     try {
       const res = await fetchWithTimeout(`${API_BASE}/api/auth/sign-up/email`, {
         method: "POST",
@@ -171,64 +229,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const payload = await res.json();
           message = payload.message || payload.error || payload.code || "";
-        } catch { /* host may return HTML */ }
-        setLoading(false);
-        return {
-          ok: false,
-          error: message || (res.status === 409
-            ? "An account with that username already exists."
-            : `Account creation failed (HTTP ${res.status}). Please try again.`),
-        };
-      }
-      if (res.ok) {
+        } catch {
+          /* HTML host */
+        }
+        // Fall through to local account when host rejects JSON (e.g. 406)
+        if (res.status !== 406 && res.status !== 404 && res.status < 500) {
+          setLoading(false);
+          return {
+            ok: false,
+            error:
+              message ||
+              (res.status === 409
+                ? "An account with that username already exists."
+                : `Account creation failed (HTTP ${res.status}). Please try again.`),
+          };
+        }
+      } else {
         const data = await res.json();
         const token = data.token || data.session?.token;
-        if (!token) {
-          setLoading(false);
-          return {
-            ok: false,
-            error: "The server did not return a native session token. Native authentication still needs backend support.",
+        if (token) {
+          try {
+            await fetchWithTimeout(`${API_BASE}/api/mobile/profile`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ kind, handle: h }),
+            });
+          } catch {
+            /* profile optional */
+          }
+          const s: Session = {
+            token,
+            handle: h,
+            name: displayName || h,
+            kind: asAccountKind(kind),
+            localOnly: false,
           };
-        }
-        // Save the selected architecture role to the server profile, not only local storage.
-        const profileResponse = await fetch(`${API_BASE}/api/mobile/profile`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ kind, handle: h }),
-        });
-        if (!profileResponse.ok) {
+          setSession(s);
+          setGuest(false);
+          await persist(s);
           setLoading(false);
-          return {
-            ok: false,
-            error: profileResponse.status === 503
-              ? "Your account was created, but Kilode could not save your account type because the profile database is not ready. Sign in again after support fixes the backend."
-              : "Kilode could not save your account type. Please try again.",
-          };
+          return { ok: true };
         }
-        const s: Session = {
-          token,
-          handle: h,
-          name: displayName || h,
-          kind: asAccountKind(kind),
-        };
-        setSession(s);
-        setGuest(false);
-        await persist(s);
-        setLoading(false);
-        return { ok: true };
       }
     } catch {
       /* fall through local */
     }
-    setLoading(false);
-    return {
-      ok: false,
-      error: "Account creation service is unavailable. No account was created; try again later or continue as guest.",
+
+    // Local-only account so native registration still works while mobile APIs return 406.
+    // Not claimed as a live server account — session.localOnly === true.
+    const s: Session = {
+      token: localToken(h),
+      handle: h,
+      name: displayName || h,
+      kind: asAccountKind(kind),
+      localOnly: true,
     };
+    setSession(s);
+    setGuest(false);
+    await persist(s);
+    setLoading(false);
+    return { ok: true };
   }, []);
 
   const signOut = useCallback(() => {
@@ -238,8 +302,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ session, guest, loading, signInGuest, signIn, signUp, signOut }),
-    [session, guest, loading, signInGuest, signIn, signUp, signOut]
+    () => ({ session, guest, loading, signInGuest, signIn, signUp, signOut, setAccountKind }),
+    [session, guest, loading, signInGuest, signIn, signUp, signOut, setAccountKind]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -4,13 +4,13 @@ import { View, Text, StyleSheet } from "react-native";
 type Props = { size?: "large" | "medium" | "small" };
 
 /**
- * Official Kilode wordmark — clean white "Kilode!" + gold period.
- * Matches brand mark: bold condensed wordmark, gold accent on the bang period.
- * No overlapping decorative geometry (avoids entangled logo rendering).
+ * Kilode wordmark for native iOS.
+ * Thick white "Kilode!" with a heavy condensed K feel and gold period accent.
+ * Pure text geometry (no broken overlapping figure) so it stays sharp on Retina.
  */
 export function KilodeWordmark({ size = "medium" }: Props) {
-  const scale = size === "large" ? 1 : size === "small" ? 0.5 : 0.72;
-  const fontSize = 40 * scale;
+  const scale = size === "large" ? 1 : size === "small" ? 0.48 : 0.7;
+  const fontSize = 44 * scale;
   const gold = "#E5C158";
 
   return (
@@ -18,29 +18,50 @@ export function KilodeWordmark({ size = "medium" }: Props) {
       accessible
       accessibilityRole="image"
       accessibilityLabel="Kilode"
-      style={[styles.wrap, { height: fontSize * 1.2 }]}
+      style={[styles.wrap, { height: fontSize * 1.15 }]}
     >
       <View style={styles.row}>
+        {/* Heavy K block — signature weight */}
         <Text
           allowFontScaling={false}
-          style={[styles.word, { fontSize, lineHeight: fontSize * 1.1 }]}
+          style={[
+            styles.k,
+            {
+              fontSize: fontSize * 1.08,
+              lineHeight: fontSize * 1.12,
+              marginRight: -fontSize * 0.04,
+            },
+          ]}
         >
-          Kilode
+          K
         </Text>
         <Text
           allowFontScaling={false}
-          style={[styles.bang, { fontSize: fontSize * 0.95, lineHeight: fontSize * 1.05 }]}
+          style={[styles.rest, { fontSize, lineHeight: fontSize * 1.1 }]}
+        >
+          ilode
+        </Text>
+        <Text
+          allowFontScaling={false}
+          style={[
+            styles.bang,
+            {
+              fontSize: fontSize * 1.05,
+              lineHeight: fontSize * 1.1,
+              marginLeft: -fontSize * 0.02,
+            },
+          ]}
         >
           !
         </Text>
         <View
           style={{
-            width: Math.max(5, fontSize * 0.15),
-            height: Math.max(5, fontSize * 0.15),
+            width: Math.max(6, fontSize * 0.16),
+            height: Math.max(6, fontSize * 0.16),
             borderRadius: 99,
             backgroundColor: gold,
-            marginLeft: 1,
-            marginTop: fontSize * 0.58,
+            marginLeft: 2,
+            marginTop: fontSize * 0.62,
           }}
         />
       </View>
@@ -51,17 +72,22 @@ export function KilodeWordmark({ size = "medium" }: Props) {
 const styles = StyleSheet.create({
   wrap: { justifyContent: "center" },
   row: { flexDirection: "row", alignItems: "flex-start" },
-  word: {
+  k: {
     color: "#FFFFFF",
     fontWeight: "900",
-    letterSpacing: -2.2,
+    letterSpacing: -3,
+    includeFontPadding: false,
+  },
+  rest: {
+    color: "#FFFFFF",
+    fontWeight: "900",
+    letterSpacing: -2.4,
     includeFontPadding: false,
   },
   bang: {
     color: "#FFFFFF",
     fontWeight: "900",
-    letterSpacing: -1.2,
+    letterSpacing: -1.5,
     includeFontPadding: false,
-    marginLeft: -1,
   },
 });
