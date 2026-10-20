@@ -212,7 +212,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     newsThumb: { width: 76, height: 72, borderRadius: 10 },
     newsKicker: { fontSize: 11, fontWeight: "600", color: C.accent, marginBottom: 2 },
-    newsTitle: { fontSize: 15, fontWeight: "650", color: C.text, lineHeight: 21 },
+    newsTitle: { fontSize: 15, fontWeight: "600", color: C.text, lineHeight: 21 },
 
     roomRow: {
       flexDirection: "row",
