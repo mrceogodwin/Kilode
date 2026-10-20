@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 type Props = {
   s: any; C: any; sessionName: string; news: any[]; tracks: any[]; takes: any[];
-  liked: Record<string, boolean>; refreshing: boolean; onRefresh: () => void;
+  liked: Record<string, boolean>; onLikePost: (id: string) => void; refreshing: boolean; onRefresh: () => void;
   onOpenMedia: (id?: string) => void; onOpenMusic: () => void; onOpenEvents: () => void;
   onOpenMarket: () => void; onOpenJobs: () => void; events?: any[]; market?: any[]; jobs?: any[];
   onOpenSystem: (id: string) => void; onOpenSocials: () => void; onOpenPost: (p: any) => void; onOpenItem: (system: string, item: any) => void;
@@ -39,7 +39,7 @@ function firstText(...values: any[]) {
 }
 
 export function HomeScreen({
-  s, C, sessionName, news, tracks, takes, liked, refreshing, onRefresh,
+  s, C, sessionName, news, tracks, takes, liked, onLikePost, refreshing, onRefresh,
   onOpenMedia, onOpenMusic, onOpenEvents, onOpenMarket, onOpenJobs,
   events = [], market = [], jobs = [], onOpenSystem, onOpenSocials, onOpenPost, onOpenItem,
   onOpenProfile, onCompose, onPlayTrack, show, searchOpen, onCloseSearch,
@@ -131,8 +131,8 @@ export function HomeScreen({
           </View>
         )}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 22, marginTop: 10 }}>
-          <TouchableOpacity onPress={() => show("Like interaction is being connected")} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Ionicons name={liked[item.id] ? "heart" : "heart-outline"} size={18} color={liked[item.id] ? "#FF4965" : C.text3} />
+          <TouchableOpacity onPress={() => social ? onLikePost(String(item.raw.id)) : show(`${item.kind} likes are not available here yet`)} accessibilityRole="button" accessibilityLabel={social ? (liked[String(item.raw.id)] ? "Unlike post" : "Like post") : `${item.kind} likes`} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Ionicons name={social && liked[String(item.raw.id)] ? "heart" : "heart-outline"} size={18} color={social && liked[String(item.raw.id)] ? "#FF4965" : C.text3} />
             <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.likes_count ?? item.raw.likes ?? ""}</Text>
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
