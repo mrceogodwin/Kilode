@@ -30,6 +30,7 @@ type Props = {
   onOpenMusic: () => void;
   onOpenEvents: () => void;
   onOpenMarket: () => void;
+  onOpenSystem: (id: string) => void;
   onOpenSocials: () => void;
   onOpenPost: (p: any) => void;
   onOpenProfile: (u: any) => void;
@@ -81,6 +82,7 @@ export function HomeScreen({
   onOpenMusic,
   onOpenEvents,
   onOpenMarket,
+  onOpenSystem,
   onOpenSocials,
   onOpenPost,
   onOpenProfile,
@@ -142,17 +144,7 @@ export function HomeScreen({
     else if (id === "music") onOpenMusic();
     else if (id === "events") onOpenEvents();
     else if (id === "market") onOpenMarket();
-    else {
-      const labels: Record<string, string> = {
-        jobs: "Jobs",
-        communities: "Communities",
-        cinema: "Cinema",
-        creators: "Creators",
-        ads: "Ads & Business",
-        myspace: "My Space",
-      };
-      show(`${labels[id] || "This system"} is part of Kilode. Its dedicated screen needs to be connected before this shortcut can open it.`);
-    }
+    else onOpenSystem(id);
   };
 
   return (
