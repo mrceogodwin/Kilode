@@ -985,11 +985,11 @@ function KilodeApp() {
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{o.label}</Text>
                       <Text numberOfLines={2} style={{ color: C.text2, fontSize: 11, lineHeight: 15, marginTop: 3 }}>{subtitle}</Text>
-                    </ScrollView>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
-            </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
