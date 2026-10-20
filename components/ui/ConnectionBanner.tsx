@@ -36,7 +36,7 @@ export function ConnectionBanner({ source, isDark, localOnly }: Props) {
     bg = isDark ? "#2A2419" : "#F1E9D8";
     fg = isDark ? "#E8D5A3" : "#7A5C1E";
     icon = "phone-portrait-outline";
-    message = "Device session · account type saved on this phone only";
+    message = source === "live" ? "Device session · account type saved on this phone only" : "Preview content · this session is only on this device";
   } else {
     bg = isDark ? "#2A2419" : "#F1E9D8";
     fg = isDark ? "#E8D5A3" : "#7A5C1E";
