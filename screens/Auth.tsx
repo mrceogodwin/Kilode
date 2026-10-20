@@ -36,35 +36,31 @@ const FLOAT = [
     sub: "New sounds. New vibes.",
     icon: "musical-notes" as const,
     style: { top: "12%" as const, left: 12 },
-    thumb: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&q=80",
   },
   {
     key: "socials",
     title: "Socials",
-    sub: "Connect. Share. Belong.",
+    sub: "Real people. Real talk.",
     icon: "people" as const,
     style: { top: "18%" as const, right: 12 },
-    thumb: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=200&q=80",
   },
   {
     key: "media",
     title: "Media",
-    sub: "Real stories. Fresh takes.",
+    sub: "Stories that matter.",
     icon: "newspaper" as const,
-    style: { bottom: "22%" as const, left: 12 },
-    thumb: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=200&q=80",
+    style: { bottom: "22%" as const, left: 16 },
   },
   {
     key: "events",
     title: "Events",
-    sub: "Be there. Feel it.",
+    sub: "What's on in the city.",
     icon: "calendar" as const,
-    style: { bottom: "16%" as const, right: 12 },
-    thumb: "https://images.unsplash.com/photo-1459749411175-047fc749d9b0?w=200&q=80",
+    style: { bottom: "16%" as const, right: 16 },
   },
 ];
 
-export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
+export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Props) {
   const { height: windowHeight } = useWindowDimensions();
   const compact = windowHeight < 760;
   const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
@@ -76,7 +72,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 
   const submit = async () => {
     if (mode === "up" && !kind) {
-      show("Choose the Kilode system you want to join.");
+      show("Choose the account type that matches how you'll use Kilode.");
       return;
     }
     if (!handle.trim() || !password) {
@@ -107,10 +103,8 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
             <KilodeWordmark size="large" />
           </View>
 
-          <View style={[styles.hero, compact && { height: 280 }]}>
-            {/* Soft gold arcs */}
+          <View style={[styles.hero, compact && { height: 260 }]}>
             <View style={styles.arc} />
-            {/* Center portrait placeholder matching brand mood */}
             <View style={styles.portrait}>
               <Image
                 source={{
@@ -129,32 +123,28 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                   <Text style={styles.floatTitle}>{f.title}</Text>
                 </View>
                 <Text style={styles.floatSub}>{f.sub}</Text>
-                <Image source={{ uri: f.thumb }} style={styles.floatThumb} resizeMode="cover" />
               </View>
             ))}
           </View>
 
-          <View style={styles.copy}>
-            <Text style={styles.headline}>Everything You Need.</Text>
-            <Text style={styles.headlineGold}>One Platform.</Text>
-            <Text style={styles.body}>
-              Discover, create, connect and be part of something bigger. Kilode brings your world together in one place.
-            </Text>
-          </View>
+          <Text style={styles.tagline}>Talk News. Real People.</Text>
+          <Text style={styles.tagSub}>Nigeria's hybrid home for media, music, socials & opportunity.</Text>
 
           <TouchableOpacity style={styles.cta} onPress={() => setMode("up")} activeOpacity={0.9}>
             <Text style={styles.ctaText}>Get Started</Text>
-            <Ionicons name="arrow-forward" size={18} color="#111" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setMode("in")} style={styles.loginRow}>
-            <Text style={styles.loginMuted}>
-              Already have an account? <Text style={styles.loginLink}>Log In</Text>
-            </Text>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setMode("in")} activeOpacity={0.85}>
+            <Text style={styles.secondaryText}>I already have an account</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={onGuest} style={{ marginTop: 10 }}>
-            <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, textAlign: "center" }}>Continue as guest</Text>
+          <TouchableOpacity style={styles.guestBtn} onPress={onGuest}>
+            <Text style={styles.guestText}>Continue as guest</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.googleBtn} onPress={onGoogle}>
+            <Ionicons name="logo-google" size={16} color="#fff" />
+            <Text style={styles.googleText}>Continue with Google</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -172,23 +162,38 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
           <KilodeWordmark size="medium" />
           <Text style={styles.formTitle}>{mode === "up" ? "Create account" : "Welcome back"}</Text>
           <Text style={styles.formSub}>
-            {mode === "up" ? "Choose your path on Kilode" : "Sign in to continue"}
+            {mode === "up" ? "Pick how you'll use Kilode — this sets your tools." : "Sign in to continue"}
           </Text>
 
           {mode === "up" ? (
             <>
               <Text style={styles.label}>Account type</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                {ACCOUNT_KINDS.map((k) => (
-                  <TouchableOpacity
-                    key={k.id}
-                    onPress={() => setKind(k.id)}
-                    style={[styles.kindChip, kind === k.id && styles.kindChipOn]}
-                  >
-                    <Text style={[styles.kindText, kind === k.id && styles.kindTextOn]}>{k.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              {ACCOUNT_GROUPS.map((group) => (
+                <View key={group.title} style={{ marginBottom: 12 }}>
+                  <Text style={styles.groupTitle}>{group.title}</Text>
+                  {group.kinds.map((id) => {
+                    const k = ACCOUNT_KINDS.find((x) => x.id === id)!;
+                    const on = kind === k.id;
+                    return (
+                      <TouchableOpacity
+                        key={k.id}
+                        onPress={() => setKind(k.id)}
+                        style={[styles.kindRow, on && styles.kindRowOn]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: on }}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.kindRowLabel, on && { color: GOLD }]}>{k.label}</Text>
+                          <Text style={styles.kindRowHint}>{k.hint}</Text>
+                        </View>
+                        <View style={[styles.radio, on && styles.radioOn]}>
+                          {on ? <View style={styles.radioDot} /> : null}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))}
               <Text style={styles.label}>Display name</Text>
               <TextInput
                 style={styles.input}
@@ -204,6 +209,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
           <TextInput
             style={styles.input}
             autoCapitalize="none"
+            autoCorrect={false}
             placeholder="@handle"
             placeholderTextColor="rgba(255,255,255,0.35)"
             value={handle}
@@ -219,7 +225,11 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
             onChangeText={setPassword}
           />
 
-          <TouchableOpacity style={[styles.cta, { marginTop: 20, opacity: busy ? 0.6 : 1 }]} onPress={submit} disabled={busy}>
+          <TouchableOpacity
+            style={[styles.cta, { opacity: busy ? 0.6 : 1, marginTop: 8 }]}
+            onPress={submit}
+            disabled={busy}
+          >
             <Text style={styles.ctaText}>{busy ? "Please wait…" : mode === "up" ? "Create account" : "Log In"}</Text>
           </TouchableOpacity>
 
@@ -239,114 +249,156 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#0A0A0B" },
-  welcome: { flex: 1, paddingHorizontal: 20, paddingBottom: 12 },
-  logoWrap: { alignItems: "center", paddingTop: 8, marginBottom: 4 },
+  root: { flex: 1, backgroundColor: "#0B0B0F" },
+  welcome: { flex: 1, paddingHorizontal: 20, paddingBottom: 16 },
+  logoWrap: { alignItems: "center", marginTop: 8, marginBottom: 8 },
   hero: {
-    height: 340,
-    marginTop: 4,
-    marginBottom: 8,
-    justifyContent: "center",
-    alignItems: "center",
+    height: 320,
+    borderRadius: 24,
+    backgroundColor: "#141418",
+    overflow: "hidden",
+    marginBottom: 18,
   },
   arc: {
     position: "absolute",
-    width: 320,
-    height: 320,
-    borderRadius: 160,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     borderWidth: 1,
     borderColor: "rgba(229,193,88,0.18)",
+    top: -40,
+    alignSelf: "center",
+    left: "50%",
+    marginLeft: -140,
   },
   portrait: {
-    width: 200,
-    height: 260,
-    borderRadius: 20,
+    position: "absolute",
+    left: "50%",
+    marginLeft: -70,
+    top: 48,
+    width: 140,
+    height: 180,
+    borderRadius: 70,
     overflow: "hidden",
-    backgroundColor: "#1a1510",
+    backgroundColor: "#1a1a20",
   },
   portraitImg: { width: "100%", height: "100%" },
   portraitFade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10,10,11,0.15)",
+    backgroundColor: "rgba(11,11,15,0.25)",
   },
   floatCard: {
     position: "absolute",
-    width: 132,
-    backgroundColor: "rgba(22,20,18,0.92)",
-    borderRadius: 14,
+    backgroundColor: "rgba(20,20,24,0.92)",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "rgba(229,193,88,0.22)",
-    padding: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+    borderColor: "rgba(229,193,88,0.2)",
+    maxWidth: 140,
   },
-  floatHead: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 2 },
-  floatTitle: { color: "#fff", fontSize: 12, fontWeight: "800" },
-  floatSub: { color: "rgba(255,255,255,0.55)", fontSize: 10, marginBottom: 6 },
-  floatThumb: { width: "100%", height: 48, borderRadius: 8, backgroundColor: "#222" },
-  copy: { alignItems: "center", paddingHorizontal: 8, marginTop: 4 },
-  headline: {
-    color: "#FFFFFF",
-    fontSize: 28,
+  floatHead: { flexDirection: "row", alignItems: "center", gap: 4 },
+  floatTitle: { color: "#fff", fontWeight: "800", fontSize: 11 },
+  floatSub: { color: "rgba(255,255,255,0.55)", fontSize: 10, marginTop: 2 },
+  tagline: {
+    color: "#fff",
+    fontSize: 22,
     fontWeight: "800",
-    letterSpacing: -0.6,
     textAlign: "center",
+    letterSpacing: -0.3,
   },
-  headlineGold: {
-    color: GOLD,
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.6,
-    textAlign: "center",
-    marginTop: 2,
-  },
-  body: {
+  tagSub: {
     color: "rgba(255,255,255,0.55)",
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
     textAlign: "center",
-    marginTop: 10,
-    paddingHorizontal: 12,
+    marginTop: 6,
+    marginBottom: 18,
+    lineHeight: 18,
   },
   cta: {
-    marginTop: 20,
     backgroundColor: GOLD,
     borderRadius: 999,
     paddingVertical: 16,
+    alignItems: "center",
+  },
+  ctaText: { color: "#111", fontWeight: "800", fontSize: 16 },
+  secondaryBtn: {
+    marginTop: 10,
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  secondaryText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  guestBtn: { marginTop: 12, alignItems: "center" },
+  guestText: { color: "rgba(255,255,255,0.55)", fontWeight: "600", fontSize: 13 },
+  googleBtn: {
+    marginTop: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    paddingVertical: 12,
   },
-  ctaText: { color: "#111", fontSize: 16, fontWeight: "800" },
-  loginRow: { marginTop: 16, alignItems: "center" },
-  loginMuted: { color: "rgba(255,255,255,0.5)", fontSize: 14 },
-  loginLink: { color: GOLD, fontWeight: "700" },
+  googleText: { color: "rgba(255,255,255,0.75)", fontWeight: "600", fontSize: 13 },
   formPad: { padding: 20, paddingBottom: 40 },
-  formTitle: { color: "#fff", fontSize: 24, fontWeight: "800", marginTop: 16 },
-  formSub: { color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 6, marginBottom: 18 },
-  label: { color: "rgba(255,255,255,0.55)", fontSize: 12, fontWeight: "600", marginBottom: 6, marginTop: 10 },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.06)",
+  formTitle: { color: "#fff", fontSize: 24, fontWeight: "800", marginTop: 12 },
+  formSub: { color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 6, marginBottom: 16 },
+  label: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  groupTitle: {
+    color: GOLD,
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    marginTop: 4,
+  },
+  kindRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
-    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    marginBottom: 8,
+  },
+  kindRowOn: {
+    borderColor: GOLD,
+    backgroundColor: "rgba(229,193,88,0.1)",
+  },
+  kindRowLabel: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  kindRowHint: { color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 2, lineHeight: 16 },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  radioOn: { borderColor: GOLD },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: GOLD },
+  input: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
     color: "#fff",
-    fontSize: 16,
-  },
-  kindChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    marginRight: 8,
+    borderColor: "rgba(255,255,255,0.1)",
+    fontSize: 15,
+    marginBottom: 12,
   },
-  kindChipOn: { borderColor: GOLD, backgroundColor: "rgba(229,193,88,0.12)" },
-  kindText: { color: "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: "600" },
-  kindTextOn: { color: GOLD },
+  loginMuted: { color: "rgba(255,255,255,0.45)", fontSize: 13 },
+  loginLink: { color: GOLD, fontWeight: "700" },
 });

@@ -4,12 +4,12 @@ import { View, Text, StyleSheet } from "react-native";
 type Props = { size?: "large" | "medium" | "small" };
 
 /**
- * Official Kilode wordmark (brand asset):
- * Bold white "Kilode" with signature K figure + gold "!" and gold period dot.
- * Matches the transparent-bg logo mark used across Kilode.
+ * Official Kilode wordmark — clean white "Kilode!" + gold period.
+ * Matches brand mark: bold condensed wordmark, gold accent on the bang period.
+ * No overlapping decorative geometry (avoids entangled logo rendering).
  */
 export function KilodeWordmark({ size = "medium" }: Props) {
-  const scale = size === "large" ? 1 : size === "small" ? 0.52 : 0.72;
+  const scale = size === "large" ? 1 : size === "small" ? 0.5 : 0.72;
   const fontSize = 40 * scale;
   const gold = "#E5C158";
 
@@ -18,67 +18,29 @@ export function KilodeWordmark({ size = "medium" }: Props) {
       accessible
       accessibilityRole="image"
       accessibilityLabel="Kilode"
-      style={[styles.wrap, { height: fontSize * 1.25 }]}
+      style={[styles.wrap, { height: fontSize * 1.2 }]}
     >
       <View style={styles.row}>
-        {/* K block with figure mark */}
-        <View style={{ position: "relative" }}>
-          <Text
-            allowFontScaling={false}
-            style={[styles.word, { fontSize, lineHeight: fontSize * 1.08 }]}
-          >
-            K
-          </Text>
-          {/* Person figure integrated into K (head + torso) */}
-          <View
-            style={{
-              position: "absolute",
-              left: fontSize * 0.22,
-              top: fontSize * 0.02,
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={{
-                width: fontSize * 0.22,
-                height: fontSize * 0.22,
-                borderRadius: fontSize * 0.11,
-                backgroundColor: "#fff",
-              }}
-            />
-            <View
-              style={{
-                width: fontSize * 0.12,
-                height: fontSize * 0.28,
-                marginTop: -1,
-                backgroundColor: "#fff",
-                borderBottomLeftRadius: 2,
-                borderBottomRightRadius: 2,
-              }}
-            />
-          </View>
-        </View>
         <Text
           allowFontScaling={false}
-          style={[styles.word, { fontSize, lineHeight: fontSize * 1.08, marginLeft: -fontSize * 0.06 }]}
+          style={[styles.word, { fontSize, lineHeight: fontSize * 1.1 }]}
         >
-          ilode
+          Kilode
         </Text>
         <Text
           allowFontScaling={false}
-          style={[styles.bang, { fontSize: fontSize * 0.92, lineHeight: fontSize * 1.05, color: "#fff" }]}
+          style={[styles.bang, { fontSize: fontSize * 0.95, lineHeight: fontSize * 1.05 }]}
         >
           !
         </Text>
-        {/* Gold period dot under / beside bang — brand accent */}
         <View
           style={{
-            width: Math.max(5, fontSize * 0.16),
-            height: Math.max(5, fontSize * 0.16),
+            width: Math.max(5, fontSize * 0.15),
+            height: Math.max(5, fontSize * 0.15),
             borderRadius: 99,
             backgroundColor: gold,
             marginLeft: 1,
-            marginTop: fontSize * 0.55,
+            marginTop: fontSize * 0.58,
           }}
         />
       </View>
@@ -92,13 +54,14 @@ const styles = StyleSheet.create({
   word: {
     color: "#FFFFFF",
     fontWeight: "900",
-    letterSpacing: -2.4,
+    letterSpacing: -2.2,
     includeFontPadding: false,
   },
   bang: {
+    color: "#FFFFFF",
     fontWeight: "900",
     letterSpacing: -1.2,
     includeFontPadding: false,
-    marginLeft: -2,
+    marginLeft: -1,
   },
 });
