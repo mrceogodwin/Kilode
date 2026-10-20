@@ -44,9 +44,10 @@ async function tryLiveJson<T>(
   if (!API_BASE) {
     return { ok: false, data: fallback, source: "error", error: "Dedicated Kilode API is not configured", fn: fnName };
   }
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 12000);
+    timer = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(`${API_BASE}${path}`, {
       signal: ctrl.signal,
       headers: {
@@ -54,7 +55,6 @@ async function tryLiveJson<T>(
         "User-Agent": UA,
       },
     });
-    clearTimeout(timer);
     if (!res.ok) {
       return {
         ok: false,
@@ -80,7 +80,7 @@ async function tryLiveJson<T>(
     const msg = e instanceof Error ? e.message : "network";
     return { ok: false, data: fallback, source: "error", error: msg, fn: fnName };
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 
