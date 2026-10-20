@@ -90,18 +90,6 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
     if (match) setActive(match);
   }, [initialArticleId, data]);
 
-  useEffect(() => {
-    if (hero.length < 2) return;
-    const id = setInterval(() => {
-      setSlide((prev) => {
-        const next = (prev + 1) % hero.length;
-        carouselRef.current?.scrollTo({ x: next * (CAROUSEL_W + 12), animated: true });
-        return next;
-      });
-    }, 4500);
-    return () => clearInterval(id);
-  }, [hero.length]);
-
   const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = e.nativeEvent.contentOffset.x;
     setSlide(Math.round(x / (CAROUSEL_W + 12)));
@@ -121,7 +109,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.6 }}>
           {(active.kicker || "MEDIA").toUpperCase()} · {active.time || "Today"}
         </Text>
-        <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.4, marginTop: 8, lineHeight: 28 }}>
+        <Text style={{ color: C.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.55, marginTop: 8, lineHeight: 31 }}>
           {active.title}
         </Text>
         <Text style={{ color: C.text3, fontSize: 12, marginTop: 8 }}>{active.author || "Kilode Editorial"}</Text>
@@ -139,7 +127,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
             <Text style={{ color: C.accent, fontSize: 10, fontWeight: "700", letterSpacing: 0.6 }}>{ADS[0].label.toUpperCase()}</Text>
             <Text style={{ color: C.text, fontSize: 15, fontWeight: "700", marginTop: 4 }}>{ADS[0].title}</Text>
             <TouchableOpacity onPress={() => show("Ad destination opens when ad network is connected.")} style={{ marginTop: 10, alignSelf: "flex-start", backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 }}>
-              <Text style={{ color: "#111", fontWeight: "800", fontSize: 13 }}>{ADS[0].cta}</Text>
+              <Text style={{ color: "#F4F5F0", fontWeight: "800", fontSize: 13 }}>{ADS[0].cta}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -169,43 +157,10 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         <TouchableOpacity onPress={onBack} accessibilityRole="button">
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity onPress={() => setListMode(listMode === "grid" ? "list" : "grid")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name={listMode === "grid" ? "list-outline" : "grid-outline"} size={20} color={C.text2} />
-          </TouchableOpacity>
-        </View>
+        <View style={{ width: 20 }} />
       </View>
 
-      {/* Trending ticker */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, gap: 8 }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingRight: 4 }}>
-          <View style={{ backgroundColor: C.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
-            <Text style={{ color: "#F4F5F0", fontSize: 10, fontWeight: "800", letterSpacing: 0.7 }}>TRENDING</Text>
-          </View>
-        </View>
-        {TRENDING.map((t) => (
-          <TouchableOpacity
-            key={t}
-            onPress={() => show(`Search for “${t}” when Media search is live.`)}
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 999,
-              backgroundColor: C.elevated,
-              borderWidth: 1,
-              borderColor: C.border,
-            }}
-          >
-            <Text style={{ color: C.text2, fontSize: 12, fontWeight: "600" }}>#{t.replace(/\s+/g, "")}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Category chips — minimal */}
+      {/* Category navigation */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}>
         {CATEGORIES.map((c) => (
           <TouchableOpacity
@@ -246,7 +201,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                 onPress={() => setActive(a)}
                 style={{
                   width: CAROUSEL_W,
-                  height: 224,
+                  height: 236,
                   borderRadius: 16,
                   overflow: "hidden",
                   backgroundColor: a.tone || C.elevated,
@@ -263,8 +218,8 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    padding: 14,
-                    backgroundColor: "rgba(10,18,13,0.78)",
+                    padding: 16,
+                    backgroundColor: "rgba(10,18,13,0.82)",
                   }}
                 >
                   <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.8 }}>
@@ -293,34 +248,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         </View>
       ) : null}
 
-      {/* Portrait ad strip */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, marginBottom: 18 }}>
-        {ADS.map((ad) => (
-          <TouchableOpacity
-            key={ad.id}
-            activeOpacity={0.88}
-            onPress={() => show("Ad opens when the ad network is connected.")}
-            style={{
-              width: 140,
-              borderRadius: 14,
-              overflow: "hidden",
-              backgroundColor: ad.color,
-              borderWidth: 1,
-              borderColor: C.border,
-            }}
-          >
-            <Image source={{ uri: ad.imageUrl }} style={{ width: 140, height: 160 }} resizeMode="cover" />
-            <View style={{ padding: 10 }}>
-              <Text style={{ color: C.accent, fontSize: 9, fontWeight: "800", letterSpacing: 0.5 }}>{ad.label.toUpperCase()}</Text>
-              <Text style={{ color: C.text, fontSize: 12, fontWeight: "700", marginTop: 3 }} numberOfLines={2}>
-                {ad.title}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Section label + More */}
+      {/* Latest stories */}
       <View style={{ paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <Text style={{ color: C.text, fontSize: 15, fontWeight: "800" }}>Latest</Text>
         <TouchableOpacity onPress={() => setShowMore((v) => !v)}>
@@ -328,7 +256,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         </TouchableOpacity>
       </View>
 
-      {/* 3-column grid */}
+      {/* Editorial story feed */}
       {listMode === "grid" ? (
         <View style={{ paddingHorizontal: 16, flexDirection: "row", flexWrap: "wrap", gap: GRID_GAP }}>
           {gridItems.map((a) => (
@@ -379,7 +307,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
                 <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 0.5 }}>
                   {(a.kicker || "MEDIA").toUpperCase()} · {a.time || ""}
                 </Text>
-                <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 4, lineHeight: 19 }} numberOfLines={2}>
+                <Text style={{ color: C.text, fontSize: 15, fontWeight: "700", marginTop: 4, lineHeight: 21, letterSpacing: -0.2 }} numberOfLines={2}>
                   {a.title}
                 </Text>
               </View>
