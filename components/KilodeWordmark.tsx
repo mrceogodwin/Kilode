@@ -73,20 +73,20 @@ export function KilodeWordmark({ size = "medium" }: Props) {
             elevation: 2,
           }]} />
         </View>
-        <Text
-          allowFontScaling={false}
-          numberOfLines={1}
-          style={[styles.word, {
-            fontSize,
-            lineHeight: fontSize * 1.08,
-            letterSpacing: -fontSize * 0.105,
-            textShadowColor: "#315D40",
-            textShadowOffset: { width: 0, height: 2 },
-            textShadowRadius: 1.5,
-          }]}
-        >
-          ilode
-        </Text>
+        <View style={[styles.wordStack, { minHeight: fontSize * 1.08 }]}>
+          <Text allowFontScaling={false} numberOfLines={1} accessible={false}
+            style={[styles.word, styles.wordDepth, { fontSize, lineHeight: fontSize * 1.08, letterSpacing: -fontSize * 0.105 }]}>
+            ilode
+          </Text>
+          <Text allowFontScaling={false} numberOfLines={1} accessible={false}
+            style={[styles.word, styles.wordHighlight, { fontSize, lineHeight: fontSize * 1.08, letterSpacing: -fontSize * 0.105 }]}>
+            ilode
+          </Text>
+          <Text allowFontScaling={false} numberOfLines={1}
+            style={[styles.word, { fontSize, lineHeight: fontSize * 1.08, letterSpacing: -fontSize * 0.105, textShadowColor: "#315D40", textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1.5 }]}>
+            ilode
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -99,6 +99,9 @@ const styles = StyleSheet.create({
   stem: { position: "absolute", borderRadius: 3 },
   diagonal: { position: "absolute", borderRadius: 3 },
   dot: { position: "absolute" },
+  wordStack: { position: "relative", justifyContent: "center", overflow: "visible" },
+  wordDepth: { position: "absolute", left: 0, top: 2, color: "#315D40" },
+  wordHighlight: { position: "absolute", left: -0.5, top: -1, color: "#C4E6CB", opacity: 0.48 },
   word: {
     color: "#91C7A0",
     fontWeight: "900",
