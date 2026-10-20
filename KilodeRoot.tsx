@@ -250,12 +250,23 @@ function KilodeApp() {
           return;
         }
         setLiked((previous) => ({ ...previous, [id]: result.liked! }));
+        setTakes((previous) => previous.map((post) => {
+          if (String(post.id) !== id) return post;
+          const currentLikes = Number(post.likes_count ?? post.likes ?? 0);
+          return { ...post, likes: Math.max(0, currentLikes + (result.liked ? 1 : -1)), likes_count: Math.max(0, currentLikes + (result.liked ? 1 : -1)), likedByMe: result.liked };
+        }));
       } catch {
         show("Could not update like. Check your connection and try again.");
       }
       return;
     }
-    setLiked((previous) => ({ ...previous, [id]: !previous[id] }));
+    const nextLiked = !liked[id];
+    setLiked((previous) => ({ ...previous, [id]: nextLiked }));
+    setTakes((previous) => previous.map((post) => {
+      if (String(post.id) !== id) return post;
+      const currentLikes = Number(post.likes_count ?? post.likes ?? 0);
+      return { ...post, likes: Math.max(0, currentLikes + (nextLiked ? 1 : -1)), likes_count: Math.max(0, currentLikes + (nextLiked ? 1 : -1)), likedByMe: nextLiked };
+    }));
   };
 
   useEffect(() => {
@@ -494,7 +505,7 @@ function KilodeApp() {
 
     return (
       <HomeScreen
-        s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked}
+        s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked} onLikePost={handleLikePost}
         events={events} market={marketItems} jobs={jobItems}
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
