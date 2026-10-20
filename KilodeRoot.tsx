@@ -147,6 +147,10 @@ function KilodeApp() {
       setTab(next);
     }
   }, []);
+  const navigateBackRef = useRef(navigateBack);
+  const navigateForwardRefCallback = useRef(navigateForward);
+  navigateBackRef.current = navigateBack;
+  navigateForwardRefCallback.current = navigateForward;
   const edgeSwipeResponder = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gesture) => {
