@@ -242,6 +242,11 @@ export function HomeScreen({
       </View>
 
       <SectionHead C={C} title="Media" onSeeAll={() => onOpenMedia()} />
+      {news.length === 0 ? (
+        <TouchableOpacity onPress={() => onOpenMedia()} style={{ marginHorizontal: 16, padding: 14, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
+          <Text style={{ color: C.text2, fontSize: 13 }}>No stories loaded · open Media</Text>
+        </TouchableOpacity>
+      ) : (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
         {news.slice(0, 6).map((n: any) => (
           <TouchableOpacity key={n.id} activeOpacity={0.88} onPress={() => onOpenMedia(String(n.id))} style={{ width: 108 }}>
@@ -256,8 +261,14 @@ export function HomeScreen({
           </TouchableOpacity>
         ))}
       </ScrollView>
+      )}
 
       <SectionHead C={C} title="Music" onSeeAll={onOpenMusic} />
+      {tracks.length === 0 ? (
+        <TouchableOpacity onPress={onOpenMusic} style={{ marginHorizontal: 16, padding: 14, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
+          <Text style={{ color: C.text2, fontSize: 13 }}>No tracks loaded · open Music</Text>
+        </TouchableOpacity>
+      ) : (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
         {tracks.slice(0, 6).map((t: any) => (
           <TouchableOpacity key={t.id} activeOpacity={0.88} onPress={() => onPlayTrack(t)} style={{ width: 100 }}>
@@ -269,6 +280,7 @@ export function HomeScreen({
           </TouchableOpacity>
         ))}
       </ScrollView>
+      )}
 
       <SectionHead C={C} title="Socials" onSeeAll={onOpenSocials} />
       <TouchableOpacity
@@ -312,7 +324,11 @@ export function HomeScreen({
             <Image source={{ uri: takes[0].mediaUrl }} style={{ width: "100%", height: 130, borderRadius: 10, marginTop: 8, backgroundColor: C.elevated }} resizeMode="cover" />
           ) : null}
         </TouchableOpacity>
-      ) : null}
+      ) : (
+        <TouchableOpacity onPress={onOpenSocials} style={{ marginHorizontal: 16, padding: 14, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
+          <Text style={{ color: C.text2, fontSize: 13 }}>No posts in feed · open Socials</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
