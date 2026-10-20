@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ACCOUNT_GROUPS, ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 import { KilodeWordmark } from "../components/KilodeWordmark";
 
-const ACCENT = "#46B978";
+const ACCENT = "#D4AF37";
 
 type Props = {
   isDark: boolean;
@@ -293,13 +293,13 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#101714" },
+  root: { flex: 1, backgroundColor: "#0D0D10" },
   welcome: { flex: 1, paddingHorizontal: 20, paddingBottom: 16 },
   logoWrap: { alignItems: "center", marginTop: 8, marginBottom: 8 },
   hero: {
     height: 300,
     borderRadius: 24,
-    backgroundColor: "#1B2821",
+    backgroundColor: "#18181C",
     overflow: "hidden",
     marginBottom: 18,
   },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     height: 280,
     borderRadius: 140,
     borderWidth: 1,
-    borderColor: "rgba(70,185,120,0.22)",
+    borderColor: "rgba(212,175,55,0.22)",
     top: -40,
     alignSelf: "center",
     left: "50%",
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 70,
     overflow: "hidden",
-    backgroundColor: "#24352B",
+    backgroundColor: "#2A2A30",
   },
   portraitImg: { width: "100%", height: "100%" },
   portraitFade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(16,23,20,0.28)",
+    backgroundColor: "rgba(13,13,16,0.28)",
   },
   floatCard: {
     position: "absolute",
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   },
   kindRowOn: {
     borderColor: ACCENT,
-    backgroundColor: "rgba(70,185,120,0.12)",
+    backgroundColor: "rgba(212,175,55,0.12)",
   },
   kindRowLabel: { color: "#fff", fontWeight: "700", fontSize: 14 },
   kindRowHint: { color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 2, lineHeight: 16 },
