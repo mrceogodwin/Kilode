@@ -522,7 +522,7 @@ function KilodeApp() {
   };
 
   const contextCreateLabel: Record<string, string> = {
-    music: "Track", events: "Event", market: "Market", jobs: "Job", cinema: "Film", ads: "Ad",
+    music: "Track", events: "Event", market: "Market", jobs: "Job", cinema: "Film", ads: "Ad", media: "Article", communities: "Community", creators: "Creator",
   };
   const contextCreateAction = contextCreateLabel[createContext];
   const createOptions = contextCreateAction ? CREATE.filter((option) => option.label === contextCreateAction) : CREATE;
@@ -687,6 +687,7 @@ function KilodeApp() {
                 const iconName: keyof typeof Ionicons.glyphMap = ({
                   Post: "create-outline", Track: "musical-notes-outline", Film: "film-outline",
                   Job: "briefcase-outline", Market: "bag-handle-outline", Event: "calendar-outline", Ad: "megaphone-outline",
+                  Article: "newspaper-outline", Community: "people-outline", Creator: "videocam-outline",
                 } as Record<string, keyof typeof Ionicons.glyphMap>)[o.label] || "add-circle-outline";
                 const subtitle = o.label === "Post" ? "Share something with your feed"
                   : o.label === "Track" ? "Open Music and its track tools"
