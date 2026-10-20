@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { createMusicReleaseDraft, listOwnMusicReleases, uploadMusicReleaseAudio } from "../lib/supabase";
+import { createMusicReleaseDraft, listOwnMusicReleases, submitMusicReleaseForReview, uploadMusicReleaseAudio } from "../lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { can } from "../lib/permissions";
@@ -53,6 +53,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [editingReleaseId, setEditingReleaseId] = useState<string | null>(null);
   const [myReleases, setMyReleases] = useState<any[]>([]);
   const [loadingReleases, setLoadingReleases] = useState(false);
+  const [submittingReleaseId, setSubmittingReleaseId] = useState<string | null>(null);
   const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
@@ -219,8 +220,26 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <View style={{ flex: 1 }}>
                 <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }} numberOfLines={1}>{release.title}</Text>
                 <Text style={{ color: C.text3, fontSize: 11, marginTop: 3, textTransform: "capitalize" }}>{release.release_type} · {release.status}</Text>
+                <Text style={{ color: release.audio_path ? C.accent : C.text3, fontSize: 10, marginTop: 3 }}>{release.audio_path ? "Audio attached privately" : "Audio not attached"}</Text>
+                {release.status === "draft" && release.audio_path ? (
+                  <TouchableOpacity
+                    disabled={submittingReleaseId === release.id}
+                    onPress={async () => {
+                      if (!userId) { show("Sign in to submit your release."); return; }
+                      setSubmittingReleaseId(release.id);
+                      const result = await submitMusicReleaseForReview(userId, release.id);
+                      setSubmittingReleaseId(null);
+                      if (!result.ok) { show(result.error || "Could not submit release."); return; }
+                      setReleaseRefreshKey((key) => key + 1);
+                      show("Release submitted for review. It is still private until approved and published.");
+                    }}
+                    style={{ alignSelf: "flex-start", marginTop: 7, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: C.accentSoft, opacity: submittingReleaseId === release.id ? 0.6 : 1 }}
+                  >
+                    <Text style={{ color: C.accent, fontWeight: "700", fontSize: 11 }}>{submittingReleaseId === release.id ? "Submitting…" : "Submit for review"}</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
-              <Ionicons name={release.status === "published" ? "checkmark-circle" : "time-outline"} size={18} color={release.status === "published" ? C.accent : C.text3} />
+              <Ionicons name={release.status === "published" ? "checkmark-circle" : release.status === "submitted" ? "shield-checkmark-outline" : "time-outline"} size={18} color={release.status === "published" ? C.accent : C.text3} />
             </View>
           )) : (
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{loadingReleases ? "Loading your releases…" : "Your private drafts and submissions will appear here."}</Text>
