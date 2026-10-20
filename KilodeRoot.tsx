@@ -168,7 +168,8 @@ function KilodeApp() {
     if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} onBack={() => go("home")} show={show} />;
     if (tab === "market") return <MarketScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "jobs") return <JobsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "communities" || tab === "chat") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "communities") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "creators") return <CreatorsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} onOpenTrack={setSelectedTrack} onOpenArtist={setSelectedArtist} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
@@ -193,29 +194,9 @@ function KilodeApp() {
             { id: "n4", icon: "🎵", text: "New drop in Afrobeats charts", time: "3h", unread: false, lane: "music" },
             { id: "n5", icon: "📅", text: "Lagos Music Festival is this weekend", time: "5h", unread: false, lane: "events" },
           ]).map((a: any) => (
-            <TouchableOpacity
-              key={a.id}
-              onPress={() => go(a.lane || "home")}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                marginHorizontal: 12,
-                marginBottom: 8,
-                padding: 12,
-                borderRadius: 14,
-                backgroundColor: a.unread ? C.elevated : C.card,
-                borderWidth: 1,
-                borderColor: a.unread ? C.accent + "44" : C.border,
-              }}
-            >
-              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: C.card, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ fontSize: 18 }}>{a.icon}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: C.text, fontWeight: a.unread ? "700" : "600", fontSize: 14, lineHeight: 19 }}>{a.text}</Text>
-                <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{a.time}</Text>
-              </View>
+            <TouchableOpacity key={a.id} onPress={() => go(a.lane || "home")} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 12, marginBottom: 8, padding: 12, borderRadius: 14, backgroundColor: a.unread ? C.elevated : C.card, borderWidth: 1, borderColor: a.unread ? C.accent + "44" : C.border }}>
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: C.card, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 18 }}>{a.icon}</Text></View>
+              <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: a.unread ? "700" : "600", fontSize: 14 }}>{a.text}</Text><Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{a.time}</Text></View>
               {a.unread ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent }} /> : null}
             </TouchableOpacity>
           ))}
@@ -269,7 +250,7 @@ function KilodeApp() {
         </ScrollView>
       );
     }
-    if (DESKS.some((d) => d.id === tab) && !["events", "market", "jobs", "chat", "creators"].includes(tab)) {
+    if (DESKS.some((d) => d.id === tab) && !["events", "market", "jobs", "chat", "creators", "communities"].includes(tab)) {
       const d = DESKS.find((x) => x.id === tab);
       const items = LISTINGS[tab] || [];
       return (
@@ -287,25 +268,12 @@ function KilodeApp() {
 
     return (
       <HomeScreen
-        s={s}
-        C={C}
-        sessionName={session.name || "there"}
-        news={news}
-        tracks={tracks}
-        takes={takes}
-        liked={liked}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
+        s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked}
+        refreshing={refreshing} onRefresh={onRefresh}
         onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
-        onOpenMusic={() => go("music")}
-        onOpenEvents={() => go("events")}
-        onOpenMarket={() => go("market")}
-        onOpenSocials={() => go("socials")}
-        onOpenPost={(p) => setSelectedPost(p)}
-        onOpenProfile={(u) => setSelectedProfile(u)}
-        onCompose={() => setComposeOpen(true)}
-        onPlayTrack={(t) => setSelectedTrack(t)}
-        show={show}
+        onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
+        onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
+        onCompose={() => setComposeOpen(true)} onPlayTrack={(t) => setSelectedTrack(t)} show={show}
       />
     );
   };
@@ -318,6 +286,11 @@ function KilodeApp() {
     : tab === "events" ? "Events"
     : tab === "market" ? "Market"
     : tab === "jobs" ? "Jobs"
+    : tab === "chat" ? "Chat"
+    : tab === "communities" ? "Communities"
+    : tab === "creators" ? "Creators"
+    : tab === "cinema" ? "Cinema"
+    : tab === "music" ? "Music"
     : DESKS.find((d) => d.id === tab)?.label;
 
   return (
@@ -369,7 +342,7 @@ function KilodeApp() {
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
             <View style={s.deskGrid}>
-              {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "💬" }, { id: "myspace", label: "My Space", icon: "🏠" }].map((d) => (
+              {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "💬" }, { id: "chat", label: "Chat", icon: "💬" }, { id: "myspace", label: "My Space", icon: "🏠" }].map((d) => (
                 <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
                   <Ionicons name={systemIconName(d.icon)} size={22} color={C.accent} />
                   <Text style={s.deskGridLabel}>{d.label}</Text>
