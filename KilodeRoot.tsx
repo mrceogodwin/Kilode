@@ -75,6 +75,7 @@ function DetailMiniPlayer({ s, C, track, isPlaying, progress, onToggle, onClose 
 function PlaybackEqualizer({ isPlaying, color }: { isPlaying: boolean; color: string }) {
   const bars = useRef([0.35, 0.65, 0.45, 0.8, 0.3].map(() => new Animated.Value(0.25))).current;
   const loops = useRef<Animated.CompositeAnimation[]>([]);
+  const staggerTimers: ReturnType<typeof setTimeout>[] = [];
 
   useEffect(() => {
     loops.current.forEach((animation) => animation.stop());
@@ -101,7 +102,6 @@ function PlaybackEqualizer({ isPlaying, color }: { isPlaying: boolean; color: st
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying]);
 
-  const staggerTimers: ReturnType<typeof setTimeout>[] = [];
   return (
     <View accessibilityLabel={isPlaying ? "Animated audio equalizer" : "Audio paused"} style={{ height: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3, width: 27 }}>
       {bars.map((bar, index) => (
