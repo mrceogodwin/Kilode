@@ -42,6 +42,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
   // Multi-step: welcome → pick account type → credentials
   const [mode, setMode] = useState<"welcome" | "kind" | "in" | "up">("welcome");
   const [handle, setHandle] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind | null>(null);
@@ -61,7 +62,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
     try {
       const result =
         mode === "up"
-          ? await onSignUp(handle.trim(), password, kind as AccountKind, name.trim() || undefined)
+          ? await onSignUp(handle.trim(), password, kind as AccountKind, name.trim() || undefined, email.trim())
           : await onSignIn(handle.trim(), password, kind || undefined);
       if (!result.ok) show(result.error || "Something went wrong. Try again.");
       else show(mode === "up" ? `Welcome to Kilode · ${kind}` : "Welcome back");
@@ -225,7 +226,24 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
             </>
           ) : null}
 
-          <Text style={styles.label}>Username</Text>
+          {mode === "up" ? (
+            <>
+              <Text style={styles.label}>Email address</Text>
+              <TextInput
+                style={styles.input}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                autoComplete="email"
+                placeholder="you@example.com"
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </>
+          ) : null}
+          <Text style={styles.label}>{mode === "in" ? "Email or username" : "Username"}</Text>
           <TextInput
             style={styles.input}
             autoCapitalize="none"
