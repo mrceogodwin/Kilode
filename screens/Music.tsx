@@ -208,10 +208,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   };
 
   const openMusicDestination = (name: string, genre?: string) => {
-    setDestination((current) => {
-      if (current && current !== name) setDestinationHistory((history) => [...history, current]);
-      return name;
-    });
+    if (destination && destination !== name) setDestinationHistory((history) => [...history, destination]);
+    setDestination(name);
     setSelectedGenre(genre ?? null);
     setMusicQuery("");
   };
