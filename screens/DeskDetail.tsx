@@ -15,12 +15,13 @@ type Props = {
 /** Feature-specific detail surface for Jobs, Market, Events and other Kilode desks. */
 export function DeskDetailScreen({ s, C, system, item, onBack, show }: Props) {
   const title = String(item?.title || item?.name || system);
-  const action = system === "Jobs" ? "Apply for this job"
-    : system === "Market" ? "Contact seller"
-    : system === "Events" ? "RSVP to event"
-    : system === "Rent" ? "Contact listing"
-    : system === "Ads" ? "View campaign"
-    : `Open ${system.toLowerCase()}`;
+  const normalizedSystem = system.toLowerCase();
+  const action = normalizedSystem === "jobs" ? "Apply for this job"
+    : normalizedSystem === "market" ? "Contact seller"
+    : normalizedSystem === "events" ? "RSVP to event"
+    : normalizedSystem === "rent" ? "Contact listing"
+    : normalizedSystem === "ads" ? "View campaign"
+    : `Open ${normalizedSystem}`;
 
   return (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
@@ -33,7 +34,7 @@ export function DeskDetailScreen({ s, C, system, item, onBack, show }: Props) {
           <Image source={{ uri: item.imageUrl }} style={{ height: 210, borderRadius: 18, marginBottom: 18, backgroundColor: C.elevated }} resizeMode="cover" />
         ) : (
           <View style={{ height: 120, borderRadius: 18, marginBottom: 18, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name={system === "Jobs" ? "briefcase-outline" : system === "Events" ? "calendar-outline" : system === "Market" ? "bag-handle-outline" : "grid-outline"} size={38} color={C.accent} />
+            <Ionicons name={normalizedSystem === "jobs" ? "briefcase-outline" : normalizedSystem === "events" ? "calendar-outline" : normalizedSystem === "market" ? "bag-handle-outline" : "grid-outline"} size={38} color={C.accent} />
           </View>
         )}
         <Text style={[s.meta, { color: C.accent, fontWeight: "700", marginBottom: 8 }]}>{system.toUpperCase()}</Text>
