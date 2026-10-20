@@ -107,7 +107,7 @@ function KilodeApp() {
     setNews(Array.isArray(n.data) ? n.data : []); setTracks(Array.isArray(tr.data) ? tr.data : []);
     setActivity(Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
-    const next = sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "live";
+    const next = sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "mock";
     setSource(next as any); return next as any;
   }, [session?.token]);
 
