@@ -415,7 +415,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                   </View>
                 );
               })}
-              {!destinationTracks.length ? <View style={{ alignItems: "center", paddingVertical: 30 }}><Ionicons name="musical-notes-outline" size={32} color={C.text3} /><Text style={{ color: C.text, fontWeight: "700", marginTop: 10 }}>{destination === "Library" ? "No saved tracks yet" : destination === "Recently Played" ? "Nothing played yet" : "No matching music yet"}</Text><Text style={{ color: C.text3, fontSize: 12, textAlign: "center", marginTop: 6, lineHeight: 18 }}>When music is available in the connected catalogue, it will appear here.</Text></View> : null}
+              {!(activePlaylist ? activePlaylistTracks : destinationTracks).length ? <View style={{ alignItems: "center", paddingVertical: 30 }}><Ionicons name="musical-notes-outline" size={32} color={C.text3} /><Text style={{ color: C.text, fontWeight: "700", marginTop: 10 }}>{activePlaylist ? "No tracks for this collection yet" : destination === "Library" ? "No saved tracks yet" : destination === "Recently Played" ? "Nothing played yet" : "No matching music yet"}</Text><Text style={{ color: C.text3, fontSize: 12, textAlign: "center", marginTop: 6, lineHeight: 18 }}>{activePlaylist ? "This collection will fill in as matching tracks become available in the connected catalogue." : "When music is available in the connected catalogue, it will appear here."}</Text></View> : null}
             </>
           ) : null}
         </ScrollView>
