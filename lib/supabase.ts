@@ -318,14 +318,16 @@ export async function uploadMusicReleaseAudio(
     });
     if (uploadError) return { ok: false, error: uploadError.message };
 
-    const { error: updateError } = await sb.from("music_releases")
+    const { data: updated, error: updateError } = await sb.from("music_releases")
       .update({ audio_path: path })
       .eq("id", releaseId)
       .eq("artist_id", artistId)
-      .eq("status", "draft");
-    if (updateError) {
+      .eq("status", "draft")
+      .select("id")
+      .maybeSingle();
+    if (updateError || !updated) {
       await sb.storage.from("kilode-music-audio").remove([path]);
-      return { ok: false, error: updateError.message };
+      return { ok: false, error: updateError?.message || "This release is no longer an editable draft." };
     }
     return { ok: true, path };
   } catch {
