@@ -8,7 +8,7 @@ type Props = {
   liked: Record<string, boolean>; refreshing: boolean; onRefresh: () => void;
   onOpenMedia: (id?: string) => void; onOpenMusic: () => void; onOpenEvents: () => void;
   onOpenMarket: () => void; onOpenJobs: () => void; events?: any[]; market?: any[]; jobs?: any[];
-  onOpenSystem: (id: string) => void; onOpenSocials: () => void; onOpenPost: (p: any) => void;
+  onOpenSystem: (id: string) => void; onOpenSocials: () => void; onOpenPost: (p: any) => void; onOpenItem: (system: string, item: any) => void;
   onOpenProfile: (u: any) => void; onCompose: () => void; onPlayTrack: (t: any) => void;
   show: (m: string) => void;
 };
@@ -41,7 +41,7 @@ function firstText(...values: any[]) {
 export function HomeScreen({
   s, C, sessionName, news, tracks, takes, liked, refreshing, onRefresh,
   onOpenMedia, onOpenMusic, onOpenEvents, onOpenMarket, onOpenJobs,
-  events = [], market = [], jobs = [], onOpenSystem, onOpenSocials, onOpenPost,
+  events = [], market = [], jobs = [], onOpenSystem, onOpenSocials, onOpenPost, onOpenItem,
   onOpenProfile, onCompose, onPlayTrack, show,
 }: Props) {
   const [system, setSystem] = useState("all");
@@ -78,9 +78,9 @@ export function HomeScreen({
       ...takes.map((x) => ({ id: "social-" + x.id, kind: "Socials", raw: x, date: timeOf(x), title: firstText(x.name, x.author?.name, x.handle, "Kilode member"), body: firstText(x.text, x.body, x.content), image: firstText(x.mediaUrl, x.imageUrl, x.image_url), sub: firstText(x.handle, x.author?.handle, x.time, "Socials"), onPress: () => onOpenPost(x) })),
       ...news.map((x) => ({ id: "media-" + x.id, kind: "Media", raw: x, date: timeOf(x), title: firstText(x.title, "Story"), body: firstText(x.kicker, x.summary, x.body, x.author), image: firstText(x.imageUrl, x.image_url, x.image), sub: firstText(x.author, x.time, "Media"), onPress: () => onOpenMedia(String(x.id)) })),
       ...tracks.map((x) => ({ id: "music-" + x.id, kind: "Music", raw: x, date: timeOf(x), title: firstText(x.title, "Track"), body: firstText(x.description, x.artist, x.artist_name, "Open Music"), image: firstText(x.coverUrl, x.cover_url, x.imageUrl), sub: firstText(x.artist, x.artist_name, x.time, "Music"), onPress: () => onPlayTrack(x) })),
-      ...events.map((x) => ({ id: "event-" + x.id, kind: "Events", raw: x, date: timeOf(x), title: firstText(x.title, "Event"), body: firstText(x.venue, x.meta, x.location, "Open Events"), image: firstText(x.imageUrl, x.image_url, x.cover_url), sub: firstText(x.time, x.date, "Events"), onPress: onOpenEvents })),
-      ...market.map((x) => ({ id: "market-" + x.id, kind: "Market", raw: x, date: timeOf(x), title: firstText(x.title, "Listing"), body: firstText(x.price, x.price_label, x.meta, x.category, "Open Market"), image: firstText(x.imageUrl, x.image_url, x.image, x.cover_url), sub: firstText(x.location, x.category, "Market"), onPress: onOpenMarket })),
-      ...jobs.map((x) => ({ id: "job-" + x.id, kind: "Jobs", raw: x, date: timeOf(x), title: firstText(x.title, "Opportunity"), body: firstText(x.salary, x.salary_label, x.meta, x.location, x.location_label, "Open Jobs"), image: firstText(x.imageUrl, x.image_url, x.image), sub: firstText(x.company, x.location, x.location_label, "Jobs"), onPress: onOpenJobs })),
+      ...events.map((x) => ({ id: "event-" + x.id, kind: "Events", raw: x, date: timeOf(x), title: firstText(x.title, "Event"), body: firstText(x.venue, x.meta, x.location, "Open Events"), image: firstText(x.imageUrl, x.image_url, x.cover_url), sub: firstText(x.time, x.date, "Events"), onPress: () => onOpenItem("Events", x) })),
+      ...market.map((x) => ({ id: "market-" + x.id, kind: "Market", raw: x, date: timeOf(x), title: firstText(x.title, "Listing"), body: firstText(x.price, x.price_label, x.meta, x.category, "Open Market"), image: firstText(x.imageUrl, x.image_url, x.image, x.cover_url), sub: firstText(x.location, x.category, "Market"), onPress: () => onOpenItem("Market", x) })),
+      ...jobs.map((x) => ({ id: "job-" + x.id, kind: "Jobs", raw: x, date: timeOf(x), title: firstText(x.title, "Opportunity"), body: firstText(x.salary, x.salary_label, x.meta, x.location, x.location_label, "Open Jobs"), image: firstText(x.imageUrl, x.image_url, x.image), sub: firstText(x.company, x.location, x.location_label, "Jobs"), onPress: () => onOpenItem("Jobs", x) })),
     ];
     return rows.sort((a, b) => b.date - a.date);
   }, [takes, news, tracks, events, market, jobs, onOpenPost, onOpenMedia, onPlayTrack, onOpenEvents, onOpenMarket, onOpenJobs]);
