@@ -90,6 +90,7 @@ export async function createPost(body: string, userId: string): Promise<{ ok: bo
     .select("id, body, media_url, created_at, author:profiles(handle, display_name, kind)")
     .single();
   if (error) return { ok: false, error: error.message };
+  const author = Array.isArray(data.author) ? data.author[0] : data.author;
   return {
     ok: true,
     data: {
@@ -98,9 +99,9 @@ export async function createPost(body: string, userId: string): Promise<{ ok: bo
       body: data.body,
       mediaUrl: data.media_url,
       time: data.created_at,
-      name: data.author?.display_name || "Member",
-      handle: data.author?.handle || "member",
-      role: data.author?.kind || "member",
+      name: author?.display_name || "Member",
+      handle: author?.handle || "member",
+      role: author?.kind || "member",
       likes: 0,
       comments: 0,
       reposts: 0,
