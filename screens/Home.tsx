@@ -305,12 +305,14 @@ export function HomeScreen({
         <Text style={{ color: C.text3, fontSize: 13, flex: 1 }}>What's on your mind?</Text>
       </TouchableOpacity>
 
-      {takes[0] ? (
+      {takes.length ? takes.slice(0, 3).map((take: any) => (
         <TouchableOpacity
+          key={String(take.id)}
           activeOpacity={0.9}
-          onPress={() => onOpenPost(takes[0])}
+          onPress={() => onOpenPost(take)}
           style={{
             marginHorizontal: 16,
+            marginBottom: 8,
             padding: 12,
             borderRadius: 14,
             backgroundColor: C.card,
@@ -318,13 +320,13 @@ export function HomeScreen({
             borderColor: C.border,
           }}
         >
-          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{takes[0].name}</Text>
-          <Text style={{ color: C.text, fontSize: 13, lineHeight: 18, marginTop: 6 }} numberOfLines={3}>{takes[0].text}</Text>
-          {takes[0].mediaUrl ? (
-            <Image source={{ uri: takes[0].mediaUrl }} style={{ width: "100%", height: 130, borderRadius: 10, marginTop: 8, backgroundColor: C.elevated }} resizeMode="cover" />
+          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{take.name || take.author?.name || "Kilode member"}</Text>
+          <Text style={{ color: C.text, fontSize: 13, lineHeight: 18, marginTop: 6 }} numberOfLines={3}>{take.text || take.body || ""}</Text>
+          {take.mediaUrl ? (
+            <Image source={{ uri: take.mediaUrl }} style={{ width: "100%", height: 130, borderRadius: 10, marginTop: 8, backgroundColor: C.elevated }} resizeMode="cover" />
           ) : null}
         </TouchableOpacity>
-      ) : (
+      )) : (
         <TouchableOpacity onPress={onOpenSocials} style={{ marginHorizontal: 16, padding: 14, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
           <Text style={{ color: C.text2, fontSize: 13 }}>No posts in feed · open Socials</Text>
         </TouchableOpacity>
