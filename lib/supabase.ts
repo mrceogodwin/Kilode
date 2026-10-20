@@ -380,3 +380,40 @@ export async function listOwnMusicReleases(artistId: string): Promise<{ ok: bool
   return { ok: true, data: data || [] };
 }
 
+
+
+/** List the signed-in artist's support pages. Payment records remain server-controlled. */
+export async function listOwnSupportPages(artistId: string): Promise<{ ok: boolean; data: any[]; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, data: [], error: "Kilode support backend is not configured." };
+  if (!artistId) return { ok: false, data: [], error: "Sign in to your artist account first." };
+  const { data, error } = await sb.from("support_pages")
+    .select("id, title, message, currency, status, created_at")
+    .eq("recipient_id", artistId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) return { ok: false, data: [], error: error.message };
+  return { ok: true, data: data || [] };
+}
+
+/** Create an artist support page. This does not initiate or confirm a payment. */
+export async function createArtistSupportPage(
+  artistId: string,
+  input: { title?: string; message?: string; currency?: string }
+): Promise<{ ok: boolean; data?: any; error?: string }> {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, error: "Kilode support backend is not configured." };
+  if (!artistId) return { ok: false, error: "Sign in to your artist account first." };
+  const title = (input.title || "Support my music").trim();
+  const message = (input.message || "If you enjoy my music, you can support my work here. Support is voluntary.").trim();
+  const currency = (input.currency || "NGN").toUpperCase();
+  if (title.length < 2 || title.length > 100) return { ok: false, error: "Support page title must be 2–100 characters." };
+  if (message.length > 500) return { ok: false, error: "Support message must be 500 characters or fewer." };
+  if (!/^[A-Z]{3}$/.test(currency)) return { ok: false, error: "Use a valid three-letter currency code." };
+  const { data, error } = await sb.from("support_pages")
+    .insert({ recipient_id: artistId, title, message, currency, status: "active" })
+    .select("id, title, message, currency, status, created_at")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data };
+}
