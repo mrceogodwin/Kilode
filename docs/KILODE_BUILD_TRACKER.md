@@ -8,7 +8,7 @@
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
 - **Latest work:** Home floating create action is now a two-column native grid; music mini-player has a playback-aware animated equalizer and status label. Music artist carousel uses registered artist profiles; avatar failures fall back safely. Header wordmark redesign is also in the branch.
-- **Latest source checkpoint `749fbdf7`:** GitHub Actions `Kilode native validation` PASSED (TypeScript, Expo Doctor, and iOS JavaScript bundle export); `Kilode Web Preview Check` PASSED. This verifies source/export checks only—not an installable iOS binary, physical-device behaviour, or backend integration.
+- **Latest source checkpoint `de74e7e3`:** GitHub Actions `Kilode native validation` PASSED (TypeScript, Expo Doctor, and iOS JavaScript bundle export); `Kilode Web Preview Check` PASSED. This verifies source/export checks only—not an installable iOS binary, physical-device behaviour, or backend integration.
 - **Vercel preview:** deployment attempt for this source was blocked by Vercel's `api-deployments-free-per-day` limit (retry after 24 hours). Do not claim the live preview has updated.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
