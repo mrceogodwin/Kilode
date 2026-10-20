@@ -149,7 +149,7 @@ export function MarketScreen({ s, C, onBack, show, accountKind }: Props) {
               )}
               <View style={{ padding: 10 }}>
                 <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }} numberOfLines={2}>{p.title}</Text>
-                <Text style={{ color: C.accent, fontWeight: "800", fontSize: 14, marginTop: 4 }}>{p.price}</Text>
+                <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14, marginTop: 4 }}>{p.price}</Text>
                 {p.rating ? <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>★ {p.rating}</Text> : null}
               </View>
             </View>
