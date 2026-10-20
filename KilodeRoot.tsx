@@ -250,7 +250,7 @@ function KilodeApp() {
       const chips = ["All", "Likes", "Comments", "Follows"];
       return (
         <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 28 }} refreshControl={rc} showsVerticalScrollIndicator={false}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 4, marginBottom: 8 }}><Text style={{ color: C.text, fontSize: 22, fontWeight: "800" }}>Notifications</Text></View>
+          <View style={{ paddingHorizontal: 16, paddingTop: 4, marginBottom: 8 }}><Text style={{ color: C.text, fontSize: 19, fontWeight: "600", letterSpacing: -0.3 }}>Notifications</Text></View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, marginBottom: 12 }}>
             {chips.map((f, i) => (
               <View key={f} style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: i === 0 ? C.accent : "transparent", borderWidth: 1, borderColor: i === 0 ? C.accent : C.border }}>
@@ -298,7 +298,7 @@ function KilodeApp() {
               <Text style={{ color: C.text, fontSize: 28, fontWeight: "800" }}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>{displayName || session.name}</Text>
+              <Text style={{ color: C.text, fontSize: 16, fontWeight: "600", letterSpacing: -0.15 }}>{displayName || session.name}</Text>
               <Text style={{ color: C.text2, marginTop: 2 }}>@{displayHandle || session.handle}</Text>
               <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700", marginTop: 4 }}>{accountKindLabel(session.kind)}</Text>
               <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
@@ -314,8 +314,8 @@ function KilodeApp() {
             </TouchableOpacity>
           </View>
           <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 22 }}>
-            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>{takes.length || 0}</Text><Text style={s.meta}>Posts</Text></View>
-            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Followers</Text></View>
+            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "600", fontSize: 16 }}>{takes.length || 0}</Text><Text style={s.meta}>Posts</Text></View>
+            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "600", fontSize: 16 }}>—</Text><Text style={s.meta}>Followers</Text></View>
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Following</Text></View>
           </View>
           <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, marginTop: 22, marginBottom: 10 }}>
