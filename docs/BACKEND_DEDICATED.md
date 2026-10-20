@@ -78,6 +78,9 @@ Never present seed as production users or live analytics.
 2. SQL → run `supabase/migrations/001_kilode_core.sql`.
 3. Copy URL + anon key into local `.env` (from `.env.example`).
 4. Confirm tip branch has updated `lib/config.ts`.
-5. Run TypeScript, Expo Doctor and browser export checks.\n6. Test sign-up, profile creation, Socials posting, feed refresh and cross-device persistence with a real account.\n7. Build and secure the remaining create flows for Media, Music, Events, Market and Jobs.
+5. Run TypeScript, Expo Doctor and browser export checks.
+6. Test sign-up, profile creation, Socials posting, feed refresh and cross-device persistence with a real account.
+7. Build and secure the remaining create flows for Media, Music, Events, Market and Jobs.
 
-**Code readiness:** shared feed loaders, Socials publishing, catalogue reads and Realtime listeners are implemented.\n**Backend readiness:** still **not operational/verified** until a dedicated project is configured, the migration is applied, and real-user tests pass.
+**Code readiness:** shared feed loaders, Socials publishing, catalogue reads and Realtime listeners are implemented.
+**Backend readiness:** still **not operational/verified** until a dedicated project is configured, the migration is applied, and real-user tests pass.
