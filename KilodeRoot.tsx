@@ -164,9 +164,13 @@ function KilodeApp() {
       setSource("mock"); return "mock" as const;
     }
     const [t, r, n, tr, a] = await Promise.all([getBackendMode() === "supabase" ? loadSocialsFeed() : fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token)]);
-    setTakes(Array.isArray(t.data) ? t.data : []); setRooms(Array.isArray(r.data) ? r.data : []);
-    setNews(Array.isArray(n.data) ? n.data : []); setTracks(Array.isArray(tr.data) ? tr.data : []);
-    setActivity(Array.isArray(a.data) ? a.data : []);
+    // Keep the native preview visually populated when a backend is not connected.
+    // Seed data is used only for non-live sources; live empty responses stay genuinely empty.
+    setTakes(t.source === "live" && Array.isArray(t.data) ? t.data : TAKES);
+    setRooms(r.source === "live" && Array.isArray(r.data) ? r.data : ROOMS);
+    setNews(n.source === "live" && Array.isArray(n.data) ? n.data : NEWS);
+    setTracks(tr.source === "live" && Array.isArray(tr.data) ? tr.data : TRACKS);
+    setActivity(a.source === "live" && Array.isArray(a.data) ? a.data : ACTIVITY);
     const sources = [t, r, n, tr].map((x) => x.source);
     const next = sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "mock";
     setSource(next as any); return next as any;
