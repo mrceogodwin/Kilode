@@ -58,8 +58,8 @@ export function makeStyles(C: Palette, isDark: boolean) {
     },
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
     headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-    headerTitle: { fontSize: 16, fontWeight: "600", color: C.text, letterSpacing: -0.35 },
-    brand: { fontSize: 23, fontWeight: "800", color: C.text, letterSpacing: -1.05 },
+    headerTitle: { fontSize: 15, fontWeight: "600", color: C.text, letterSpacing: -0.25 },
+    brand: { fontSize: 20, fontWeight: "700", color: C.text, letterSpacing: -0.7 },
     brandAccent: { color: C.accent },
 
     livePill: {
@@ -441,8 +441,8 @@ export function makeStyles(C: Palette, isDark: boolean) {
       borderColor: C.border,
     },
     playerArt: { width: 36, height: 36, borderRadius: 8 },
-    playerTitle: { fontSize: 13, fontWeight: "700", color: C.text },
-    playerSub: { fontSize: 11, color: C.text2 },
+    playerTitle: { fontSize: 12, fontWeight: "600", color: C.text, letterSpacing: -0.15 },
+    playerSub: { fontSize: 10, color: C.text2, letterSpacing: 0.05 },
     playerBtn: { fontSize: 16, color: C.text2, padding: 6 },
 
     modalRoot: { flex: 1, justifyContent: "flex-end" },
