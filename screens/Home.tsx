@@ -10,7 +10,7 @@ type Props = {
   onOpenMarket: () => void; onOpenJobs: () => void; events?: any[]; market?: any[]; jobs?: any[];
   onOpenSystem: (id: string) => void; onOpenSocials: () => void; onOpenPost: (p: any) => void; onOpenItem: (system: string, item: any) => void;
   onOpenProfile: (u: any) => void; onCompose: () => void; onPlayTrack: (t: any) => void;
-  show: (m: string) => void;
+  show: (m: string) => void; searchOpen: boolean; onCloseSearch: () => void;
 };
 
 const SYSTEMS = [
@@ -42,7 +42,7 @@ export function HomeScreen({
   s, C, sessionName, news, tracks, takes, liked, refreshing, onRefresh,
   onOpenMedia, onOpenMusic, onOpenEvents, onOpenMarket, onOpenJobs,
   events = [], market = [], jobs = [], onOpenSystem, onOpenSocials, onOpenPost, onOpenItem,
-  onOpenProfile, onCompose, onPlayTrack, show,
+  onOpenProfile, onCompose, onPlayTrack, show, searchOpen, onCloseSearch,
 }: Props) {
   const [system, setSystem] = useState("all");
   const [q, setQ] = useState("");
@@ -207,15 +207,16 @@ export function HomeScreen({
         <Text style={{ flex: 1, color: C.text, fontWeight: "700", fontSize: 13 }}>Search: {submittedSearch} · {searchResults.length} results</Text>
         <TouchableOpacity onPress={() => { setSubmittedSearch(""); setQ(""); }}><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
       </View>}
-      <View style={{ marginHorizontal: 12, marginBottom: 10, paddingHorizontal: 12, height: 40, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated, flexDirection: "row", alignItems: "center" }}>
-        <Ionicons name="search" size={16} color={C.text3} />
-        <TextInput value={q} onChangeText={setQ} onSubmitEditing={() => { if (!q.trim()) { show("Enter a search term"); return; } setSubmittedSearch(q.trim()); }} returnKeyType="search"
+      {searchOpen && <View style={{ marginHorizontal: 12, marginBottom: 10, paddingHorizontal: 12, height: 42, borderRadius: 12, borderWidth: 1, borderColor: C.accent + "66", backgroundColor: C.elevated, flexDirection: "row", alignItems: "center" }}>
+        <Ionicons name="search" size={16} color={C.accent} />
+        <TextInput autoFocus value={q} onChangeText={setQ} onSubmitEditing={() => { if (!q.trim()) { show("Enter a search term"); return; } setSubmittedSearch(q.trim()); }} returnKeyType="search"
           placeholder="Search Kilode" placeholderTextColor={C.text3} style={{ flex: 1, marginLeft: 8, color: C.text, fontSize: 13 }} />
-        {!!q && <TouchableOpacity onPress={() => { setQ(""); setSubmittedSearch(""); }}><Ionicons name="close-circle" size={17} color={C.text3} /></TouchableOpacity>}
-      </View>
+        {!!q && <TouchableOpacity onPress={() => { setQ(""); setSubmittedSearch(""); }} accessibilityRole="button" accessibilityLabel="Clear search"><Ionicons name="close-circle" size={17} color={C.text3} /></TouchableOpacity>}
+        <TouchableOpacity onPress={onCloseSearch} accessibilityRole="button" accessibilityLabel="Close search" style={{ marginLeft: 8 }}><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
+      </View>}
 
 
-      {/* Compact discovery rails sit below Search; the mixed feed remains the main Home stream. */}
+      {/* Compact discovery rails support discovery; the mixed feed remains the main Home stream. */}
       {system === "all" && !submittedSearch && <View style={{ marginTop: 2, marginBottom: 4 }}>
         {tracks.length > 0 && <View style={{ marginHorizontal: 12, marginBottom: 10, paddingTop: 4, paddingBottom: 4 }}>
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 12, marginBottom: 10 }}>
