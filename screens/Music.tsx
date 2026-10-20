@@ -44,6 +44,12 @@ const GENRES = [
 
 export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, userId, tracks: tracksProp }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Home");
+  const [destination, setDestination] = useState<string | null>(null);
+  const [musicQuery, setMusicQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [savedTrackIds, setSavedTrackIds] = useState<Record<string, boolean>>({});
+  const [recentTrackIds, setRecentTrackIds] = useState<string[]>([]);
+
   const [artistProfiles, setArtistProfiles] = useState<any[]>([]);
   const [loadingArtists, setLoadingArtists] = useState(false);
   const [artistCatalogueError, setArtistCatalogueError] = useState("");
@@ -138,6 +144,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   }, [tab, userId]);
 
   const openTrack = (t: any) => {
+    setRecentTrackIds((current) => [String(t.id ?? t.title), ...current.filter((id) => id !== String(t.id ?? t.title))].slice(0, 30));
     if (onOpenTrack) onOpenTrack(t);
     else {
       onPlay(t);
@@ -145,8 +152,117 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     }
   };
 
+  const openMusicDestination = (name: string, genre?: string) => {
+    setDestination(name);
+    setSelectedGenre(genre ?? null);
+    setMusicQuery("");
+  };
+
+  const catalogueTracks = tracks.filter((track: any) => {
+    const query = musicQuery.trim().toLowerCase();
+    const genreMatch = !selectedGenre || String(track.genre || track.genres || "").toLowerCase().includes(selectedGenre.toLowerCase());
+    const queryMatch = !query || [track.title, track.artist, track.album, track.genre].some((value) => String(value || "").toLowerCase().includes(query));
+    return genreMatch && queryMatch;
+  });
+  const destinationTracks = destination === "Library"
+    ? catalogueTracks.filter((track: any) => savedTrackIds[String(track.id ?? track.title)])
+    : destination === "Recently Played"
+      ? recentTrackIds.map((id) => catalogueTracks.find((track: any) => String(track.id ?? track.title) === id)).filter(Boolean)
+      : destination === "Albums" || destination === "Releases"
+        ? catalogueTracks.filter((track: any) => track.album || track.release_type)
+        : catalogueTracks;
+
+
   return (
     <>
+    <Modal visible={Boolean(destination)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDestination(null)}>
+      <View style={{ flex: 1, backgroundColor: C.bg || C.background || "#111114" }}>
+        <View style={{ paddingTop: 14, paddingHorizontal: 18, paddingBottom: 12, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: C.border }}>
+          <TouchableOpacity onPress={() => setDestination(null)} accessibilityRole="button" accessibilityLabel="Back to Music" style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: C.elevated }}>
+            <Ionicons name="chevron-back" size={21} color={C.text} />
+          </TouchableOpacity>
+          <Text style={{ color: C.text, fontSize: 19, fontWeight: "800", flex: 1, marginLeft: 10 }}>{destination}</Text>
+          <TouchableOpacity onPress={() => openMusicDestination("Search")} accessibilityLabel="Search music">
+            <Ionicons name="search-outline" size={21} color={C.text} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 36 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {destination === "Search" ? (
+            <TextInput value={musicQuery} onChangeText={setMusicQuery} autoFocus placeholder="Tracks, artists, albums…" placeholderTextColor={C.text3} style={{ color: C.text, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 13, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 16 }} />
+          ) : null}
+          {destination === "Genres" ? (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 9, marginBottom: 18 }}>
+              {GENRES.map((genre) => (
+                <TouchableOpacity key={genre.id} onPress={() => { setSelectedGenre(genre.label); setDestination(genre.label); }} style={{ width: "48%", minHeight: 76, borderRadius: 14, padding: 13, justifyContent: "flex-end", backgroundColor: genre.color }}>
+                  <Ionicons name="musical-notes" size={20} color="#fff" />
+                  <Text style={{ color: "#fff", fontWeight: "800", fontSize: 14, marginTop: 8 }}>{genre.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {destination === "Playlists" ? (
+            <View style={{ gap: 10, marginBottom: 18 }}>
+              {[
+                { title: "Naija Now", subtitle: "Contemporary Nigerian sounds", icon: "headset-outline" },
+                { title: "Late Night Rotation", subtitle: "Smooth tracks for after hours", icon: "moon-outline" },
+                { title: "New & Noted", subtitle: "Recently added music", icon: "sparkles-outline" },
+                { title: "The Discovery List", subtitle: "Find your next favourite", icon: "compass-outline" },
+              ].map((playlist) => (
+                <TouchableOpacity key={playlist.title} onPress={() => { setDestination("Playlist · " + playlist.title); setMusicQuery(""); }} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, backgroundColor: C.card, borderRadius: 13, borderWidth: 1, borderColor: C.border }}>
+                  <View style={{ width: 52, height: 52, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name={playlist.icon as any} size={24} color={C.accent} /></View>
+                  <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{playlist.title}</Text><Text style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{playlist.subtitle}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>Curated collection · catalogue-dependent</Text></View>
+                  <Ionicons name="chevron-forward" size={18} color={C.text3} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {destination === "Library" ? (
+            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 14 }}>Your saved tracks on this device are shown here. Account-synced library and purchases require the connected Music backend.</Text>
+          ) : null}
+          {destination === "Push Link" ? (
+            <View style={{ padding: 16, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, marginBottom: 16 }}>
+              <Ionicons name="megaphone-outline" size={26} color={C.accent} />
+              <Text style={{ color: C.text, fontWeight: "800", fontSize: 16, marginTop: 10 }}>Promote music across Kilode</Text>
+              <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 7 }}>Create a campaign for an eligible track or release, choose placements and a budget, and review verified results. Campaign payments and activation are not connected yet.</Text>
+              <TouchableOpacity onPress={() => show(canList ? "Artist campaign setup requires the trusted Push Link payment and activation workflow." : "Push Link campaign creation is available to eligible artist accounts.")} style={{ alignSelf: "flex-start", marginTop: 13, backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 }}><Text style={{ color: "#111", fontWeight: "800", fontSize: 12 }}>Explore promotion</Text></TouchableOpacity>
+            </View>
+          ) : null}
+          {destination?.startsWith("Playlist · ") ? (
+            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>This is a curated playlist concept. Tracks below come from the currently available catalogue; playlist persistence and editorial publishing need backend support.</Text>
+          ) : null}
+          {destination !== "Genres" && destination !== "Playlists" && destination !== "Push Link" ? (
+            <>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+                <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>{destination === "Library" ? "Saved tracks" : destination === "Recently Played" ? "Recently played" : destination === "Albums" || destination === "Releases" ? "Available releases" : selectedGenre || destination}</Text>
+                <Text style={{ color: C.text3, fontSize: 11 }}>{destinationTracks.length} items</Text>
+              </View>
+              {destinationTracks.map((track: any, index: number) => {
+                const id = String(track.id ?? track.title);
+                const title = String(track.title || "Untitled track");
+                const artistName = String(track.artist || track.artist_name || "Unknown artist");
+                const artwork = track.imageUrl || track.cover_url || track.artwork_url;
+                return (
+                  <View key={id} style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                    {artwork ? <Image source={{ uri: artwork }} style={{ width: 48, height: 48, borderRadius: 8, backgroundColor: C.elevated }} /> : <View style={{ width: 48, height: 48, borderRadius: 8, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="musical-notes-outline" size={19} color={C.text3} /></View>}
+                    <TouchableOpacity onPress={() => openTrack(track)} style={{ flex: 1 }} accessibilityRole="button">
+                      <Text numberOfLines={1} style={{ color: C.text, fontSize: 13, fontWeight: "700" }}>{title}</Text>
+                      <Text numberOfLines={1} style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>{artistName}{track.album ? " · " + track.album : ""}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSavedTrackIds((current) => ({ ...current, [id]: !current[id] }))} accessibilityRole="button" accessibilityLabel={savedTrackIds[id] ? "Remove saved track" : "Save track"} style={{ padding: 7 }}>
+                      <Ionicons name={savedTrackIds[id] ? "heart" : "heart-outline"} size={19} color={savedTrackIds[id] ? C.accent : C.text3} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => openTrack(track)} accessibilityRole="button" accessibilityLabel={"Play " + title} style={{ padding: 4 }}>
+                      <Ionicons name="play-circle" size={25} color={C.accent} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+              {!destinationTracks.length ? <View style={{ alignItems: "center", paddingVertical: 30 }}><Ionicons name="musical-notes-outline" size={32} color={C.text3} /><Text style={{ color: C.text, fontWeight: "700", marginTop: 10 }}>{destination === "Library" ? "No saved tracks yet" : destination === "Recently Played" ? "Nothing played yet" : "No matching music yet"}</Text><Text style={{ color: C.text3, fontSize: 12, textAlign: "center", marginTop: 6, lineHeight: 18 }}>When music is available in the connected catalogue, it will appear here.</Text></View> : null}
+            </>
+          ) : null}
+        </ScrollView>
+      </View>
+    </Modal>
     <Modal visible={draftOpen} animationType="slide" transparent onRequestClose={() => setDraftOpen(false)}>
       <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.58)" }}>
         <View style={{ backgroundColor: C.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 32, borderWidth: 1, borderColor: C.border }}>
@@ -371,6 +487,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         </View>
       ) : null}
 
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 14, gap: 8 }}>
+        {[
+          { label: "Search", icon: "search-outline" },
+          { label: "Releases", icon: "albums-outline" },
+          { label: "Playlists", icon: "list-outline" },
+          { label: "Genres", icon: "grid-outline" },
+          { label: "Library", icon: "heart-outline" },
+          { label: "Recently Played", icon: "time-outline" },
+          { label: "Push Link", icon: "megaphone-outline" },
+        ].map((item) => (
+          <TouchableOpacity key={item.label} onPress={() => openMusicDestination(item.label)} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 999, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+            <Ionicons name={item.icon as any} size={15} color={C.accent} />
+            <Text style={{ color: C.text, fontSize: 12, fontWeight: "700" }}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
       <View style={{ marginHorizontal: 16, marginTop: 14, padding: 4, flexDirection: "row", borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
         {TABS.map((t) => (
           <TouchableOpacity
@@ -440,12 +573,30 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         );
       })}
 
+      {(tab === "Home" || tab === "Discover") ? (
+        <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>More to explore</Text>
+          <TouchableOpacity onPress={() => openMusicDestination("Playlists")}><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Playlists</Text></TouchableOpacity>
+        </View>
+      ) : null}
+      {(tab === "Home" || tab === "Discover") ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 10 }}>
+        {[
+          { title: "New Releases", detail: "Fresh singles, EPs & albums", icon: "disc-outline", target: "Releases" },
+          { title: "Your Library", detail: "Saved music in one place", icon: "heart-outline", target: "Library" },
+          { title: "Recently Played", detail: "Pick up where you left off", icon: "time-outline", target: "Recently Played" },
+          { title: "Push Link", detail: "Discover promoted music", icon: "megaphone-outline", target: "Push Link" },
+        ].map((item) => <TouchableOpacity key={item.title} onPress={() => openMusicDestination(item.target)} style={{ width: 154, padding: 13, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+          <Ionicons name={item.icon as any} size={22} color={C.accent} />
+          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13, marginTop: 13 }}>{item.title}</Text>
+          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 4 }}>{item.detail}</Text>
+        </TouchableOpacity>)}
+      </ScrollView> : null}
       {(tab === "Home" || tab === "Discover") ? <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, paddingHorizontal: 16, marginTop: 18, marginBottom: 9 }}>Genres</Text> : null}
       {(tab === "Home" || tab === "Discover") ? <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
         {GENRES.map((g) => (
           <TouchableOpacity
             key={g.id}
-            onPress={() => show(`${g.label} catalogue when Music API is live.`)}
+            onPress={() => openMusicDestination(g.label, g.label)}
             style={{ width: "48%", minHeight: 52, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 11, paddingVertical: 10, borderRadius: 11, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
           >
             <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: g.color, opacity: 0.9, alignItems: "center", justifyContent: "center" }}>
