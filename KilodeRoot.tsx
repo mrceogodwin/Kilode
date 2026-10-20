@@ -99,16 +99,16 @@ function KilodeApp() {
 
   const playTrack = useCallback(async (track: any) => {
     setNowPlaying(track);
-    if (!track?.previewUrl) {
-      setIsPlaying(false);
-      show("No playable audio preview is attached to this track yet.");
-      return;
-    }
     try {
       if (soundRef.current) {
         await soundRef.current.stopAsync().catch(() => undefined);
         await soundRef.current.unloadAsync().catch(() => undefined);
         soundRef.current = null;
+      }
+      if (!track?.previewUrl) {
+        setIsPlaying(false);
+        show("No playable audio preview is attached to this track yet.");
+        return;
       }
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
       const created = await Audio.Sound.createAsync({ uri: track.previewUrl }, { shouldPlay: true, volume: 1 }, status => {
