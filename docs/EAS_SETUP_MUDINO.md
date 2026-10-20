@@ -1,65 +1,53 @@
 # EAS setup — Expo account `mudino`
 
 **Account:** https://expo.dev/accounts/mudino  
-**Native repo:** https://github.com/mrceogodwin/Kilode  
-**Website/API:** https://github.com/mrceogodwin/Kilode-v2 (Vercel — not EAS)
+**Native repo:** https://github.com/mrceogodwin/Kilode
 
-Grok cannot log into Expo. Run everything below on your machine.
+The native app must use Kilode's dedicated backend when it is ready. Do not restore the old `kilode-nine.vercel.app` or `kilode-v2.vercel.app` API URL as a fallback. Until a dedicated API URL is configured, live API requests intentionally fail closed rather than presenting seed data as live.
 
-## Authenticate
+## 1. Link the real EAS project once
 
-```bash
-npm install -g eas-cli
-eas login
-eas whoami
-# must print: mudino
-```
-
-Do not share passwords or tokens in chat.
-
-## Project (avoid duplicates)
+Run these commands locally. Do not paste passwords, tokens, or signing credentials into chat.
 
 ```bash
-git clone https://github.com/mrceogodwin/Kilode.git
-cd Kilode
-git pull
 npm install
-
-eas project:info
+npx eas-cli login
+npx eas-cli whoami
+# Must print: mudino
+npx eas-cli project:info
 ```
 
-- If already linked under **mudino** / slug **kilode** → do not create another project.
-- If not linked:
+If `project:info` shows the existing Kilode project, reuse it. If it reports the project is not linked, run:
 
 ```bash
-eas init
+npx eas-cli init
 ```
 
-Choose account **mudino**. Link existing project if one exists; otherwise create slug `kilode` once.
+Select account `mudino`, then link the existing Kilode project if present. Create a new project only if no existing Kilode project exists. Confirm the generated project ID is in `app.json` under `expo.extra.eas.projectId`; do not leave it empty. Commit the resulting config.
 
-Commit the resulting `projectId` in `app.json`:
+## 2. GitHub Actions secrets
+
+To enable the manual iOS preview workflow, add these repository Actions secrets in GitHub Settings → Secrets and variables → Actions:
+
+- `EXPO_TOKEN`: an Expo access token with access to the Kilode project.
+- `EAS_PROJECT_ID`: the project ID from the linked EAS project.
+
+Never commit either value to the repository or print it in workflow logs.
+
+## 3. Build a preview iOS app
+
+Once the project is linked and both secrets are configured, open GitHub Actions → **Kilode iOS EAS preview build** → Run workflow. It builds the `preview` profile for iOS and uploads the EAS build URL to the job log. This is a signed/internal distribution build, not a TestFlight submission.
+
+The production build should only be run after preview installation and backend configuration have been verified.
+
+## 4. Build locally
 
 ```bash
-git add app.json
-git commit -m "chore(eas): link EAS projectId under mudino"
-git push
+npx eas-cli build --platform ios --profile preview
 ```
 
-## Build iOS and Android
+Bundle identifier: `ng.kilode.app`.
 
-```bash
-eas build --platform ios --profile production
-eas build --platform android --profile production
-```
+## 5. Backend status
 
-Profiles: `development` | `preview` | `production` (see `eas.json`).
-
-Bundle ID / package: `ng.kilode.app`
-
-```bash
-eas credentials
-```
-
-## Website
-
-Do not deploy this repo on Vercel as Kilode web. Website + `/api/mobile/*` stay on **Kilode-v2**.
+The native client currently has no configured dedicated API host. Set `EXPO_PUBLIC_API_URL` only when the dedicated Kilode API is deployed and its mobile endpoints have been tested. Until then, API-backed features are not production-connected. Do not label local seed data as live.
