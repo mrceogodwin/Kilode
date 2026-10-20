@@ -17,13 +17,14 @@ import { SettingsScreen } from "./screens/Settings";
 import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
+import { SocialsScreen } from "./screens/Socials";
+import { EventsScreen } from "./screens/Events";
 import { TrackDetailScreen } from "./screens/TrackDetail";
 import { ArtistDetailScreen } from "./screens/ArtistDetail";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { PostActions } from "./components/ui/PostActions";
-import { SectionHeader } from "./components/ui/SectionHeader";
 import { EmptyState } from "./components/ui/EmptyState";
 import { ConnectionBanner } from "./components/ui/ConnectionBanner";
 import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
@@ -101,16 +102,13 @@ function KilodeApp() {
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null); setSelectedTrack(null); setSelectedArtist(null);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
+    setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null); setSelectedTrack(null); setSelectedArtist(null);
   };
 
   const loadAll = useCallback(async () => {
     if (Platform.OS === "web") {
-      setTakes(TAKES);
-      setRooms(ROOMS);
-      setNews(NEWS);
-      setTracks(TRACKS);
-      setActivity(ACTIVITY);
+      setTakes(TAKES); setRooms(ROOMS); setNews(NEWS); setTracks(TRACKS); setActivity(ACTIVITY);
       setSource("mock");
       return "mock" as const;
     }
@@ -124,8 +122,7 @@ function KilodeApp() {
     setActivity(Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
     const nextSource: "live" | "mock" | "error" =
-      sources.every((value) => value === "live") ? "live"
-        : sources.some((value) => value === "error") ? "error" : "live";
+      sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "live";
     setSource(nextSource);
     return nextSource;
   }, [session?.token]);
@@ -145,9 +142,9 @@ function KilodeApp() {
     setRefreshing(true);
     try {
       const result = await loadAll();
-      show(result === "error" ? "Some Kilode services are unavailable. Try again shortly." : result === "mock" ? "Preview content refreshed" : "Refreshed");
+      show(result === "error" ? "Some services unavailable." : result === "mock" ? "Preview refreshed" : "Refreshed");
     } catch {
-      show("Could not refresh Kilode. Check your connection and try again.");
+      show("Could not refresh.");
     } finally {
       setRefreshing(false);
     }
@@ -166,7 +163,7 @@ function KilodeApp() {
     return (
       <AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp}
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
-        onGoogle={() => { show("Google sign-in isn't connected yet."); }} show={show} />
+        onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />
     );
   }
 
@@ -185,9 +182,9 @@ function KilodeApp() {
   );
 
   const rc = <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} colors={[C.accent]} />;
-
-  // NOTE: Home/Socials/MySpace/Desk body implementations restored from commit 1e64e19 with destination wiring.
-  // Full UI blocks preserved via dynamic require pattern replaced with inlined critical destinations.
+  const eventList = (LISTINGS.events || []).map((e: any) => ({
+    id: e.id, title: e.title, meta: e.meta, price: e.price, tag: e.tag,
+  }));
 
   const body = () => {
     if (settingsOpen) return <SettingsScreen s={s} C={C} session={session} onBack={() => setSettingsOpen(false)} onSignOut={() => { signOut(); setSettingsOpen(false); }} show={show} />;
@@ -197,12 +194,12 @@ function KilodeApp() {
         onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))}
         onComment={() => setCommentTake(selectedPost)}
         onFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedPost.handle || selectedPost.name)]: !prev[String(selectedPost.handle || selectedPost.name)] }))}
-        onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved for review."); }}
+        onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved."); }}
         onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((prev) => prev.includes(h) ? prev : [...prev, h]); setSelectedPost(null); show("Blocked @" + h); }}
         show={show} />
     );
     if (selectedProfile) return (
-      <UserProfileScreen s={s} C={C} user={selectedProfile} posts={takes.filter((post: any) => String(post.handle || post.name) === String(selectedProfile.handle || selectedProfile.name))}
+      <UserProfileScreen s={s} C={C} user={selectedProfile} posts={takes.filter((p: any) => String(p.handle || p.name) === String(selectedProfile.handle || selectedProfile.name))}
         isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
         onBack={() => setSelectedProfile(null)}
         onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))}
@@ -216,12 +213,9 @@ function KilodeApp() {
       <ArtistDetailScreen s={s} C={C} artistName={selectedArtist} tracks={tracks} onBack={() => setSelectedArtist(null)}
         onOpenTrack={(t) => { setSelectedArtist(null); setSelectedTrack(t); }} onPlay={setNowPlaying} show={show} />
     );
-    if (selectedDeskItem) return (
-      <DeskDetailScreen s={s} C={C} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />
-    );
-    if (tab === "media") return (
-      <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />
-    );
+    if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
+    if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
+    if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} onBack={() => go("home")} show={show} />;
     if (tab === "music") return (
       <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying}
         onOpenTrack={(t) => setSelectedTrack(t)} onOpenArtist={(name) => setSelectedArtist(name)} />
@@ -243,33 +237,26 @@ function KilodeApp() {
     }
     if (tab === "socials") {
       return (
-        <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
-          <View style={s.composer}>
-            <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
-            <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What is happening in Naija?</Text></TouchableOpacity>
-            <TouchableOpacity style={s.postBtn} onPress={() => setComposeOpen(true)}><Text style={s.postBtnText}>Post</Text></TouchableOpacity>
-          </View>
-          {takes.filter((t: any) => !blocked.includes(String(t.handle || ""))).map((t: any) => (
-            <View key={t.id} style={s.postCard}>
-              <View style={s.postTop}>
-                <TouchableOpacity onPress={() => setSelectedProfile(t)}><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
-                <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)}>
-                  <Text style={s.postName}>{t.name}</Text>
-                  <Text style={s.meta}>@{t.handle} · {t.time}</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity onPress={() => setSelectedPost(t)}><Text style={s.postBody}>{t.text}</Text></TouchableOpacity>
-              <PostActions liked={!!liked[t.id]} likes={(t.likes || 0) + (liked[t.id] ? 1 : 0)} comments={t.comments || 0}
-                accent={C.accent} danger={C.danger} muted={C.text2}
-                onLike={() => setLiked({ ...liked, [t.id]: !liked[t.id] })}
-                onComment={() => setCommentTake(t)}
-                onShare={async () => { try { await Share.share({ message: `${t.name}: ${t.text}` }); } catch { show("Could not share"); } }}
-                onReport={async () => { await submitReport("post", String(t.id), "other"); show("Reported locally"); }}
-                onBlock={async () => { const h = String(t.handle || t.name); await blockUser(h); setBlocked((p) => p.includes(h) ? p : [...p, h]); show("Blocked @" + h); }}
-              />
-            </View>
-          ))}
-        </ScrollView>
+        <SocialsScreen
+          s={s} C={C} takes={takes} blocked={blocked} liked={liked} following={following}
+          sessionName={session.name || "K"} refreshing={refreshing} onRefresh={onRefresh}
+          onCompose={() => setComposeOpen(true)}
+          onOpenPost={(post) => setSelectedPost(post)}
+          onOpenProfile={(user) => setSelectedProfile(user)}
+          onLike={(id) => setLiked((prev) => ({ ...prev, [id]: !prev[id] }))}
+          onComment={(post) => setCommentTake(post)}
+          onFollow={(key, name) => {
+            setFollowing((prev) => ({ ...prev, [key]: !prev[key] }));
+            show(following[key] ? `Unfollowed ${name}` : `Following ${name}`);
+          }}
+          onReport={async (id) => { await submitReport("post", id, "other"); show("Reported · saved locally until moderation API is live"); }}
+          onBlock={async (handle) => {
+            await blockUser(handle);
+            setBlocked((prev) => (prev.includes(handle) ? prev : [...prev, handle]));
+            show(`Blocked @${handle} on this device`);
+          }}
+          show={show}
+        />
       );
     }
     if (tab === "myspace") {
@@ -288,7 +275,7 @@ function KilodeApp() {
         </ScrollView>
       );
     }
-    if (DESKS.some((d) => d.id === tab)) {
+    if (DESKS.some((d) => d.id === tab) && tab !== "events") {
       const d = DESKS.find((x) => x.id === tab);
       const items = LISTINGS[tab] || [];
       return (
@@ -307,7 +294,7 @@ function KilodeApp() {
         </ScrollView>
       );
     }
-    // Home — discovery
+    // Home
     return (
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
         <View style={[s.padH, { paddingTop: 10 }]}>
@@ -338,7 +325,7 @@ function KilodeApp() {
             <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.meta}</Text></View>
           </TouchableOpacity>
         ))}
-        {(homeChip === 0) && (
+        {homeChip === 0 && (
           <ScrollView horizontal contentContainerStyle={s.tracksRow}>
             {tracks.slice(0, 6).map((t: any) => (
               <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => setSelectedTrack(t)}>
@@ -353,7 +340,7 @@ function KilodeApp() {
     );
   };
 
-  const headerTitle = settingsOpen ? "Settings" : tab === "activity" ? "Notifications" : tab === "myspace" ? "My Space" : tab === "media" ? "Media" : DESKS.find((d) => d.id === tab)?.label;
+  const headerTitle = settingsOpen ? "Settings" : tab === "activity" ? "Notifications" : tab === "myspace" ? "My Space" : tab === "media" ? "Media" : tab === "events" ? "Events" : DESKS.find((d) => d.id === tab)?.label;
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
