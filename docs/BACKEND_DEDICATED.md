@@ -42,7 +42,7 @@ EAS / TestFlight = native build readiness (separate).
 
 - **Auth:** Supabase Auth (email/password first).
 - **Profile:** `public.profiles` with `kind` (`account_kind` enum matching app) and `role` (`user` \| `moderator` \| `super_admin`).
-- **Content:** `posts`, `articles`, `tracks`, `events`, `market_listings`, `jobs`, plus likes/replies/reports/blocks.
+- **Content:** `posts`, `articles`, `tracks`, `events`, `market_listings`, `jobs`, plus likes/replies/reports/blocks. Native code already queries the read catalogues, publishes text posts, and subscribes to changes on the six discovery tables when Supabase is configured.
 - **RLS:** enabled on all tables; public read where appropriate; writes scoped to `auth.uid()`.
 - **Secrets:** only `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` in the app.
 
