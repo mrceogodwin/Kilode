@@ -21,7 +21,7 @@ type Props = {
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
-  /** Override primary fill (defaults to Kilode green) */
+  /** Override primary fill (defaults to Kilode gold) */
   accent?: string;
 };
 
@@ -41,7 +41,7 @@ export function KilodeButton({
     variant === "primary"
       ? { backgroundColor: accent }
       : variant === "secondary"
-        ? { backgroundColor: "#0F2A1A" }
+        ? { backgroundColor: "#2A2415" }
         : variant === "outline"
           ? { backgroundColor: "transparent", borderWidth: 1.5, borderColor: accent }
           : variant === "danger"
