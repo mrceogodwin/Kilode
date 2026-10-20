@@ -20,6 +20,7 @@ type EventItem = {
   imageUrl?: string;
   organiser?: string;
   category?: string;
+  previewOnly?: boolean;
 };
 
 type Props = {
@@ -35,46 +36,46 @@ const FILTERS = ["All", "Concerts", "Parties", "Seminars"];
 const FALLBACK: EventItem[] = [
   {
     id: "e1",
-    title: "Lagos Music Festival 2025",
-    meta: "Sat, 24 May 2025 · Eko Convention Centre",
+    title: "Lagos Music Festival",
+    meta: "Preview example · date not confirmed",
     tag: "Music",
     category: "Concerts",
-    price: "From ₦15,000",
+    price: "Preview only",
     city: "Lagos",
-    organiser: "Lagos Live",
+    organiser: "Sample organiser · not verified",
     imageUrl: "https://images.unsplash.com/photo-1459749411175-047fc749d9b0?w=800&q=80",
   },
   {
     id: "e2",
     title: "Tech & Innovation Summit",
-    meta: "Tue, 27 May 2025 · Landmark Event Centre",
+    meta: "Preview example · date not confirmed",
     tag: "Tech",
     category: "Seminars",
-    price: "Register",
+    price: "Preview only",
     city: "Lagos",
-    organiser: "Build NG",
+    organiser: "Sample organiser · not verified",
     imageUrl: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
   },
   {
     id: "e3",
     title: "Comedy Night Lagos",
-    meta: "Sat, 31 May 2025 · Terra Kulture",
+    meta: "Preview example · date not confirmed",
     tag: "Comedy",
     category: "Parties",
-    price: "From ₦8,000",
+    price: "Preview only",
     city: "Lagos",
-    organiser: "Laugh Lagos",
+    organiser: "Sample organiser · not verified",
     imageUrl: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&q=80",
   },
   {
     id: "e4",
     title: "Afrobeats rooftop session",
-    meta: "Sun 5pm · VI",
+    meta: "Preview example · date not confirmed",
     tag: "Music",
     category: "Concerts",
-    price: "₦8,000",
+    price: "Preview only",
     city: "Lagos",
-    organiser: "Sound City Live",
+    organiser: "Sample organiser · not verified",
     imageUrl: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",
   },
 ];
@@ -92,6 +93,7 @@ export function EventsScreen({ s, C, events, onBack, show }: Props) {
         ...e,
         category: e.category || (e.tag === "Tonight" ? "Parties" : "Concerts"),
         imageUrl: e.imageUrl || FALLBACK[0].imageUrl,
+        previewOnly: true,
       }))
     : FALLBACK;
 
@@ -152,15 +154,11 @@ export function EventsScreen({ s, C, events, onBack, show }: Props) {
           <TouchableOpacity
             style={{ flex: 1, backgroundColor: C.accent, borderRadius: 999, paddingVertical: 15, alignItems: "center" }}
             onPress={() =>
-              show(
-                isFree
-                  ? "RSVP saved on this device. Live booking when Events API is connected."
-                  : `Ticket flow for ${active.price} — nothing charged until payments are live.`
-              )
+              show("Preview event only. Registration and ticket booking are not connected yet.")
             }
           >
             <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>
-              {isFree ? "Register" : "Get Tickets"}
+              {active.previewOnly ? "Preview only" : isFree ? "Register" : "Get Tickets"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -182,7 +180,7 @@ export function EventsScreen({ s, C, events, onBack, show }: Props) {
         </View>
 
         <Text style={{ color: C.text3, fontSize: 12, marginTop: 18, lineHeight: 18 }}>
-          Payments and live inventory need the Events backend. This screen never pretends a card was charged.
+          Preview listings only. Live event dates, organisers, ticket inventory and payments are not connected.
         </Text>
       </ScrollView>
     );
@@ -303,7 +301,7 @@ export function EventsScreen({ s, C, events, onBack, show }: Props) {
                 }}
               >
                 <Text style={{ color: "#111", fontWeight: "800", fontSize: 13 }}>
-                  {isFree ? "Register" : "Get Tickets"}
+                  {e.previewOnly ? "Preview only" : isFree ? "Register" : "Get Tickets"}
                 </Text>
               </TouchableOpacity>
               <Ionicons name="chevron-forward" size={18} color={C.text3} />
