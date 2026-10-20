@@ -606,6 +606,7 @@ function KilodeApp() {
         onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
         onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
         isDark={isDark}
+        accent={C.accent}
       />
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
         <View style={s.modalRoot}>
