@@ -75,13 +75,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           style={{
             marginHorizontal: 16,
             marginTop: 12,
-            backgroundColor: C.accent,
+            backgroundColor: C.accentSoft,
+            borderColor: C.border,
+            borderWidth: 1,
             borderRadius: 999,
             paddingVertical: 12,
             alignItems: "center",
           }}
         >
-          <Text style={{ color: "#111", fontWeight: "800", fontSize: 14 }}>Drop a track</Text>
+          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 14 }}>Drop a track</Text>
         </TouchableOpacity>
       ) : null}
 
@@ -94,12 +96,12 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               paddingHorizontal: 14,
               paddingVertical: 8,
               borderRadius: 999,
-              backgroundColor: tab === t ? C.accent : "transparent",
+              backgroundColor: tab === t ? C.accentSoft : "transparent",
               borderWidth: 1,
               borderColor: tab === t ? C.accent : C.border,
             }}
           >
-            <Text style={{ color: tab === t ? "#111" : C.text2, fontWeight: "700", fontSize: 13 }}>{t}</Text>
+            <Text style={{ color: tab === t ? C.accent : C.text2, fontWeight: "600", fontSize: 13 }}>{t}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -137,7 +139,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       </TouchableOpacity>
 
       <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
-        <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>Top charts</Text>
+        <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>Top charts</Text>
         <TouchableOpacity onPress={() => setTab("Charts")}>
           <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text>
         </TouchableOpacity>
@@ -175,20 +177,21 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         );
       })}
 
-      <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>Genres</Text>
+      <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>Genres</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
         {GENRES.map((g) => (
           <TouchableOpacity
             key={g.id}
             onPress={() => show(`${g.label} catalogue when Music API is live.`)}
-            style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: g.color }}
+            style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
           >
-            <Text style={{ color: "#111", fontWeight: "800", fontSize: 13 }}>{g.label}</Text>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: g.color }} />
+            <Text style={{ color: C.text, fontWeight: "600", fontSize: 13 }}>{g.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>From Kilode</Text>
+      <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>From Kilode</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
         {tracks.map((t: any) => (
           <TouchableOpacity key={t.id} onPress={() => openTrack(t)} style={{ width: 120 }}>
