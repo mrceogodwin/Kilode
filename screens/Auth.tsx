@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  useWindowDimensions,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
 import { ACCOUNT_GROUPS, ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 import { KilodeWordmark } from "../components/KilodeWordmark";
+
+const GOLD = "#E5C158";
 
 type Props = {
   isDark: boolean;
@@ -27,110 +37,104 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind | null>(null);
   const [busy, setBusy] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
-
-  // Keep the welcome hero useful if a remote video is slow or blocked.
-  useEffect(() => {
-    if (mode !== "welcome" || videoReady || videoFailed) return;
-    const timeout = setTimeout(() => setVideoFailed(true), 5000);
-    return () => clearTimeout(timeout);
-  }, [mode, videoReady, videoFailed]);
 
   const submit = async () => {
-    if (mode === "up" && !kind) { show("Choose the Kilode system you want to join."); return; }
-    if (!handle.trim() || !password) { show("Enter your username and password."); return; }
+    if (mode === "up" && !kind) {
+      show("Choose the Kilode system you want to join.");
+      return;
+    }
+    if (!handle.trim() || !password) {
+      show("Enter your username and password.");
+      return;
+    }
     setBusy(true);
     try {
-      const result = mode === "up"
-        ? await onSignUp(handle.trim(), password, kind as AccountKind, name.trim() || undefined)
-        : await onSignIn(handle.trim(), password);
+      const result =
+        mode === "up"
+          ? await onSignUp(handle.trim(), password, kind as AccountKind, name.trim() || undefined)
+          : await onSignIn(handle.trim(), password);
       if (!result.ok) show(result.error || "Something went wrong. Try again.");
       else show(mode === "up" ? `Welcome to Kilode · ${kind}` : "Welcome back");
     } catch {
       show("Could not connect. Please try again.");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" />
       {mode === "welcome" ? (
-        <View style={[styles.welcome, compactWelcome && styles.welcomeCompact]}>
-          <View style={styles.topBrand}>
+        <View style={[styles.welcomeRef, compactWelcome && { paddingTop: 4 }]}>
+          <View style={styles.refLogoWrap}>
             <KilodeWordmark size="large" />
           </View>
-          <View style={[styles.heroWrap, compactWelcome && styles.heroWrapCompact]}>
-            <View style={styles.hero}>
-              <View style={styles.videoMosaic}>
-                {WELCOME_SCENES.map((_, index) => (
-                  <View key={index} style={[styles.videoTile, styles.videoTileStill, { transform: [{ translateY: index % 3 === 0 ? -4 : index % 3 === 1 ? 5 : 0 }] }]}>
-                    <View style={styles.tileGlyph}>
-                      <Ionicons
-                        name={index % 3 === 0 ? "musical-notes-outline" : index % 3 === 1 ? "people-outline" : "play-outline"}
-                        size={18}
-                        color="rgba(229,193,88,0.78)"
-                      />
-                    </View>
-                    <View style={styles.tileShade} />
-                  </View>
-                ))}
+
+          <View style={[styles.refHero, compactWelcome && { minHeight: 220 }]}>
+            <View style={[styles.floatCard, styles.floatTL]}>
+              <Text style={styles.floatTitle}>♪  Music</Text>
+              <Text style={styles.floatSub}>New sounds. New vibes.</Text>
+            </View>
+            <View style={[styles.floatCard, styles.floatTR]}>
+              <Text style={styles.floatTitle}>👤  Socials</Text>
+              <Text style={styles.floatSub}>Connect. Share. Belong.</Text>
+            </View>
+            <View style={[styles.floatCard, styles.floatBL]}>
+              <Text style={styles.floatTitle}>▣  Media</Text>
+              <Text style={styles.floatSub}>Real stories. Fresh takes.</Text>
+            </View>
+            <View style={[styles.floatCard, styles.floatBR]}>
+              <Text style={styles.floatTitle}>📅  Events</Text>
+              <Text style={styles.floatSub}>Be there. Feel it.</Text>
+            </View>
+            <View style={[styles.refPortrait, compactWelcome && { height: 200, width: 170 }]}>
+              <View style={styles.refPortraitInner}>
+                <Ionicons name="person" size={64} color="rgba(229,193,88,0.35)" />
               </View>
-              <View style={styles.heroCenterVideo}>
-                <View style={styles.videoFallback}>
-                  <View style={styles.fallbackOrb}><Ionicons name="musical-notes" size={30} color="#E5C158" /></View>
-                  <Text style={styles.fallbackTitle}>KILODE</Text>
-                  <Text style={styles.fallbackSub}>MUSIC · CULTURE · PEOPLE</Text>
-                </View>
-                {!videoFailed ? (
-                  <Video
-                    source={{ uri: WELCOME_SCENES[0] }}
-                    style={[styles.centerVideo, { opacity: videoReady ? 1 : 0 }]}
-                    resizeMode={ResizeMode.COVER}
-                    shouldPlay
-                    isLooping
-                    isMuted
-                    useNativeControls={false}
-                    onReadyForDisplay={() => setVideoReady(true)}
-                    onError={() => setVideoFailed(true)}
-                  />
-                ) : null}
-                <View style={styles.centerVideoShade} />
-                <View style={styles.centerLive}><View style={styles.liveDot} /><Text style={styles.centerLiveText}>LIVE CULTURE</Text></View>
-                <View style={styles.centerCaption}><Ionicons name="musical-notes" size={12} color={GOLD} /><Text style={styles.captionText}>THE SOUND OF YOUR WORLD</Text></View>
-              </View>
-              <View style={styles.floatingTag}><Ionicons name="musical-notes" size={14} color="#E5C158" /><Text style={styles.tagText}>MUSIC</Text></View>
-              <View style={[styles.floatingTag, styles.tagMedia]}><Ionicons name="play-circle" size={14} color="#E5C158" /><Text style={styles.tagText}>CULTURE</Text></View>
-              <View style={[styles.floatingTag, styles.tagSocial]}><Ionicons name="people" size={14} color="#E5C158" /><Text style={styles.tagText}>YOUR PEOPLE</Text></View>
-              <View style={styles.heroCaption}><View style={styles.liveDot} /><Text style={styles.captionText}>10 SCENES · ONE WORLD</Text></View>
             </View>
           </View>
-          <View style={[styles.copy, compactWelcome && styles.copyCompact]}>
-            <Text style={[styles.headline, compactWelcome && styles.headlineCompact]}>Everything you need.</Text>
-            <Text style={[styles.headlineGold, compactWelcome && styles.headlineCompact]}>One platform.</Text>
-            <Text style={[styles.description, compactWelcome && styles.descriptionCompact]}>Discover your people, music, stories and what’s happening around you.</Text>
+
+          <View style={styles.refCopy}>
+            <Text style={styles.refHeadline}>Everything You Need.</Text>
+            <Text style={styles.refHeadlineGold}>One Platform.</Text>
+            <Text style={styles.refBody}>
+              Discover, create, connect and be part of something bigger.
+            </Text>
           </View>
-          <View style={[styles.actions, compactWelcome && styles.actionsCompact]}>
-            <TouchableOpacity activeOpacity={0.85} style={styles.primary} onPress={() => setMode("up")}>
-              <Text style={styles.primaryText}>Get started</Text><Ionicons name="arrow-forward" size={18} color="#11100D" />
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.75} style={styles.loginButton} onPress={() => setMode("in")}>
-              <Text style={styles.loginText}>I already have an account <Text style={styles.loginStrong}>Log in</Text></Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.guestButton} onPress={onGuest}><Text style={styles.guestText}>Explore as guest</Text></TouchableOpacity>
-          </View>
+
+          <TouchableOpacity style={styles.refCta} onPress={() => setMode("up")} activeOpacity={0.9}>
+            <Text style={styles.refCtaText}>Get Started</Text>
+            <Ionicons name="arrow-forward" size={18} color="#111" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setMode("in")} style={styles.refLoginRow}>
+            <Text style={styles.refLogin}>
+              Already have an account? <Text style={styles.refLoginLink}>Log In</Text>
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onGuest} style={{ marginTop: 8 }}>
+            <Text style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, textAlign: "center" }}>
+              Continue as guest
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <ScrollView contentContainerStyle={styles.authContent} keyboardShouldPersistTaps="handled">
-            <TouchableOpacity style={styles.back} onPress={() => setMode("welcome")}><Ionicons name="arrow-back" size={20} color="#F6F5F1" /></TouchableOpacity>
-            <View style={styles.authBrand}><KilodeWordmark size="medium" /></View>
+            <TouchableOpacity style={styles.back} onPress={() => setMode("welcome")}>
+              <Ionicons name="arrow-back" size={20} color="#F6F5F1" />
+            </TouchableOpacity>
+            <View style={styles.authBrand}>
+              <KilodeWordmark size="medium" />
+            </View>
             <Text style={styles.authTitle}>{mode === "in" ? "Welcome back." : "Find your people."}</Text>
-            <Text style={styles.authSubtitle}>{mode === "in" ? "Pick up where you left off." : "One account. Your whole world."}</Text>
+            <Text style={styles.authSubtitle}>
+              {mode === "in" ? "Pick up where you left off." : "One account. Your whole world."}
+            </Text>
             {mode === "up" ? (
               <>
                 <Text style={styles.label}>YOUR KILODE ACCOUNT</Text>
-                <Text style={styles.kindIntro}>Choose the system you’re joining. Your account opens the tools and spaces built for that role.</Text>
+                <Text style={styles.kindIntro}>Choose the system you’re joining.</Text>
                 {ACCOUNT_GROUPS.map((group) => (
                   <View key={group.title} style={styles.kindGroup}>
                     <Text style={styles.kindGroupTitle}>{group.title}</Text>
@@ -141,38 +145,67 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                         return (
                           <TouchableOpacity
                             key={k.id}
-                            accessibilityRole="radio"
-                            accessibilityState={{ selected }}
                             style={[styles.kindCell, selected && styles.kindCellOn]}
                             onPress={() => setKind(k.id)}
                           >
                             <View style={styles.kindHeading}>
-                              <Text style={[styles.kindTitle, selected && styles.kindTitleOn]}>{k.label}</Text>
+                              <Text style={[styles.kindTitle, selected && styles.kindTitleOn]} numberOfLines={1}>
+                                {k.label}
+                              </Text>
                               <View style={[styles.kindRadio, selected && styles.kindRadioOn]}>
                                 {selected ? <View style={styles.kindRadioDot} /> : null}
                               </View>
                             </View>
-                            <Text style={styles.kindHint}>{k.hint}</Text>
+                            <Text style={styles.kindHint} numberOfLines={2}>
+                              {k.hint}
+                            </Text>
                           </TouchableOpacity>
                         );
                       })}
                     </View>
                   </View>
                 ))}
-                <TextInput style={styles.field} placeholder="Display name (optional)" placeholderTextColor="#77756F" value={name} onChangeText={setName} />
+                <TextInput
+                  style={styles.field}
+                  placeholder="Display name"
+                  placeholderTextColor="#68665F"
+                  value={name}
+                  onChangeText={setName}
+                />
               </>
             ) : null}
-            <TextInput style={styles.field} placeholder="Username" placeholderTextColor="#77756F" autoCapitalize="none" autoCorrect={false} value={handle} onChangeText={setHandle} />
-            <TextInput style={styles.field} placeholder={mode === "up" ? "Password (8+ characters)" : "Password"} placeholderTextColor="#77756F" secureTextEntry value={password} onChangeText={setPassword} />
-            <TouchableOpacity activeOpacity={0.85} disabled={busy} style={[styles.primary, busy && { opacity: 0.6 }]} onPress={submit}>
-              <Text style={styles.primaryText}>{busy ? "Please wait…" : mode === "in" ? "Log in" : "Create account"}</Text><Ionicons name="arrow-forward" size={18} color="#11100D" />
+            <TextInput
+              style={styles.field}
+              placeholder="Username or email"
+              placeholderTextColor="#68665F"
+              autoCapitalize="none"
+              value={handle}
+              onChangeText={setHandle}
+            />
+            <TextInput
+              style={styles.field}
+              placeholder="Password"
+              placeholderTextColor="#68665F"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={[styles.refCta, { opacity: busy ? 0.6 : 1 }]}
+              disabled={busy}
+              onPress={submit}
+            >
+              <Text style={styles.refCtaText}>{busy ? "Please wait…" : mode === "in" ? "Log In" : "Create account"}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.switchRow} onPress={() => setMode(mode === "in" ? "up" : "in")}>
-              <Text style={styles.switchText}>{mode === "in" ? "New to Kilode? " : "Already have an account? "}<Text style={styles.switchGold}>{mode === "in" ? "Join now" : "Log in"}</Text></Text>
+            <TouchableOpacity
+              style={styles.switchRow}
+              onPress={() => setMode(mode === "in" ? "up" : "in")}
+            >
+              <Text style={styles.switchText}>
+                {mode === "in" ? "New here? " : "Have an account? "}
+                <Text style={styles.switchGold}>{mode === "in" ? "Sign up" : "Log in"}</Text>
+              </Text>
             </TouchableOpacity>
-            <View style={styles.divider}><View style={styles.dividerLine} /><Text style={styles.dividerText}>OR</Text><View style={styles.dividerLine} /></View>
-            <TouchableOpacity style={styles.guestOutline} onPress={onGuest}><Text style={styles.guestText}>Continue as guest</Text></TouchableOpacity>
-            <Text style={styles.legal}>By continuing, you agree to Kilode’s Terms and Privacy Policy.</Text>
           </ScrollView>
         </KeyboardAvoidingView>
       )}
@@ -180,74 +213,92 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   );
 }
 
-const WELCOME_SCENES = [
-  "https://videos.pexels.com/video-files/5805069/5805069-uhd_2160_3840_25fps.mp4",
-  "https://videos.pexels.com/video-files/9690764/9690764-uhd_2160_3840_30fps.mp4",
-  "https://videos.pexels.com/video-files/8027282/8027282-uhd_2160_3840_25fps.mp4",
-  "https://videos.pexels.com/video-files/6940477/6940477-uhd_1440_2560_25fps.mp4",
-  "https://videos.pexels.com/video-files/12322749/12322749-hd_1080_1920_30fps.mp4",
-  "https://videos.pexels.com/video-files/9653700/9653700-hd_1920_1080_25fps.mp4",
-  "https://videos.pexels.com/video-files/6940485/6940485-uhd_1440_2560_25fps.mp4",
-  "https://videos.pexels.com/video-files/9187818/9187818-hd_1080_1920_25fps.mp4",
-  "https://videos.pexels.com/video-files/8929212/8929212-hd_1080_1920_30fps.mp4",
-  "https://videos.pexels.com/video-files/9690755/9690755-uhd_2160_3840_30fps.mp4"
-];
-
-const GOLD = "#D4AF57";
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#0B0B0D" },
-  welcome: { flex: 1, paddingHorizontal: 24, paddingTop: 10, paddingBottom: Platform.OS === "ios" ? 8 : 18 },
-  welcomeCompact: { paddingHorizontal: 21, paddingTop: 4, paddingBottom: Platform.OS === "ios" ? 4 : 8 },
-  topBrand: { height: 54, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  logo: { color: "#FAF9F6", fontSize: 35, fontWeight: "900", letterSpacing: -2.1, includeFontPadding: false },
-  logoMark: { color: GOLD, fontSize: 39, fontWeight: "900", letterSpacing: -2.5 },
-  signature: { width: 42, height: 24, justifyContent: "center", alignItems: "flex-end" },
-  signatureLine: { width: 34, height: 3, borderRadius: 2, backgroundColor: GOLD, transform: [{ rotate: "-24deg" }] },
-  signatureDot: { position: "absolute", right: 0, bottom: 2, width: 5, height: 5, borderRadius: 3, backgroundColor: GOLD },
-  heroWrap: { flex: 1, minHeight: 250, maxHeight: 430, marginTop: 10, marginBottom: 24 },
-  heroWrapCompact: { minHeight: 190, maxHeight: 270, marginTop: 5, marginBottom: 13 },
-  hero: { flex: 1, borderRadius: 28, overflow: "hidden", justifyContent: "flex-start", backgroundColor: "#211D17" },
-  videoMosaic: { ...StyleSheet.absoluteFillObject, flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignContent: "space-between", padding: 7, gap: 5 },
-  videoTile: { width: "18.7%", height: "48.5%", borderRadius: 8, overflow: "hidden", backgroundColor: "#25221B", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
-  videoTileStill: { alignItems: "center", justifyContent: "center" },
-  tileGlyph: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(12,12,13,0.42)", borderWidth: 1, borderColor: "rgba(212,175,87,0.18)" },
-  tileShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(7,7,8,0.28)" },
-  heroCenterVideo: { position: "absolute", width: "43%", top: "4%", bottom: "4%", left: "28.5%", borderRadius: 20, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.58)", backgroundColor: "#161411", shadowColor: "#000", shadowOpacity: 0.45, shadowRadius: 18, elevation: 10 },
-  centerVideo: { ...StyleSheet.absoluteFillObject },
-  videoFallback: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", backgroundColor: "#17150F" },
-  fallbackOrb: { width: 62, height: 62, borderRadius: 31, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(212,175,87,0.10)", borderWidth: 1, borderColor: "rgba(212,175,87,0.5)" },
-  fallbackTitle: { color: "#F7F4EA", fontSize: 18, fontWeight: "900", letterSpacing: 3, marginTop: 14 },
-  fallbackSub: { color: "#D4AF57", fontSize: 7, fontWeight: "800", letterSpacing: 1.2, marginTop: 5 },
-  centerVideoShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(7,7,8,0.18)" },
-  centerLive: { position: "absolute", top: 10, left: 8, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 7, paddingVertical: 6, borderRadius: 20, backgroundColor: "rgba(15,15,16,0.78)" },
-  centerLiveText: { color: "#F7F4EA", fontSize: 8, fontWeight: "800", letterSpacing: 0.7 },
-  centerCaption: { position: "absolute", bottom: 10, left: 8, right: 8, flexDirection: "row", alignItems: "center", gap: 4 },
-
-  floatingTag: { position: "absolute", top: 18, left: 16, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 20, backgroundColor: "rgba(15,15,16,0.82)", borderWidth: 1, borderColor: "rgba(212,175,87,0.32)" },
-  tagMedia: { top: 86, left: undefined, right: 14 },
-  tagSocial: { top: undefined, left: 14, bottom: 78 },
-  tagText: { color: "#F7F4EA", fontSize: 10, fontWeight: "800", letterSpacing: 1 },
-  heroCaption: { position: "absolute", left: 16, right: 16, bottom: 16, flexDirection: "row", alignItems: "center", gap: 8 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: GOLD },
-  captionText: { color: "#F7F4EA", fontSize: 10, fontWeight: "800", letterSpacing: 1.4 },
-  copy: { marginBottom: 20 },
-  copyCompact: { marginBottom: 10 },
-  headline: { color: "#F7F6F2", fontSize: 31, lineHeight: 36, fontWeight: "800", letterSpacing: -1.15 },
-  headlineGold: { color: GOLD, fontSize: 31, lineHeight: 36, fontWeight: "800", letterSpacing: -1.15 },
-  headlineCompact: { fontSize: 27, lineHeight: 31, letterSpacing: -0.9 },
-  description: { color: "#A7A49C", fontSize: 14, lineHeight: 21, marginTop: 10, maxWidth: 330 },
-  descriptionCompact: { fontSize: 13, lineHeight: 18, marginTop: 7 },
-  actions: { gap: 8 },
-  actionsCompact: { gap: 4 },
-  primary: { minHeight: 54, borderRadius: 17, backgroundColor: GOLD, paddingHorizontal: 19, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
-  primaryText: { color: "#11100D", fontSize: 15, fontWeight: "800" },
-  loginButton: { minHeight: 44, alignItems: "center", justifyContent: "center" },
-  loginText: { color: "#A7A49C", fontSize: 13 },
-  loginStrong: { color: "#F7F6F2", fontWeight: "800" },
-  guestButton: { alignItems: "center", paddingVertical: 6 },
-  guestText: { color: "#B8B4AA", fontSize: 13, fontWeight: "600" },
+  root: { flex: 1, backgroundColor: "#0B0B0F" },
+  welcomeRef: {
+    flex: 1,
+    backgroundColor: "#0A0A0C",
+    paddingHorizontal: 22,
+    paddingTop: 12,
+    paddingBottom: 28,
+  },
+  refLogoWrap: { alignItems: "center", marginTop: 8, marginBottom: 8 },
+  refHero: { flex: 1, minHeight: 260, justifyContent: "center", alignItems: "center" },
+  refPortrait: {
+    width: 200,
+    height: 240,
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: "#1A1510",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(229,193,88,0.2)",
+  },
+  refPortraitInner: { alignItems: "center", justifyContent: "center" },
+  floatCard: {
+    position: "absolute",
+    width: 132,
+    backgroundColor: "rgba(22,22,26,0.92)",
+    borderRadius: 14,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    zIndex: 2,
+  },
+  floatTL: { top: "12%", left: 0 },
+  floatTR: { top: "18%", right: 0 },
+  floatBL: { bottom: "18%", left: 0 },
+  floatBR: { bottom: "12%", right: 0 },
+  floatTitle: { color: "#F5F5F5", fontSize: 13, fontWeight: "700" },
+  floatSub: { color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 3 },
+  refCopy: { marginTop: 8, marginBottom: 18 },
+  refHeadline: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    textAlign: "center",
+  },
+  refHeadlineGold: {
+    color: GOLD,
+    fontSize: 28,
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    textAlign: "center",
+    marginTop: 2,
+  },
+  refBody: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+    marginTop: 12,
+    paddingHorizontal: 12,
+  },
+  refCta: {
+    backgroundColor: GOLD,
+    borderRadius: 999,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  refCtaText: { color: "#111111", fontSize: 16, fontWeight: "800" },
+  refLoginRow: { marginTop: 16, alignItems: "center" },
+  refLogin: { color: "rgba(255,255,255,0.55)", fontSize: 14 },
+  refLoginLink: { color: GOLD, fontWeight: "700" },
   authContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 14, paddingBottom: 28 },
-  back: { width: 42, height: 42, alignItems: "center", justifyContent: "center", borderRadius: 21, backgroundColor: "#1B1B1D", marginBottom: 22 },
+  back: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: "#1B1B1D",
+    marginBottom: 22,
+  },
   authBrand: { marginBottom: 26 },
   authTitle: { color: "#F7F6F2", fontSize: 32, lineHeight: 38, fontWeight: "800", letterSpacing: -1.2 },
   authSubtitle: { color: "#A7A49C", fontSize: 14, marginTop: 7, marginBottom: 28 },
@@ -256,22 +307,44 @@ const styles = StyleSheet.create({
   kindGroup: { marginBottom: 13 },
   kindGroupTitle: { color: "#858178", fontSize: 10, fontWeight: "800", letterSpacing: 1.2, marginBottom: 8 },
   kindGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 2 },
-  kindCell: { width: "48%", flexGrow: 1, borderWidth: 1, borderColor: "#303033", backgroundColor: "#151517", borderRadius: 14, padding: 12, minHeight: 82 },
+  kindCell: {
+    width: "48%",
+    flexGrow: 1,
+    borderWidth: 1,
+    borderColor: "#303033",
+    backgroundColor: "#151517",
+    borderRadius: 14,
+    padding: 12,
+    minHeight: 82,
+  },
   kindCellOn: { borderColor: GOLD, backgroundColor: "rgba(212,175,87,0.09)" },
   kindHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 6 },
-  kindRadio: { width: 15, height: 15, borderRadius: 8, borderWidth: 1, borderColor: "#66625A", alignItems: "center", justifyContent: "center" },
+  kindRadio: {
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#66625A",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   kindRadioOn: { borderColor: GOLD },
   kindRadioDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: GOLD },
   kindTitle: { color: "#F7F6F2", fontSize: 12, fontWeight: "800", flexShrink: 1 },
   kindTitleOn: { color: GOLD },
   kindHint: { color: "#858178", fontSize: 10, marginTop: 4, lineHeight: 13 },
-  field: { minHeight: 54, borderRadius: 15, borderWidth: 1, borderColor: "#303033", backgroundColor: "#151517", paddingHorizontal: 16, color: "#F7F6F2", fontSize: 15, marginBottom: 12 },
+  field: {
+    minHeight: 54,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#303033",
+    backgroundColor: "#151517",
+    paddingHorizontal: 16,
+    color: "#F7F6F2",
+    fontSize: 15,
+    marginBottom: 12,
+  },
   switchRow: { alignItems: "center", paddingVertical: 17 },
   switchText: { color: "#A7A49C", fontSize: 13 },
   switchGold: { color: GOLD, fontWeight: "800" },
-  divider: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 5 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "#2B2B2E" },
-  dividerText: { color: "#68665F", fontSize: 10, fontWeight: "800", letterSpacing: 1.5 },
-  guestOutline: { minHeight: 48, borderRadius: 15, borderWidth: 1, borderColor: "#38383B", alignItems: "center", justifyContent: "center", marginTop: 14 },
-  legal: { textAlign: "center", fontSize: 10, lineHeight: 15, color: "#69675F", marginTop: 18 },
 });
