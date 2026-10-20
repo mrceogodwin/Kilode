@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { Audio } from "expo-av";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
 import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
 import { getBackendMode } from "./lib/config";
@@ -43,6 +44,34 @@ const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   "⚽": "football-outline", "💻": "laptop-outline", "▶️": "play-circle-outline", "✏️": "create-outline",
 };
 const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap => SYSTEM_ICON[emoji] || "apps-outline";
+
+const PREVIEW_POSTS_KEY = "@kilode/preview-posts";
+
+async function readPreviewPosts(): Promise<any[]> {
+  try {
+    const raw = await AsyncStorage.getItem(PREVIEW_POSTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function savePreviewPost(post: any): Promise<void> {
+  const current = await readPreviewPosts();
+  const next = [post, ...current.filter((item) => String(item.id) !== String(post.id))].slice(0, 100);
+  await AsyncStorage.setItem(PREVIEW_POSTS_KEY, JSON.stringify(next));
+}
+
+function mergePreviewPosts(seed: any[], saved: any[]): any[] {
+  const ids = new Set<string>();
+  return [...saved, ...seed].filter((item) => {
+    const id = String(item.id);
+    if (ids.has(id)) return false;
+    ids.add(id);
+    return true;
+  });
+}
 
 function isDeviceSession(session: { token?: string; localOnly?: boolean } | null | undefined) {
   if (!session) return false;
@@ -159,14 +188,19 @@ function KilodeApp() {
   };
 
   const loadAll = useCallback(async () => {
-    if (Platform.OS === "web") {
-      setTakes(TAKES); setRooms(ROOMS); setNews(NEWS); setTracks(TRACKS); setActivity(ACTIVITY);
-      setSource("mock"); return "mock" as const;
-    }
-    const [t, r, n, tr, a] = await Promise.all([getBackendMode() === "supabase" ? loadSocialsFeed() : fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity(session?.token)]);
-    // Keep the native preview visually populated when a backend is not connected.
-    // Seed data is used only for non-live sources; live empty responses stay genuinely empty.
-    setTakes(t.source === "live" && Array.isArray(t.data) ? t.data : TAKES);
+    // Use the same feed loader on web preview and native. The UI is the container;
+    // backend rows fill it when configured, while seed/local-preview rows are explicit fallback.
+    const [t, r, n, tr, a, savedPreviewPosts] = await Promise.all([
+      getBackendMode() === "supabase" ? loadSocialsFeed() : fetchTakes(),
+      fetchRooms(),
+      fetchNews(),
+      fetchTracks(),
+      fetchActivity(session?.token),
+      readPreviewPosts(),
+    ]);
+    // A genuinely live empty feed stays empty. Preview posts are merged only into non-live
+    // mode so device-local examples can never be presented as server-published content.
+    setTakes(t.source === "live" && Array.isArray(t.data) ? t.data : mergePreviewPosts(TAKES, savedPreviewPosts));
     setRooms(r.source === "live" && Array.isArray(r.data) ? r.data : ROOMS);
     setNews(n.source === "live" && Array.isArray(n.data) ? n.data : NEWS);
     setTracks(tr.source === "live" && Array.isArray(tr.data) ? tr.data : TRACKS);
@@ -464,9 +498,13 @@ function KilodeApp() {
                   } else {
                     const r = await postTake(composeText, session.token);
                     if (r.ok && (r as any).data) {
-                      setTakes((p) => [(r as any).data, ...p]);
+                      const created = (r as any).data;
+                      if (r.source !== "live") {
+                        await savePreviewPost({ ...created, previewOnly: true });
+                      }
+                      setTakes((p) => [created, ...p.filter((item) => String(item.id) !== String(created.id))]);
                       setComposeText(""); setComposeOpen(false); go("socials");
-                      show(r.source === "live" ? "Posted live" : "Added to preview");
+                      show(r.source === "live" ? "Posted live" : "Saved on this device · preview only");
                     } else show((r as any).error || "Could not post.");
                   }
                 } catch (e) { show(e instanceof Error ? e.message : "Could not post."); }
