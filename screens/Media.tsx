@@ -170,8 +170,7 @@ export function MediaScreen({ s, C, news, initialArticleId, onBack, show }: Prop
         <TouchableOpacity onPress={onBack} accessibilityRole="button">
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
-        <Text style={{ color: C.text, fontSize: 17, fontWeight: "800", letterSpacing: -0.3 }}>Media</Text>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+                <View style={{ flexDirection: "row", gap: 8 }}>
           <TouchableOpacity onPress={() => setListMode(listMode === "grid" ? "list" : "grid")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name={listMode === "grid" ? "list-outline" : "grid-outline"} size={20} color={C.text2} />
           </TouchableOpacity>
