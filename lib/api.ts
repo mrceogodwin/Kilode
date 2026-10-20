@@ -79,6 +79,8 @@ async function tryLiveJson<T>(
   } catch (e) {
     const msg = e instanceof Error ? e.message : "network";
     return { ok: false, data: fallback, source: "error", error: msg, fn: fnName };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
