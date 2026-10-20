@@ -23,10 +23,15 @@ export function ArtistDetailScreen({ s, C, artist, tracks, userId, backLabel, on
   const artistId = typeof artist === "object" && artist ? artist.id : undefined;
   const avatar = typeof artist === "object" && artist ? artist.avatar_url : undefined;
   const bio = typeof artist === "object" && artist ? artist.bio : undefined;
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [followReady, setFollowReady] = useState(false);
   const discography = tracks.filter((t) => String(t.artist || "").toLowerCase() === artistName.toLowerCase());
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [artistId, avatar]);
 
   useEffect(() => {
     let active = true;
@@ -66,7 +71,7 @@ export function ArtistDetailScreen({ s, C, artist, tracks, userId, backLabel, on
         <Text style={s.link}>‹ {backLabel || "Music"}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: "center", marginBottom: 20 }}>
-        {avatar ? <Image source={{ uri: avatar }} style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.elevated, marginBottom: 12 }} /> : (
+        {avatar && !avatarFailed ? <Image source={{ uri: avatar }} onError={() => setAvatarFailed(true)} style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.elevated, marginBottom: 12 }} /> : (
           <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
             <Text style={{ color: C.text, fontSize: 32, fontWeight: "800" }}>{artistName.slice(0, 1).toUpperCase()}</Text>
           </View>
