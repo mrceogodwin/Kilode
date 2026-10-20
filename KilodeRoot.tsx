@@ -280,6 +280,8 @@ function KilodeApp() {
     };
     const channel = sb.channel("kilode-shared-discovery")
       .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, scheduleRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_replies" }, scheduleRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, scheduleRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, scheduleRefresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "tracks" }, scheduleRefresh)
@@ -659,7 +661,7 @@ function KilodeApp() {
           </View>
         </View>
       </Modal>
-      <CommentsSheet visible={!!commentTake} onClose={() => setCommentTake(null)} takeId={commentTake?.id || ""} takeAuthor={commentTake?.name || ""} takeText={commentTake?.text || ""} token={session.token} C={C} isDark={isDark} show={show} />
+      <CommentsSheet visible={!!commentTake} onClose={() => setCommentTake(null)} takeId={commentTake?.id || ""} takeAuthor={commentTake?.name || ""} takeText={commentTake?.text || ""} token={session.token} userId={session.userId} C={C} isDark={isDark} show={show} />
       {toast ? <View style={s.toast}><Text style={s.toastText}>{toast}</Text></View> : null}
     </SafeAreaView>
   );
