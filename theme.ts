@@ -2,12 +2,12 @@
 export const ACCENT = "#2E8B57";
 export const ACCENT_LIGHT = "#46B978";
 
-// Compatibility tokens for older UI primitives; mapped to Kilode gold/neutrals.
+// Compatibility names retained for older UI primitives; values follow Kilode green surfaces.
 export const BLUE = ACCENT;
 export const BLUE_SOFT = "#20362A";
 export const GREEN = "#46B978";
 export const BORDER = "#304238";
-export const TEXT = "#F5F5F5";
+export const TEXT = "#F4F5F0";
 export const TEXT2 = "#A8B5AC";
 export const TEXT3 = "#7F9185";
 export const WHITE = "#1B2821";
