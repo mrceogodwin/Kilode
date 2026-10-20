@@ -338,7 +338,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             </>
           ) : null}
           {destination === "Tailored to You" ? (
-            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>Personalised locally from tracks you recently played and saved on this device. Cross-member trends and account-synced recommendations need privacy-safe, aggregated backend signals.</Text>
+            <View style={{ backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 14 }}>
+              <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{topPreferredGenre ? `A little more ${topPreferredGenre}` : "Your listening, your mix"}</Text>
+              <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 4 }}>{locallyKnownTracks.length ? "Ordered using your recent plays, saved tracks and genre signals on this device." : "Play or save a few tracks and this mix can start learning your taste on this device."} Member-wide trends and account-synced recommendations will need privacy-safe aggregated backend data.</Text>
+            </View>
           ) : null}
           {destination?.startsWith("Playlist · ") || EDITORIAL_PLAYLISTS.some((playlist) => playlist.title === destination) ? (
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>Playlist collection preview. Track selection uses the available catalogue; saved playlists, editorial publishing and member-wide trends require backend support.</Text>
