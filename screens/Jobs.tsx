@@ -23,7 +23,7 @@ export const JOBS: Job[] = [
   { id: "j2", title: "Marketing Executive", company: "Flutterwave", location: "Lagos, Nigeria", type: "Full-time", salary: "₦150k – ₦250k/month", color: "#A855F7", tags: ["Growth", "Brand"] },
   { id: "j3", title: "UI/UX Designer", company: "Kuda Bank", location: "Remote", type: "Full-time", salary: "₦200k – ₦350k/month", color: "#06B6D4", tags: ["Figma", "Product"] },
   { id: "j4", title: "Business Analyst", company: "Interswitch", location: "Abuja, Nigeria", type: "Full-time", salary: "₦180k – ₦300k/month", color: "#F59E0B", tags: ["Data", "Strategy"] },
-  { id: "j5", title: "Content Writer", company: "Kilode Media", location: "Abuja, Nigeria", type: "Part-time", salary: "Contract", color: "#10B981", tags: ["Editorial"] },
+  { id: "j5", title: "Content Writer", company: "Kilode Media", location: "Abuja, Nigeria", type: "Part-time", salary: "Contract", color: "#F08A4B", tags: ["Editorial"] },
   { id: "j6", title: "React Native Engineer", company: "Andela", location: "Remote", type: "Full-time", salary: "₦400k – ₦650k/month", color: "#E5C158", tags: ["Expo", "iOS"] },
 ];
 
@@ -56,7 +56,7 @@ export function JobsScreen({ s, C, onBack, show, accountKind }: Props) {
         <View style={{ width: 56, height: 56, borderRadius: 14, backgroundColor: active.color, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#fff", fontWeight: "900", fontSize: 20 }}>{active.company.slice(0, 1)}</Text>
         </View>
-        <Text style={{ color: C.text, fontSize: 22, fontWeight: "800", marginTop: 14 }}>{active.title}</Text>
+        <Text style={{ color: C.text, fontSize: 19, fontWeight: "700", letterSpacing: -0.3, marginTop: 14 }}>{active.title}</Text>
         <Text style={{ color: C.text2, marginTop: 6, fontSize: 15 }}>{active.company}</Text>
         <Text style={{ color: C.text3, marginTop: 4 }}>{active.location} · {active.type}</Text>
         <Text style={{ color: C.accent, fontWeight: "800", marginTop: 14, fontSize: 17 }}>{active.salary}</Text>
