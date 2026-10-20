@@ -63,7 +63,16 @@ export function HomeScreen({
     const timeOf = (x: any) => {
       const raw = x.createdAt || x.created_at || x.published_at || x.starts_at || x.date || x.time;
       const n = raw ? Date.parse(String(raw)) : 0;
-      return Number.isFinite(n) ? n : 0;
+      if (Number.isFinite(n) && n > 0) return n;
+      // Seed/preview items often carry relative labels such as "2h ago".
+      const relative = String(raw || "").match(/(\\d+)\\s*(m|min|h|hr|d|day)s?\\s*ago/i);
+      if (relative) {
+        const amount = Number(relative[1]);
+        const unit = relative[2].toLowerCase();
+        const ms = unit.startsWith("m") ? 60_000 : unit.startsWith("h") ? 3_600_000 : 86_400_000;
+        return Date.now() - amount * ms;
+      }
+      return 0;
     };
     const rows: any[] = [
       ...takes.map((x) => ({ id: "social-" + x.id, kind: "Socials", raw: x, date: timeOf(x), title: firstText(x.name, x.author?.name, x.handle, "Kilode member"), body: firstText(x.text, x.body, x.content), image: firstText(x.mediaUrl, x.imageUrl, x.image_url), sub: firstText(x.handle, x.author?.handle, x.time, "Socials"), onPress: () => onOpenPost(x) })),
@@ -105,10 +114,20 @@ export function HomeScreen({
             <Ionicons name="ellipsis-horizontal" size={18} color={C.text3} />
           </TouchableOpacity>
         </View>
-        {!!item.body && <Text style={{ color: C.text, fontSize: 14, lineHeight: 20, marginTop: 9 }} numberOfLines={social ? 3 : 2}>{item.body}</Text>}
-        {wideImage && <Image source={{ uri: item.image }} style={{ width: "100%", height: 164, borderRadius: 10, marginTop: 10, backgroundColor: C.elevated }} resizeMode="cover" />}
-        {compactImage && <Image source={{ uri: item.image }} style={{ position: "absolute", right: 12, top: 12, width: 94, height: 76, borderRadius: 9, backgroundColor: C.elevated }} resizeMode="cover" />}
-        {compactImage && <View style={{ height: 2 }} />}
+        {wideImage ? (
+          <>
+            {!!item.body && <Text style={{ color: C.text, fontSize: 14, lineHeight: 20, marginTop: 9 }} numberOfLines={3}>{item.body}</Text>}
+            <Image source={{ uri: item.image }} style={{ width: "100%", height: 164, borderRadius: 10, marginTop: 10, backgroundColor: C.elevated }} resizeMode="cover" />
+          </>
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 9 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              {!!item.body && <Text style={{ color: C.text, fontSize: 13, lineHeight: 18 }} numberOfLines={3}>{item.body}</Text>}
+              {!item.body && <Text style={{ color: C.text3, fontSize: 12 }}>Open {item.kind}</Text>}
+            </View>
+            {!!item.image && <Image source={{ uri: item.image }} style={{ width: 94, height: 76, borderRadius: 9, backgroundColor: C.elevated }} resizeMode="cover" />}
+          </View>
+        )}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 22, marginTop: 10 }}>
           <TouchableOpacity onPress={() => show("Like interaction is being connected")} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <Ionicons name={liked[item.id] ? "heart" : "heart-outline"} size={18} color={liked[item.id] ? "#FF4965" : C.text3} />
