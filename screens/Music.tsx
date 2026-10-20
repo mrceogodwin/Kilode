@@ -201,7 +201,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => canList ? setDraftOpen(true) : show("Music uploads are available to Artist accounts.")}
+          onPress={() => {
+            if (!canList) { show("Music uploads are available to Artist accounts."); return; }
+            setReleaseTitle("");
+            setReleaseType("single");
+            setSelectedAudio(null);
+            setEditingReleaseId(null);
+            setDraftOpen(true);
+          }}
           accessibilityRole="button"
           accessibilityLabel="Create music release draft"
         >
@@ -242,6 +249,22 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                 <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }} numberOfLines={1}>{release.title}</Text>
                 <Text style={{ color: C.text3, fontSize: 11, marginTop: 3, textTransform: "capitalize" }}>{release.release_type} · {release.status}</Text>
                 <Text style={{ color: release.audio_path ? C.accent : C.text3, fontSize: 10, marginTop: 3 }}>{release.audio_path ? "Audio attached privately" : "Audio not attached"}</Text>
+                {release.status === "draft" && !release.audio_path ? (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setReleaseTitle(release.title || "");
+                      setReleaseType(release.release_type === "ep" || release.release_type === "album" ? release.release_type : "single");
+                      setSelectedAudio(null);
+                      setEditingReleaseId(release.id);
+                      setDraftOpen(true);
+                    }}
+                    style={{ alignSelf: "flex-start", marginTop: 7, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: C.accentSoft }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Attach audio to ${release.title || "release"}`}
+                  >
+                    <Text style={{ color: C.accent, fontWeight: "700", fontSize: 11 }}>Add audio</Text>
+                  </TouchableOpacity>
+                ) : null}
                 {release.status === "draft" && release.audio_path ? (
                   <TouchableOpacity
                     disabled={submittingReleaseId === release.id}
