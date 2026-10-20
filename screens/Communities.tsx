@@ -33,7 +33,7 @@ const GROUPS = [
     name: "Lagos Founders",
     meta: "9.2k members · Startups",
     imageUrl: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&q=80",
-    color: "#10B981",
+    color: "#F08A4B",
   },
   {
     id: "g5",
