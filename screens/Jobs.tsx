@@ -14,7 +14,7 @@ type Job = {
   tags?: string[];
 };
 
-type Props = { s: any; C: any; onBack: () => void; show: (m: string) => void; accountKind?: string };
+type Props = { s: any; C: any; onBack: () => void; show: (m: string) => void; accountKind?: string; jobs?: Job[] };
 
 const FILTERS = ["All", "Full-time", "Part-time", "Remote"];
 
@@ -27,7 +27,7 @@ export const JOBS: Job[] = [
   { id: "j6", title: "React Native Engineer", company: "Andela", location: "Remote", type: "Full-time", salary: "₦400k – ₦650k/month", color: "#E5C158", tags: ["Expo", "iOS"] },
 ];
 
-export function JobsScreen({ s, C, onBack, show, accountKind }: Props) {
+export function JobsScreen({ s, C, onBack, show, accountKind, jobs }: Props) {
   const [filter, setFilter] = useState("All");
   const [q, setQ] = useState("");
   const [active, setActive] = useState<Job | null>(null);
@@ -36,7 +36,7 @@ export function JobsScreen({ s, C, onBack, show, accountKind }: Props) {
   const canApply = can(accountKind, "jobs_apply") || can(accountKind, "feed_post");
 
   const list = useMemo(() => {
-    let rows = JOBS;
+    let rows = jobs ?? JOBS;
     if (filter === "Full-time") rows = rows.filter((j) => j.type === "Full-time");
     if (filter === "Part-time") rows = rows.filter((j) => j.type === "Part-time");
     if (filter === "Remote") rows = rows.filter((j) => /remote/i.test(j.location));
@@ -45,7 +45,7 @@ export function JobsScreen({ s, C, onBack, show, accountKind }: Props) {
       rows = rows.filter((j) => `${j.title} ${j.company}`.toLowerCase().includes(n));
     }
     return rows;
-  }, [filter, q]);
+  }, [filter, q, jobs]);
 
   if (active) {
     return (
