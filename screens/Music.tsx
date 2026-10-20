@@ -210,7 +210,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
   const catalogueTracks = tracks.filter((track: any) => {
     const query = musicQuery.trim().toLowerCase();
-    const genreMatch = !selectedGenre || String(track.genre || track.genres || "").toLowerCase().includes(selectedGenre.toLowerCase());
+    const trackTags = [track.genre, track.genres, track.region, track.country, track.origin, track.mood].map((value) => String(value || "")).join(" ").toLowerCase();
+    const genreMatch = !selectedGenre
+      || (selectedGenre === "Nigeria" ? /nigeria|naija|nigerian/i.test(trackTags) : false)
+      || (selectedGenre === "Emerging" ? Boolean(track.is_emerging || track.emerging) : false)
+      || trackTags.includes(selectedGenre.toLowerCase());
     const queryMatch = !query || [track.title, track.artist, track.album, track.genre].some((value) => String(value || "").toLowerCase().includes(query));
     return genreMatch && queryMatch;
   });
