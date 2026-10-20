@@ -93,7 +93,7 @@ export async function listRecentPosts(limit = 40, userId?: string): Promise<{ ok
     handle: row.author?.handle || "member",
     time: row.created_at,
     role: row.author?.kind || "member",
-    likes: Math.max(0, (likesByPost.get(String(row.id)) || 0) - (likedByMe.has(String(row.id)) ? 1 : 0)),
+    likes: likesByPost.get(String(row.id)) || 0,
     likedByMe: likedByMe.has(String(row.id)),
     comments: commentsByPost.get(String(row.id)) || 0,
     reposts: 0,
