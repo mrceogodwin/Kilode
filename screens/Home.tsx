@@ -58,13 +58,6 @@ const RAIL = [
   { id: "myspace", label: "My Space", icon: "person-circle-outline" as const },
 ];
 
-function hourGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 export function HomeScreen({
   s,
   C,
@@ -145,11 +138,6 @@ export function HomeScreen({
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
     >
-      <View style={{ paddingHorizontal: 16, paddingTop: 2 }}>
-        <Text style={{ color: C.text, fontSize: 15, fontWeight: "700" }}>
-          {hourGreeting()}, {sessionName.split(" ")[0] || "there"}
-        </Text>
-      </View>
 
       <View style={{ marginHorizontal: 16, marginTop: 10, flexDirection: "row", alignItems: "center", gap: 8 }}>
         <View
