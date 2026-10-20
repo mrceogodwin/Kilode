@@ -263,7 +263,12 @@ export function HomeScreen({
               height: 148,
               borderRadius: 16,
               overflow: "hidden",
-              backgroundColor: card.color || C.elevated,
+              backgroundColor: "#17191F",
+              shadowColor: "#000",
+              shadowOpacity: 0.22,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: 5 },
+              elevation: 3,
               borderWidth: 1,
               borderColor: C.border,
             }}
@@ -271,9 +276,11 @@ export function HomeScreen({
             {card.imageUrl ? (
               <Image source={{ uri: card.imageUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
             ) : (
-              <View style={{ flex: 1, backgroundColor: card.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="musical-notes" size={32} color="rgba(255,255,255,0.85)" />
-              </View>
+              <LinearGradient colors={["#353946", "#242833", "#111318"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="musical-notes" size={27} color="rgba(255,255,255,0.92)" />
+                </View>
+              </LinearGradient>
             )}
             <LinearGradient colors={["transparent", "rgba(5,6,8,0.88)"]} locations={[0.05, 1]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 12, paddingTop: 34, paddingBottom: 12 }}>
               <Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 10, fontWeight: "700", letterSpacing: 0.5 }}>{card.kind}</Text>
@@ -321,7 +328,7 @@ export function HomeScreen({
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
           {tracks.slice(0, 6).map((t: any) => (
             <TouchableOpacity key={t.id} activeOpacity={0.88} onPress={() => onPlayTrack(t)} style={{ width: 100 }}>
-              <LinearGradient colors={["#343946", t.color || "#17251E", "#0D0F13"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 100, height: 100, borderRadius: 12, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <LinearGradient colors={["#353946", "#242833", "#111318"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 100, height: 100, borderRadius: 12, alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
                 <Ionicons name="musical-notes" size={24} color="rgba(255,255,255,0.92)" />
               </LinearGradient>
               <Text style={{ color: C.text, fontSize: 11, fontWeight: "700", marginTop: 5 }} numberOfLines={1}>{t.title}</Text>
