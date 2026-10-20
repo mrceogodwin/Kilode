@@ -136,6 +136,25 @@ export function toolsFor(kind: AccountKind | string | undefined | null): Account
   return tools;
 }
 
+
+export type WorkspaceIdentity = { title: string; subtitle: string; primaryLabel: string };
+
+export function workspaceFor(kind: AccountKind | string | undefined | null): WorkspaceIdentity {
+  switch (kind) {
+    case "artist": return { title: "Artist Studio", subtitle: "Your music, releases and fan community in one place.", primaryLabel: "Music workspace" };
+    case "writer": return { title: "Writer Desk", subtitle: "Your stories, editorial work and audience tools.", primaryLabel: "Editorial workspace" };
+    case "advertiser": return { title: "Ads Workspace", subtitle: "Manage campaign preparation and promotion destinations.", primaryLabel: "Campaign tools" };
+    case "cinema": return { title: "Cinema Desk", subtitle: "Organise film listings, trailers and audience discovery.", primaryLabel: "Cinema workspace" };
+    case "job_poster": return { title: "Hiring Dashboard", subtitle: "Create opportunities and manage your hiring activity.", primaryLabel: "Hiring tools" };
+    case "job_seeker": return { title: "Career Space", subtitle: "Discover openings and keep your job-search activity together.", primaryLabel: "Career tools" };
+    case "vendor": return { title: "Market Stall", subtitle: "Manage product listings and bring shoppers to your store.", primaryLabel: "Seller tools" };
+    case "renter": return { title: "Space Listings", subtitle: "Organise rental and space listings for discovery.", primaryLabel: "Listing tools" };
+    case "brand": return { title: "Brand Workspace", subtitle: "Your business presence, audience and promotion tools.", primaryLabel: "Business tools" };
+    case "member":
+    default: return { title: "My Space", subtitle: "Your profile, activity and the parts of Kilode you use most.", primaryLabel: "Personal tools" };
+  }
+}
+
 export function accountKindLabel(kind: AccountKind | string | undefined | null): string {
   const hit = ACCOUNT_KINDS.find((k) => k.id === kind);
   return hit?.label || "Member";
