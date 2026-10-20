@@ -23,7 +23,7 @@ const TABS = ["Home", "Discover", "Charts", "Artists"] as const;
 
 const FEATURED = {
   name: "Ayra Starr",
-  meta: "R&B · Afrobeats · 2.8M followers",
+  meta: "R&B · Afrobeats · Featured artist",
   imageUrl: "https://images.unsplash.com/photo-1516280440614-6697288d5b28?w=800&q=80",
 };
 
@@ -379,7 +379,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
       {(tab === "Home" || tab === "Charts" || tab === "Discover") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Popular right now" : "Top charts"}</Text>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Popular picks" : "Chart preview"}</Text>
           {tab !== "Charts" ? <TouchableOpacity onPress={() => setTab("Charts")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text></TouchableOpacity> : null}
         </View>
       ) : null}
@@ -456,7 +456,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Text style={{ color: following ? C.text : "#111", fontWeight: "700", fontSize: 11 }}>{following ? "Following" : "Follow"}</Text>
             </TouchableOpacity>
           </TouchableOpacity>
-          <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 12 }}>Artist discovery is currently a curated preview. Live artist search, verified profiles and follower counts will come from the Kilode catalogue.</Text>
+          <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 12 }}>Curated preview only. Artist search, verified profiles and follower counts will come from Kilode’s live catalogue; this screen does not show live rankings yet.</Text>
         </View>
       ) : null}
 
@@ -465,9 +465,13 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
         {tracks.map((t: any) => (
           <TouchableOpacity key={t.id} onPress={() => openTrack(t)} style={{ width: 112 }}>
-            <View style={{ width: 112, height: 112, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="musical-notes" size={28} color="rgba(255,255,255,0.9)" />
-            </View>
+            {t.imageUrl || t.coverUrl || t.cover_url || t.artworkUrl ? (
+              <Image source={{ uri: t.imageUrl || t.coverUrl || t.cover_url || t.artworkUrl }} style={{ width: 112, height: 112, borderRadius: 10, backgroundColor: t.color || C.elevated }} resizeMode="cover" />
+            ) : (
+              <View style={{ width: 112, height: 112, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="musical-notes" size={28} color="rgba(255,255,255,0.9)" />
+              </View>
+            )}
             <Text style={{ color: C.text, fontWeight: "700", fontSize: 12, marginTop: 6 }} numberOfLines={1}>{t.title}</Text>
             <Text style={{ color: C.text3, fontSize: 11 }} numberOfLines={1}>{t.artist}</Text>
           </TouchableOpacity>
