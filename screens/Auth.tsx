@@ -17,7 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ACCOUNT_GROUPS, ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 import { KilodeWordmark } from "../components/KilodeWordmark";
 
-const GOLD = "#E5C158";
+const ACCENT = "#46B978";
 
 type Props = {
   isDark: boolean;
@@ -97,7 +97,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
             {FLOAT.map((f) => (
               <View key={f.key} style={[styles.floatCard, f.style as any]}>
                 <View style={styles.floatHead}>
-                  <Ionicons name={f.icon} size={12} color={GOLD} />
+                  <Ionicons name={f.icon} size={12} color={ACCENT} />
                   <Text style={styles.floatTitle}>{f.title}</Text>
                 </View>
                 <Text style={styles.floatSub}>{f.sub}</Text>
@@ -143,7 +143,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
         <StatusBar barStyle="light-content" />
         <ScrollView contentContainerStyle={styles.formPad} keyboardShouldPersistTaps="handled">
           <TouchableOpacity onPress={() => setMode("welcome")} style={{ marginBottom: 12 }}>
-            <Text style={{ color: GOLD, fontWeight: "600" }}>‹ Back</Text>
+            <Text style={{ color: ACCENT, fontWeight: "600" }}>‹ Back</Text>
           </TouchableOpacity>
           <KilodeWordmark size="medium" />
           <Text style={styles.formTitle}>Choose your path</Text>
@@ -164,7 +164,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
                     accessibilityState={{ selected: on }}
                   >
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.kindRowLabel, on && { color: GOLD }]}>{k.label}</Text>
+                      <Text style={[styles.kindRowLabel, on && { color: ACCENT }]}>{k.label}</Text>
                       <Text style={styles.kindRowHint}>{k.hint}</Text>
                     </View>
                     <View style={[styles.radio, on && styles.radioOn]}>{on ? <View style={styles.radioDot} /> : null}</View>
@@ -201,7 +201,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
             onPress={() => setMode(mode === "up" ? "kind" : "welcome")}
             style={{ marginBottom: 16 }}
           >
-            <Text style={{ color: GOLD, fontWeight: "600" }}>‹ Back</Text>
+            <Text style={{ color: ACCENT, fontWeight: "600" }}>‹ Back</Text>
           </TouchableOpacity>
           <KilodeWordmark size="medium" />
           <Text style={styles.formTitle}>{mode === "up" ? "Create account" : "Welcome back"}</Text>
@@ -293,13 +293,13 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#0B0B0F" },
+  root: { flex: 1, backgroundColor: "#101714" },
   welcome: { flex: 1, paddingHorizontal: 20, paddingBottom: 16 },
   logoWrap: { alignItems: "center", marginTop: 8, marginBottom: 8 },
   hero: {
     height: 300,
     borderRadius: 24,
-    backgroundColor: "#141418",
+    backgroundColor: "#1B2821",
     overflow: "hidden",
     marginBottom: 18,
   },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     height: 280,
     borderRadius: 140,
     borderWidth: 1,
-    borderColor: "rgba(229,193,88,0.18)",
+    borderColor: "rgba(70,185,120,0.22)",
     top: -40,
     alignSelf: "center",
     left: "50%",
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 70,
     overflow: "hidden",
-    backgroundColor: "#1a1a20",
+    backgroundColor: "#24352B",
   },
   portraitImg: { width: "100%", height: "100%" },
   portraitFade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(11,11,15,0.25)",
+    backgroundColor: "rgba(16,23,20,0.28)",
   },
   floatCard: {
     position: "absolute",
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "rgba(229,193,88,0.2)",
+    borderColor: "rgba(70,185,120,0.24)",
     maxWidth: 130,
   },
   floatHead: { flexDirection: "row", alignItems: "center", gap: 4 },
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   cta: {
-    backgroundColor: GOLD,
+    backgroundColor: ACCENT,
     borderRadius: 999,
     paddingVertical: 16,
     alignItems: "center",
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   groupTitle: {
-    color: GOLD,
+    color: ACCENT,
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.8,
@@ -415,8 +415,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   kindRowOn: {
-    borderColor: GOLD,
-    backgroundColor: "rgba(229,193,88,0.1)",
+    borderColor: ACCENT,
+    backgroundColor: "rgba(70,185,120,0.12)",
   },
   kindRowLabel: { color: "#fff", fontWeight: "700", fontSize: 14 },
   kindRowHint: { color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 2, lineHeight: 16 },
@@ -429,8 +429,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  radioOn: { borderColor: GOLD },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: GOLD },
+  radioOn: { borderColor: ACCENT },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: ACCENT },
   input: {
     backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 12,
@@ -443,5 +443,5 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   loginMuted: { color: "rgba(255,255,255,0.45)", fontSize: 13 },
-  loginLink: { color: GOLD, fontWeight: "700" },
+  loginLink: { color: ACCENT, fontWeight: "700" },
 });
