@@ -7,9 +7,10 @@
 ## Current checkpoint
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
-- **Latest work:** Home floating create action is being changed from list rows to a two-column native grid; music mini-player now has a playback-aware animated equalizer and status label. Music uses registered artist profiles for its carousel and featured artist card; removed the hardcoded third-party featured artist/image. Avatar failures fall back safely. Header wordmark redesign is also in the branch.
-- **Latest confirmed passing CI checkpoint `d6c0e120`:** native validation and Web Preview Check passed. This is source validation, not a compiled/installable iOS binary or physical-device test.
-- **Current source commit `b025484f`:** create-grid JSX corrected and pushed; native validation and web preview checks are queued. Do not mark this UI change verified until both complete.
+- **Latest work:** Home floating create action is now a two-column native grid; music mini-player has a playback-aware animated equalizer and status label. Music artist carousel uses registered artist profiles; avatar failures fall back safely. Header wordmark redesign is also in the branch.
+- **Latest source checkpoint `749fbdf7`:** GitHub Actions `Kilode native validation` PASSED (TypeScript, Expo Doctor, and iOS JavaScript bundle export); `Kilode Web Preview Check` PASSED. This verifies source/export checks only—not an installable iOS binary, physical-device behaviour, or backend integration.
+- **Vercel preview:** deployment attempt for this source was blocked by Vercel's `api-deployments-free-per-day` limit (retry after 24 hours). Do not claim the live preview has updated.
+- **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
