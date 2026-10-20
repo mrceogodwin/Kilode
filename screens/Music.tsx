@@ -225,11 +225,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       : destination === "Albums" || destination === "Releases"
         ? catalogueTracks.filter((track: any) => track.album || track.release_type)
         : destination === "Tailored to You"
-          ? [
-              ...recentTrackIds.map((id) => catalogueTracks.find((track: any) => String(track.id ?? track.title) === id)).filter(Boolean),
-              ...catalogueTracks.filter((track: any) => savedTrackIds[String(track.id ?? track.title)]),
-              ...catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)) && !savedTrackIds[String(track.id ?? track.title)]),
-            ].filter((track: any, index: number, list: any[]) => list.findIndex((other: any) => String(other.id ?? other.title) === String(track.id ?? track.title)) === index)
+          ? tailoredTracks
           : destination === "Top 100"
             ? [...catalogueTracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, 100)
             : destination === "The Discovery List"
@@ -244,6 +240,27 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                       ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
                       : catalogueTracks;
   const hasVerifiedChartSignals = destination === "Top 100" && destinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
+  const locallyKnownTracks = [...recentTrackIds, ...Object.keys(savedTrackIds).filter((id) => savedTrackIds[id])]
+    .map((id) => tracks.find((track: any) => String(track.id ?? track.title) === id))
+    .filter(Boolean) as any[];
+  const preferredGenres = locallyKnownTracks.reduce((counts: Record<string, number>, track: any) => {
+    const raw = track.genre ?? track.genres;
+    const genres = (Array.isArray(raw) ? raw : String(raw || "").split(/[,/|]/)).map((genre: any) => String(genre).trim().toLowerCase()).filter(Boolean);
+    genres.forEach((genre: string) => { counts[genre] = (counts[genre] || 0) + 1; });
+    return counts;
+  }, {});
+  const topPreferredGenre = Object.entries(preferredGenres).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const tailoredTracks = [...catalogueTracks].sort((a: any, b: any) => {
+    const score = (track: any) => {
+      const id = String(track.id ?? track.title);
+      const genre = String(track.genre ?? track.genres ?? "").toLowerCase();
+      return (recentTrackIds.includes(id) ? 4 : 0)
+        + (savedTrackIds[id] ? 3 : 0)
+        + (topPreferredGenre && genre.includes(topPreferredGenre) ? 2 : 0)
+        + (track.is_emerging || track.emerging ? 1 : 0);
+    };
+    return score(b) - score(a);
+  });
   const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
 
 
