@@ -114,7 +114,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 160 }} resizeMode="cover" />
         <View style={{ padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: C.text, fontWeight: "800", fontSize: 16 }}>{FEATURED.name}</Text>
+            <Text style={{ color: C.text, fontWeight: "800", fontSize: 15 }}>{FEATURED.name}</Text>
             <Text style={{ color: C.text3, fontSize: 12, marginTop: 3 }}>{FEATURED.meta}</Text>
           </View>
           <TouchableOpacity
@@ -169,7 +169,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Ionicons name="musical-notes" size={18} color="#fff" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{row.title}</Text>
+              <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{row.title}</Text>
               <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{row.artist}</Text>
             </View>
             <Ionicons name="play-circle" size={28} color={C.accent} />
@@ -177,7 +177,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         );
       })}
 
-      <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 }}>Genres</Text>
+      <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, paddingHorizontal: 16, marginTop: 18, marginBottom: 9 }}>Genres</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
         {GENRES.map((g) => (
           <TouchableOpacity
