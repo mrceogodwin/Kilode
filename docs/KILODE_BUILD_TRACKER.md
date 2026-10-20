@@ -7,8 +7,8 @@
 ## Current checkpoint
 
 - **Repository:** `mrceogodwin/Kilode`, branch `preview/web`.
-- **Latest work:** native Music home now replaces the oversized “From Kilode” track row with a compact registered-artist carousel; header wordmark redesign is also in the branch. Exact current CI status must be checked against the branch HEAD.
-- **Previously verified checkpoint `aaf9c6d5`:** native validation and web export checks passed. Newer logo and Music carousel changes require their own final CI results.
+- **Latest work:** Music replaces the oversized “From Kilode” row with a registered-artist carousel; broken avatar URLs now fall back to initials/icons in the carousel and full Artists list. Header wordmark redesign is also in the branch. CI must be checked against the latest HEAD.
+- **Verified checkpoint `4a246073`:** native validation and web export checks passed. The artist-carousel commit `942014fe` web export passed; native validation was queued at last check. The avatar-fallback change is newer and still requires CI.
 - **Physical iPhone install/gesture/audio testing:** NOT VERIFIED.
 - **EAS iOS build:** BLOCKED/UNVERIFIED; `app.json` has an empty `extra.eas.projectId`.
 - **Live dedicated Supabase backend:** NOT CONFIGURED/VERIFIED. Do not describe seed/offline mode as live.
@@ -40,12 +40,13 @@
 ## P1 — Music system
 
 - [x] Replace the oversized “From Kilode” track row with a compact round-thumbnail carousel sourced from registered artist profiles; “See all” opens the full Artists list.
+- [x] Add runtime image-error fallbacks for broken artist avatar URLs in the carousel and full Artists list.
 - [ ] Verify carousel, image fallbacks, loading/error/empty states and full artist list on iOS; backend must return registered profiles for the carousel to populate.
 - [x] Top 100/categories and tailored playlist foundations exist in Music screen code.
 - [x] Local saved tracks/playlists and recent listening are stored per user/device.
 - [x] Queue navigation and rapid track-switch safeguards have been implemented in prior commits.
 - [x] Latest change clears in-memory library state when storage read fails, instead of retaining another account's state.
-- [ ] Confirm latest Music carousel and logo changes pass native validation and web export.
+- [ ] Confirm latest avatar-fallback, Music carousel and logo changes pass native validation and web export.
 - [ ] Test account switching, corrupt storage, storage rejection, save/unsave, and app restart on device.
 - [ ] Verify Top 100 uses trustworthy, server-ranked catalogue data when backend is configured; do not label seed catalogue as real rankings.
 - [ ] Verify category/genre matching with actual catalogue metadata and useful empty/error states.
