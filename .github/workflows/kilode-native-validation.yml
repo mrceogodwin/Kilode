@@ -1,0 +1,49 @@
+name: Kilode iOS native validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: kilode-ios-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-ios:
+    name: Typecheck, Expo Doctor, iOS bundle export
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout iOS app
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: TypeScript validation
+        run: npm run typecheck
+
+      - name: Expo Doctor
+        run: npx expo-doctor
+
+      - name: Export iOS JavaScript bundle
+        run: npx expo export --platform ios
+
+      - name: Upload iOS bundle validation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kilode-ios-bundle-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
