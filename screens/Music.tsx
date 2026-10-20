@@ -65,6 +65,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [playlistCategory, setPlaylistCategory] = useState("all");
   const [savedTrackIds, setSavedTrackIds] = useState<Record<string, boolean>>({});
+  const [savedPlaylistIds, setSavedPlaylistIds] = useState<Record<string, boolean>>({});
   const [recentTrackIds, setRecentTrackIds] = useState<string[]>([]);
   const [loadedLibraryStorageKey, setLoadedLibraryStorageKey] = useState<string | null>(null);
   const libraryStorageKey = `kilode.music.library.v1.${userId || "guest"}`;
@@ -100,13 +101,16 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         try {
           const saved = JSON.parse(raw);
           setSavedTrackIds(saved.savedTrackIds && typeof saved.savedTrackIds === "object" ? saved.savedTrackIds : {});
+          setSavedPlaylistIds(saved.savedPlaylistIds && typeof saved.savedPlaylistIds === "object" ? saved.savedPlaylistIds : {});
           setRecentTrackIds(Array.isArray(saved.recentTrackIds) ? saved.recentTrackIds.filter((id: unknown) => typeof id === "string").slice(0, 30) : []);
         } catch {
           setSavedTrackIds({});
+          setSavedPlaylistIds({});
           setRecentTrackIds([]);
         }
       } else {
         setSavedTrackIds({});
+        setSavedPlaylistIds({});
         setRecentTrackIds([]);
       }
       setLoadedLibraryStorageKey(libraryStorageKey);
@@ -116,10 +120,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
   useEffect(() => {
     if (loadedLibraryStorageKey !== libraryStorageKey) return;
-    AsyncStorage.setItem(libraryStorageKey, JSON.stringify({ savedTrackIds, recentTrackIds })).catch(() => {
+    AsyncStorage.setItem(libraryStorageKey, JSON.stringify({ savedTrackIds, savedPlaylistIds, recentTrackIds })).catch(() => {
       show("Couldn't save your Music library on this device.");
     });
-  }, [loadedLibraryStorageKey, libraryStorageKey, savedTrackIds, recentTrackIds]);
+  }, [loadedLibraryStorageKey, libraryStorageKey, savedTrackIds, savedPlaylistIds, recentTrackIds]);
 
   useEffect(() => {
     let active = true;
@@ -262,6 +266,22 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     return score(b) - score(a);
   });
   const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
+  const activePlaylist = EDITORIAL_PLAYLISTS.find((playlist) => playlist.title === destination);
+  const activePlaylistTracks = activePlaylist?.category === "tailored"
+    ? tailoredTracks
+    : activePlaylist?.category === "community"
+      ? catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)))
+      : activePlaylist?.category === "new"
+        ? [...catalogueTracks].sort((a: any, b: any) => new Date(b.release_date ?? b.created_at ?? 0).getTime() - new Date(a.release_date ?? a.created_at ?? 0).getTime())
+        : activePlaylist?.category === "genre"
+          ? catalogueTracks.filter((track: any) => String(track.genre ?? track.genres ?? "").toLowerCase().includes("afro"))
+          : activePlaylist?.category === "focus"
+            ? catalogueTracks.filter((track: any) => /r&b|ambient|acoustic|chill|lo.?fi|instrumental/i.test(String(track.genre ?? track.genres ?? track.mood ?? "")))
+            : activePlaylist?.category === "naija"
+              ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
+              : activePlaylist?.category === "mood"
+                ? catalogueTracks.filter((track: any) => /r&b|chill|soul|slow|ambient/i.test(String(track.genre ?? track.genres ?? track.mood ?? "")))
+                : catalogueTracks;
 
 
   return (
@@ -343,8 +363,29 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 4 }}>{locallyKnownTracks.length ? "Ordered using your recent plays, saved tracks and genre signals on this device." : "Play or save a few tracks and this mix can start learning your taste on this device."} Member-wide trends and account-synced recommendations will need privacy-safe aggregated backend data.</Text>
             </View>
           ) : null}
-          {destination?.startsWith("Playlist · ") || EDITORIAL_PLAYLISTS.some((playlist) => playlist.title === destination) ? (
-            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginBottom: 12 }}>Playlist collection preview. Track selection uses the available catalogue; saved playlists, editorial publishing and member-wide trends require backend support.</Text>
+          {activePlaylist ? (
+            <View style={{ marginBottom: 18 }}>
+              <View style={{ minHeight: 170, borderRadius: 18, padding: 18, justifyContent: "space-between", backgroundColor: C.card, borderWidth: 1, borderColor: C.border, overflow: "hidden" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <View style={{ width: 48, height: 48, borderRadius: 13, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name={activePlaylist.icon as any} size={25} color={C.accent} /></View>
+                  <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>KILODE PLAYLIST</Text>
+                </View>
+                <View>
+                  <Text style={{ color: C.text, fontSize: 24, fontWeight: "900", letterSpacing: -0.6 }}>{activePlaylist.title}</Text>
+                  <Text style={{ color: C.text2, fontSize: 12, lineHeight: 18, marginTop: 5 }}>{activePlaylist.subtitle}</Text>
+                  <Text style={{ color: C.text3, fontSize: 10, marginTop: 7 }}>{activePlaylistTracks.length} available tracks · {activePlaylist.category === "tailored" ? "Personalised on this device" : "Catalogue-based collection"}</Text>
+                </View>
+              </View>
+              <View style={{ flexDirection: "row", gap: 9, marginTop: 12 }}>
+                <TouchableOpacity onPress={() => activePlaylistTracks[0] ? openTrack(activePlaylistTracks[0]) : show("No tracks are available for this playlist yet.")} style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingVertical: 12, borderRadius: 11, backgroundColor: C.accent }}>
+                  <Ionicons name="play" size={17} color="#111" /><Text style={{ color: "#111", fontSize: 12, fontWeight: "800" }}>Play collection</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setSavedPlaylistIds((current) => { const next = { ...current, [activePlaylist.title]: !current[activePlaylist.title] }; if (!next[activePlaylist.title]) delete next[activePlaylist.title]; return next; })} accessibilityRole="button" accessibilityLabel={savedPlaylistIds[activePlaylist.title] ? "Unsave playlist" : "Save playlist"} style={{ width: 48, alignItems: "center", justifyContent: "center", borderRadius: 11, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+                  <Ionicons name={savedPlaylistIds[activePlaylist.title] ? "bookmark" : "bookmark-outline"} size={20} color={savedPlaylistIds[activePlaylist.title] ? C.accent : C.text} />
+                </TouchableOpacity>
+              </View>
+              <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 10 }}>This collection uses the catalogue currently available to the app. Saving is stored on this device; shared editorial management and member-wide trend signals need backend support.</Text>
+            </View>
           ) : null}
           {destination !== "Genres" && destination !== "Playlists" && destination !== "Push Link" ? (
             <>
