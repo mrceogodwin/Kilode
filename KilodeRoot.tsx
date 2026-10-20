@@ -123,48 +123,6 @@ function KilodeApp() {
   const navigationHistoryRef = useRef<string[]>(["home"]);
   const navigationForwardRef = useRef<string[]>([]);
   const swipeStartXRef = useRef(0);
-  const navigateBack = useCallback(() => {
-    if (composeOpen) { setComposeOpen(false); return; }
-    if (createOpen) { setCreateOpen(false); return; }
-    if (moreOpen) { setMoreOpen(false); return; }
-    if (settingsOpen) { setSettingsOpen(false); return; }
-    if (selectedPost) { setSelectedPost(null); return; }
-    if (selectedProfile) { setSelectedProfile(null); return; }
-    if (selectedTrack) { setSelectedTrack(null); return; }
-    if (selectedArtist) { setSelectedArtist(null); setArtistReturnToTrack(false); return; }
-    if (selectedDeskItem) { setSelectedDeskItem(null); return; }
-    if (selectedArticleId) { setSelectedArticleId(null); return; }
-    const history = navigationHistoryRef.current;
-    if (history.length > 1) {
-      navigationForwardRef.current.unshift(history.pop()!);
-      setTab(history[history.length - 1]);
-    }
-  }, [composeOpen, createOpen, moreOpen, settingsOpen, selectedPost, selectedProfile, selectedTrack, selectedArtist, selectedDeskItem, selectedArticleId]);
-  const navigateForward = useCallback(() => {
-    const next = navigationForwardRef.current.shift();
-    if (next) {
-      navigationHistoryRef.current.push(next);
-      setTab(next);
-    }
-  }, []);
-  const navigateBackRef = useRef(navigateBack);
-  const navigateForwardRefCallback = useRef(navigateForward);
-  navigateBackRef.current = navigateBack;
-  navigateForwardRefCallback.current = navigateForward;
-  const edgeSwipeResponder = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_evt, gesture) => {
-      const width = Dimensions.get("window").width;
-      const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.3;
-      return horizontal && ((swipeStartXRef.current <= 24 && gesture.dx > 18) || (swipeStartXRef.current >= width - 24 && gesture.dx < -18));
-    },
-    onPanResponderRelease: (_evt, gesture) => {
-      if (gesture.dx > 70) navigateBack();
-      else if (gesture.dx < -70) navigateForward();
-    },
-    onPanResponderTerminationRequest: () => true,
-  })).current;
-
   const [homeSearchOpen, setHomeSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -210,6 +168,48 @@ function KilodeApp() {
   const [profileEditorOpen, setProfileEditorOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [blocked, setBlocked] = useState<string[]>([]);
+
+  const navigateBack = useCallback(() => {
+    if (composeOpen) { setComposeOpen(false); return; }
+    if (createOpen) { setCreateOpen(false); return; }
+    if (moreOpen) { setMoreOpen(false); return; }
+    if (settingsOpen) { setSettingsOpen(false); return; }
+    if (selectedPost) { setSelectedPost(null); return; }
+    if (selectedProfile) { setSelectedProfile(null); return; }
+    if (selectedTrack) { setSelectedTrack(null); return; }
+    if (selectedArtist) { setSelectedArtist(null); setArtistReturnToTrack(false); return; }
+    if (selectedDeskItem) { setSelectedDeskItem(null); return; }
+    if (selectedArticleId) { setSelectedArticleId(null); return; }
+    const history = navigationHistoryRef.current;
+    if (history.length > 1) {
+      navigationForwardRef.current.unshift(history.pop()!);
+      setTab(history[history.length - 1]);
+    }
+  }, [composeOpen, createOpen, moreOpen, settingsOpen, selectedPost, selectedProfile, selectedTrack, selectedArtist, selectedDeskItem, selectedArticleId]);
+  const navigateForward = useCallback(() => {
+    const next = navigationForwardRef.current.shift();
+    if (next) {
+      navigationHistoryRef.current.push(next);
+      setTab(next);
+    }
+  }, []);
+  const navigateBackRef = useRef(navigateBack);
+  const navigateForwardRefCallback = useRef(navigateForward);
+  navigateBackRef.current = navigateBack;
+  navigateForwardRefCallback.current = navigateForward;
+  const edgeSwipeResponder = useRef(PanResponder.create({
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_evt, gesture) => {
+      const width = Dimensions.get("window").width;
+      const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.3;
+      return horizontal && ((swipeStartXRef.current <= 24 && gesture.dx > 18) || (swipeStartXRef.current >= width - 24 && gesture.dx < -18));
+    },
+    onPanResponderRelease: (_evt, gesture) => {
+      if (gesture.dx > 70) navigateBackRef.current();
+      else if (gesture.dx < -70) navigateForwardRefCallback.current();
+    },
+    onPanResponderTerminationRequest: () => true,
+  })).current;
 
   useEffect(() => {
     let active = true;
