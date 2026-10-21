@@ -648,7 +648,6 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         sessionHandle={session.handle}
         show={show}
         onBack={() => setSettingsOpen(false)}
-        onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
       />
     );
     if (selectedPost) return <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]} onBack={() => setSelectedPost(null)} onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))} onComment={() => setCommentTake(selectedPost)} onFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedPost.handle || selectedPost.name)]: !prev[String(selectedPost.handle || selectedPost.name)] }))} onReport={async () => { await submitReport("post", String(selectedPost.id), "other", undefined, session?.handle || session?.name || "guest"); show("Report saved on this device. Kilode review is not connected yet."); }} onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h, session?.handle || session?.name || "guest"); setBlocked((prev) => prev.includes(h) ? prev : [...prev, h]); setSelectedPost(null); show("Blocked @" + h + " on this device"); }} show={show} />;
