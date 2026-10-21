@@ -65,6 +65,19 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [loadedLibraryStorageKey, setLoadedLibraryStorageKey] = useState<string | null>(null);
   const libraryStorageKey = `kilode.music.library.v1.${userId || "guest"}`;
 
+  useEffect(() => {
+    let active = true;
+    if (!userId || destination !== "Push Link") { setCampaignBriefs([]); return; }
+    AsyncStorage.getItem(`kilode.pushlink.music.briefs.v1.${userId}`).then((raw) => {
+      if (!active) return;
+      try {
+        const parsed = raw ? JSON.parse(raw) : [];
+        setCampaignBriefs(Array.isArray(parsed) ? parsed.filter((item: any) => item && item.status === "local_draft").slice(0, 20) : []);
+      } catch { setCampaignBriefs([]); }
+    }).catch(() => { if (active) setCampaignBriefs([]); });
+    return () => { active = false; };
+  }, [userId, destination]);
+
 
   const [artistProfiles, setArtistProfiles] = useState<any[]>([]);
   const [loadingArtists, setLoadingArtists] = useState(false);
@@ -90,6 +103,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [campaignBudget, setCampaignBudget] = useState("5000");
   const [campaignDays, setCampaignDays] = useState("7");
   const [savingCampaignBrief, setSavingCampaignBrief] = useState(false);
+  const [campaignBriefs, setCampaignBriefs] = useState<any[]>([]);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
 
@@ -478,7 +492,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                       const list = Array.isArray(prior) ? prior : [];
                       const chosen = tracks.find((track: any, index: number) => String(track.id ?? track.title ?? index) === campaignTrackId);
                       list.unshift({ id: `local-${Date.now()}`, trackId: campaignTrackId, trackTitle: chosen?.title || "Untitled track", placements: campaignPlacements, budgetNaira: budget, durationDays: days, status: "local_draft", createdAt: new Date().toISOString() });
-                      await AsyncStorage.setItem(key, JSON.stringify(list.slice(0, 20)));
+                      const savedList = list.slice(0, 20);
+                      await AsyncStorage.setItem(key, JSON.stringify(savedList));
+                      setCampaignBriefs(savedList);
                       show("Campaign brief saved on this device. Checkout and campaign submission are not connected yet.");
                     } catch {
                       show("Could not save the campaign brief on this device.");
@@ -489,6 +505,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                     <Ionicons name="save-outline" size={16} color="#111" /><Text style={{ color: "#111", fontSize: 12, fontWeight: "800" }}>{savingCampaignBrief ? "Saving…" : "Save campaign brief"}</Text>
                   </TouchableOpacity>
                   <Text style={{ color: C.text3, fontSize: 10, lineHeight: 15, marginTop: 9 }}>No payment is taken. A saved local draft is not an active promotion, and its reach or results are not measured.</Text>
+                  {campaignBriefs.length > 0 ? (
+                    <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: C.border }}>
+                      <Text style={{ color: C.text, fontSize: 13, fontWeight: "800", marginBottom: 8 }}>Saved briefs on this device</Text>
+                      {campaignBriefs.slice(0, 5).map((brief: any) => (
+                        <View key={brief.id} style={{ padding: 11, borderRadius: 10, backgroundColor: C.elevated, marginBottom: 7 }}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                            <View style={{ flex: 1 }}>
+                              <Text numberOfLines={1} style={{ color: C.text, fontSize: 12, fontWeight: "700" }}>{brief.trackTitle || "Music campaign"}</Text>
+                              <Text style={{ color: C.text3, fontSize: 10, marginTop: 3 }}>{(brief.placements || []).join(" · ")} · {brief.durationDays} days</Text>
+                            </View>
+                            <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800" }}>₦{Number(brief.budgetNaira || 0).toLocaleString("en-NG")}</Text>
+                          </View>
+                          <Text style={{ color: C.text3, fontSize: 10, marginTop: 5 }}>LOCAL DRAFT · Not submitted</Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
                 </>
               )}
             </View>
