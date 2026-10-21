@@ -40,11 +40,13 @@ For initial migration, unchecked audit items are `NOT STARTED / VERIFY CURRENT S
 - **Acceptance:** Check safe areas, status bars, keyboard, navigation, accessibility, offline/network errors, loading, empty states, crash handling, performance and permissions.
 
 ### KIL-006 — Branding and entry
-- **Status:** NOT STARTED / VERIFY CURRENT SOURCE
+- **Status:** IN PROGRESS — FINAL ASSET NOT PRESENT
+- **Evidence:** `components/KilodeWordmark.tsx` renders a code-drawn approximation; `assets/` contains only `.gitkeep` on `preview/web`. The approved final transparent metallic-white logo asset has not been integrated.
 - **Acceptance:** Integrate the approved final metallic-white entangled Kilode wordmark with green dot, transparent background, correct scale/alignment. Existing approximation is not proof of final asset integration.
 
 ### KIL-007 — Branding and entry
-- **Status:** NOT STARTED / VERIFY CURRENT SOURCE
+- **Status:** IN PROGRESS — VIDEO ASSETS MISSING
+- **Evidence:** `screens/Auth.tsx` currently uses one remote Unsplash portrait with an icon fallback. The `assets/` folder contains no welcome video files; the requested ten-video montage and prominent dancing-person scene are not implemented.
 - **Acceptance:** First launch must show the distinctive native welcome screen with ten short video scenes and a prominent dancing/person scene; test load/offline behaviour and onboarding transitions.
 
 ### KIL-008 — Branding and entry
