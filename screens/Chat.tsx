@@ -28,7 +28,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
     return (
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
         <View style={[s.header, { borderBottomWidth: 1, borderBottomColor: C.border }]}>
-          <TouchableOpacity onPress={() => setActive(null)}>
+          <TouchableOpacity onPress={() => setActive(null)} accessibilityRole="button" accessibilityLabel="Back to chat list">
             <Text style={s.link}>‹ Back</Text>
           </TouchableOpacity>
           <Text style={s.headerTitle}>{thread.name}</Text>
@@ -71,7 +71,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             alignItems: "center",
           }}
         >
-          <TouchableOpacity onPress={() => show("Attach")} style={s.iconBtn}>
+          <TouchableOpacity onPress={() => show("Attach")} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Attach to message">
             <Text style={s.iconBtnText}>+</Text>
           </TouchableOpacity>
           <TextInput
@@ -87,6 +87,8 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
               borderWidth: 1,
               borderColor: C.border,
             }}
+            accessibilityLabel="Message text"
+            returnKeyType="send"
             placeholder="Type a message"
             placeholderTextColor={C.text3}
             value={draft}
@@ -142,6 +144,8 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             borderColor: C.border,
             fontSize: 14,
           }}
+          accessibilityLabel="Search chats"
+          returnKeyType="search"
           placeholder="Search chats"
           placeholderTextColor={C.text3}
           value={q}
@@ -149,13 +153,15 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
         />
       </View>
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Start a new message"
         style={[s.primaryBtn, { marginHorizontal: 14, marginVertical: 8 }]}
         onPress={() => show("New chat · pick people next")}
       >
         <Text style={s.primaryBtnText}>New message</Text>
       </TouchableOpacity>
       {filtered.map((t) => (
-        <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => setActive(t)}>
+        <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => setActive(t)} accessibilityRole="button" accessibilityLabel={`Open chat with ${t.name}`}>
           <View style={s.roomAv}>
             <Text style={s.roomAvText}>{t.name.replace("#", "").slice(0, 2).toUpperCase()}</Text>
           </View>
