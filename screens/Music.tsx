@@ -133,7 +133,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         {(["new", "charts", "artists"] as const).map((t) => (
           <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
             <Text style={[s.chipText, tab === t && s.chipTextOn]}>
-              {t === "new" ? "New drops" : t === "charts" ? "Top charts" : "Artists"}
+              {t === "new" ? "New drops" : t === "charts" ? "Tracks" : "Artists"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -199,11 +199,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
       {tab === "charts" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Top charts</Text>
+            <Text style={s.sectionTitle}>Tracks in catalogue</Text>
           </View>
-          {chartTracks.map((c: any, index: number) => (
+          {chartTracks.length === 0 ? <Text style={[s.meta, s.padH]}>No catalogue tracks match this search.</Text> : chartTracks.map((c: any, index: number) => (
             <TouchableOpacity
-              key={c.rank}
+              key={c.id || `${c.title}-${index}`}
               style={s.roomRow}
               onPress={() =>
                 selectTrack(c)
@@ -225,7 +225,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
       {tab === "artists" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Featured artists</Text>
+            <Text style={s.sectionTitle}>Artists in catalogue</Text>
           </View>
           {artists.filter((a: any) => a.name.toLowerCase().includes(search.trim().toLowerCase())).map((a: any) => (
             <TouchableOpacity
