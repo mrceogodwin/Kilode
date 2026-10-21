@@ -191,7 +191,7 @@ function KilodeApp() {
     </ScrollView>
   );
 
-  const Socials = (t Socials = () => (
+  const Socials = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.composer}>
         <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
