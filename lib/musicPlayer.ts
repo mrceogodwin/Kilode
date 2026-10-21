@@ -81,7 +81,8 @@ function getPlayableUrl(track: MusicTrack): string | null {
     track.preview_url;
   if (typeof candidate !== "string") return null;
   const value = candidate.trim();
-  return /^https?:\/\//i.test(value) ? value : null;
+  // Native playback must use TLS; do not stream an insecure HTTP source.
+  return /^https:\/\//i.test(value) ? value : null;
 }
 
 async function configureAudioMode() {
