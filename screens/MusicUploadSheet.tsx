@@ -179,9 +179,10 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
     if (pendingUploadExpiresAt) {
       const expiresAt = Date.parse(pendingUploadExpiresAt);
       if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+        setPendingUploadId(null);
         setPendingUploadUrl(null);
         setPendingUploadExpiresAt(null);
-        fail("This secure upload link has expired. Start a new upload to receive a fresh link.");
+        fail("This secure upload link has expired. Select the file again and start a new upload.");
         return;
       }
     }
@@ -191,7 +192,7 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       setStage("Retrying audio transfer…");
       const uploaded = await uploadMusicAsset(pendingUploadUrl, audio.uri, audio.mimeType);
       if (!uploaded.ok) {
-        fail(`${uploaded.error || "Audio upload failed."} The secure link may have expired; if it keeps failing, start a new upload.`);
+        fail(`${uploaded.error || "Audio upload failed."} You can retry while the secure link is valid. If it expires, select the file again for a new upload.`);
         return;
       }
       setPendingUploadUrl(null);
@@ -209,6 +210,8 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       } else if (state === "published" && trackId) {
         setMessage("This track is already published.");
         setPendingUploadId(null);
+        setPendingUploadUrl(null);
+        setPendingUploadExpiresAt(null);
         onPublished();
       } else if (["failed", "rejected", "error"].includes(state)) {
         setPendingUploadId(null);
