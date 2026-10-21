@@ -14,6 +14,7 @@ import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, li
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
+import { UpgradeScreen } from "./screens/Upgrade";
 import { AuthScreen } from "./screens/Auth";
 import { KilodeWordmark } from "./components/KilodeWordmark";
 import { MediaScreen } from "./screens/Media";
@@ -579,6 +580,7 @@ function KilodeApp() {
     if (tab === "communities") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "creators") return <CreatorsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={playTrack} onOpenTrack={setSelectedTrack} onOpenArtist={(artist) => { setArtistReturnToTrack(false); setSelectedArtist(artist); }} accountKind={session.kind} userId={session.userId} tracks={tracks} />;
+    if (tab === "upgrade") return <UpgradeScreen s={s} C={C} accountKind={session.kind} onBack={() => go("myspace")} show={show} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
     if (tab === "activity") {
       const chips = ["All", "Likes", "Comments", "Follows"];
@@ -653,6 +655,14 @@ function KilodeApp() {
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "600", fontSize: 16 }}>—</Text><Text style={s.meta}>Followers</Text></View>
             <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Following</Text></View>
           </View>
+          <TouchableOpacity onPress={() => go("upgrade")} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 18, marginBottom: 2, padding: 13, borderRadius: 14, borderWidth: 1, borderColor: C.accent + "66", backgroundColor: C.accent + "10" }}>
+            <View style={{ width: 38, height: 38, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: C.accent + "20" }}><Ionicons name="sparkles-outline" size={20} color={C.accent} /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontSize: 13, fontWeight: "800" }}>Upgrade</Text>
+              <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>Account-specific plans and paid tools</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={17} color={C.accent} />
+          </TouchableOpacity>
           <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, marginTop: 22, marginBottom: 10 }}>
             {workspace.primaryLabel.toUpperCase()}
           </Text>
@@ -753,6 +763,7 @@ function KilodeApp() {
     : tab === "creators" ? "Creators"
     : tab === "cinema" ? "Cinema"
     : tab === "music" ? "Music"
+    : tab === "upgrade" ? "Upgrade"
     : DESKS.find((d) => d.id === tab)?.label;
 
   return (
