@@ -3,11 +3,11 @@ import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-nativ
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Palette } from "../themeStyles";
 
-type Props = { s: any; C: Palette; onBack: () => void; show: (message: string) => void; artistName: string };
+type Props = { s: any; C: Palette; onBack: () => void; show: (message: string) => void; artistName: string; artistHandle?: string };
 type Draft = { title: string; releaseType: string; genre: string; releaseDate: string; credits: string; notes: string; audioReady?: boolean; artworkReady?: boolean; metadataChecked?: boolean; rightsConfirmed?: boolean; updatedAt: string };
 const STORAGE_KEY = "@kilode/artist-release-planner-v1";
 
-export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) {
+export function ArtistReleasePlanner({ s, C, onBack, show, artistName, artistHandle }: Props) {
   const [title, setTitle] = useState("");
   const [releaseType, setReleaseType] = useState("Single");
   const [genre, setGenre] = useState("");
@@ -16,7 +16,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [drafts, setDrafts] = useState<Draft[]>([]);
-  const storageKey = `${STORAGE_KEY}:${(artistName || "artist").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_").slice(0, 64)}`;
+  // Prefer the account handle over the display name: two artists can share a display name.\n  // This remains device-local scoping, not a server-side account identity.\n  const accountScope = (artistHandle || artistName || "artist").trim().toLowerCase().replace(/^@/, "").replace(/[^a-z0-9_-]/g, "_").slice(0, 64) || "artist";\n  const storageKey = `${STORAGE_KEY}:${accountScope}`;
   const [saved, setSaved] = useState(false);
   const [rights, setRights] = useState(false);
   const [artwork, setArtwork] = useState(false);
