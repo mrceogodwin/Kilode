@@ -107,6 +107,16 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
           typeof saved.uploadId !== "string" ||
           !saved.uploadId
         ) {
+          // Never carry the previous account's in-memory draft into this
+          // session; the persistence effect runs after recovery loading finishes.
+          setTitle("");
+          setGenre("");
+          setAudio(null);
+          setRightsConfirmed(false);
+          setPendingUploadId(null);
+          setPendingUploadUrl(null);
+          setPendingUploadExpiresAt(null);
+          setMessage("");
           return;
         }
         setTitle(typeof saved.title === "string" ? saved.title : "");
@@ -133,7 +143,18 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         }
         if (active) setMessage("Recovered an unfinished music upload. Check its status or retry the transfer if the secure link is still valid.");
       } catch {
-        // A corrupt recovery record must never prevent the upload sheet from opening.
+        // A corrupt record must not let the previous session's state be saved
+        // into the newly active account's recovery slot.
+        if (active) {
+          setTitle("");
+          setGenre("");
+          setAudio(null);
+          setRightsConfirmed(false);
+          setPendingUploadId(null);
+          setPendingUploadUrl(null);
+          setPendingUploadExpiresAt(null);
+          setMessage("");
+        }
         if (active && canPersistRecovery) {
           try {
             await AsyncStorage.removeItem(recoveryScope);
