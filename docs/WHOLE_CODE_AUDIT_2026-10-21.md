@@ -45,7 +45,7 @@ Scope: Expo React Native app in `mrceogodwin/Kilode`, working branch `music-comp
 
 ## Changes made during this audit
 
-- Added `@expo/vector-icons` as a direct dependency because the native Music screen imports it. Automated validation result for the resulting commit is tracked separately; this audit does not assume it passed until the workflow reports success.
+- Added `@expo/vector-icons` as a direct dependency because the native Music screen imports it. The first CI run then exposed its missing peer dependency `expo-font`; added SDK-compatible `expo-font` (`~12.0.10`) and verified TypeScript, Expo Doctor, and iOS bundle export all passed on commit `52ad7e17`.
 - Previous Vercel config change is kept as a secondary static mirror only; it is not counted as an iOS fix.
 
 ## Definition of done
