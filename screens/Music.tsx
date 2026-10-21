@@ -85,6 +85,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [artistCatalogueError, setArtistCatalogueError] = useState("");
   const [failedArtistAvatarIds, setFailedArtistAvatarIds] = useState<Record<string, boolean>>({});
   const [followedArtists, setFollowedArtists] = useState<Record<string, boolean>>({});
+  const [artistSearch, setArtistSearch] = useState("");
+  const [artistFilter, setArtistFilter] = useState<"all" | "following">("all");
   const [busyArtistId, setBusyArtistId] = useState<string | null>(null);
   const [draftOpen, setDraftOpen] = useState(false);
   const [releaseTitle, setReleaseTitle] = useState("");
@@ -348,6 +350,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const activeReleaseTitle = destinationName.startsWith("Release · ") ? destinationName.slice(10) : null;
   const activeAlbum = activeAlbumTitle ? albumGroups.find((item) => item.title === activeAlbumTitle) : undefined;
   const activeRelease = activeReleaseTitle ? releaseGroups.find((item) => item.title === activeReleaseTitle) : undefined;
+  const visibleArtistProfiles = artistProfiles.filter((artist: any) => {
+    const query = artistSearch.trim().toLowerCase();
+    const searchable = [artist.display_name, artist.handle, artist.bio, artist.genre, artist.genres].filter(Boolean).join(" ").toLowerCase();
+    return (!query || searchable.includes(query)) && (artistFilter === "all" || Boolean(followedArtists[artist.id]));
+  });
   const datedNewTracks = catalogueTracks
     .map((track: any) => {
       const rawDate = track.release_date ?? track.created_at;
@@ -1076,10 +1083,25 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       {tab === "Artists" ? (
         <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-            <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>Artists</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>Find your next favourite</Text>
+              <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{artistProfiles.length} registered artist{artistProfiles.length === 1 ? "" : "s"} in the available catalogue</Text>
+            </View>
             {loadingArtists ? <ActivityIndicator size="small" color={C.accent} /> : null}
           </View>
-          {artistProfiles.map((artist) => {
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 11, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, marginBottom: 11 }}>
+            <Ionicons name="search-outline" size={17} color={C.text3} />
+            <TextInput value={artistSearch} onChangeText={setArtistSearch} placeholder="Search artist, handle or bio" placeholderTextColor={C.text3} autoCapitalize="none" returnKeyType="search" style={{ flex: 1, color: C.text, paddingVertical: 12, fontSize: 12 }} accessibilityLabel="Search artists" />
+            {artistSearch ? <TouchableOpacity onPress={() => setArtistSearch("")} accessibilityRole="button" accessibilityLabel="Clear artist search"><Ionicons name="close-circle" size={17} color={C.text3} /></TouchableOpacity> : null}
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 13 }}>
+            {([{ id: "all", label: "All artists" }, { id: "following", label: "Following" }] as const).map((filter) => (
+              <TouchableOpacity key={filter.id} onPress={() => setArtistFilter(filter.id)} accessibilityRole="button" accessibilityState={{ selected: artistFilter === filter.id }} style={{ paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: artistFilter === filter.id ? C.accent : C.card, borderWidth: 1, borderColor: artistFilter === filter.id ? C.accent : C.border }}>
+                <Text style={{ color: artistFilter === filter.id ? "#111" : C.text2, fontSize: 11, fontWeight: "700" }}>{filter.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {visibleArtistProfiles.map((artist) => {
             const isFollowing = Boolean(followedArtists[artist.id]);
             const avatar = artist.avatar_url;
             return (
@@ -1127,6 +1149,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 4 }}>
               {artistCatalogueError || "No artist profiles are available yet. Artist accounts will appear here when the Kilode backend is connected."}
             </Text>
+          ) : null}
+          {!loadingArtists && artistProfiles.length > 0 && visibleArtistProfiles.length === 0 ? (
+            <View style={{ paddingVertical: 24, alignItems: "center" }}>
+              <Ionicons name={artistFilter === "following" ? "heart-outline" : "search-outline"} size={25} color={C.text3} />
+              <Text style={{ color: C.text, fontSize: 13, fontWeight: "700", marginTop: 9 }}>{artistFilter === "following" && !artistSearch ? "No followed artists yet" : "No artists match that search"}</Text>
+              <Text style={{ color: C.text3, fontSize: 11, marginTop: 4, textAlign: "center" }}>{artistFilter === "following" && !artistSearch ? "Follow artists to build your own list here." : "Try another name, handle or keyword."}</Text>
+              {artistFilter === "following" ? <TouchableOpacity onPress={() => setArtistFilter("all")} style={{ marginTop: 10, paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: C.elevated }}><Text style={{ color: C.accent, fontSize: 11, fontWeight: "700" }}>Browse all artists</Text></TouchableOpacity> : null}
+            </View>
           ) : null}
           <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 12 }}>Profiles and follow status come from Kilode's backend. Follower counts and rankings are not displayed until verified data is available.</Text>
         </View>
