@@ -283,14 +283,31 @@ export function CommentsSheet({
                     name: saved.name || saved.author?.name || "You",
                     time: saved.time || "now",
                   };
-                  setList((prev) => [...prev, nextComment]);
-                  const nextLocalComments = [...localComments, nextComment];
-                  setLocalComments(nextLocalComments);
                   let cacheFailed = false;
                   try {
-                    await AsyncStorage.setItem(commentStorageKey, JSON.stringify(nextLocalComments));
+                    const raw = await AsyncStorage.getItem(submittedStorageKey);
+                    let latest: Comment[] = [];
+                    if (raw) {
+                      const parsed: unknown = JSON.parse(raw);
+                      if (Array.isArray(parsed)) {
+                        latest = parsed.filter((item) =>
+                          item && typeof item.id === "string" &&
+                          typeof item.text === "string" &&
+                          String(item.takeId) === String(submittedTakeId)
+                        );
+                      }
+                    }
+                    const merged = [...latest, nextComment];
+                    await AsyncStorage.setItem(submittedStorageKey, JSON.stringify(merged));
+                    if (currentContextRef.current.commentStorageKey === submittedStorageKey) {
+                      setLocalComments(merged);
+                      setList((prev) => [...prev, nextComment]);
+                    }
                   } catch {
                     cacheFailed = true;
+                    if (currentContextRef.current.commentStorageKey === submittedStorageKey) {
+                      setList((prev) => [...prev, nextComment]);
+                    }
                   }
                   setDraft("");
                   setSending(false);
