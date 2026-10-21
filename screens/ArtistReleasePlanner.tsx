@@ -15,14 +15,15 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
   const [credits, setCredits] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
-  const [drafts, setDrafts] = useState<Draft[]>([]);\n  const storageKey = `${STORAGE_KEY}:${(artistName || "artist").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_").slice(0, 64)}`;
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const storageKey = `${STORAGE_KEY}:${(artistName || "artist").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_").slice(0, 64)}`;
   const [saved, setSaved] = useState(false);
   const [rights, setRights] = useState(false);
   const [artwork, setArtwork] = useState(false);
   const [metadata, setMetadata] = useState(false);
   const [audio, setAudio] = useState(false);
 
-  const dateValid = useMemo(() => { if (!releaseDate) return true; if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(releaseDate)) return false; const parsed = new Date(`${releaseDate}T00:00:00Z`); return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === releaseDate; }, [releaseDate]);
+  const dateValid = useMemo(() => { if (!releaseDate) return true; if (!/^\d{4}-\d{2}-\d{2}$/.test(releaseDate)) return false; const parsed = new Date(`${releaseDate}T00:00:00Z`); return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === releaseDate; }, [releaseDate]);
   const requiredReady = title.trim().length > 0 && genre.trim().length > 0 && dateValid;
   useEffect(() => {
     let active = true;
@@ -31,7 +32,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
       try { const value = JSON.parse(raw); if (Array.isArray(value)) setDrafts(value.filter((x): x is Draft => x && typeof x.title === "string" && typeof x.genre === "string").slice(0, 20)); } catch { setDrafts([]); }
     }).catch(() => { if (active) setDrafts([]); });
     return () => { active = false; };
-  }, []);
+  }, [storageKey]);
 
   const loadDraft = (draft: Draft) => {
     setTitle(draft.title); setReleaseType(draft.releaseType || "Single"); setGenre(draft.genre); setReleaseDate(draft.releaseDate || ""); setCredits(draft.credits || ""); setNotes(draft.notes || ""); setAudio(draft.audioReady === true); setArtwork(draft.artworkReady === true); setMetadata(draft.metadataChecked === true); setRights(draft.rightsConfirmed === true); setSaved(true);
@@ -104,7 +105,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
       </View> : null}
       <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginTop: 24, marginBottom: 10 }}>Release readiness</Text>
       <View style={{ borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, overflow: "hidden" }}>
-        {checklist.map((item) => <TouchableOpacity key={item.label} onPress={() => item.set(!item.value)} accessibilityRole="checkbox" accessibilityState={{ checked: item.value }} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
+        {checklist.map((item) => <TouchableOpacity key={item.label} onPress={() => { item.set(!item.value); setSaved(false); }} accessibilityRole="checkbox" accessibilityState={{ checked: item.value }} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
           <View style={{ width: 23, height: 23, borderRadius: 7, borderWidth: 1, borderColor: item.value ? C.accent : C.border, backgroundColor: item.value ? C.accent : "transparent", alignItems: "center", justifyContent: "center", marginRight: 11 }}><Text style={{ color: "#0D0D10", fontWeight: "900" }}>{item.value ? "✓" : ""}</Text></View>
           <Text style={{ color: C.text, fontSize: 13, flex: 1 }}>{item.label}</Text>
         </TouchableOpacity>)}
