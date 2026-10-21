@@ -21,6 +21,7 @@ type Props = {
 };
 
 const TABS = ["Home", "Discover", "Charts", "Artists"] as const;
+const TAB_LABELS: Record<(typeof TABS)[number], string> = { Home: "For You", Discover: "Explore", Charts: "New", Artists: "Artists" };
 
 const TOP100_CATEGORIES = ["All", "Nigeria", "Afrobeats", "Hip Hop", "R&B", "Amapiano", "Emerging"];
 
@@ -46,10 +47,10 @@ const EDITORIAL_PLAYLISTS = [
 ];
 
 const GENRES = [
-  { id: "afro", label: "Afrobeats", color: "#E5C158" },
-  { id: "hip", label: "Hip Hop", color: "#3B82F6" },
-  { id: "rnb", label: "R&B", color: "#A855F7" },
-  { id: "amapiano", label: "Amapiano", color: "#10B981" },
+  { id: "afro", label: "Afrobeats", color: "#D4AF37" },
+  { id: "hip", label: "Hip Hop", color: "#B99A4B" },
+  { id: "rnb", label: "R&B", color: "#8E7A4B" },
+  { id: "amapiano", label: "Amapiano", color: "#E5C158" },
 ];
 
 export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArtist, accountKind, userId, tracks: tracksProp }: Props) {
@@ -881,7 +882,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             accessibilityState={{ selected: tab === t }}
             style={{ flex: 1, alignItems: "center", paddingVertical: 9, borderRadius: 9, backgroundColor: tab === t ? C.card : "transparent" }}
           >
-            <Text style={{ color: tab === t ? C.text : C.text3, fontWeight: tab === t ? "700" : "500", fontSize: 12 }}>{t}</Text>
+            <Text style={{ color: tab === t ? C.text : C.text3, fontWeight: tab === t ? "700" : "500", fontSize: 12 }}>{TAB_LABELS[t]}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -900,7 +901,24 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         const artwork = track.imageUrl || track.cover_url || track.artwork_url;
         return (
           <TouchableOpacity key={id} onPress={() => openTrack(track)} style={{ marginHorizontal: 16, marginTop: 10, flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 7, paddingHorizontal: 2, borderBottomWidth: 1, borderBottomColor: C.border }}>
-            <Text style={{ color: C.text3, fontWeight: "800", width: 20 }}>{index + 1}</Text>
+            {(() => {
+              const movement = String(track.chart_movement ?? track.rank_movement ?? "").toLowerCase();
+              const rankChange = Number(track.rank_change);
+              const hasExplicitMovement = ["up", "down", "same", "steady", "new"].includes(movement);
+              const isUp = movement === "up" || (Number.isFinite(rankChange) && rankChange > 0);
+              const isDown = movement === "down" || (Number.isFinite(rankChange) && rankChange < 0);
+              const isNew = movement === "new";
+              const isSteady = movement === "same" || movement === "steady" || (Number.isFinite(rankChange) && rankChange === 0);
+              const indicatorColor = isUp ? "#E5C158" : isDown ? "#C98778" : C.text3;
+              return (
+                <View style={{ width: 28, alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ color: C.text3, fontWeight: "800", fontSize: 12 }}>{index + 1}</Text>
+                  {isNew ? <Text style={{ color: "#E5C158", fontSize: 8, fontWeight: "900", marginTop: 1 }}>NEW</Text>
+                    : hasExplicitMovement && (isUp || isDown || isSteady) ? <Text style={{ color: indicatorColor, fontSize: 10, lineHeight: 11, fontWeight: "900" }}>{isUp ? "▴" : isDown ? "▾" : "▸"}</Text>
+                    : null}
+                </View>
+              );
+            })()}
             {artwork ? <Image source={{ uri: artwork }} style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: C.elevated }} /> : <View style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="musical-notes" size={18} color={C.text3} /></View>}
             <View style={{ flex: 1 }}>
               <Text numberOfLines={1} style={{ color: C.text, fontWeight: "600", fontSize: 13, letterSpacing: -0.1 }}>{title}</Text>
@@ -920,21 +938,18 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
       {(tab === "Home" || tab === "Discover") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>More to explore</Text>
-          <TouchableOpacity onPress={() => openMusicDestination("Playlists")}><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Playlists</Text></TouchableOpacity>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>More to Explore</Text>
+          <TouchableOpacity onPress={() => openMusicDestination("Playlists")}><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>All collections</Text></TouchableOpacity>
         </View>
       ) : null}
       {(tab === "Home" || tab === "Discover") ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 10 }}>
         {[
-          { title: "Kilode Top 100", detail: "Kilode's own chart destination", icon: "podium-outline", target: "Top 100" },
-          { title: "Playlists for every mood", detail: "Browse collections and categories", icon: "list-outline", target: "Playlists" },
-          { title: "New Releases", detail: "Fresh singles, EPs & albums", icon: "disc-outline", target: "Releases" },
-          { title: "Your Library", detail: "Saved music in one place", icon: "heart-outline", target: "Library" },
-          { title: "Recently Played", detail: "Pick up where you left off", icon: "time-outline", target: "Recently Played" },
-          { title: "Push Link", detail: "Discover promoted music", icon: "megaphone-outline", target: "Push Link" },
-        ].map((item) => <TouchableOpacity key={item.title} onPress={() => openMusicDestination(item.target)} style={{ width: 154, padding: 13, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
-          <Ionicons name={item.icon as any} size={22} color={C.accent} />
-          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13, marginTop: 13 }}>{item.title}</Text>
+          { title: "Explore Tracks", detail: "Find your next repeat", icon: "musical-notes-outline", target: "The Discovery List" },
+          { title: "Fresh Releases", detail: "Singles, EPs & albums", icon: "disc-outline", target: "Releases" },
+          { title: "Meet the Artists", detail: "Discover artists on Kilode", icon: "people-outline", target: "Artists" },
+        ].map((item) => <TouchableOpacity key={item.title} onPress={() => item.target === "Artists" ? setTab("Artists") : openMusicDestination(item.target)} accessibilityRole="button" style={{ width: 148, minHeight: 112, padding: 13, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+          <Ionicons name={item.icon as any} size={21} color={C.accent} />
+          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13, marginTop: 12 }}>{item.title}</Text>
           <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 4 }}>{item.detail}</Text>
         </TouchableOpacity>)}
       </ScrollView> : null}
