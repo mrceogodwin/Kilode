@@ -222,3 +222,27 @@ For every new finding, add: severity (P0/P1/P2), system, exact file/line, eviden
 ### Honest status rule
 
 UI completeness is not service completeness. Until backend endpoints and device behavior are tested, label music catalogue, charts, chat, uploads, Push Link, earnings, moderation and account deletion according to the boundaries above. Do not mark them production-ready based solely on source structure or CI passing.
+
+
+## 13. Follow-up audit — media, comments, cinema and reusable controls (2026-10-21)
+
+- **Comments are device-local in the current source:** `screens/Comments.tsx` labels the history as device-saved and server history as not connected. It has a local preview path and AsyncStorage persistence. Likes/follows/comments must be reconciled with a server source of truth before multi-device or public interactions are considered live.
+- **Cinema submission is a placeholder:** `screens/Cinema.tsx` has a submit-film action that shows a notice rather than submitting a film. Film catalogue provenance, rights review, playback/streaming, submissions, moderation and creator permissions remain unverified.
+- **Media/news actions require source validation:** `screens/Media.tsx` includes local interaction paths. Confirm that articles are sourced from a legitimate feed/API, links open safely, publication timestamps and attribution are correct, and the UI differentiates preview items from current news.
+- **DeskDetail is honest about unconnected transactions:** `screens/DeskDetail.tsx` tells users there is no live transaction service and confirms no application/booking is submitted. Keep that disclosure until Jobs/Market/Events/Cinema transactions are genuinely implemented.
+- **Social interactions need server authority:** `screens/PostDetail.tsx` and `screens/UserProfile.tsx` accept follow state and post actions via local callbacks. Validate likes, follows, shares and profile data against persisted server state, with pagination and optimistic-update rollback.
+- **Reusable UI accessibility is mixed:** the tab bar and music full player expose useful roles/labels, but `components/ui/PostActions.tsx` uses labels such as “Like”, “Comments”, “Share”, “Report” and “Block user” without a complete dynamic state/count announcement. Review VoiceOver labels/hints, selected state, touch targets, focus order, Dynamic Type, contrast and keyboard dismissal throughout the app.
+- **Create tab:** `components/ui/KilodeTabBar.tsx` exposes an accessible “Create” button; verify on device that it opens the intended compact popover and does not cover the composer, keyboard or bottom safe area. Source presence alone does not confirm the user's requested interaction feels correct.
+- **Music discovery persistence is local:** `lib/musicDiscovery.ts` uses AsyncStorage for scoped discovery preferences. Confirm scope isolation when switching accounts, behavior after sign-out/account deletion, malformed-data recovery, and whether the preference should sync across devices.
+- **Full player has accessible transport controls:** `screens/MusicFullPlayer.tsx` labels play/pause, previous/next, shuffle and repeat. Test VoiceOver, playback interruptions, audio-session behavior, background mode, lock-screen controls and Bluetooth/headphone routing on an actual iPhone.
+- **P1 — Public content provenance:** no end-to-end verification has been made of the media/news feed, cinema content, market/jobs/event listings or creator profiles. Each source needs ownership, freshness, moderation, reporting and removal paths; seeded/preview content must not look like verified live listings.
+- **P2 — Interaction/accessibility regression suite absent from current evidence:** existing validation success does not demonstrate automated screen-level tests, VoiceOver checks, safe-area/keyboard coverage, or actual interaction tests for the create popover, drawer and 5-item dock.
+
+### Test matrix to add
+
+1. Comment creation/edit/delete, duplicate submission, local storage corruption, account switch, and server/offline conflict.
+2. Media item attribution/date/URL validation and unavailable-feed states.
+3. Cinema submit action disabled or clearly labelled until an actual submission service exists.
+4. Job/market/event detail CTAs never imply an application, booking or purchase succeeded unless the server confirms it.
+5. VoiceOver walkthrough for Home, drawer, bottom dock, create popover, Music/Top 100, full player, Auth and Settings.
+6. Device tests for keyboard avoidance, bottom safe area, audio interruptions, offline network, and reduced motion/text sizing.
