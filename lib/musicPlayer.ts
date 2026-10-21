@@ -125,7 +125,13 @@ function onStatus(status: AVPlaybackStatus, source: Audio.Sound) {
     if (finishedSound !== source) {
       finishedSound = source;
       publish();
-      onTrackFinished?.();
+      // A screen-level queue callback must not escape into the native status
+      // handler and destabilize audio completion for the active player.
+      try {
+        onTrackFinished?.();
+      } catch {
+        // Playback remains completed even if queue advancement fails.
+      }
       return;
     }
   }
