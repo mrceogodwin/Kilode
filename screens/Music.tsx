@@ -953,6 +953,40 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         </TouchableOpacity>
       ) : null}
 
+      {(tab === "Home" || tab === "Discover") ? (() => {
+        const recentTracks = recentTrackIds.map((id) => catalogueTracks.find((track: any) => String(track.id ?? track.title) === id)).filter(Boolean) as any[];
+        const savedTracks = catalogueTracks.filter((track: any) => savedTrackIds[String(track.id ?? track.title)]);
+        const africanTracks = catalogueTracks.filter((track: any) => /afro|naija|nigeria|nigerian|amapiano|african/i.test([track.genre, track.genres, track.region, track.country, track.artist_country].filter(Boolean).join(" ")));
+        const sections = [
+          { title: "Back in Your Orbit", subtitle: "Pick up where you left off", items: recentTracks.slice(0, 10), empty: "Your recently played tracks will appear here." },
+          { title: "Your Sound", subtitle: topPreferredGenre ? `Based on your ${topPreferredGenre} listening` : "Shaped by what you save and play", items: tailoredTracks.slice(0, 10), empty: "Play or save a few tracks to start shaping your mix." },
+          { title: "Fresh from Africa", subtitle: "African sounds from the available catalogue", items: africanTracks.slice(0, 10), empty: "More African music will appear as the catalogue grows." },
+          { title: "Kilode Selects", subtitle: "A handpicked path into the catalogue", items: catalogueTracks.filter((track: any) => track.is_featured || track.featured || track.editor_pick).concat(catalogueTracks.filter((track: any) => !track.is_featured && !track.featured && !track.editor_pick)).slice(0, 10), empty: "Selected tracks will appear here." },
+          { title: "Your Collection", subtitle: "Music you have saved on this device", items: savedTracks.slice(0, 10), empty: "Save tracks with the heart button to build your collection." },
+        ];
+        return <View>
+          {sections.map((section) => <View key={section.title} style={{ marginTop: 20 }}>
+            <View style={{ paddingHorizontal: 16, flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontSize: 16, fontWeight: "800", letterSpacing: -0.25 }}>{section.title}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{section.subtitle}</Text>
+              </View>
+              {section.items.length ? <TouchableOpacity onPress={() => openMusicDestination(section.title === "Back in Your Orbit" ? "Recently Played" : section.title === "Your Collection" ? "Library" : section.title === "Your Sound" ? "Tailored to You" : section.title === "Fresh from Africa" ? "Naija Now" : "The Discovery List")} accessibilityRole="button"><Text style={{ color: C.accent, fontSize: 11, fontWeight: "700" }}>See all</Text></TouchableOpacity> : null}
+            </View>
+            {section.items.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 11, paddingTop: 9 }}>
+              {section.items.map((track: any, index: number) => {
+                const id = String(track.id ?? track.title);
+                const artwork = track.imageUrl || track.cover_url || track.artwork_url;
+                return <TouchableOpacity key={id + "-" + index} onPress={() => openTrack(track)} accessibilityRole="button" accessibilityLabel={`Play ${track.title || "track"} by ${track.artist || track.artist_name || "Unknown artist"}`} style={{ width: 126 }}>
+                  {artwork ? <Image source={{ uri: artwork }} style={{ width: 126, height: 126, borderRadius: 12, backgroundColor: C.elevated }} /> : <View style={{ width: 126, height: 126, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}><Ionicons name="musical-notes" size={30} color={C.accent} /></View>}
+                  <Text numberOfLines={1} style={{ color: C.text, fontSize: 12, fontWeight: "700", marginTop: 8 }}>{track.title || "Untitled track"}</Text>
+                  <Text numberOfLines={1} style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{track.artist || track.artist_name || "Unknown artist"}</Text>
+                </TouchableOpacity>;
+              })}
+            </ScrollView> : <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, paddingHorizontal: 16, paddingVertical: 12 }}>{section.empty}</Text>}
+          </View>)}
+        </View>;
+      })() : null}
       {(tab === "Home" || tab === "Discover") ? <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, paddingHorizontal: 16, marginTop: 18, marginBottom: 9 }}>Genres</Text> : null}
       {(tab === "Home" || tab === "Discover") ? <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
         {GENRES.map((g) => (
