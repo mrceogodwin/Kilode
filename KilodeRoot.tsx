@@ -107,9 +107,11 @@ function KilodeApp() {
   }, [following, liked, socialPrefsKey, socialPrefsLoadedFor]);
 
   useEffect(() => {
-    const unsubscribe = subscribeMusicPlayer((track, playing) => {
+    const unsubscribe = subscribeMusicPlayer((track, playing, positionMillis, durationMillis) => {
       setNowPlaying(track);
       setIsMusicPlaying(playing);
+      setMusicPositionMillis(positionMillis);
+      setMusicDurationMillis(durationMillis);
     });
     return () => { unsubscribe(); };
   }, []);
@@ -573,6 +575,15 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
           <TouchableOpacity onPress={() => void stopMusicPlayback()} accessibilityRole="button" accessibilityLabel="Stop music"><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
         </View>
       ) : null}
+      <MusicFullPlayer
+        visible={musicPlayerExpanded && Boolean(nowPlaying)}
+        track={nowPlaying}
+        playing={isMusicPlaying}
+        C={C}
+        onClose={() => setMusicPlayerExpanded(false)}
+        positionMillis={musicPositionMillis}
+        durationMillis={musicDurationMillis}
+      />
       <KilodeTabBar
         active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"}
         onTab={(id) => go(id)}
