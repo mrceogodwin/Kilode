@@ -8,7 +8,7 @@ import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
-import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
+import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback, playMusicTrack, seekMusicPlayback, setMusicRepeat } from "./lib/musicPlayer";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -63,6 +63,8 @@ function KilodeApp() {
   const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);
   const [musicPositionMillis, setMusicPositionMillis] = useState(0);
   const [musicDurationMillis, setMusicDurationMillis] = useState(0);
+  const [musicShuffle, setMusicShuffle] = useState(false);
+  const [musicRepeat, setMusicRepeatState] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
@@ -117,6 +119,27 @@ function KilodeApp() {
   }, []);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
+  const playAdjacentTrack = async (direction: -1 | 1) => {
+    const playable = tracks.filter((item: any) => Boolean(item.audioUrl || item.audio_url || item.streamUrl || item.stream_url || item.previewUrl || item.preview_url));
+    if (!playable.length) { show("More playable Kilode tracks are needed for the queue."); return; }
+    const currentIndex = playable.findIndex((item: any) => String(item.id ?? item.title) === String(nowPlaying?.id ?? nowPlaying?.title));
+    let nextIndex: number;
+    if (musicShuffle && direction === 1) {
+      const choices = playable.filter((_: any, index: number) => index !== currentIndex);
+      const next = choices[Math.floor(Math.random() * choices.length)];
+      if (!next) { await playMusicTrack(playable[0]); return; }
+      await playMusicTrack(next);
+      return;
+    }
+    nextIndex = currentIndex < 0 ? (direction === 1 ? 0 : playable.length - 1) : (currentIndex + direction + playable.length) % playable.length;
+    await playMusicTrack(playable[nextIndex]);
+  };
+  const toggleMusicShuffle = () => setMusicShuffle((value) => !value);
+  const toggleMusicRepeat = () => setMusicRepeatState((value) => {
+    setMusicRepeat(!value);
+    return !value;
+  });
+
   const go = (t: string) => {
     setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
   };
@@ -583,6 +606,12 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         onClose={() => setMusicPlayerExpanded(false)}
         positionMillis={musicPositionMillis}
         durationMillis={musicDurationMillis}
+        onNext={() => void playAdjacentTrack(1)}
+        onPrevious={() => { if (musicPositionMillis > 3000) void seekMusicPlayback(0); else void playAdjacentTrack(-1); }}
+        shuffle={musicShuffle}
+        repeat={musicRepeat}
+        onToggleShuffle={toggleMusicShuffle}
+        onToggleRepeat={toggleMusicRepeat}
       />
       <KilodeTabBar
         active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"}
