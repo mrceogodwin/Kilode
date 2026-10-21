@@ -6,6 +6,7 @@ import { fetchTracks, getMusicPlayback, recordMusicEvent } from "../lib/api";
 import { playMusicTrack, subscribeMusicPlayer } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
 import { MusicUploadSheet } from "./MusicUploadSheet";
+import { buildMusicDiscoveryShelves, readMusicDiscoveryProfile, recordMusicDiscoveryAction, type MusicDiscoveryProfile, type MusicDiscoveryShelf } from "../lib/musicDiscovery";
 
 function musicTrackIdentity(track: any): string {
   if (track?.id !== undefined && track?.id !== null && String(track.id).trim()) {
@@ -35,6 +36,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [discoveryProfile, setDiscoveryProfile] = useState<MusicDiscoveryProfile>({ version: 1, events: [], hiddenTrackKeys: [] });
+  const [discoveryReady, setDiscoveryReady] = useState(false);
+  const [discoveryShelves, setDiscoveryShelves] = useState<MusicDiscoveryShelf[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    void readMusicDiscoveryProfile().then((profile) => {
+      if (!active) return;
+      setDiscoveryProfile(profile);
+      setDiscoveryReady(true);
+    });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    setDiscoveryShelves(buildMusicDiscoveryShelves(tracks, discoveryProfile));
+  }, [tracks, discoveryProfile]);
 
 
   useEffect(() => {
@@ -100,6 +118,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
       if (catalogueSource === "live" && track?.id) {
         void recordMusicEvent(token, String(track.id), "play_started");
       }
+      void recordMusicDiscoveryAction(track, "played");
+      void readMusicDiscoveryProfile().then(setDiscoveryProfile);
       onPlay(playableTrack);
     } finally {
       setPlaybackBusy(false);
@@ -186,6 +206,32 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
           {canUpload ? <TouchableOpacity onPress={() => setUploadOpen(true)} accessibilityRole="button" accessibilityLabel="Upload a music track" style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}><Ionicons name="cloud-upload-outline" size={21} color={C.accent} /></TouchableOpacity> : null}
         </View>
       </View>
+
+      {discoveryReady && discoveryShelves.map((shelf) => (
+        <View key={shelf.id} style={{ marginTop: 18 }}>
+          <View style={s.sectionHead}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.sectionTitle}>{shelf.title}</Text>
+              <Text style={[s.meta, { marginTop: 3 }]}>{shelf.subtitle}</Text>
+            </View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
+            {shelf.tracks.map((track: any) => (
+              <TouchableOpacity
+                key={musicTrackIdentity(track)}
+                style={[s.trackCard, { backgroundColor: track.color || C.accent }]}
+                onPress={() => selectTrack(track)}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${track.title} from ${shelf.title}`}
+              >
+                <Ionicons name="headset-outline" size={18} color="#fff" style={{ marginBottom: 6 }} />
+                <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+                <Text style={s.trackArtist} numberOfLines={1}>{track.artist || "Kilode artist"}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      ))}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
         {(["new", "charts", "artists"] as const).map((t) => (
