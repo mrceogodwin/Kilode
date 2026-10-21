@@ -355,13 +355,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     const searchable = [artist.display_name, artist.handle, artist.bio, artist.genre, artist.genres].filter(Boolean).join(" ").toLowerCase();
     return (!query || searchable.includes(query)) && (artistFilter === "all" || Boolean(followedArtists[artist.id]));
   });
+  const nowTimestamp = Date.now();
   const datedNewTracks = catalogueTracks
     .map((track: any) => {
       const rawDate = track.release_date ?? track.created_at;
       const timestamp = rawDate ? new Date(rawDate).getTime() : Number.NaN;
       return { track, timestamp };
     })
-    .filter((item) => Number.isFinite(item.timestamp) && item.timestamp > 0)
+    // Future-dated releases belong in an upcoming-release surface, not a "newly released" list.
+    .filter((item) => Number.isFinite(item.timestamp) && item.timestamp > 0 && item.timestamp <= nowTimestamp)
     .sort((a, b) => b.timestamp - a.timestamp)
     .map((item) => item.track);
   const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
@@ -375,7 +377,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             .filter((track: any) => {
               const rawDate = track.release_date ?? track.created_at;
               const timestamp = rawDate ? new Date(rawDate).getTime() : Number.NaN;
-              return Number.isFinite(timestamp) && timestamp > 0;
+              return Number.isFinite(timestamp) && timestamp > 0 && timestamp <= nowTimestamp;
             })
             .sort((a: any, b: any) => new Date(b.release_date ?? b.created_at).getTime() - new Date(a.release_date ?? a.created_at).getTime())
         : activePlaylist?.category === "genre"
