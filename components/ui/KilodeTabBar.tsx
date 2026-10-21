@@ -28,11 +28,11 @@ export function KilodeTabBar({
   onTab,
   onCreate,
   isDark = true,
-  accent = "#91C7A0",
+  accent = "#D4AF37",
 }: Props) {
-  const bg = isDark ? "#14171A" : "#FFFFFF";
-  const muted = isDark ? "#7A7A80" : "#777";
-  const border = isDark ? "#2B3035" : "#E1E5DF";
+  const bg = isDark ? "#0D0D10" : "#FFFFFF";
+  const muted = isDark ? "#9A9A9E" : "#777777";
+  const border = isDark ? "#2A2A30" : "#E1E5DF";
 
   const item = (t: (typeof LEFT)[0]) => {
     const on = active === t.id;
@@ -75,19 +75,19 @@ const styles = StyleSheet.create({
   },
   item: { alignItems: "center", justifyContent: "center", flex: 1, minWidth: 0, minHeight: 48, gap: 3 },
   label: { fontSize: 10, fontWeight: "700", letterSpacing: 0.1 },
-  plusWrap: { alignItems: "center", justifyContent: "center", width: 58, marginTop: -17 },
+  plusWrap: { alignItems: "center", justifyContent: "center", width: 54, marginTop: -10 },
   plus: {
-    width: 50,
-    height: 50,
-    borderRadius: 17,
+    width: 44,
+    height: 44,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#D7F0DD",
-    shadowColor: "#5DAA74",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.24,
-    shadowRadius: 9,
+    borderWidth: 1.5,
+    borderColor: "#E5C158",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 7,
     elevation: 6,
   },
 });
