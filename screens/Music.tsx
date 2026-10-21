@@ -52,6 +52,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
     ])
   ).values());
   const chartTracks = filteredTracks.slice(0, 10);
+  const visibleArtists = artists.filter((a: any) => a.name.toLowerCase().includes(search.trim().toLowerCase()));
 
   useEffect(() => {
     const unsubscribe = subscribeMusicPlayer((track, playing) => {
@@ -253,11 +254,22 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Artists in catalogue</Text>
           </View>
-          {artists.filter((a: any) => a.name.toLowerCase().includes(search.trim().toLowerCase())).map((a: any) => (
+          {visibleArtists.length === 0 ? (
+            <EmptyState
+              title={search ? "No artists found" : "No artists yet"}
+              body={search ? "Try another artist name." : "Artist profiles will appear here when tracks are available in the catalogue."}
+              textColor={C.text}
+              mutedColor={C.text2}
+              accentColor={C.accent}
+              icon="people-outline"
+            />
+          ) : visibleArtists.map((a: any) => (
             <TouchableOpacity
               key={a.id}
               style={s.roomRow}
               onPress={() => setActiveArtist(a)}
+              accessibilityRole="button"
+              accessibilityLabel={`Open artist ${a.name}`}
             >
               <View
                 style={[
