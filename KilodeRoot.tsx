@@ -33,7 +33,6 @@ function KilodeApp() {
   const s = useMemo(() => makeStyles(C, isDark), [C, isDark]);
 
   const [tab, setTab] = useState("home");
-  const [homeChip, setHomeChip] = useState(0);
   const [slide, setSlide] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -174,74 +173,25 @@ function KilodeApp() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-        {["For you", "Trending", "Rooms", "News"].map((c, i) => (
-          <TouchableOpacity key={c} style={[s.chip, homeChip === i && s.chipOn]} onPress={() => setHomeChip(i)}>
-            <Text style={[s.chipText, homeChip === i && s.chipTextOn]}>{c}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      {(homeChip === 0 || homeChip === 1) && (
-        <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>Explore</Text><TouchableOpacity onPress={() => setMoreOpen(true)}><Text style={s.link}>More</Text></TouchableOpacity></View>
-          <View style={s.grid4}>{ROLE_GRID.map((r) => (<TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}><Text style={s.gridIcon}>{r.icon}</Text><Text style={s.gridLabel}>{r.label}</Text></TouchableOpacity>))}</View>
-        </>
-      )}
-      {(homeChip === 0 || homeChip === 1) && (
-        <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>{homeChip === 1 ? "Trending takes" : "Music · New drops"}</Text><TouchableOpacity onPress={() => go(homeChip === 1 ? "socials" : "music")}><Text style={s.link}>{homeChip === 1 ? "Socials" : "Browse"}</Text></TouchableOpacity></View>
-          {homeChip === 1 ? (
-            takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 5).map((t: any) => (
-              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => { go("socials"); setSelectedProfile(t); }}>
-                <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
-                <View style={s.flex}><Text style={s.roomName} numberOfLines={1}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
-                <Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>♥ {t.likes || 0}</Text>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
-              {tracks.map((t: any) => (
-                <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => { setNowPlaying(t); show(`Playing ${t.title}`); }}>
-                  <Text style={s.trackPlay}>▶</Text><Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text><Text style={s.trackArtist} numberOfLines={1}>{t.artist}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-        </>
-      )}
-      {(homeChip === 0 || homeChip === 3) && (
-        <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>News for you</Text></View>
-          {news.map((n: any) => (
-            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
-              <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
-              <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
+      <>
+        <View style={s.sectionHead}>
+          <Text style={s.sectionTitle}>Explore Kilode</Text>
+          <TouchableOpacity onPress={() => setMoreOpen(true)}><Text style={s.link}>More</Text></TouchableOpacity>
+        </View>
+        <View style={s.grid4}>
+          {ROLE_GRID.map((r) => (
+            <TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}>
+              <Text style={s.gridIcon}>{r.icon}</Text>
+              <Text style={s.gridLabel}>{r.label}</Text>
             </TouchableOpacity>
           ))}
-        </>
-      )}
-      {(homeChip === 0 || homeChip === 2) && (
-        <>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>Rooms · {rooms.filter((r: any) => r.live).length} live</Text></View>
-          {rooms.map((r: any) => {
-            const isJoined = !!joined[r.id];
-            return (
-              <TouchableOpacity key={r.id} style={s.roomRow}>
-                <View style={s.roomAv}><Text style={s.roomAvText}>{r.av}</Text>{r.live ? <View style={s.roomLive} /> : null}</View>
-                <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.live ? `${r.speaking || 0} speaking · ` : ""}{r.meta}</Text></View>
-                <TouchableOpacity style={[s.joinBtn, isJoined && s.joinLive]} onPress={() => { setJoined({ ...joined, [r.id]: !isJoined }); show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`); }}>
-                  <Text style={[s.joinBtnText, isJoined && s.joinLiveText]}>{isJoined ? "Joined" : "Join"}</Text>
-                </TouchableOpacity>
-              </TouchableOpacity>
-            );
-          })}
-        </>
-      )}
+        </View>
+      </>
       <View style={{ height: 20 }} />
     </ScrollView>
   );
 
-  const Socials = () => (
+  const Socials = (t Socials = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.composer}>
         <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
