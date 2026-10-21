@@ -319,7 +319,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                 : destination === "The Discovery List"
                   ? catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)))
                   : destination === "New & Noted"
-                    ? [...catalogueTracks].sort((a: any, b: any) => new Date(b.release_date ?? b.created_at ?? 0).getTime() - new Date(a.release_date ?? a.created_at ?? 0).getTime())
+                    ? [...catalogueTracks].filter((track: any) => {
+                        const value = track.release_date ?? track.created_at;
+                        const timestamp = value ? new Date(value).getTime() : Number.NaN;
+                        return Number.isFinite(timestamp) && timestamp > 0;
+                      }).sort((a: any, b: any) => new Date(b.release_date ?? b.created_at).getTime() - new Date(a.release_date ?? a.created_at).getTime())
                     : destination === "Afrobeats Essentials"
                       ? catalogueTracks.filter((track: any) => String(track.genre ?? track.genres ?? "").toLowerCase().includes("afro"))
                       : destination === "Focus Mode"
@@ -330,8 +334,16 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   // Filter chart categories before limiting to 50/100, so a genre chart can fill its full ranking.
   const visibleDestinationTracks = destinationTracks;
   const hasVerifiedChartSignals = (destination === "Top 100" || destination === "Top 50") && visibleDestinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
-  const albumGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.album).map((track: any) => [String(track.album), track])).entries()).map(([album, track]: any) => ({ title: String(album), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, trackCount: catalogueTracks.filter((item: any) => String(item.album) === String(album)).length }));
-  const releaseGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.release_title || track.release || track.album).map((track: any) => [String(track.release_title || track.release || track.album), track])).entries()).map(([title, track]: any) => ({ title: String(title), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, type: String(track.release_type || "release"), trackCount: catalogueTracks.filter((item: any) => String(item.release_title || item.release || item.album) === String(title)).length }));
+  const albumGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.album).map((track: any) => [String(track.album), track])).entries()).map(([album, track]: any) => {
+    const matching = catalogueTracks.filter((item: any) => String(item.album) === String(album));
+    const dates = matching.map((item: any) => item.release_date ?? item.created_at).filter(Boolean).map((value: any) => new Date(value).getTime()).filter((value: number) => Number.isFinite(value) && value > 0);
+    return { title: String(album), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, trackCount: matching.length, latestDate: dates.length ? Math.max(...dates) : null };
+  });
+  const releaseGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.release_title || track.release || track.album).map((track: any) => [String(track.release_title || track.release || track.album), track])).entries()).map(([title, track]: any) => {
+    const matching = catalogueTracks.filter((item: any) => String(item.release_title || item.release || item.album) === String(title));
+    const dates = matching.map((item: any) => item.release_date ?? item.created_at).filter(Boolean).map((value: any) => new Date(value).getTime()).filter((value: number) => Number.isFinite(value) && value > 0);
+    return { title: String(title), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, type: String(track.release_type || "release"), trackCount: matching.length, latestDate: dates.length ? Math.max(...dates) : null };
+  }).sort((a: any, b: any) => (b.latestDate || 0) - (a.latestDate || 0));
   const activeAlbumTitle = destinationName.startsWith("Album · ") ? destinationName.slice(8) : null;
   const activeReleaseTitle = destinationName.startsWith("Release · ") ? destinationName.slice(10) : null;
   const activeAlbum = activeAlbumTitle ? albumGroups.find((item) => item.title === activeAlbumTitle) : undefined;
@@ -443,7 +455,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               {releaseGroups.map((release) => (
                 <TouchableOpacity key={release.title} onPress={() => openMusicDestination("Release · " + release.title)} style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 13, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
                   {release.artwork ? <Image source={{ uri: release.artwork }} style={{ width: 58, height: 58, borderRadius: 9, backgroundColor: C.elevated }} /> : <View style={{ width: 58, height: 58, borderRadius: 9, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="albums-outline" size={24} color={C.accent} /></View>}
-                  <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{release.title}</Text><Text numberOfLines={1} style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{release.artist}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>{release.type.toUpperCase()} · {release.trackCount} tracks</Text></View>
+                  <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>{release.title}</Text><Text numberOfLines={1} style={{ color: C.text3, fontSize: 12, marginTop: 4 }}>{release.artist}</Text><Text style={{ color: C.text3, fontSize: 10, marginTop: 4 }}>{release.type.toUpperCase()} · {release.trackCount} tracks{release.latestDate ? ` · ${new Date(release.latestDate).toLocaleDateString(undefined, { month: "short", year: "numeric" })}` : ""}</Text></View>
                   <Ionicons name="chevron-forward" size={18} color={C.text3} />
                 </TouchableOpacity>
               ))}
@@ -458,7 +470,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{activeAlbum ? "ALBUM" : "RELEASE"}</Text>
               <Text style={{ color: C.text, fontSize: 23, fontWeight: "900", marginTop: 4 }}>{activeAlbum?.title || activeRelease?.title}</Text>
               <Text style={{ color: C.text2, fontSize: 13, marginTop: 5 }}>{activeAlbum?.artist || activeRelease?.artist}</Text>
-              <Text style={{ color: C.text3, fontSize: 11, marginTop: 6 }}>{activeAlbum?.trackCount || activeRelease?.trackCount || 0} tracks · Catalogue metadata</Text>
+              <Text style={{ color: C.text3, fontSize: 11, marginTop: 6 }}>{activeAlbum?.trackCount || activeRelease?.trackCount || 0} tracks{(activeAlbum?.latestDate || activeRelease?.latestDate) ? ` · ${new Date((activeAlbum?.latestDate || activeRelease?.latestDate) as number).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : " · Catalogue metadata"}</Text>
               <TouchableOpacity onPress={() => destinationTracks[0] ? openTrack(destinationTracks[0]) : show("No tracks are available for this release yet.")} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingVertical: 12, borderRadius: 11, backgroundColor: C.accent, marginTop: 14 }}>
                 <Ionicons name="play" size={17} color="#111" /><Text style={{ color: "#111", fontSize: 12, fontWeight: "800" }}>Play {activeAlbum ? "album" : "release"}</Text>
               </TouchableOpacity>
