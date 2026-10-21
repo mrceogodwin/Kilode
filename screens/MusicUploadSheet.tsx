@@ -51,6 +51,10 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
   };
 
   const chooseAudio = async () => {
+    if (pendingUploadId) {
+      fail("Finish checking or retrying the current upload before choosing another file.");
+      return;
+    }
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: "audio/*",
@@ -147,7 +151,10 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       const state = normalizeState(result.data.state);
       const trackId = result.data.trackId;
       if (["failed", "rejected", "error"].includes(state)) {
-        fail(`Kilode could not process this audio (${state.replace(/_/g, " ")}).`);
+        setPendingUploadId(null);
+        setPendingUploadUrl(null);
+        setPendingUploadExpiresAt(null);
+        fail(`Kilode could not process this audio (${state.replace(/_/g, " ")}). You can correct the issue and start a new upload.`);
       } else if (["processed", "ready", "ready_to_publish", "complete", "completed"].includes(state) && trackId) {
         await publishIfReady(String(trackId));
       } else if (state === "published" && trackId) {
@@ -204,7 +211,10 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         setPendingUploadId(null);
         onPublished();
       } else if (["failed", "rejected", "error"].includes(state)) {
-        fail(`Kilode could not process this audio (${state.replace(/_/g, " ")}).`);
+        setPendingUploadId(null);
+        setPendingUploadUrl(null);
+        setPendingUploadExpiresAt(null);
+        fail(`Kilode could not process this audio (${state.replace(/_/g, " ")}). You can correct the issue and start a new upload.`);
       } else {
         setMessage("Audio uploaded. Kilode is processing it before publication.");
         show("Audio uploaded · processing pending");
@@ -219,6 +229,10 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
 
   const submitUpload = async () => {
     if (busy) return;
+    if (pendingUploadId) {
+      fail("Resolve the current upload first. Use Retry audio transfer or Check processing status.");
+      return;
+    }
     if (!token.trim() || ["guest", "local", "live"].includes(token)) {
       fail("Sign in with a real Kilode Artist account before uploading music.");
       return;
@@ -317,9 +331,9 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
               <Ionicons name="close" size={24} color={C.text || "#fff"} />
             </TouchableOpacity>
           </View>
-          <TextInput value={title} onChangeText={setTitle} placeholder="Track title" placeholderTextColor={C.text3 || "#888"} editable={!busy} style={{ color: C.text || "#fff", backgroundColor: C.input || "#101014", borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 12, padding: 13, marginTop: 14 }} />
-          <TextInput value={genre} onChangeText={setGenre} placeholder="Genre (optional)" placeholderTextColor={C.text3 || "#888"} editable={!busy} style={{ color: C.text || "#fff", backgroundColor: C.input || "#101014", borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 12, padding: 13, marginTop: 10 }} />
-          <TouchableOpacity onPress={() => void chooseAudio()} disabled={busy} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.input || "#101014", borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 12, padding: 14, marginTop: 12 }}>
+          <TextInput value={title} onChangeText={setTitle} placeholder="Track title" placeholderTextColor={C.text3 || "#888"} editable={!busy && !pendingUploadId} style={{ color: C.text || "#fff", backgroundColor: C.input || "#101014", borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 12, padding: 13, marginTop: 14 }} />
+          <TextInput value={genre} onChangeText={setGenre} placeholder="Genre (optional)" placeholderTextColor={C.text3 || "#888"} editable={!busy && !pendingUploadId} style={{ color: C.text || "#fff", backgroundColor: C.input || "#101014", borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 12, padding: 13, marginTop: 10 }} />
+          <TouchableOpacity onPress={() => void chooseAudio()} disabled={busy || Boolean(pendingUploadId)} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.input || "#101014", borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 12, padding: 14, marginTop: 12 }}>
             <Ionicons name="musical-notes" size={21} color={C.accent || "#D4AF37"} />
             <View style={{ flex: 1 }}>
               <Text style={{ color: C.text || "#fff", fontSize: 14, fontWeight: "700" }}>{audio?.name || "Choose audio file"}</Text>
@@ -327,14 +341,14 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
             </View>
             <Ionicons name="folder-open-outline" size={20} color={C.text2 || "#aaa"} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setRightsConfirmed((value) => !value)} disabled={busy} accessibilityRole="checkbox" accessibilityState={{ checked: rightsConfirmed }} style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 14 }}>
+          <TouchableOpacity onPress={() => setRightsConfirmed((value) => !value)} disabled={busy || Boolean(pendingUploadId)} accessibilityRole="checkbox" accessibilityState={{ checked: rightsConfirmed }} style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 14 }}>
             <Ionicons name={rightsConfirmed ? "checkbox" : "square-outline"} size={22} color={rightsConfirmed ? (C.accent || "#D4AF37") : (C.text2 || "#aaa")} />
             <Text style={{ flex: 1, color: C.text2 || "#aaa", fontSize: 12, lineHeight: 18 }}>I own this recording or have permission to distribute it, and I agree to Kilode’s music rights rules.</Text>
           </TouchableOpacity>
           {message ? <Text accessibilityRole="text" style={{ color: C.text2 || "#aaa", fontSize: 12, lineHeight: 17, marginTop: 12 }}>{message}</Text> : null}
           {busy && stage ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}><ActivityIndicator color={C.accent || "#D4AF37"} /><Text style={{ color: C.text2 || "#aaa", fontSize: 12 }}>{stage}</Text></View> : null}
-          <TouchableOpacity onPress={() => void submitUpload()} disabled={busy} accessibilityRole="button" style={{ backgroundColor: C.accent || "#D4AF37", borderRadius: 13, padding: 15, alignItems: "center", marginTop: 16, opacity: busy ? 0.6 : 1 }}>
-            <Text style={{ color: "#0D0D10", fontWeight: "800", fontSize: 14 }}>{busy ? "Working…" : "Upload track"}</Text>
+          <TouchableOpacity onPress={() => void submitUpload()} disabled={busy || Boolean(pendingUploadId)} accessibilityRole="button" style={{ backgroundColor: C.accent || "#D4AF37", borderRadius: 13, padding: 15, alignItems: "center", marginTop: 16, opacity: busy ? 0.6 : 1 }}>
+            <Text style={{ color: "#0D0D10", fontWeight: "800", fontSize: 14 }}>{busy ? "Working…" : pendingUploadId ? "Upload in progress" : "Upload track"}</Text>
           </TouchableOpacity>
           {pendingUploadId && pendingUploadUrl ? <TouchableOpacity onPress={() => void retryTransfer()} disabled={busy} accessibilityRole="button" style={{ borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 13, padding: 13, alignItems: "center", marginTop: 9, opacity: busy ? 0.6 : 1 }}><Text style={{ color: C.text || "#fff", fontWeight: "700", fontSize: 13 }}>Retry audio transfer</Text></TouchableOpacity> : null}
           {pendingUploadId ? <TouchableOpacity onPress={() => void checkProcessing()} disabled={busy} accessibilityRole="button" style={{ borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 13, padding: 13, alignItems: "center", marginTop: 9, opacity: busy ? 0.6 : 1 }}><Text style={{ color: C.text || "#fff", fontWeight: "700", fontSize: 13 }}>Check processing status</Text></TouchableOpacity> : null}
