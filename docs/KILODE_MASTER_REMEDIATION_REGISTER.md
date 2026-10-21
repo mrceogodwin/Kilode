@@ -246,3 +246,15 @@ UI completeness is not service completeness. Until backend endpoints and device 
 4. Job/market/event detail CTAs never imply an application, booking or purchase succeeded unless the server confirms it.
 5. VoiceOver walkthrough for Home, drawer, bottom dock, create popover, Music/Top 100, full player, Auth and Settings.
 6. Device tests for keyboard avoidance, bottom safe area, audio interruptions, offline network, and reduced motion/text sizing.
+
+
+## 14. Web preview alignment change (2026-10-21)
+
+- Updated `docs/kilode-ios-preview.html` in commit `02c08c345627008301ccb9d8b55472bfe208f43e`.
+- Changed preview tokens to the established premium dark/gold palette (`#0D0D10`, `#18181C`, `#2A2A30`, `#D4AF37`) rather than green as the primary accent.
+- Removed the Home greeting that identified the viewer as a guest; replaced it with a cross-system discovery heading.
+- Replaced the blue/green promotional gradients with restrained dark/gold/neutral cards.
+- Replaced the oversized create action notice with a compact four-item popover for Post, Story, Upload music and Create event. Actions explicitly state they are preview-only and not published.
+- Kept the disclosure that this is interactive HTML, not the Expo runtime, and that sample content is not live.
+- **Not yet verified:** latest CI is still running; Vercel deployment propagation and the actual deployed page have not been confirmed. The preview remains a visual mirror, not the native app or backend.
+- **Still pending:** approved transparent Kilode logo asset integration, matching all five dock tabs/actions to the native branch, removing remaining placeholder sections where the native implementation differs, and browser/device visual QA.
