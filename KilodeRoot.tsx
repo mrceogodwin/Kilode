@@ -157,13 +157,27 @@ function KilodeApp() {
         show(page.error || "Could not load more posts. Try again.");
         return;
       }
+      const knownIds = new Set<string>();
       setTakes((current) => {
-        const known = new Set(current.map((item: any) => String(item.id)));
-        const additions = page.data.filter((item: any) => !known.has(String(item.id)));
+        current.forEach((item: any) => knownIds.add(String(item.id)));
+        const additions = page.data.filter((item: any) => {
+          const id = String(item.id);
+          if (knownIds.has(id)) return false;
+          knownIds.add(id);
+          return true;
+        });
+        // Stop if the server repeats its cursor without returning new posts;
+        // otherwise the user could repeatedly request the same page forever.
+        const cursorStalled = Boolean(page.nextCursor && page.nextCursor === takesNextCursor);
+        if (cursorStalled && additions.length === 0) {
+          setTakesHasMore(false);
+          setTakesNextCursor(null);
+        } else {
+          setTakesNextCursor(page.nextCursor || null);
+          setTakesHasMore(Boolean(page.hasMore && page.nextCursor));
+        }
         return [...current, ...additions];
       });
-      setTakesNextCursor(page.nextCursor || null);
-      setTakesHasMore(Boolean(page.hasMore && page.nextCursor));
     } catch {
       show("Could not load more posts. Try again.");
     } finally {
