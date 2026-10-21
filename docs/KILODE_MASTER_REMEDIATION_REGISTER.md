@@ -258,3 +258,14 @@ UI completeness is not service completeness. Until backend endpoints and device 
 - Kept the disclosure that this is interactive HTML, not the Expo runtime, and that sample content is not live.
 - **Not yet verified:** latest CI is still running; Vercel deployment propagation and the actual deployed page have not been confirmed. The preview remains a visual mirror, not the native app or backend.
 - **Still pending:** approved transparent Kilode logo asset integration, matching all five dock tabs/actions to the native branch, removing remaining placeholder sections where the native implementation differs, and browser/device visual QA.
+
+
+## 15. Web preview deployment verification (2026-10-21)
+
+- Created a fresh Vercel preview deployment from branch `music-compact-create-sheet`, exact commit `b73d3d8653ee606aeb650061c3b1511c85716b74`.
+- Deployment ID: `dpl_6sfpVPyp3zDUb7F4mckofrZnbvMn`; Vercel reported state `READY`.
+- Preview URL: https://kilodenew-ap6fjkst9-godwin-oriabure.vercel.app
+- Fetched the deployed page after readiness; HTTP status was 200. The returned HTML contains the gold palette token `#D4AF37`, compact creation options including `Upload music`, and does not contain the old `Good morning` Home greeting or old `#22C55E` green-primary token.
+- This verifies the deployed **static HTML visual mirror** was rebuilt from the current branch. It is not the Expo runtime, does not verify native app behavior, and does not establish a production domain alias.
+- Vercel project `kilodenew` has Git auto-deployment disabled in its `vercel.json` configuration (`github.enabled: false`), so a GitHub commit alone did not update the deployed page; this manual deployment was required.
+- The compact creation menu and current palette are now present in the fresh deployment. Still pending: visual inspection on actual mobile Safari, full screen parity with the native app, approved logo integration, and device testing.
