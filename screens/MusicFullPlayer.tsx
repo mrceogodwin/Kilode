@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Modal, View, Text, TouchableOpacity, Image, StatusBar } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { toggleMusicPlayback, seekMusicPlayback } from "../lib/musicPlayer";
@@ -21,6 +21,17 @@ type Props = {
 
 export function MusicFullPlayer({ visible, track, playing, C, onClose, positionMillis, durationMillis, onNext, onPrevious, shuffle, repeat, onToggleShuffle, onToggleRepeat }: Props) {
   const [progressWidth, setProgressWidth] = useState(1);
+  const [scrubPosition, setScrubPosition] = useState<number | null>(null);
+  const progressRef = useRef<View>(null);
+
+  const positionFromPageX = (pageX: number, onMeasured: (position: number) => void) => {
+    if (!durationMillis || !Number.isFinite(pageX)) return;
+    progressRef.current?.measureInWindow((x, _y, width) => {
+      const measuredWidth = Math.max(1, width || progressWidth);
+      const ratio = Math.max(0, Math.min(1, (pageX - x) / measuredWidth));
+      onMeasured(ratio * durationMillis);
+    });
+  };
   if (!track) return null;
   const artwork = track.artworkUrl || track.artwork_url || track.coverUrl || track.cover_url || track.image;
   const formatTime = (ms: number) => { const total = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`; };
@@ -52,30 +63,29 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
         </View>
         <View style={{ width: "100%", maxWidth: 340, alignSelf: "center" }}>
           <View
+            ref={progressRef}
             onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))}
             onStartShouldSetResponder={() => durationMillis > 0}
             onMoveShouldSetResponder={() => durationMillis > 0}
-            onResponderGrant={(event) => {
-              if (!durationMillis) return;
-              const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth));
-              void seekMusicPlayback(ratio * durationMillis);
+            onResponderGrant={(_event, gestureState) => {
+              positionFromPageX(gestureState.x0, setScrubPosition);
             }}
-            onResponderMove={(event) => {
-              if (!durationMillis) return;
-              const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth));
-              void seekMusicPlayback(ratio * durationMillis);
+            onResponderMove={(_event, gestureState) => {
+              positionFromPageX(gestureState.moveX, setScrubPosition);
             }}
-            onResponderRelease={(event) => {
-              if (!durationMillis) return;
-              const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth));
-              void seekMusicPlayback(ratio * durationMillis);
+            onResponderRelease={(_event, gestureState) => {
+              positionFromPageX(gestureState.moveX, (position) => {
+                setScrubPosition(null);
+                void seekMusicPlayback(position);
+              });
             }}
+            onResponderTerminate={() => setScrubPosition(null)}
             accessibilityRole="adjustable"
             accessibilityLabel="Track position"
             style={{ height: 28, justifyContent: "center", borderRadius: 9 }}
           >
             <View style={{ height: 4, borderRadius: 2, backgroundColor: "#2A2A30", overflow: "hidden" }}>
-              <View style={{ width: `${durationMillis ? Math.min(100, (positionMillis / durationMillis) * 100) : 0}%`, height: 4, backgroundColor: "#D4AF37" }} />
+              <View style={{ width: `${durationMillis ? Math.min(100, ((scrubPosition ?? positionMillis) / durationMillis) * 100) : 0}%`, height: 4, backgroundColor: "#D4AF37" }} />
             </View>
           </View>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 0 }}>
