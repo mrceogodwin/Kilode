@@ -6,6 +6,16 @@ import { fetchTracks } from "../lib/api";
 import { playMusicTrack, subscribeMusicPlayer } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
 
+function musicTrackIdentity(track: any): string {
+  if (track?.id !== undefined && track?.id !== null && String(track.id).trim()) {
+    return `id:${String(track.id)}`;
+  }
+  const url = [track?.audioUrl, track?.audio_url, track?.streamUrl, track?.stream_url, track?.previewUrl, track?.preview_url]
+    .find((value) => typeof value === "string" && /^https?:\/\//i.test(value.trim()));
+  if (url) return `url:${String(url).trim()}`;
+  return `meta:${String(track?.title || "").trim().toLowerCase()}:${String(track?.artist || "").trim().toLowerCase()}`;
+}
+
 type Props = {
   s: any;
   C: any;
@@ -56,7 +66,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
 
   useEffect(() => {
     const unsubscribe = subscribeMusicPlayer((track, playing) => {
-      setIsPlaying(Boolean(track && activeTrack && String(track.id) === String(activeTrack.id) && playing));
+      setIsPlaying(Boolean(track && activeTrack && musicTrackIdentity(track) === musicTrackIdentity(activeTrack) && playing));
     });
     return () => { unsubscribe(); };
   }, [activeTrack]);
