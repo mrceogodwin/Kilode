@@ -22,6 +22,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
+  const soundTrackIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -57,6 +58,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
     return () => {
       const sound = soundRef.current;
       soundRef.current = null;
+      soundTrackIdRef.current = null;
       if (sound) void sound.unloadAsync();
     };
   }, []);
@@ -70,12 +72,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         show("This track has no playable audio source yet.");
         return;
       }
-      if (soundRef.current) {
+      if (soundRef.current && soundTrackIdRef.current === String(track.id)) {
         const status = await soundRef.current.getStatusAsync();
         if (status.isLoaded && status.isPlaying) {
           await soundRef.current.pauseAsync();
           setIsPlaying(false);
           return;
+        }
+        if (status.isLoaded && status.didJustFinish) {
+          await soundRef.current.setPositionAsync(0);
         }
         if (status.isLoaded) {
           await soundRef.current.playAsync();
@@ -83,8 +88,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           onPlay(track);
           return;
         }
+      }
+      if (soundRef.current) {
         await soundRef.current.unloadAsync();
         soundRef.current = null;
+        soundTrackIdRef.current = null;
       }
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
@@ -105,6 +113,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         }
       );
       soundRef.current = created.sound;
+      soundTrackIdRef.current = String(track.id);
       setIsPlaying(created.status.isLoaded ? created.status.isPlaying : false);
       onPlay(track);
     } catch {
