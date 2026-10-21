@@ -16,7 +16,9 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName, artistHan
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [drafts, setDrafts] = useState<Draft[]>([]);
-  // Prefer the account handle over the display name: two artists can share a display name.\n  // This remains device-local scoping, not a server-side account identity.\n  const accountScope = (artistHandle || artistName || "artist").trim().toLowerCase().replace(/^@/, "").replace(/[^a-z0-9_-]/g, "_").slice(0, 64) || "artist";\n  const storageKey = `${STORAGE_KEY}:${accountScope}`;
+  // Prefer the account handle over the display name: two artists can share a display name.
+  // This remains device-local scoping, not a server-side account identity.
+  const accountScope = (artistHandle || artistName || "artist").trim().toLowerCase().replace(/^@/, "").replace(/[^a-z0-9_-]/g, "_").slice(0, 64) || "artist";\n  const storageKey = `${STORAGE_KEY}:${accountScope}`;
   const [saved, setSaved] = useState(false);
   const [rights, setRights] = useState(false);
   const [artwork, setArtwork] = useState(false);
