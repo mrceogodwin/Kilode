@@ -130,6 +130,8 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
 
     currentTrack = track;
     isPlaying = false;
+    positionMillis = 0;
+    durationMillis = 0;
     publish();
 
     const created = await Audio.Sound.createAsync(
@@ -143,6 +145,9 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
     return { ok: true };
   } catch {
     isPlaying = false;
+    positionMillis = 0;
+    durationMillis = 0;
+    if (!sound) currentTrack = null;
     publish();
     return { ok: false, message: "Playback failed. Please check the connection and try again." };
   } finally {
@@ -180,6 +185,8 @@ export async function stopMusicPlayback(): Promise<void> {
   if (!sound) {
     currentTrack = null;
     isPlaying = false;
+    positionMillis = 0;
+    durationMillis = 0;
     publish();
     return;
   }
@@ -187,6 +194,8 @@ export async function stopMusicPlayback(): Promise<void> {
   sound = null;
   currentTrack = null;
   isPlaying = false;
+  positionMillis = 0;
+  durationMillis = 0;
   publish();
   oldSound.setOnPlaybackStatusUpdate(null);
   await oldSound.stopAsync().catch(() => undefined);
