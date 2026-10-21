@@ -2,12 +2,14 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export type TabId = "home" | "socials" | "activity" | "myspace";
+export type TabId = "home" | "socials" | "myspace";
 
 type Props = {
   active: string;
   onTab: (id: TabId) => void;
   onCreate: () => void;
+  onMore: () => void;
+  showCreate?: boolean;
   isDark?: boolean;
   accent?: string;
 };
@@ -20,7 +22,6 @@ const TABS: {
 }[] = [
   { id: "home", label: "Home", icon: "home-outline", iconOn: "home" },
   { id: "socials", label: "Socials", icon: "people-outline", iconOn: "people" },
-  { id: "activity", label: "Activity", icon: "notifications-outline", iconOn: "notifications" },
   { id: "myspace", label: "My Space", icon: "person-outline", iconOn: "person" },
 ];
 
@@ -29,6 +30,8 @@ export function KilodeTabBar({
   active,
   onTab,
   onCreate,
+  onMore,
+  showCreate = true,
   isDark = true,
   accent = "#D4AF37",
 }: Props) {
@@ -48,21 +51,24 @@ export function KilodeTabBar({
         );
       })}
 
-      <TouchableOpacity accessibilityLabel="Create" accessibilityRole="button" hitSlop={8} style={styles.plusWrap} onPress={onCreate} activeOpacity={0.9}>
-        <View style={[styles.plus, { backgroundColor: accent, borderColor: bg }]}>
-          <Ionicons name="add" size={28} color="#fff" />
-        </View>
-      </TouchableOpacity>
+      {showCreate ? (
+        <TouchableOpacity accessibilityLabel="Create" accessibilityRole="button" hitSlop={8} style={styles.plusWrap} onPress={onCreate} activeOpacity={0.9}>
+          <View style={[styles.plus, { backgroundColor: accent, borderColor: bg }]}>
+            <Ionicons name="add" size={28} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.plusSpacer} />
+      )}
 
-      {TABS.slice(2).map((t) => {
-        const on = active === t.id;
-        return (
-          <TouchableOpacity key={t.id} style={styles.item} onPress={() => onTab(t.id)} accessibilityRole="tab">
-            <Ionicons name={on ? t.iconOn : t.icon} size={22} color={on ? accent : muted} />
-            <Text style={[styles.label, { color: on ? accent : muted }]}>{t.label}</Text>
-          </TouchableOpacity>
-        );
-      })}
+      <TouchableOpacity accessibilityLabel="More menu" accessibilityRole="button" style={styles.item} onPress={onMore}>
+        <Ionicons name="menu-outline" size={22} color={muted} />
+        <Text style={[styles.label, { color: muted }]}>More</Text>
+      </TouchableOpacity>
+      <TouchableOpacity accessibilityRole="tab" accessibilityLabel="My Space" style={styles.item} onPress={() => onTab("myspace")}>
+        <Ionicons name={active === "myspace" ? "person" : "person-outline"} size={22} color={active === "myspace" ? accent : muted} />
+        <Text style={[styles.label, { color: active === "myspace" ? accent : muted }]}>My Space</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -79,6 +85,7 @@ const styles = StyleSheet.create({
   item: { alignItems: "center", minWidth: 60, gap: 2 },
   label: { fontSize: 10, fontWeight: "600" },
   plusWrap: { marginTop: -18 },
+  plusSpacer: { width: 52, height: 52 },
   plus: {
     width: 52,
     height: 52,
