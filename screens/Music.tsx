@@ -744,11 +744,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               return;
             }
             setSavingDraft(true);
-            let releaseId = editingReleaseId;
+            try {
+              let releaseId = editingReleaseId;
             if (!releaseId) {
               const result = await createMusicReleaseDraft(userId, { title: releaseTitle, releaseType });
               if (!result.ok || !result.id) {
-                setSavingDraft(false);
                 show(result.error || "Could not save release draft.");
                 return;
               }
@@ -770,14 +770,19 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                 return;
               }
             }
-            setSavingDraft(false);
             setReleaseTitle("");
             setReleaseType("single");
             setSelectedAudio(null);
             setEditingReleaseId(null);
             setDraftOpen(false);
             setReleaseRefreshKey((key) => key + 1);
-            show(selectedAudio ? "Private release draft and audio saved. It is not public until reviewed and published." : "Release draft saved privately. You can attach audio later.");
+              show(selectedAudio ? "Private release draft and audio saved. It is not public until reviewed and published." : "Release draft saved privately. You can attach audio later.");
+            } catch {
+              setReleaseRefreshKey((key) => key + 1);
+              show("Could not save the release draft because of an unexpected error. Your draft may have been saved; check Your Releases before retrying.");
+            } finally {
+              setSavingDraft(false);
+            }
           }} style={{ backgroundColor: C.accent, borderRadius: 13, paddingVertical: 14, alignItems: "center", opacity: savingDraft ? 0.7 : 1 }}>
             {savingDraft ? <ActivityIndicator color="#111" /> : <Text style={{ color: "#111", fontWeight: "800", fontSize: 15 }}>{editingReleaseId ? "Retry audio upload" : "Save private draft"}</Text>}
           </TouchableOpacity>
