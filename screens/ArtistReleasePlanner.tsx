@@ -22,7 +22,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
   const [metadata, setMetadata] = useState(false);
   const [audio, setAudio] = useState(false);
 
-  const dateValid = useMemo(() => !releaseDate || /^\d{4}-\d{2}-\d{2}$/.test(releaseDate), [releaseDate]);
+  const dateValid = useMemo(() => { if (!releaseDate) return true; if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(releaseDate)) return false; const parsed = new Date(`${releaseDate}T00:00:00Z`); return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === releaseDate; }, [releaseDate]);
   const requiredReady = title.trim().length > 0 && genre.trim().length > 0 && dateValid;
   useEffect(() => {
     let active = true;
