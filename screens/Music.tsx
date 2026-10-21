@@ -400,27 +400,69 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
 
       {tab === "charts" && (
         <>
-          <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Explore tracks</Text>
-          </View>
-          {exploreTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : exploreTracks.map((c: any, index: number) => (
-            <TouchableOpacity
-              key={musicTrackIdentity(c)}
-              style={s.roomRow}
-              onPress={() =>
-                selectTrack(c)
-              }
-            >
-              <Text style={[s.roomName, { width: 28, color: C.accent }]}>{index + 1}</Text>
-              <View style={s.flex}>
-                <Text style={s.roomName}>{c.title}</Text>
-                <Text style={s.meta}>
-                  {c.artist || "Kilode artist"}
-                </Text>
+          <View style={{ marginHorizontal: 14, marginTop: 12, marginBottom: 14, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: "#8D7440", backgroundColor: C.card, overflow: "hidden" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={{ width: 54, height: 62, borderRadius: 13, borderWidth: 1, borderColor: "#C8A85B", backgroundColor: "#29241A", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="trophy" size={22} color="#E5C158" />
+                <Text style={{ color: "#E5C158", fontSize: 10, fontWeight: "900", letterSpacing: 1 }}>100</Text>
               </View>
-              <Ionicons name="play-circle-outline" size={28} color={C.accent} />
-            </TouchableOpacity>
-          ))}
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontSize: 21, fontWeight: "900", letterSpacing: -0.5 }}>KILODE TOP 100</Text>
+                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>The tracks shaping the sound right now.</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8 }}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#E5C158" }} />
+                  <Text style={{ color: "#E5C158", fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{catalogueSource === "live" ? "CATALOGUE CONNECTED · RANKINGS PENDING" : "PREVIEW · NOT A LIVE CHART"}</Text>
+                </View>
+              </View>
+            </View>
+            <View style={{ height: 1, backgroundColor: "#8D7440", opacity: 0.7, marginTop: 14, marginBottom: 10 }} />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="stats-chart-outline" size={14} color="#E5C158" />
+              <Text style={{ color: C.text2, fontSize: 11, flex: 1 }}>Rank movement needs verified play and chart history. No movement is fabricated.</Text>
+              <Ionicons name="shield-checkmark-outline" size={14} color="#E5C158" />
+            </View>
+          </View>
+          <View style={[s.sectionHead, { marginBottom: 6 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.sectionTitle}>The Top 100</Text>
+              <Text style={[s.meta, { marginTop: 3 }]}>Every track has a place. Tap a row to open it.</Text>
+            </View>
+            <Ionicons name="musical-notes-outline" size={18} color={C.accent} />
+          </View>
+          {exploreTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : exploreTracks.slice(0, 100).map((track: any, index: number) => {
+            const rankChange = Number.isFinite(track.rankChange) ? track.rankChange : null;
+            const previousRank = Number.isFinite(track.previousRank) ? track.previousRank : null;
+            const change = rankChange !== null ? rankChange : previousRank !== null ? previousRank - (index + 1) : null;
+            const movementIcon = change === null || change === 0 ? "remove-outline" : change > 0 ? "arrow-up" : "arrow-down";
+            const movementColor = change === null || change === 0 ? C.text3 : change > 0 ? "#59C98A" : "#E58A78";
+            return (
+              <TouchableOpacity
+                key={musicTrackIdentity(track)}
+                style={{ marginHorizontal: 14, marginBottom: 7, minHeight: 64, flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 8, borderRadius: 13, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, gap: 10 }}
+                onPress={() => selectTrack(track)}
+                accessibilityRole="button"
+                accessibilityLabel={`Rank ${index + 1}, ${track.title}, ${track.artist || "Kilode artist"}`}
+              >
+                <View style={{ width: 27, alignItems: "center" }}>
+                  <Text style={{ color: index < 3 ? "#E5C158" : C.text2, fontSize: index < 3 ? 19 : 16, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{String(index + 1).padStart(2, "0")}</Text>
+                  {index === 0 ? <Ionicons name="crown" size={10} color="#E5C158" /> : index === 1 ? <Ionicons name="medal-outline" size={10} color="#B8C0CC" /> : index === 2 ? <Ionicons name="medal-outline" size={10} color="#B87951" /> : null}
+                </View>
+                <View style={{ width: 38, height: 42, borderRadius: 9, backgroundColor: C.input, borderWidth: 1, borderColor: index < 3 ? "#8D7440" : C.border, alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name={index === 0 ? "trophy-outline" : index % 5 === 0 ? "flame-outline" : "musical-note-outline"} size={17} color={index < 3 ? "#E5C158" : C.accent} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ color: C.text, fontSize: 13, fontWeight: "800" }} numberOfLines={1}>{track.title}</Text>
+                  <Text style={{ color: C.text2, fontSize: 11, marginTop: 3 }} numberOfLines={1}>{track.artist || "Kilode artist"}</Text>
+                </View>
+                <View style={{ alignItems: "center", justifyContent: "center", minWidth: 28 }}>
+                  <Ionicons name={movementIcon as any} size={15} color={movementColor} />
+                  <Text style={{ color: movementColor, fontSize: 9, fontWeight: "800", marginTop: 1 }}>{change === null ? "—" : change > 0 ? `+${change}` : change < 0 ? String(change) : "—"}</Text>
+                </View>
+                <Ionicons name="play-circle-outline" size={24} color={C.accent} />
+              </TouchableOpacity>
+            );
+          })}
+          {exploreTracks.length > 0 ? <Text style={[s.meta, { paddingHorizontal: 14, marginTop: 7, marginBottom: 18, lineHeight: 16 }]}>This list currently follows available catalogue order. Official chart positions and movement will appear only when verified chart data is connected.</Text> : null}
         </>
       )}
 
