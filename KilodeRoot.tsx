@@ -654,7 +654,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
     if (tab === "myspace") return <MySpace />;
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={(track) => { setNowPlaying(track); setMusicPlayerExpanded(true); }} canUpload={session?.kind === "artist"} token={session?.token || ""} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={(track) => { setNowPlaying(track); setMusicPlayerExpanded(true); }} canUpload={session?.kind === "artist"} token={session?.token || ""} accountScope={session?.handle || session?.name || "guest"} />;
     if (tab === "pushlink") return <PushLinkScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "media") return (
       <MediaScreen
