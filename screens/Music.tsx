@@ -128,7 +128,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
   const chartTracks = top100Snapshot
     ? top100Snapshot.entries
         .map((entry) => {
-          const track = exploreTracks.find((candidate: any) => String(candidate?.id ?? candidate?.trackId ?? candidate?.track_id ?? "") === entry.trackId);
+          const track = exploreTracks.find((candidate: any) => String(candidate?.id ?? candidate?.trackId ?? candidate?.track_id ?? "").trim() === entry.trackId.trim());
           return track ? { ...track, rank: entry.rank, previousRank: entry.previousRank, rankChange: entry.movement } : null;
         })
         .filter((track): track is NonNullable<typeof track> => Boolean(track))
