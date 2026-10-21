@@ -400,26 +400,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
 
       {tab === "charts" && (
         <>
-          <View style={{ marginHorizontal: 14, marginTop: 12, marginBottom: 14, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: "#8D7440", backgroundColor: C.card, overflow: "hidden" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <View style={{ width: 54, height: 62, borderRadius: 13, borderWidth: 1, borderColor: "#C8A85B", backgroundColor: "#29241A", alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="trophy" size={22} color="#E5C158" />
-                <Text style={{ color: "#E5C158", fontSize: 10, fontWeight: "900", letterSpacing: 1 }}>100</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: C.text, fontSize: 21, fontWeight: "900", letterSpacing: -0.5 }}>KILODE TOP 100</Text>
-                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>The tracks shaping the sound right now.</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8 }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#E5C158" }} />
-                  <Text style={{ color: "#E5C158", fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{catalogueSource === "live" ? "CATALOGUE CONNECTED · RANKINGS PENDING" : "PREVIEW · NOT A LIVE CHART"}</Text>
+          <View style={{ marginHorizontal: 14, marginTop: 12, marginBottom: 14, borderRadius: 20, borderWidth: 1, borderColor: "#75613A", backgroundColor: C.card, overflow: "hidden" }}>
+            <View style={{ height: 3, flexDirection: "row" }}><View style={{ flex: 3, backgroundColor: "#E5C158" }} /><View style={{ flex: 1, backgroundColor: "#B8C0CC" }} /><View style={{ flex: 1, backgroundColor: "#B87951" }} /></View>
+            <View style={{ padding: 15 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <View style={{ width: 58, height: 66, borderRadius: 14, borderWidth: 1, borderColor: "#C8A85B", backgroundColor: "#242329", alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="trophy" size={22} color="#E5C158" />
+                  <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 2, height: 10, marginTop: 2 }}>{[4, 8, 5, 10, 6, 8, 3].map((h, i) => <View key={i} style={{ width: 2, height: h, borderRadius: 1, backgroundColor: i < 4 ? "#E5C158" : "#B8C0CC" }} />)}</View>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}><Ionicons name="sparkles" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "900", letterSpacing: 1.8 }}>KILODE CHARTS · FLAGSHIP</Text></View>
+                  <Text style={{ color: C.text, fontSize: 22, fontWeight: "900", letterSpacing: 0.3 }}>TOP 100</Text>
+                  <Text style={{ color: C.text2, fontSize: 11, marginTop: 3 }}>The songs moving the culture.</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 7 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: catalogueSource === "live" ? "#B8C0CC" : "#E5C158" }} /><Text style={{ color: catalogueSource === "live" ? "#B8C0CC" : "#E5C158", fontSize: 9, fontWeight: "800", letterSpacing: 0.7 }}>{catalogueSource === "live" ? "CATALOGUE CONNECTED · CHART DATA PENDING" : "PREVIEW MODE · NOT OFFICIAL RANKINGS"}</Text></View>
                 </View>
               </View>
-            </View>
-            <View style={{ height: 1, backgroundColor: "#8D7440", opacity: 0.7, marginTop: 14, marginBottom: 10 }} />
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Ionicons name="stats-chart-outline" size={14} color="#E5C158" />
-              <Text style={{ color: C.text2, fontSize: 11, flex: 1 }}>Rank movement needs verified play and chart history. No movement is fabricated.</Text>
-              <Ionicons name="shield-checkmark-outline" size={14} color="#E5C158" />
+              <View style={{ height: 1, backgroundColor: C.border, marginTop: 14, marginBottom: 10 }} />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}><Ionicons name="trending-up-outline" size={15} color="#59C98A" /><Text style={{ color: C.text2, fontSize: 10, flex: 1, lineHeight: 15 }}>Rank arrows will reflect verified chart movement—not guesses.</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderWidth: 1, borderColor: "#75613A", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 }}><Ionicons name="shield-checkmark-outline" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "800" }}>FAIR PLAY</Text></View></View>
             </View>
           </View>
           <View style={[s.sectionHead, { marginBottom: 6 }]}>
@@ -435,30 +432,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
             const change = rankChange !== null ? rankChange : previousRank !== null ? previousRank - (index + 1) : null;
             const movementIcon = change === null || change === 0 ? "remove-outline" : change > 0 ? "arrow-up" : "arrow-down";
             const movementColor = change === null || change === 0 ? C.text3 : change > 0 ? "#59C98A" : "#E58A78";
+            const rankAccent = index === 0 ? "#E5C158" : index === 1 ? "#B8C0CC" : index === 2 ? "#B87951" : C.border;
+            const curatedIcon = index === 0 ? "crown-outline" : index === 1 ? "medal-outline" : index === 2 ? "ribbon-outline" : index % 7 === 0 ? "sparkles-outline" : index % 5 === 0 ? "flame-outline" : "musical-note-outline";
             return (
-              <TouchableOpacity
-                key={musicTrackIdentity(track)}
-                style={{ marginHorizontal: 14, marginBottom: 7, minHeight: 64, flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 8, borderRadius: 13, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, gap: 10 }}
-                onPress={() => selectTrack(track)}
-                accessibilityRole="button"
-                accessibilityLabel={`Rank ${index + 1}, ${track.title}, ${track.artist || "Kilode artist"}`}
-              >
-                <View style={{ width: 27, alignItems: "center" }}>
-                  <Text style={{ color: index < 3 ? "#E5C158" : C.text2, fontSize: index < 3 ? 19 : 16, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{String(index + 1).padStart(2, "0")}</Text>
-                  {index === 0 ? <Ionicons name="trophy-outline" size={10} color="#E5C158" /> : index === 1 ? <Ionicons name="medal-outline" size={10} color="#B8C0CC" /> : index === 2 ? <Ionicons name="medal-outline" size={10} color="#B87951" /> : null}
-                </View>
-                <View style={{ width: 38, height: 42, borderRadius: 9, backgroundColor: C.input, borderWidth: 1, borderColor: index < 3 ? "#8D7440" : C.border, alignItems: "center", justifyContent: "center" }}>
-                  <Ionicons name={index === 0 ? "trophy-outline" : index % 5 === 0 ? "flame-outline" : "musical-note-outline"} size={17} color={index < 3 ? "#E5C158" : C.accent} />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ color: C.text, fontSize: 13, fontWeight: "800" }} numberOfLines={1}>{track.title}</Text>
-                  <Text style={{ color: C.text2, fontSize: 11, marginTop: 3 }} numberOfLines={1}>{track.artist || "Kilode artist"}</Text>
-                </View>
-                <View style={{ alignItems: "center", justifyContent: "center", minWidth: 28 }}>
-                  <Ionicons name={movementIcon as any} size={15} color={movementColor} />
-                  <Text style={{ color: movementColor, fontSize: 9, fontWeight: "800", marginTop: 1 }}>{change === null ? "—" : change > 0 ? `+${change}` : change < 0 ? String(change) : "—"}</Text>
-                </View>
-                <Ionicons name="play-circle-outline" size={24} color={C.accent} />
+              <TouchableOpacity key={musicTrackIdentity(track)} style={{ marginHorizontal: 14, marginBottom: 5, minHeight: 57, flexDirection: "row", alignItems: "center", paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: index < 3 ? "#75613A" : C.border, backgroundColor: C.card, gap: 8 }} onPress={() => selectTrack(track)} accessibilityRole="button" accessibilityLabel={`Rank ${index + 1}, ${track.title}, ${track.artist || "Kilode artist"}`}>
+                <View style={{ width: 31, alignItems: "center", justifyContent: "center" }}><Text style={{ color: index < 3 ? rankAccent : C.text2, fontSize: index < 3 ? 19 : 15, fontWeight: "900", fontVariant: ["tabular-nums"], letterSpacing: -0.6 }}>{String(index + 1).padStart(2, "0")}</Text>{index < 3 ? <View style={{ height: 2, width: 15, borderRadius: 1, backgroundColor: rankAccent, marginTop: 2 }} /> : null}</View>
+                <View style={{ width: 34, height: 36, borderRadius: 9, backgroundColor: index < 3 ? "#242329" : C.input, borderWidth: 1, borderColor: index < 3 ? rankAccent : C.border, alignItems: "center", justifyContent: "center" }}><Ionicons name={curatedIcon as any} size={15} color={index < 3 ? rankAccent : C.accent} /></View>
+                <View style={{ flex: 1, minWidth: 0 }}><Text style={{ color: C.text, fontSize: 12, fontWeight: "800" }} numberOfLines={1}>{track.title}</Text><Text style={{ color: C.text2, fontSize: 10, marginTop: 2 }} numberOfLines={1}>{track.artist || "Kilode artist"}</Text></View>
+                <View style={{ alignItems: "center", justifyContent: "center", minWidth: 27, paddingVertical: 4, borderRadius: 7, backgroundColor: change === null || change === 0 ? C.input : change > 0 ? "rgba(89,201,138,0.10)" : "rgba(229,138,120,0.10)" }}><Ionicons name={movementIcon as any} size={14} color={movementColor} /><Text style={{ color: movementColor, fontSize: 9, fontWeight: "900", marginTop: 1 }}>{change === null ? "—" : change > 0 ? `+${change}` : change < 0 ? String(change) : "—"}</Text></View>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Open ${track.title}`} onPress={() => selectTrack(track)} hitSlop={8} style={{ paddingLeft: 2, paddingVertical: 4 }}><Ionicons name="chevron-forward" size={17} color={C.text3} /></TouchableOpacity>
               </TouchableOpacity>
             );
           })}
