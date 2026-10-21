@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
-import { fetchTracks } from "../lib/api";
+import { fetchTracks, getMusicPlayback, recordMusicEvent } from "../lib/api";
 import { playMusicTrack, subscribeMusicPlayer } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
 import { MusicUploadSheet } from "./MusicUploadSheet";
@@ -79,12 +79,28 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
     if (playbackBusy) return;
     setPlaybackBusy(true);
     try {
-      const result = await playMusicTrack(track);
+      let playableTrack = track;
+      if (catalogueSource === "live") {
+        if (!track?.id) {
+          show("This live track is missing its Kilode track ID.");
+          return;
+        }
+        const playback = await getMusicPlayback(token, String(track.id));
+        if (!playback.ok || !playback.data?.url || !/^https:\/\//i.test(playback.data.url)) {
+          show(playback.error || "Kilode could not create a secure playback link for this track.");
+          return;
+        }
+        playableTrack = { ...track, audioUrl: playback.data.url, audio_url: undefined, streamUrl: undefined, stream_url: undefined, previewUrl: undefined, preview_url: undefined };
+      }
+      const result = await playMusicTrack(playableTrack);
       if (!result.ok) {
         show(result.message || "This track cannot be played yet.");
         return;
       }
-      onPlay(track);
+      if (catalogueSource === "live" && track?.id) {
+        void recordMusicEvent(token, String(track.id), "play_started");
+      }
+      onPlay(playableTrack);
     } finally {
       setPlaybackBusy(false);
     }
