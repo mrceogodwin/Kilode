@@ -11,6 +11,7 @@ import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
+import { PushLinkScreen } from "./screens/PushLink";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
@@ -406,6 +407,7 @@ function KilodeApp() {
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} />;
+    if (tab === "pushlink") return <PushLinkScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "media") return (
       <MediaScreen
         s={s}
