@@ -176,11 +176,15 @@ export function CommentsSheet({
           </Text>
         </View>
 
+        <Text style={{ color: C.text3, fontSize: 11, paddingHorizontal: 16, paddingTop: 2 }}>
+          Device-saved comments · server history not connected yet
+        </Text>
+
         <ScrollView style={{ flex: 1 }}>
           {loadingComments ? (
             <Text style={styles.empty}>Loading comments…</Text>
           ) : list.length === 0 ? (
-            <Text style={styles.empty}>No comments yet — be first</Text>
+            <Text style={styles.empty}>No comments saved on this device yet</Text>
           ) : (
             list.map((c) => (
               <View key={c.id} style={styles.row}>
