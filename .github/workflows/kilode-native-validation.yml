@@ -10,9 +10,11 @@ on:
       - main
   workflow_dispatch:
 
+# Give every commit its own validation run. Sharing one branch-level group
+# cancelled the previous run on every push, preventing a full validation result.
 concurrency:
-  group: kilode-ios-native-${{ github.ref }}
-  cancel-in-progress: true
+  group: kilode-ios-native-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   validate-ios:
