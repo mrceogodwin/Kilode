@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Palette } from "../themeStyles";
 
 type Props = { s: any; C: Palette; onBack: () => void; show: (message: string) => void; artistName: string };
-type Draft = { title: string; releaseType: string; genre: string; releaseDate: string; credits: string; notes: string; updatedAt: string };
+type Draft = { title: string; releaseType: string; genre: string; releaseDate: string; credits: string; notes: string; audioReady?: boolean; artworkReady?: boolean; metadataChecked?: boolean; rightsConfirmed?: boolean; updatedAt: string };
 const STORAGE_KEY = "@kilode/artist-release-planner-v1";
 
 export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) {
@@ -15,7 +15,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
   const [credits, setCredits] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
-  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);\n  const storageKey = `${STORAGE_KEY}:${(artistName || "artist").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "_").slice(0, 64)}`;
   const [saved, setSaved] = useState(false);
   const [rights, setRights] = useState(false);
   const [artwork, setArtwork] = useState(false);
@@ -26,7 +26,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
   const requiredReady = title.trim().length > 0 && genre.trim().length > 0 && dateValid;
   useEffect(() => {
     let active = true;
-    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+    AsyncStorage.getItem(storageKey).then((raw) => {
       if (!active || !raw) return;
       try { const value = JSON.parse(raw); if (Array.isArray(value)) setDrafts(value.filter((x): x is Draft => x && typeof x.title === "string" && typeof x.genre === "string").slice(0, 20)); } catch { setDrafts([]); }
     }).catch(() => { if (active) setDrafts([]); });
@@ -34,7 +34,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
   }, []);
 
   const loadDraft = (draft: Draft) => {
-    setTitle(draft.title); setReleaseType(draft.releaseType || "Single"); setGenre(draft.genre); setReleaseDate(draft.releaseDate || ""); setCredits(draft.credits || ""); setNotes(draft.notes || ""); setSaved(true);
+    setTitle(draft.title); setReleaseType(draft.releaseType || "Single"); setGenre(draft.genre); setReleaseDate(draft.releaseDate || ""); setCredits(draft.credits || ""); setNotes(draft.notes || ""); setAudio(draft.audioReady === true); setArtwork(draft.artworkReady === true); setMetadata(draft.metadataChecked === true); setRights(draft.rightsConfirmed === true); setSaved(true);
     show("Release draft loaded.");
   };
 
@@ -57,12 +57,12 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
     }
     setSaving(true);
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      const raw = await AsyncStorage.getItem(storageKey);
       let existing: Draft[] = [];
       try { existing = raw ? JSON.parse(raw) : []; } catch { existing = []; }
-      const draft: Draft = { title: title.trim(), releaseType, genre: genre.trim(), releaseDate: releaseDate.trim(), credits: credits.trim(), notes: notes.trim(), updatedAt: new Date().toISOString() };
+      const draft: Draft = { title: title.trim(), releaseType, genre: genre.trim(), releaseDate: releaseDate.trim(), credits: credits.trim(), notes: notes.trim(), audioReady: audio, artworkReady: artwork, metadataChecked: metadata, rightsConfirmed: rights, updatedAt: new Date().toISOString() };
       const next = [draft, ...(Array.isArray(existing) ? existing.filter((x) => !(x.title === draft.title && x.releaseType === draft.releaseType)) : [])].slice(0, 20);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(next));
       setDrafts(next);
       setSaved(true);
       show("Release plan saved on this device.");
