@@ -106,22 +106,24 @@ Backend constraint: do not silently default the native app to Kilode v2 or kilod
 - [ ] No hardcoded secrets, no fabricated live data, no local-only action described as server-persisted.
 - [ ] Test account isolation, ownership, invalid input, permission-denied cases, failed uploads/payments and network interruption.
 
-## Latest execution audit — 2026-10-21 19:25 WAT
+## Latest execution audit — 2026-10-21 19:30 WAT
 
-- `app.json` currently declares Expo app `Kilode`, slug `kilode`, owner `mudino`, iOS bundle ID `ng.kilode.app`, and EAS project ID `b9f2e786-665d-46e5-9a7c-7af7ab25e0ea`.
+- `app.json` declares Expo app `Kilode`, slug `kilode`, owner `mudino`, iOS bundle ID `ng.kilode.app`, and EAS project ID `b9f2e786-665d-46e5-9a7c-7af7ab25e0ea`.
 - `eas.json` defines development, preview and production profiles. Preview iOS is internal distribution; production profile has `autoIncrement: true`.
 - `package.json` provides `typecheck`, `eas:build:ios`, `eas:build:android`, and `eas:build:preview` scripts.
-- The two guessed workflow paths `.github/workflows/eas-build.yml` and `.github/workflows/build.yml` returned 404. This is **not** proof that no workflow exists; the full workflow directory and configured GitHub secret names/status have not been verified in this pass.
-- No GitHub workflow run was returned for the audit-document commit by the available commit-run query. That query is scoped to PR-triggered runs, so it cannot prove there are no other Actions runs.
-- The Vercel deployment for the latest app-code commit `2da635bed6a4cb8c6d0af3b69b2c7043baa96cee` is READY; logs say Expo web export completed. This does not verify native iOS compilation, signing, installation or TestFlight.
+- Existing native validation workflow: `.github/workflows/native-preview.yml`. It runs npm install, TypeScript, Expo Doctor, and exports an iOS JavaScript bundle artifact. This is **not** a compiled/installable iOS app by itself.
+- That workflow now includes a separate EAS iOS internal-preview build job, intended to run only when manually dispatched or when the commit message contains `[ios-build]`. It checks `EXPO_TOKEN`, `EAS_PROJECT_ID`, and that the project ID matches `app.json` without printing secret values. A matching `[ios-build]` commit is being used to request an actual validation/build run; the final workflow result must be checked before reporting success.
+- The EAS workflow file was not found on the default `main` branch in this pass. GitHub's manual `workflow_dispatch` availability can depend on the workflow existing on the default branch; the explicit `[ios-build]` commit path is therefore provided on `preview/web`.
+- No `package-lock.json`, `npm-shrinkwrap.json`, or `yarn.lock` exists on `preview/web` at this audit. The workflow currently uses `npm install`; reproducible locked dependency installs remain a release hardening task.
+- The last inspected Vercel deployment for app code commit `2da635bed6a4cb8c6d0af3b69b2c7043baa96cee` reached READY, and its logs show Expo web export completed. The latest audit/workflow commits each trigger new preview deployments; their final states must be checked separately. A web export does not verify native iOS compilation, signing, installation or TestFlight.
 - `lib/config.ts` was re-read: no default host to Kilode-v2 or kilode-nine; absent dedicated env configuration it resolves to offline mode. Supabase migrations/backend still require a separately configured project and real-account validation.
-- The welcome screen code was re-read: it still displays a single remote Unsplash portrait with a local fallback. The ten-video montage and approved final logo asset are not present/verified.
-- The Jobs screen code was re-read: sample vacancies are removed, but the application button explicitly saves interest locally and the job-post button only shows an API-not-ready message. Neither is a live employer application/publishing workflow. The previously reported duplicate Job heading is not reproduced by the current `screens/Jobs.tsx` source inspection; verify on actual preview/device before changing navigation blindly.
-- The Music screen source still states that official chart rules and verified listening aggregation require backend enforcement. No weekly chart API implementation was found by the available source searches in this pass; do not assume one exists.
-- Dependency audit result remains unresolved: last Vercel logs reported 62 vulnerabilities (3 low, 17 moderate, 41 high, 1 critical). Full npm audit detail and a tested non-breaking remediation plan have not yet been retrieved.
+- The welcome screen still displays a single remote Unsplash portrait with a local fallback. The ten-video montage and approved final logo asset are not present/verified.
+- Jobs sample vacancies are removed, but Apply explicitly saves interest locally and job posting only shows an API-not-ready message. Neither is a live employer application/publishing workflow. The duplicate Job heading was not reproduced by the current `screens/Jobs.tsx` source inspection; verify on actual preview/device before changing navigation blindly.
+- Music source still states that official chart rules and verified listening aggregation require backend enforcement. No weekly chart API implementation was found by the available source searches in this pass.
+- Dependency audit remains unresolved: previous Vercel logs reported 62 npm vulnerabilities (3 low, 17 moderate, 41 high, 1 critical). Full audit details and tested non-breaking remediation are still needed.
 
 ## Native-first release gate
-Before any claim of iOS readiness, collect evidence for: (1) current branch commit SHA, (2) Expo Doctor/typecheck results, (3) an actual EAS iOS build ID and final status, (4) installable artifact, (5) physical iPhone launch and first-screen test, (6) sign-up/login and account-type flow, and (7) TestFlight processing if submission is attempted. Vercel READY is only a web-preview result and cannot satisfy this gate.
+Before any claim of iOS readiness, collect evidence for: (1) current branch commit SHA, (2) Expo Doctor/typecheck results, (3) actual EAS iOS build ID and final status, (4) installable artifact, (5) physical iPhone launch and first-screen test, (6) sign-up/login and account-type flow, and (7) TestFlight processing if submission is attempted. Vercel READY is only a web-preview result and cannot satisfy this gate.
 
 ## Recent commits recorded
 - `511c92fcfd794bd93bf2e32d9086edd45770af0f`: Top 50/100 category filtering before ranking limits.
