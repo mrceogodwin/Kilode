@@ -23,6 +23,8 @@ let positionMillis = 0;
 let durationMillis = 0;
 let repeatCurrentTrack = false;
 let audioModeConfigured = false;
+let finishedSound: Audio.Sound | null = null;
+let onTrackFinished: (() => void) | null = null;
 const listeners = new Set<PlayerListener>();
 
 function publish() {
@@ -106,6 +108,14 @@ function onStatus(status: AVPlaybackStatus, source: Audio.Sound) {
     isPlaying = true;
   } else if (status.didJustFinish) {
     isPlaying = false;
+    // Native status updates may report the same completion more than once.
+    // Advance only once for this sound, and only while it remains active.
+    if (finishedSound !== source) {
+      finishedSound = source;
+      publish();
+      onTrackFinished?.();
+      return;
+    }
   }
   publish();
 }
@@ -203,6 +213,7 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
     }
 
     sound = created.sound;
+    finishedSound = null;
     // Register only after this sound becomes the active source. This prevents
     // callbacks from a late/replaced source mutating the current player's state.
     created.sound.setOnPlaybackStatusUpdate((status) => onStatus(status, created.sound));
@@ -298,6 +309,7 @@ export async function stopMusicPlayback(): Promise<void> {
   }
   const oldSound = sound;
   sound = null;
+  finishedSound = null;
   currentTrack = null;
   isPlaying = false;
   positionMillis = 0;
@@ -311,4 +323,8 @@ export async function stopMusicPlayback(): Promise<void> {
 
 export function setMusicRepeat(enabled: boolean): void {
   repeatCurrentTrack = enabled;
+}
+
+export function setMusicTrackFinishedHandler(handler: (() => void) | null): void {
+  onTrackFinished = handler;
 }
