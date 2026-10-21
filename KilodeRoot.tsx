@@ -763,43 +763,6 @@ function KilodeApp() {
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
       <View style={s.flex}>{body()}</View>
-      {!settingsOpen && !selectedPost && !selectedProfile && !selectedTrack && !selectedArtist && !selectedDeskItem && !["activity", "myspace"].includes(tab) && (
-        <TouchableOpacity
-          onPress={() => {
-            if (tab === "socials") { setComposeOpen(true); return; }
-            setCreateContext(tab);
-            setCreateOpen(true);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={tab === "socials" ? "Write a post" : `Create for ${tab}`}
-          activeOpacity={0.88}
-          style={{
-            position: "absolute",
-            right: 18,
-            bottom: nowPlaying ? 158 : 86,
-            zIndex: 20,
-            width: 54,
-            height: 54,
-            borderRadius: 18,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: C.accent,
-            borderWidth: 2,
-            borderColor: isDark ? "#D7F0DD" : "#FFFFFF",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.22,
-            shadowRadius: 10,
-            elevation: 9,
-          }}
-        >
-          <Ionicons
-            name={({ socials: "create-outline", music: "musical-notes-outline", events: "calendar-outline", market: "bag-handle-outline", jobs: "briefcase-outline", media: "newspaper-outline", cinema: "film-outline", creators: "videocam-outline", communities: "people-outline", ads: "megaphone-outline" } as Record<string, keyof typeof Ionicons.glyphMap>)[tab] || "add"}
-            size={23}
-            color={isDark ? "#101512" : "#FFFFFF"}
-          />
-        </TouchableOpacity>
-      )}
       {nowPlaying ? (
         <View style={[s.player, { gap: 10 }]}>
           <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent, alignItems: "center", justifyContent: "center" }]}>
