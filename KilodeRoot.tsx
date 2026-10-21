@@ -949,19 +949,15 @@ function KilodeApp() {
           </View>
         </View>
       </Modal>
-      <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
-        <View style={s.modalRoot}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
-          <View style={s.sheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHead}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.sheetTitle}>{createContext === "home" ? "Create on Kilode" : "Create in " + (headerTitle || createContext)}</Text>
-                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>{contextCreateAction ? "Quick action for this screen." : "Choose where to start."}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu" style={s.iconBtn}><Ionicons name="close" size={20} color={C.text2} /></TouchableOpacity>
+      <Modal visible={createOpen} transparent animationType="fade" onRequestClose={() => setCreateOpen(false)}>
+        <View style={[s.modalRoot, { justifyContent: "flex-end", paddingBottom: 82, backgroundColor: "transparent" }]}>
+          <TouchableOpacity style={[s.scrim, { backgroundColor: "rgba(0,0,0,0.12)" }]} activeOpacity={1} onPress={() => setCreateOpen(false)} />
+          <View style={{ alignSelf: "center", width: "min(340px, 92%)", maxHeight: 300, backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderRadius: 20, padding: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 18, elevation: 12 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 3, paddingBottom: 9 }}>
+              <Text style={{ color: C.text, fontSize: 14, fontWeight: "800" }}>{createContext === "home" ? "Create on Kilode" : "Create in " + (headerTitle || createContext)}</Text>
+              <TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu" hitSlop={10} style={{ padding: 4 }}><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 540 }} contentContainerStyle={{ width: "100%", flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10, paddingBottom: 4 }}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", gap: 7, paddingBottom: 2 }}>
               {createOptions.map((o) => {
                 const allowed = !(o as any).capability || can(session.kind, (o as any).capability);
                 const iconName: keyof typeof Ionicons.glyphMap = ({
@@ -969,30 +965,17 @@ function KilodeApp() {
                   Job: "briefcase-outline", Market: "bag-handle-outline", Event: "calendar-outline", Ad: "megaphone-outline",
                   Article: "newspaper-outline", Community: "people-outline", Creator: "videocam-outline",
                 } as Record<string, keyof typeof Ionicons.glyphMap>)[o.label] || "add-circle-outline";
-                const subtitle = o.label === "Post" ? "Share something with your feed"
-                  : o.label === "Track" ? "Open Music and its track tools"
-                  : o.label === "Film" ? "Open Cinema"
-                  : o.label === "Job" ? "Open Jobs"
-                  : o.label === "Market" ? "Open Market"
-                  : o.label === "Event" ? "Open Events"
-                  : o.label === "Article" ? "Open Media publishing tools"
-                  : o.label === "Community" ? "Open Communities"
-                  : o.label === "Creator" ? "Open Creator tools"
-                  : "Open Ads and campaign tools";
                 return (
-                  <TouchableOpacity key={o.label} accessibilityRole="button" accessibilityLabel={`${o.label}. ${subtitle}`}
+                  <TouchableOpacity key={o.label} accessibilityRole="button" accessibilityLabel={o.label}
                     activeOpacity={0.78}
-                    style={{ width: "48%", minHeight: 112, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated, alignItems: "flex-start", justifyContent: "space-between", opacity: allowed ? 1 : 0.45 }}
+                    style={{ width: "31.5%", minHeight: 66, paddingVertical: 9, paddingHorizontal: 5, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center", gap: 5, opacity: allowed ? 1 : 0.45 }}
                     onPress={() => {
                       if (!allowed) { show(`Your account type cannot ${o.label.toLowerCase()} yet.`); return; }
                       if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; }
                       setCreateOpen(false); go(o.tab);
                     }}>
-                    <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.accent + "30", alignItems: "center", justifyContent: "center" }}><Ionicons name={iconName} size={21} color={C.accent} /></View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{o.label}</Text>
-                      <Text numberOfLines={2} style={{ color: C.text2, fontSize: 11, lineHeight: 15, marginTop: 3 }}>{subtitle}</Text>
-                    </View>
+                    <Ionicons name={iconName} size={20} color={C.accent} />
+                    <Text numberOfLines={1} style={{ color: C.text, fontSize: 11, fontWeight: "700" }}>{o.label}</Text>
                   </TouchableOpacity>
                 );
               })}
