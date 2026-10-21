@@ -33,7 +33,7 @@ export function PushLinkScreen({ s, C, onBack, show }: Props) {
         <Text style={[s.sub, { marginTop: 6 }]}>One campaign. Your Kilode audience. Your official destinations.</Text>
 
         <Text style={[s.sectionTitle, { marginTop: 24, marginBottom: 8 }]}>Campaign name</Text>
-        <TextInput value={title} onChangeText={setTitle} placeholder="e.g. We Want a Party — new release" placeholderTextColor={C.muted} maxLength={120} style={[s.input, { color: C.text }]} />
+        <TextInput value={title} onChangeText={setTitle} placeholder="e.g. We Want a Party — new release" placeholderTextColor={C.text3} maxLength={120} style={{ backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, padding: 12, color: C.text, minHeight: 44 }} />
 
         <Text style={[s.sectionTitle, { marginTop: 20, marginBottom: 10 }]}>What are you promoting?</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -47,15 +47,15 @@ export function PushLinkScreen({ s, C, onBack, show }: Props) {
 
         <Text style={[s.sectionTitle, { marginTop: 22, marginBottom: 8 }]}>Official destination links</Text>
         <Text style={[s.meta, { marginBottom: 8 }]}>Add one HTTPS link per line: Kilode release page, Spotify, Apple Music, Audiomack, YouTube, your website or another platform.</Text>
-        <TextInput value={links} onChangeText={(value) => { setLinks(value); setPreview(null); }} placeholder={"https://open.spotify.com/...\nhttps://audiomack.com/..."} placeholderTextColor={C.muted} multiline autoCapitalize="none" autoCorrect={false} keyboardType="url" style={[s.input, { color: C.text, minHeight: 112, textAlignVertical: "top" }]} />
+        <TextInput value={links} onChangeText={(value) => { setLinks(value); setPreview(null); }} placeholder={"https://open.spotify.com/...\nhttps://audiomack.com/..."} placeholderTextColor={C.text3} multiline autoCapitalize="none" autoCorrect={false} keyboardType="url" style={{ backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, padding: 12, color: C.text, minHeight: 112, textAlignVertical: "top" }} />
 
         <TouchableOpacity onPress={makeDraft} style={[s.primaryBtn, { marginTop: 18 }]} accessibilityRole="button">
           <Text style={s.primaryBtnText}>Preview campaign draft</Text>
         </TouchableOpacity>
 
-        {preview ? <View style={[s.card, { marginTop: 18, padding: 16 }]}>
+        {preview ? <View style={{ marginTop: 18, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
           <Text style={s.sectionTitle}>Draft preview · not published</Text>
-          <Text style={[s.h2, { marginTop: 8 }]}>{preview.title}</Text>
+          <Text style={[s.h1, { marginTop: 8 }]}>{preview.title}</Text>
           <Text style={[s.meta, { marginTop: 4 }]}>{preview.category} · {preview.destinations.length} unique destination{preview.destinations.length === 1 ? "" : "s"}</Text>
           {preview.destinations.map((destination) => <View key={destination.url} style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border }}>
             <Text style={{ color: C.text, fontWeight: "600" }}>{destination.label}</Text>
