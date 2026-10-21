@@ -724,7 +724,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
       <View style={s.flex}>{body()}</View>
-      {nowPlaying ? (
+      {nowPlaying && tab !== "chat" ? (
         <View style={s.player}>
           <TouchableOpacity
             activeOpacity={0.92}
@@ -772,7 +772,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         onToggleShuffle={toggleMusicShuffle}
         onToggleRepeat={toggleMusicRepeat}
       />
-      <KilodeTabBar
+      {tab !== "chat" ? <KilodeTabBar
         active={tab === "home" || tab === "socials" || tab === "myspace" ? tab : "home"}
         onTab={(id) => go(id)}
         onCreate={() => setCreateOpen(true)}
@@ -780,7 +780,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         showCreate={tab !== "chat"}
         isDark={isDark}
         accent={C.accent}
-      />
+      /> : null}
 
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
         <View style={s.modalRoot}>
@@ -844,10 +844,11 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         </View>
       </Modal>
 
-      <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
-        <View style={s.modalRoot}>
+      <Modal visible={createOpen} transparent animationType="fade" onRequestClose={() => setCreateOpen(false)}>
+        <View style={[s.modalRoot, { justifyContent: "center", paddingHorizontal: 24 }]}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
-          <View style={s.sheet}>
+          <View style={[s.sheet, { width: "100%", maxWidth: 330, maxHeight: "56%", alignSelf: "center", borderRadius: 20, paddingTop: 14, paddingBottom: 18 }]}>
+            <Text style={{ color: C.text2, fontSize: 11, marginBottom: 10 }}>Quick create · choose one</Text>
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
             <View style={s.deskGrid}>{CREATE.map((o) => (
