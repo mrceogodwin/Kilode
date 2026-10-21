@@ -119,12 +119,6 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     .map((artist: any) => ({ ...artist, meta: artist.trackCount + (artist.trackCount === 1 ? " track in catalogue" : " tracks in catalogue") }))
     .sort((a: any, b: any) => a.name.localeCompare(b.name));
     const exploreTracks = filteredTracks;
-  const chartMetadataAvailable = catalogueSource === "live" && exploreTracks.some((track: any) => {
-    const rank = track?.rank ?? track?.currentRank ?? track?.current_rank;
-    const change = track?.rankChange ?? track?.rank_change;
-    const previous = track?.previousRank ?? track?.previous_rank;
-    return (rank !== undefined && rank !== null) || (change !== undefined && change !== null) || (previous !== undefined && previous !== null);
-  });
   const chartTracks = top100Snapshot
     ? top100Snapshot.entries
         .map((entry) => {
@@ -132,22 +126,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
           return track ? { ...track, rank: entry.rank, previousRank: entry.previousRank, rankChange: entry.movement } : null;
         })
         .filter((track): track is NonNullable<typeof track> => Boolean(track))
-    : catalogueSource === "live"
-      ? exploreTracks.map((track: any, originalIndex: number) => {
-          const rawRank = track?.rank ?? track?.currentRank ?? track?.current_rank;
-          const rank = typeof rawRank === "number" && Number.isFinite(rawRank)
-            ? rawRank
-            : typeof rawRank === "string" && rawRank.trim() && Number.isFinite(Number(rawRank))
-              ? Number(rawRank)
-              : null;
-          return { track, originalIndex, rank: rank !== null && rank > 0 ? rank : null };
-        }).sort((a, b) => {
-          if (a.rank !== null && b.rank !== null) return a.rank - b.rank || a.originalIndex - b.originalIndex;
-          if (a.rank !== null) return -1;
-          if (b.rank !== null) return 1;
-          return a.originalIndex - b.originalIndex;
-        }).map(({ track }) => track)
-      : exploreTracks;
+    : exploreTracks;
   // Keep the chart ordered by explicit, positive API ranks when present. Tracks
   // without a verified rank stay after ranked tracks and retain catalogue order.
     const newTracks = filteredTracks.filter((track: any) => {
@@ -463,7 +442,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}><Ionicons name="sparkles" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "900", letterSpacing: 1.8 }}>KILODE CHARTS · FLAGSHIP</Text></View>
                   <Text style={{ color: C.text, fontSize: 22, fontWeight: "900", letterSpacing: 0.3 }}>TOP 100</Text>
                   <Text style={{ color: C.text2, fontSize: 11, marginTop: 3 }}>The songs moving the culture.</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 7 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: top100Snapshot ? "#59C98A" : catalogueSource === "live" ? "#B8C0CC" : "#E5C158" }} /><Text style={{ color: catalogueSource === "live" ? "#B8C0CC" : "#E5C158", fontSize: 9, fontWeight: "800", letterSpacing: 0.7 }}>{top100Snapshot ? "VERIFIED CHART SNAPSHOT · NIGERIA" : catalogueSource !== "live" ? "PREVIEW MODE · NOT OFFICIAL RANKINGS" : chartMetadataAvailable ? "LIVE CATALOGUE · CHART METADATA FOUND" : "CATALOGUE CONNECTED · CHART DATA PENDING"}</Text></View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 7 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: top100Snapshot ? "#59C98A" : catalogueSource === "live" ? "#B8C0CC" : "#E5C158" }} /><Text style={{ color: catalogueSource === "live" ? "#B8C0CC" : "#E5C158", fontSize: 9, fontWeight: "800", letterSpacing: 0.7 }}>{top100Snapshot ? "VERIFIED CHART SNAPSHOT · NIGERIA" : catalogueSource === "live" ? "CATALOGUE CONNECTED · CHART DATA PENDING" : "PREVIEW MODE · NOT OFFICIAL RANKINGS"}</Text></View>
                 </View>
               </View>
               <View style={{ height: 1, backgroundColor: C.border, marginTop: 14, marginBottom: 10 }} />
