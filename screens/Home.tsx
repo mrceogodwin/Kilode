@@ -158,7 +158,7 @@ export function HomeScreen({
         {featuredCards.map((card, index) => (
           <TouchableOpacity key={card.kind} activeOpacity={0.9} onPress={card.onPress}
             style={{ width: 0.88 * require("react-native").Dimensions.get("window").width, height: 158, marginRight: 10, borderRadius: 15, overflow: "hidden", borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
-            {card.image ? <Image source={{ uri: card.image }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" /> : <LinearGradient colors={["#20392B", "#17191D", "#101116"]} style={{ position: "absolute", width: "100%", height: "100%" }} />}
+            {card.image ? <Image source={{ uri: card.image }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" /> : <LinearGradient colors={["#3A3020", "#1B1A18", "#101116"]} style={{ position: "absolute", width: "100%", height: "100%" }} />}
             <LinearGradient colors={["rgba(0,0,0,0.04)", "rgba(0,0,0,0.86)"]} style={{ position: "absolute", width: "100%", height: "100%" }} />
             <View style={{ flex: 1, justifyContent: "flex-end", padding: 16 }}>
               <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{card.kind.toUpperCase()}  ·  FEATURED</Text>
@@ -178,15 +178,14 @@ export function HomeScreen({
       </ScrollView>
 
       {/* One horizontal rail; the remaining systems are reachable by swiping. */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 4, gap: 12 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 12, paddingBottom: 5, gap: 8 }}>
         {SYSTEMS.map((item) => {
           const active = item.id === system;
-          return <TouchableOpacity key={item.id} onPress={() => goSystem(item.id)}
-            style={{ width: 66, alignItems: "center", gap: 5 }}>
-            <View style={{ width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", backgroundColor: active ? C.accent + "20" : C.elevated, borderWidth: active ? 2 : 1, borderColor: active ? C.accent : C.border }}>
-              <Ionicons name={item.icon} size={23} color={active ? C.accent : C.text2} />
-            </View>
-            <Text style={{ color: active ? C.accent : C.text2, fontSize: 10, fontWeight: active ? "800" : "500" }} numberOfLines={1}>{item.label}</Text>
+          return <TouchableOpacity key={item.id} onPress={() => goSystem(item.id)} activeOpacity={0.82}
+            accessibilityRole="button" accessibilityLabel={`Open ${item.label}`}
+            style={{ width: 92, minHeight: 68, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 13, alignItems: "flex-start", justifyContent: "space-between", backgroundColor: active ? C.accent + "18" : C.card, borderWidth: active ? 1.5 : 1, borderColor: active ? C.accent : C.border }}>
+            <Ionicons name={item.icon} size={19} color={active ? C.accent : C.text2} />
+            <Text style={{ color: active ? C.accent : C.text, fontSize: 11, fontWeight: active ? "800" : "600" }} numberOfLines={1}>{item.label}</Text>
           </TouchableOpacity>;
         })}
       </ScrollView>
@@ -303,7 +302,7 @@ export function HomeScreen({
         <View style={{ marginHorizontal: 12, padding: 20, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, alignItems: "center" }}>
           <Ionicons name="sparkles-outline" size={25} color={C.accent} />
           <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 8 }}>{system === "all" ? "Your Kilode feed starts here" : "Nothing here yet"}</Text>
-          <Text style={{ color: C.text3, fontSize: 12, textAlign: "center", marginTop: 5, lineHeight: 17 }}>New content published by each architecture will appear here automatically when its feed is connected.</Text>
+          <Text style={{ color: C.text3, fontSize: 12, textAlign: "center", marginTop: 5, lineHeight: 17 }}>Explore a system above to get started.</Text>
         </View>
       )}
     </ScrollView>
