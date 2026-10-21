@@ -282,6 +282,34 @@ function KilodeApp() {
           </TouchableOpacity>
         ))}
       </ScrollView>
+      {takes.length > 0 ? (
+        <View style={{ marginTop: 8 }}>
+          <View style={[s.sectionHead, { marginBottom: 8 }]}>
+            <View>
+              <Text style={s.sectionTitle}>From Socials</Text>
+              {takesSource !== "live" ? <Text style={[s.meta, { marginTop: 2 }]}>Preview content · not live</Text> : null}
+            </View>
+            <TouchableOpacity onPress={() => go("socials")}><Text style={s.link}>See all</Text></TouchableOpacity>
+          </View>
+          {takes.slice(0, 2).map((take: any) => (
+            <TouchableOpacity
+              key={String(take.id)}
+              onPress={() => { setSelectedPost(take); go("socials"); }}
+              accessibilityRole="button"
+              style={{ marginHorizontal: 14, marginBottom: 8, padding: 13, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                <View style={[s.postAv, { width: 30, height: 30, borderRadius: 15, marginRight: 8 }]}><Text style={s.avatarText}>{String(take.name || "?").slice(0, 1)}</Text></View>
+                <View style={s.flex}>
+                  <Text style={[s.postName, { fontSize: 12 }]} numberOfLines={1}>{take.name || "Kilode member"}</Text>
+                  <Text style={[s.meta, { fontSize: 10 }]} numberOfLines={1}>@{take.handle || "member"} · {take.time || "recent"}</Text>
+                </View>
+              </View>
+              <Text style={{ color: C.text, fontSize: 13, lineHeight: 18 }} numberOfLines={2}>{take.text || take.body || ""}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
       <>
         <View style={s.sectionHead}>
           <Text style={s.sectionTitle}>Explore Kilode</Text>
