@@ -1,19 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { Modal, View, Text, TouchableOpacity, Image, StatusBar } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { toggleMusicPlayback } from "../lib/musicPlayer";
+import { toggleMusicPlayback, seekMusicPlayback } from "../lib/musicPlayer";
 
 type Props = {
   visible: boolean;
   track: any;
   playing: boolean;
   C: any;
-  onClose: () => void;
+  onClose: () => void;\n  positionMillis: number;\n  durationMillis: number;
 };
 
-export function MusicFullPlayer({ visible, track, playing, C, onClose }: Props) {
+export function MusicFullPlayer({ visible, track, playing, C, onClose, positionMillis, durationMillis }: Props) {\n  const [progressWidth, setProgressWidth] = useState(1);
   if (!track) return null;
-  const artwork = track.artworkUrl || track.artwork_url || track.coverUrl || track.cover_url || track.image;
+  const artwork = track.artworkUrl || track.artwork_url || track.coverUrl || track.cover_url || track.image;\n  const formatTime = (ms: number) => { const total = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`; };
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D10" />
@@ -57,7 +57,7 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose }: Props) 
             <TouchableOpacity accessibilityRole="button" accessibilityLabel="Next track" onPress={() => {}} style={{ padding: 10 }}><Ionicons name="play-skip-forward" size={27} color="#FFFFFF" /></TouchableOpacity>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel="Repeat" onPress={() => {}} style={{ padding: 10 }}><Ionicons name="repeat" size={22} color="#9A9A9E" /></TouchableOpacity>
           </View>
-          <Text style={{ color: "#9A9A9E", fontSize: 11, textAlign: "center", marginTop: 22 }}>Playback controls are available on this device. Track seeking, queue and skip logic are still to be connected.</Text>
+          <Text style={{ color: "#9A9A9E", fontSize: 11, textAlign: "center", marginTop: 22 }}>KILODE · YOUR SOUND, YOUR SPACE</Text>
         </View>
       </View>
     </Modal>
