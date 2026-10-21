@@ -157,12 +157,12 @@ export function HomeScreen({
       <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 4 }}>
         {featuredCards.map((card, index) => (
           <TouchableOpacity key={card.kind} activeOpacity={0.9} onPress={card.onPress}
-            style={{ width: 0.94 * require("react-native").Dimensions.get("window").width, height: 174, marginRight: 10, borderRadius: 15, overflow: "hidden", borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
+            style={{ width: 0.88 * require("react-native").Dimensions.get("window").width, height: 158, marginRight: 10, borderRadius: 15, overflow: "hidden", borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated }}>
             {card.image ? <Image source={{ uri: card.image }} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" /> : <LinearGradient colors={["#20392B", "#17191D", "#101116"]} style={{ position: "absolute", width: "100%", height: "100%" }} />}
             <LinearGradient colors={["rgba(0,0,0,0.04)", "rgba(0,0,0,0.86)"]} style={{ position: "absolute", width: "100%", height: "100%" }} />
             <View style={{ flex: 1, justifyContent: "flex-end", padding: 16 }}>
               <Text style={{ color: C.accent, fontSize: 10, fontWeight: "800", letterSpacing: 1 }}>{card.kind.toUpperCase()}  ·  FEATURED</Text>
-              <Text style={{ color: "#FFFFFF", fontSize: 23, lineHeight: 28, fontWeight: "800", marginTop: 5 }} numberOfLines={2}>{card.title}</Text>
+              <Text style={{ color: "#FFFFFF", fontSize: 20, lineHeight: 24, fontWeight: "800", marginTop: 5 }} numberOfLines={2}>{card.title}</Text>
               <Text style={{ color: "#F0F0F0", fontSize: 12, marginTop: 3 }} numberOfLines={1}>{card.sub}</Text>
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 9 }}>
                 <View style={{ backgroundColor: C.accent, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 6 }}>
