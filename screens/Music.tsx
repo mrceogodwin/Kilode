@@ -204,7 +204,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     return (
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
         <View style={s.padH}>
-          <TouchableOpacity onPress={() => setActiveTrack(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
+          <TouchableOpacity onPress={() => setActiveTrack(null)} style={{ marginBottom: 12 }} accessibilityRole="button" accessibilityLabel="Back to Music catalogue">
             <Text style={s.link}>‹ Back to Music</Text>
           </TouchableOpacity>
           <View style={{ height: 220, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
@@ -218,6 +218,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
             onPress={() => void togglePlayback(activeTrack)}
             disabled={playbackBusy || (catalogueSource !== "live" && !hasPlayableAudioSource(activeTrack))}
             accessibilityRole="button"
+            accessibilityLabel={playbackBusy ? "Loading track audio" : isPlaying ? `Pause ${activeTrack.title}` : catalogueSource !== "live" && !hasPlayableAudioSource(activeTrack) ? "Audio unavailable for this track" : `Play ${activeTrack.title}`}
+            accessibilityState={{ disabled: playbackBusy || (catalogueSource !== "live" && !hasPlayableAudioSource(activeTrack)), busy: playbackBusy }}
           >
             <Ionicons name={isPlaying ? "pause" : "play"} size={17} color="#fff" />
             <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>
@@ -241,7 +243,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     return (
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
         <View style={s.padH}>
-          <TouchableOpacity onPress={() => setActiveArtist(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
+          <TouchableOpacity onPress={() => setActiveArtist(null)} style={{ marginBottom: 12 }} accessibilityRole="button" accessibilityLabel="Back to Music catalogue">
             <Text style={s.link}>‹ Back to Music</Text>
           </TouchableOpacity>
           <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: activeArtist.color || C.accent, alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
@@ -251,7 +253,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
           <Text style={s.sub}>{activeArtist.meta}</Text>
           <View style={s.sectionHead}><Text style={s.sectionTitle}>Tracks</Text></View>
           {artistTracks.length ? artistTracks.map((t: any) => (
-            <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)}>
+            <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)} accessibilityRole="button" accessibilityLabel={`Open ${t.title} by ${t.artist || "Kilode artist"}`}>
               <Ionicons name="musical-note" size={20} color={C.accent} />
               <View style={[s.flex, { marginLeft: 12 }]}><Text style={s.roomName}>{t.title}</Text><Text style={s.meta}>{t.artist}</Text></View>
               <Ionicons name="chevron-forward" size={18} color={C.text3} />
