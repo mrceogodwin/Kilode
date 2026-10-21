@@ -81,7 +81,7 @@ function onStatus(status: AVPlaybackStatus) {
     }
     return;
   }
-  isPlaying = status.isPlaying;
+  positionMillis = status.positionMillis;\n  durationMillis = status.durationMillis || 0;\n  isPlaying = status.isPlaying;
   if (status.didJustFinish) {
     isPlaying = false;
   }
