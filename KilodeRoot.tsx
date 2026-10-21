@@ -7,7 +7,7 @@ import {
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
-import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
+import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake, getMusicPlayback, recordMusicEvent } from "./lib/api";
 import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback, playMusicTrack, seekMusicPlayback, setMusicRepeat } from "./lib/musicPlayer";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
@@ -57,6 +57,7 @@ function KilodeApp() {
   const [rooms, setRooms] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
+  const [tracksSource, setTracksSource] = useState<"live" | "mock" | "error">("error");
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
@@ -119,20 +120,47 @@ function KilodeApp() {
   }, []);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
+  const playQueueTrack = async (track: any) => {
+    let playableTrack = track;
+    if (tracksSource === "live") {
+      if (!track?.id || !session?.token) {
+        show("Sign in to get a secure Kilode playback link.");
+        return;
+      }
+      const playback = await getMusicPlayback(session.token, String(track.id));
+      if (!playback.ok || !playback.data?.url || !/^https:\/\//i.test(playback.data.url)) {
+        show(playback.error || "Kilode could not create a secure playback link for this track.");
+        return;
+      }
+      playableTrack = { ...track, audioUrl: playback.data.url, audio_url: undefined, streamUrl: undefined, stream_url: undefined, previewUrl: undefined, preview_url: undefined };
+    }
+    const result = await playMusicTrack(playableTrack);
+    if (!result.ok) {
+      show(result.message || "This track cannot be played yet.");
+      return;
+    }
+    if (tracksSource === "live" && track?.id && session?.token) {
+      void recordMusicEvent(session.token, String(track.id), "play_started");
+    }
+    setMusicPlayerExpanded(true);
+  };
+
   const playAdjacentTrack = async (direction: -1 | 1) => {
-    const playable = tracks.filter((item: any) => Boolean(item.audioUrl || item.audio_url || item.streamUrl || item.stream_url || item.previewUrl || item.preview_url));
+    const playable = tracks.filter((item: any) => tracksSource === "live"
+      ? Boolean(item.id)
+      : Boolean(item.audioUrl || item.audio_url || item.streamUrl || item.stream_url || item.previewUrl || item.preview_url));
     if (!playable.length) { show("More playable Kilode tracks are needed for the queue."); return; }
     const currentIndex = playable.findIndex((item: any) => String(item.id ?? item.title) === String(nowPlaying?.id ?? nowPlaying?.title));
     let nextIndex: number;
     if (musicShuffle && direction === 1) {
       const choices = playable.filter((_: any, index: number) => index !== currentIndex);
       const next = choices[Math.floor(Math.random() * choices.length)];
-      if (!next) { await playMusicTrack(playable[0]); return; }
-      await playMusicTrack(next);
+      if (!next) { await playQueueTrack(playable[0]); return; }
+      await playQueueTrack(next);
       return;
     }
     nextIndex = currentIndex < 0 ? (direction === 1 ? 0 : playable.length - 1) : (currentIndex + direction + playable.length) % playable.length;
-    await playMusicTrack(playable[nextIndex]);
+    await playQueueTrack(playable[nextIndex]);
   };
   const toggleMusicShuffle = () => setMusicShuffle((value) => !value);
   const toggleMusicRepeat = () => setMusicRepeatState((value) => {
@@ -153,6 +181,7 @@ function KilodeApp() {
     setRooms(Array.isArray(r.data) ? r.data : []);
     setNews(Array.isArray(n.data) ? n.data : []);
     setTracks(Array.isArray(tr.data) ? tr.data : []);
+    setTracksSource(tr.source);
     setActivity(Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr, a].map((x) => x.source);
     const nextSource = sources.every((value) => value === "live")
