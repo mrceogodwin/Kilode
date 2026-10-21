@@ -84,9 +84,13 @@ function KilodeApp() {
     setTracks(Array.isArray(tr.data) ? tr.data : []);
     setActivity(Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
-    if (sources.some((s) => s === "live")) setSource("live");
-    else if (sources.every((s) => s === "error")) setSource("error");
-    else setSource("mock");
+    const nextSource = sources.some((value) => value === "live")
+      ? "live"
+      : sources.every((value) => value === "error")
+        ? "error"
+        : "mock";
+    setSource(nextSource);
+    return { feedSource: t.source, appSource: nextSource };
   }, []);
 
   useEffect(() => {
@@ -100,7 +104,17 @@ function KilodeApp() {
     return () => { cancelled = true; };
   }, [loadAll]);
 
-  const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Backend offline · seed" : "Refreshed"); };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const result = await loadAll();
+      show(result.appSource === "error" ? "Backend unavailable · preview content" : result.feedSource === "live" ? "Feed updated" : "Preview refreshed");
+    } catch {
+      show("Refresh failed · try again");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (boot || authLoading) {
     return (
