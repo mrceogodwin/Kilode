@@ -170,7 +170,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
           <TouchableOpacity onPress={() => setActiveTrack(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
             <Text style={s.link}>‹ Back to Music</Text>
           </TouchableOpacity>
-          <View style={{ height: 220, borderRadius: 20, backgroundColor: activeTrack.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+          <View style={{ height: 220, borderRadius: 20, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
             <Ionicons name="musical-notes" size={56} color="#fff" />
           </View>
           <Text style={s.h1}>{activeTrack.title}</Text>
@@ -324,14 +324,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
             {shelf.tracks.map((track: any) => (
               <TouchableOpacity
                 key={musicTrackIdentity(track)}
-                style={[s.trackCard, { backgroundColor: track.color || C.accent }]}
+                style={[s.trackCard, { backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]}
                 onPress={() => selectTrack(track)}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${track.title} from ${shelf.title}`}
               >
-                <Ionicons name="headset-outline" size={18} color="#fff" style={{ marginBottom: 6 }} />
-                <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
-                <Text style={s.trackArtist} numberOfLines={1}>{track.artist || "Kilode artist"}</Text>
+                <Ionicons name="headset-outline" size={18} color={C.accent} style={{ marginBottom: 6 }} />
+                <Text style={[s.trackTitle, { color: C.text }]} numberOfLines={1}>{track.title}</Text>
+                <Text style={[s.trackArtist, { color: C.text2 }]} numberOfLines={1}>{track.artist || "Kilode artist"}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -376,16 +376,16 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               {newTracks.map((t: any) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
+                  style={[s.trackCard, { backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]}
                   onPress={() => selectTrack(t)}
                   accessibilityRole="button"
                   accessibilityLabel={`Select ${t.title}`}
                 >
-                  <Ionicons name="play" size={18} color="#fff" style={{ marginBottom: 6 }} />
-                  <Text style={s.trackTitle} numberOfLines={1}>
+                  <Ionicons name="play" size={18} color={C.accent} style={{ marginBottom: 6 }} />
+                  <Text style={[s.trackTitle, { color: C.text }]} numberOfLines={1}>
                     {t.title}
                   </Text>
-                  <Text style={s.trackArtist} numberOfLines={1}>
+                  <Text style={[s.trackArtist, { color: C.text2 }]} numberOfLines={1}>
                     {t.artist}
                   </Text>
                 </TouchableOpacity>
