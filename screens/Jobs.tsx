@@ -18,14 +18,8 @@ type Props = { s: any; C: any; onBack: () => void; show: (m: string) => void; ac
 
 const FILTERS = ["All", "Full-time", "Part-time", "Remote"];
 
-export const JOBS: Job[] = [
-  { id: "j1", title: "Frontend Developer", company: "Paystack Labs", location: "Lagos, Nigeria", type: "Full-time", salary: "₦250k – ₦400k/month", color: "#D4AF37", tags: ["React", "TypeScript"] },
-  { id: "j2", title: "Marketing Executive", company: "Flutterwave", location: "Lagos, Nigeria", type: "Full-time", salary: "₦150k – ₦250k/month", color: "#B89A55", tags: ["Growth", "Brand"] },
-  { id: "j3", title: "UI/UX Designer", company: "Kuda Bank", location: "Remote", type: "Full-time", salary: "₦200k – ₦350k/month", color: "#8A8A8F", tags: ["Figma", "Product"] },
-  { id: "j4", title: "Business Analyst", company: "Interswitch", location: "Abuja, Nigeria", type: "Full-time", salary: "₦180k – ₦300k/month", color: "#E5C158", tags: ["Data", "Strategy"] },
-  { id: "j5", title: "Content Writer", company: "Kilode Media", location: "Abuja, Nigeria", type: "Part-time", salary: "Contract", color: "#6F6F75", tags: ["Editorial"] },
-  { id: "j6", title: "React Native Engineer", company: "Andela", location: "Remote", type: "Full-time", salary: "₦400k – ₦650k/month", color: "#E5C158", tags: ["Expo", "iOS"] },
-];
+// Do not ship invented sample vacancies as live jobs. The screen only renders backend-provided rows.
+export const JOBS: Job[] = [];
 
 export function JobsScreen({ s, C, onBack, show, accountKind, jobs }: Props) {
   const [filter, setFilter] = useState("All");
@@ -36,7 +30,7 @@ export function JobsScreen({ s, C, onBack, show, accountKind, jobs }: Props) {
   const canApply = can(accountKind, "jobs_apply");
 
   const list = useMemo(() => {
-    let rows = jobs ?? JOBS;
+    let rows = jobs ?? [];
     if (filter === "Full-time") rows = rows.filter((j) => j.type === "Full-time");
     if (filter === "Part-time") rows = rows.filter((j) => j.type === "Part-time");
     if (filter === "Remote") rows = rows.filter((j) => /remote/i.test(j.location));
@@ -163,8 +157,13 @@ export function JobsScreen({ s, C, onBack, show, accountKind, jobs }: Props) {
       ))}
 
       {list.length === 0 ? (
-        <View style={{ padding: 40, alignItems: "center" }}>
-          <Text style={{ color: C.text2 }}>No roles match this filter.</Text>
+        <View style={{ padding: 32, alignItems: "center" }}>
+          <Ionicons name="briefcase-outline" size={24} color={C.text3} />
+          <Text style={{ color: C.text2, textAlign: "center", marginTop: 10, lineHeight: 19 }}>
+            {jobs && jobs.length > 0
+              ? "No roles match this filter."
+              : "No live job listings are available yet. Check back when employers publish roles."}
+          </Text>
         </View>
       ) : null}
     </ScrollView>
