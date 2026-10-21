@@ -175,8 +175,17 @@ function KilodeApp() {
 
   useEffect(() => {
     // Advance the queue after natural completion, using the same secure playback
-    // path as manual next/previous controls.
+    // path as manual next/previous controls. A one-track queue must end rather
+    // than repeatedly restarting the same finished track forever.
     setMusicTrackFinishedHandler(() => {
+      const playableCount = tracks.filter((item: any) => tracksSource === "live"
+        ? Boolean(item.id)
+        : Boolean(item.audioUrl || item.audio_url || item.streamUrl || item.stream_url || item.previewUrl || item.preview_url)).length;
+      if (playableCount <= 1) {
+        void stopMusicPlayback();
+        setMusicPlayerExpanded(false);
+        return;
+      }
       void playAdjacentTrack(1);
     });
     return () => setMusicTrackFinishedHandler(null);
