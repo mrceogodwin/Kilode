@@ -2,7 +2,7 @@
 
 **Account:** https://expo.dev/accounts/mudino  
 **Native repo:** https://github.com/mrceogodwin/Kilode  
-**Website/API:** https://github.com/mrceogodwin/Kilode-v2 (Vercel — not EAS)
+**Web preview:** Vercel is a visual mirror only; it is not the native app backend.
 
 Grok cannot log into Expo. Run everything below on your machine.
 
@@ -60,19 +60,20 @@ Bundle ID / package: `ng.kilode.app`
 eas credentials
 ```
 
-## Website
+## Native backend and web preview
 
-Do not deploy this repo on Vercel as Kilode web. Website + `/api/mobile/*` stay on **Kilode-v2**.
+- The source of truth is the Expo React Native app in this repository.
+- Vercel may host a visual preview/export, but it is not proof of native iOS behavior and is not the native system of record.
+- Native backend configuration is explicit: `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` for the dedicated Supabase project, or `EXPO_PUBLIC_API_URL` for a deliberately configured custom API.
+- Do **not** point the native app at `kilode-nine.vercel.app` or Kilode-v2. Without dedicated backend environment variables, the app resolves to offline/local mode; do not describe seeded data as live.
 
 
-## Current verified status (2026-10-19)
+## Previously reported status (2026-10-19 — superseded)
 
-- The native repo is `mrceogodwin/Kilode`, branch `preview/web`.
-- TypeScript and Expo Doctor pass in the build environment; iOS and web JavaScript bundles export successfully.
-- This is **not** a completed native iOS binary build.
-- `app.json` still has an empty `extra.eas.projectId`. The automated build environment is not logged in to Expo.
-- The native API host is `https://kilode-v2.vercel.app`; its health endpoint currently reports `ready: false` because the persistent database and explicit production auth credentials are missing.
-- The browser preview is the same React Native screen code exported for web; it is not an iPhone simulator or proof of native-device behavior.
+The notes below are historical and must not be used as current configuration: they referred to an empty EAS project ID and Kilode-v2 as the native API. The current `app.json` contains EAS project ID `b9f2e786-665d-46e5-9a7c-7af7ab25e0ea`; `lib/config.ts` specifies dedicated Supabase/custom API configuration and offline/local mode when those values are absent. The native app must not default to Kilode-v2 or Kilode Nine.
+
+- The browser preview is not an iPhone simulator or proof of native-device behavior.
+- A successful JavaScript bundle or TypeScript check is **not** a completed native iOS binary build.
 
 ## Automated iOS preview build
 
