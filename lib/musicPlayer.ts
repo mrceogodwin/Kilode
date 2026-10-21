@@ -306,8 +306,9 @@ export async function toggleMusicPlayback(): Promise<void> {
     publish();
   } catch {
     if (source !== sound) return;
-    isPlaying = false;
-    publish();
+    // Native status/play/pause failures can leave a stale sound object behind.
+    // Clear the active source so the UI can recover and the user can retry.
+    clearActiveSound(source);
   }
 }
 
