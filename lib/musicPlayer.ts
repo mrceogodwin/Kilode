@@ -18,6 +18,7 @@ let sound: Audio.Sound | null = null;
 let currentTrack: MusicTrack | null = null;
 let isPlaying = false;
 let isLoading = false;
+let playbackRequestId = 0;
 let positionMillis = 0;
 let durationMillis = 0;
 let repeatCurrentTrack = false;
@@ -102,6 +103,7 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
   if (isLoading) return { ok: false, message: "The player is preparing another track. Try again shortly." };
 
   isLoading = true;
+  const requestId = ++playbackRequestId;
   try {
     await configureAudioMode();
     if (sound && currentTrack && trackIdentity(currentTrack) === trackIdentity(track)) {
@@ -140,6 +142,15 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
       onStatus
     );
 
+    // A stop/close may have happened while the native source was loading.
+    // Dispose the late result instead of resurrecting playback after the user stopped it.
+    if (requestId !== playbackRequestId) {
+      created.sound.setOnPlaybackStatusUpdate(null);
+      await created.sound.stopAsync().catch(() => undefined);
+      await created.sound.unloadAsync().catch(() => undefined);
+      return { ok: false, message: "Playback was cancelled." };
+    }
+
     if (!created.status.isLoaded) {
       // createAsync can resolve with an unloaded status for some source failures.
       // Do not leave the UI believing a track started when the native player did not load it.
@@ -161,6 +172,9 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
     publish();
     return { ok: true };
   } catch {
+    if (requestId !== playbackRequestId) {
+      return { ok: false, message: "Playback was cancelled." };
+    }
     isPlaying = false;
     positionMillis = 0;
     durationMillis = 0;
@@ -215,6 +229,9 @@ export async function toggleMusicPlayback(): Promise<void> {
 }
 
 export async function stopMusicPlayback(): Promise<void> {
+  // Invalidate any source currently being prepared so its late completion
+  // cannot restart audio after this stop request.
+  playbackRequestId += 1;
   if (!sound) {
     currentTrack = null;
     isPlaying = false;
