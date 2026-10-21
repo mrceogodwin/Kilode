@@ -45,7 +45,7 @@ function KilodeApp() {
   const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [source, setSource] = useState<"live" | "mock" | "error">("mock");
+  const [source, setSource] = useState<"live" | "mock" | "error" | "mixed">("mock");
   const [takesSource, setTakesSource] = useState<"live" | "mock" | "error">("error");
   const [takes, setTakes] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
@@ -84,11 +84,13 @@ function KilodeApp() {
     setTracks(Array.isArray(tr.data) ? tr.data : []);
     setActivity(Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
-    const nextSource = sources.some((value) => value === "live")
+    const nextSource = sources.every((value) => value === "live")
       ? "live"
       : sources.every((value) => value === "error")
         ? "error"
-        : "mock";
+        : sources.some((value) => value === "live")
+          ? "mixed"
+          : "mock";
     setSource(nextSource);
     return { feedSource: t.source, appSource: nextSource };
   }, []);
