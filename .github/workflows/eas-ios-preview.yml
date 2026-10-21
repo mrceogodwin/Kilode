@@ -1,4 +1,4 @@
-name: Kilode iOS EAS preview build
+name: Kilode iOS Simulator preview build
 
 on:
   workflow_dispatch:
@@ -7,12 +7,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: kilode-eas-ios-preview
+  group: kilode-eas-ios-simulator-preview
   cancel-in-progress: false
 
 jobs:
-  build-ios-preview:
-    name: Build signed iOS preview
+  build-ios-simulator-preview:
+    name: Build iOS Simulator preview
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -44,9 +44,9 @@ jobs:
           npx expo config --type public --json > /tmp/kilode-expo-config.json
           node -e 'const c=JSON.parse(require("node:fs").readFileSync("/tmp/kilode-expo-config.json", "utf8")); const id=c.extra?.eas?.projectId; if (!id || id !== process.env.EAS_PROJECT_ID) { console.error("Expo project ID is missing or does not match EAS_PROJECT_ID"); process.exit(1); } if (c.ios?.bundleIdentifier !== "ng.kilode.app") { console.error("Unexpected iOS bundle identifier"); process.exit(1); } console.log("Expo project ID and iOS bundle identifier verified.");'
 
-      - name: Build iOS preview on EAS
+      - name: Build iOS Simulator preview on EAS
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
           EXPO_PUBLIC_APP_ENV: preview
-        run: npx eas-cli build --platform ios --profile preview --non-interactive
+        run: npx eas-cli build --platform ios --profile ios-simulator-preview --non-interactive
