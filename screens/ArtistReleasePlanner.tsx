@@ -67,7 +67,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName, artistHan
   const field = (label: string, value: string, onChangeText: (v: string) => void, placeholder: string, multiline = false) => (
     <View style={{ marginTop: 15 }}>
       <Text style={{ color: C.text, fontSize: 12, fontWeight: "700", marginBottom: 7 }}>{label}</Text>
-      <TextInput value={value} onChangeText={(v) => { onChangeText(v); setSaved(false); }} placeholder={placeholder} placeholderTextColor={C.text3} multiline={multiline} autoCapitalize="sentences" style={{ color: C.text, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, minHeight: multiline ? 84 : 46, textAlignVertical: multiline ? "top" : "center" }} />
+      <TextInput value={value} onChangeText={(v) => { onChangeText(v); setSaved(false); }} accessibilityLabel={label} placeholder={placeholder} placeholderTextColor={C.text3} multiline={multiline} autoCapitalize="sentences" style={{ color: C.text, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, minHeight: multiline ? 84 : 46, textAlignVertical: multiline ? "top" : "center" }} />
     </View>
   );
   const saveDraft = async () => {
@@ -103,21 +103,21 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName, artistHan
         {field("Release title *", title, setTitle, "Enter your single or project title")}
         <Text style={{ color: C.text, fontSize: 12, fontWeight: "700", marginTop: 15, marginBottom: 7 }}>Release type</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          {["Single", "EP", "Album"].map((type) => <TouchableOpacity key={type} onPress={() => { setReleaseType(type); setSaved(false); }} style={{ flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center", borderWidth: 1, borderColor: releaseType === type ? C.accent : C.border, backgroundColor: releaseType === type ? C.elevated : C.card }}><Text style={{ color: releaseType === type ? C.accent : C.text2, fontWeight: "700", fontSize: 12 }}>{type}</Text></TouchableOpacity>)}
+          {["Single", "EP", "Album"].map((type) => <TouchableOpacity key={type} onPress={() => { setReleaseType(type); setSaved(false); }} accessibilityRole="radio" accessibilityLabel={`${type} release`} accessibilityState={{ selected: releaseType === type }} style={{ flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: "center", borderWidth: 1, borderColor: releaseType === type ? C.accent : C.border, backgroundColor: releaseType === type ? C.elevated : C.card }}><Text style={{ color: releaseType === type ? C.accent : C.text2, fontWeight: "700", fontSize: 12 }}>{type}</Text></TouchableOpacity>)}
         </View>
         {field("Genre *", genre, setGenre, "e.g. Afrobeats, Afro-drill")}
         {field("Planned release date", releaseDate, setReleaseDate, "YYYY-MM-DD")}
         {!dateValid ? <Text style={{ color: C.danger, fontSize: 11, marginTop: 5 }}>Enter the date in YYYY-MM-DD format.</Text> : null}
         {field("Credits & collaborators", credits, setCredits, "Producer, songwriter, featured artists…", true)}
         {field("Private planning notes", notes, setNotes, "Promotion ideas, tasks or reminders…", true)}
-        <TouchableOpacity disabled={saving} onPress={() => void saveDraft()} accessibilityRole="button" style={{ marginTop: 18, borderRadius: 12, backgroundColor: C.accent, paddingVertical: 13, alignItems: "center", opacity: saving ? 0.6 : 1 }}>
+        <TouchableOpacity disabled={saving} onPress={() => void saveDraft()} accessibilityRole="button" accessibilityLabel="Save release draft on this device" accessibilityState={{ disabled: saving, busy: saving }} style={{ marginTop: 18, borderRadius: 12, backgroundColor: C.accent, paddingVertical: 13, alignItems: "center", opacity: saving ? 0.6 : 1 }}>
           <Text style={{ color: "#0D0D10", fontWeight: "800" }}>{saving ? "Saving…" : saved ? "Draft saved ✓" : "Save release draft"}</Text>
         </TouchableOpacity>
       </View>
       {drafts.length > 0 ? <View style={{ marginTop: 22 }}>
         <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginBottom: 10 }}>Saved drafts on this device</Text>
         {drafts.map((draft, index) => <View key={`${draft.title}-${draft.releaseType}-${draft.updatedAt}-${index}`} style={{ padding: 13, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, marginBottom: 8 }}>
-          <TouchableOpacity onPress={() => loadDraft(draft)} accessibilityRole="button" style={{ paddingVertical: 2 }}>
+          <TouchableOpacity onPress={() => loadDraft(draft)} accessibilityRole="button" accessibilityLabel={`Load ${draft.title} release draft`} style={{ paddingVertical: 2 }}>
             <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{draft.title}</Text>
             <Text style={{ color: C.text2, fontSize: 11, marginTop: 4 }}>{draft.releaseType} · {draft.genre}{draft.releaseDate ? ` · ${draft.releaseDate}` : ""}</Text>
             <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 6 }}>Load draft</Text>
