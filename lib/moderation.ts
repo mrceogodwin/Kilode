@@ -1,7 +1,8 @@
 /**
- * Client-side report / block store (AsyncStorage).
- * Production moderation requires backend review queues — this meets
- * the in-app reporting + blocking UX Apple expects for UGC apps.
+ * Local-only report / block store (AsyncStorage).
+ * This is a development fallback, not production moderation: reports are
+ * not delivered to staff and blocks are not enforced across devices.
+ * Production requires authenticated server-side report queues and block rules.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
