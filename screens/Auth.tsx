@@ -7,6 +7,7 @@ import {
   Linking,
   SafeAreaView,
   StatusBar,
+  ImageBackground,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -27,6 +28,7 @@ type Props = {
 
 export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [mode, setMode] = useState<"in" | "up">("in");
+  const [showAuth, setShowAuth] = useState(false);
   const openLegal = (url: string, label: string) => {
     Linking.openURL(url).catch(() => show(`${label} is not available right now.`));
   };
@@ -57,6 +59,52 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
     loop.start();
     return () => loop.stop();
   }, [scale]);
+
+  if (!showAuth) {
+    return (
+      <SafeAreaView style={styles.welcomeRoot}>
+        <StatusBar barStyle="light-content" />
+        <ImageBackground
+          source={{ uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=90" }}
+          resizeMode="cover"
+          style={styles.welcomeHero}
+          imageStyle={styles.welcomeHeroImage}
+        >
+          <View style={styles.welcomeShade} />
+          <View style={styles.welcomeTop}>
+            <Text style={styles.welcomeLogo}>Kilode<Text style={styles.welcomeDot}>!</Text></Text>
+          </View>
+          <View style={[styles.featureCard, styles.featureMusic]}>
+            <Text style={styles.featureTitle}>♫  Music</Text>
+            <Text style={styles.featureHint}>New sounds. New vibes.</Text>
+          </View>
+          <View style={[styles.featureCard, styles.featureSocial]}>
+            <Text style={styles.featureTitle}>♧  Socials</Text>
+            <Text style={styles.featureHint}>Connect. Share. Belong.</Text>
+          </View>
+          <View style={[styles.featureCard, styles.featureMedia]}>
+            <Text style={styles.featureTitle}>▣  Media</Text>
+            <Text style={styles.featureHint}>Real stories. Fresh takes.</Text>
+          </View>
+          <View style={[styles.featureCard, styles.featureEvents]}>
+            <Text style={styles.featureTitle}>▦  Events</Text>
+            <Text style={styles.featureHint}>Be there. Feel it.</Text>
+          </View>
+        </ImageBackground>
+        <View style={styles.welcomeCopy}>
+          <Text style={styles.welcomeHeadline}>Everything You Need.</Text>
+          <Text style={styles.welcomeHeadlineGold}>One Platform.</Text>
+          <Text style={styles.welcomeDescription}>Discover, create, connect and be part of something bigger. Kilode brings your world together in one place.</Text>
+          <TouchableOpacity accessibilityRole="button" style={styles.welcomeCTA} onPress={() => { setMode("up"); setShowAuth(true); }}>
+            <Text style={styles.welcomeCTAText}>Get Started   →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" style={styles.welcomeLogin} onPress={() => { setMode("in"); setShowAuth(true); }}>
+            <Text style={styles.welcomeLoginText}>Already have an account?  <Text style={styles.welcomeLoginGold}>Log In</Text></Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root}>
@@ -204,6 +252,29 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 }
 
 const styles = StyleSheet.create({
+  welcomeRoot: { flex: 1, backgroundColor: "#080809" },
+  welcomeHero: { height: "57%", minHeight: 390, justifyContent: "flex-start", overflow: "hidden" },
+  welcomeHeroImage: { opacity: 0.78 },
+  welcomeShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(5,5,7,0.30)" },
+  welcomeTop: { alignItems: "center", paddingTop: Platform.OS === "ios" ? 30 : 24 },
+  welcomeLogo: { color: "#FFFFFF", fontSize: 58, fontWeight: "900", letterSpacing: -4, textShadowColor: "rgba(255,255,255,0.18)", textShadowRadius: 12, textShadowOffset: { width: 0, height: 2 } },
+  welcomeDot: { color: "#2DBB75", letterSpacing: -3 },
+  featureCard: { position: "absolute", width: 158, paddingHorizontal: 12, paddingVertical: 12, borderRadius: 18, backgroundColor: "rgba(15,15,17,0.82)", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
+  featureMusic: { left: 18, top: "31%", transform: [{ rotate: "-5deg" }] },
+  featureSocial: { right: 16, top: "42%", transform: [{ rotate: "4deg" }] },
+  featureMedia: { left: 16, bottom: "8%", transform: [{ rotate: "-4deg" }] },
+  featureEvents: { right: 16, bottom: "4%", transform: [{ rotate: "3deg" }] },
+  featureTitle: { color: "#F7F7F8", fontSize: 14, fontWeight: "700" },
+  featureHint: { color: "#C3C3C8", fontSize: 10, marginTop: 4 },
+  welcomeCopy: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24, paddingTop: 12, paddingBottom: 18 },
+  welcomeHeadline: { color: "#FAFAFA", fontSize: 29, fontWeight: "800", letterSpacing: -1.1, textAlign: "center" },
+  welcomeHeadlineGold: { color: "#E5C158", fontSize: 29, fontWeight: "800", letterSpacing: -1.1, textAlign: "center", marginTop: 1 },
+  welcomeDescription: { color: "#B7B7BE", fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 14, maxWidth: 340 },
+  welcomeCTA: { width: "100%", maxWidth: 380, marginTop: 24, backgroundColor: "#E5C158", borderRadius: 32, paddingVertical: 17, alignItems: "center" },
+  welcomeCTAText: { color: "#17130A", fontSize: 16, fontWeight: "800" },
+  welcomeLogin: { paddingVertical: 16, alignItems: "center" },
+  welcomeLoginText: { color: "#B7B7BE", fontSize: 13 },
+  welcomeLoginGold: { color: "#E5C158", fontWeight: "700" },
   root: { flex: 1, backgroundColor: "#0A0A0C" },
   bgPlate: { ...StyleSheet.absoluteFillObject, backgroundColor: "#120e0a" },
   warmBlob: {
