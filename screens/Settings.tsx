@@ -38,12 +38,21 @@ export function SettingsScreen({
   const [deleting, setDeleting] = useState(false);
 
   const confirmDelete = async () => {
+    if (deleting) return;
     setDeleting(true);
-    const r = await onDeleteAccount();
-    setDeleting(false);
-    setDeleteOpen(false);
-    if (r.ok) show("Account deleted");
-    else show(r.error || "Could not delete account");
+    try {
+      const r = await onDeleteAccount();
+      if (r.ok) {
+        setDeleteOpen(false);
+        show("Account deleted");
+      } else {
+        show(r.error || "Could not delete account. Please try again.");
+      }
+    } catch {
+      show("Could not delete account. Check your connection and try again.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const row = (label: string, onPress: () => void, danger?: boolean) => (
