@@ -49,6 +49,7 @@ export const CREATE = [
   { label: "Job", sub: "Post a role", icon: "💼", tab: "jobs" },
   { label: "Market", sub: "List a product", icon: "🛍️", tab: "market" },
   { label: "Event", sub: "Host something", icon: "📅", tab: "events" },
+  { label: "Push Link", sub: "Promote across platforms", icon: "↗", tab: "pushlink" },
 ];
 
 export const TAKES = [
