@@ -113,9 +113,20 @@ async function tryLiveJson<T>(
 
 function normalizeTakes(payload: any): any[] {
   if (Array.isArray(payload)) return payload;
-  if (payload && Array.isArray(payload.takes)) return payload.takes;
-  if (payload && Array.isArray(payload.data)) return payload.data;
+  if (!payload || typeof payload !== "object") return [];
+  if (Array.isArray(payload.takes)) return payload.takes;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (payload.data && typeof payload.data === "object") {
+    if (Array.isArray(payload.data.takes)) return payload.data.takes;
+    if (Array.isArray(payload.data.data)) return payload.data.data;
+  }
   return [];
+}
+
+function paginationPayload(payload: any): any {
+  if (payload?.pagination && typeof payload.pagination === "object") return payload;
+  if (payload?.data && typeof payload.data === "object") return payload.data;
+  return payload;
 }
 
 export async function fetchTakes(cursor?: string | null): Promise<ApiResult<any[]>> {
@@ -124,20 +135,25 @@ export async function fetchTakes(cursor?: string | null): Promise<ApiResult<any[
   const r = await tryLiveJson<any>(`/api/mobile/takes?${params.toString()}`, { takes: TAKES }, "listTakes");
   if (r.ok) {
     const list = normalizeTakes(r.data);
-    const nextCursor = typeof r.data?.nextCursor === "string"
-      ? r.data.nextCursor
-      : typeof r.data?.next_cursor === "string"
-        ? r.data.next_cursor
-        : typeof r.data?.pagination?.nextCursor === "string"
-          ? r.data.pagination.nextCursor
-          : null;
-    const hasMore = typeof r.data?.hasMore === "boolean"
-      ? r.data.hasMore
-      : typeof r.data?.has_more === "boolean"
-        ? r.data.has_more
-        : typeof r.data?.pagination?.hasMore === "boolean"
-          ? r.data.pagination.hasMore
-          : Boolean(nextCursor);
+    const page = paginationPayload(r.data);
+    const nextCursor = typeof page?.nextCursor === "string"
+      ? page.nextCursor
+      : typeof page?.next_cursor === "string"
+        ? page.next_cursor
+        : typeof page?.pagination?.nextCursor === "string"
+          ? page.pagination.nextCursor
+          : typeof page?.pagination?.next_cursor === "string"
+            ? page.pagination.next_cursor
+            : null;
+    const hasMore = typeof page?.hasMore === "boolean"
+      ? page.hasMore
+      : typeof page?.has_more === "boolean"
+        ? page.has_more
+        : typeof page?.pagination?.hasMore === "boolean"
+          ? page.pagination.hasMore
+          : typeof page?.pagination?.has_more === "boolean"
+            ? page.pagination.has_more
+            : Boolean(nextCursor);
     return {
       ok: true,
       data: list,
