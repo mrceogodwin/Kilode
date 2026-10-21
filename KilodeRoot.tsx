@@ -43,7 +43,7 @@ function KilodeApp() {
   const [posting, setPosting] = useState(false);
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
-  const [socialPrefsLoaded, setSocialPrefsLoaded] = useState(false);
+  const [socialPrefsLoadedFor, setSocialPrefsLoadedFor] = useState<string | null>(null);
   const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,7 +70,6 @@ function KilodeApp() {
 
   useEffect(() => {
     let active = true;
-    setSocialPrefsLoaded(false);
     AsyncStorage.getItem(socialPrefsKey).then((raw) => {
       if (!active) return;
       if (raw) {
@@ -89,17 +88,19 @@ function KilodeApp() {
     }).catch(() => {
       if (active) { setLiked({}); setFollowing({}); }
     }).finally(() => {
-      if (active) setSocialPrefsLoaded(true);
+      if (active) setSocialPrefsLoadedFor(socialPrefsKey);
     });
     return () => { active = false; };
   }, [socialPrefsKey]);
 
   useEffect(() => {
-    if (!socialPrefsLoaded) return;
+    // Do not write account A's in-memory preferences under account B's key
+    // during the render before B's AsyncStorage hydration has completed.
+    if (socialPrefsLoadedFor !== socialPrefsKey) return;
     AsyncStorage.setItem(socialPrefsKey, JSON.stringify({ liked, following })).catch(() => {
       // Local preferences are best-effort; server-backed engagement is not implemented yet.
     });
-  }, [following, liked, socialPrefsKey, socialPrefsLoaded]);
+  }, [following, liked, socialPrefsKey, socialPrefsLoadedFor]);
 
   useEffect(() => {
     const unsubscribe = subscribeMusicPlayer((track, playing) => {
