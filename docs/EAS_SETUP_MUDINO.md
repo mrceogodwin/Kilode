@@ -77,12 +77,12 @@ The notes below are historical and must not be used as current configuration: th
 
 ## Latest automated validation (2026-10-21)
 
-Commit `c2cc6763ef8e83eb1eb21844dd1a8ee7719cb2af` completed both GitHub Actions validation workflows successfully:
+Latest verified source commit: `bd3bb6a98358200c69c8746a75303949f62055ca` (`fix(auth): let saved sessions continue from launch screen`).
 
-- Native validation: TypeScript, Expo Doctor, iOS JavaScript export, and native artifact upload all passed. Artifact: `kilode-native-preview-c2cc6763ef8e83eb1eb21844dd1a8ee7719cb2af`.
-- Browser preview: TypeScript, Expo web export, entry-point verification, and web artifact upload all passed. Artifact: `kilode-expo-web-preview-c2cc6763ef8e83eb1eb21844dd1a8ee7719cb2af`.
-- These are validation/export results, **not** evidence of an installable iOS binary, physical-device testing, TestFlight availability, or live backend connectivity.
-
+- Native validation passed: TypeScript, Expo Doctor, iOS JavaScript export, and artifact upload. Artifact: `kilode-native-preview-bd3bb6a98358200c69c8746a75303949f62055ca` (3.2 MB; expires 2026-11-04). Run: https://github.com/mrceogodwin/Kilode/actions/runs/39682935669
+- Browser preview validation passed: TypeScript, Expo web export, entry-point verification, and artifact upload. Artifact: `kilode-expo-web-preview-bd3bb6a98358200c69c8746a75303949f62055ca` (2.4 MB; expires 2026-11-04). Run: https://github.com/mrceogodwin/Kilode/actions/runs/39682935718
+- The source now routes saved sessions through the native welcome screen on cold launch and provides a `Continue to Kilode` action.
+- These checks and artifacts are validation/export results, **not** evidence of an installable iOS binary, physical-device testing, TestFlight availability, or live backend connectivity. The requested ten-scene video-led welcome is still not implemented; the current hero remains a remote static portrait.
 ## Automated iOS preview build
 
 The manual GitHub Actions workflow is **Actions → Kilode native validation → Run workflow** (`.github/workflows/native-preview.yml`). Its default push run performs TypeScript, Expo Doctor and iOS JavaScript export checks. The `eas-ios-preview` job runs only on manual dispatch or when a commit message contains `[ios-build]`; it builds an installable iOS preview through EAS.
