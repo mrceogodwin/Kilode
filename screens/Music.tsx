@@ -85,23 +85,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     });
     return () => { active = false; };
   }, []);
-  const refreshTop100 = async () => {
+  const refreshTop100 = async (silent = false) => {
     if (chartRefreshing) return;
     setChartRefreshing(true);
     try {
       const result = await fetchTop100Chart("week", "NG");
       setTop100Snapshot(result.ok ? result.data : null);
-      if (!result.ok) show("The official Top 100 snapshot is unavailable right now. The catalogue preview remains separate.");
+      if (!result.ok && !silent) show("The official Top 100 snapshot is unavailable right now. The catalogue preview remains separate.");
     } catch {
       setTop100Snapshot(null);
-      show("Could not refresh the Top 100 chart. Please try again.");
+      if (!silent) show("Could not refresh the Top 100 chart. Please try again.");
     } finally {
       setChartRefreshing(false);
     }
   };
 
   useEffect(() => {
-    void refreshTop100();
+    void refreshTop100(true);
   }, []);
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
