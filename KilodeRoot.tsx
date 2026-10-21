@@ -152,8 +152,8 @@ function KilodeApp() {
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.padH}>
-        <Text style={s.h1}>Good morning</Text>
-        <Text style={s.sub}>{session.handle} · {session.kind}</Text>
+        <Text style={s.h1}>Kilode</Text>
+        <Text style={s.sub}>Everything happening, in one place</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
         {CAROUSEL_FALLBACK.map((c) => (
