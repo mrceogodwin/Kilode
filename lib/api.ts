@@ -323,11 +323,22 @@ type MusicUploadState = { uploadId: string; state: string; trackId?: string; tra
 async function normalizeMusicUploadState(result: ApiResult<MusicUploadState>): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
   if (!result.ok || !result.data) return result as ApiResult<{ uploadId: string; state: string; trackId?: string }>;
   const raw = result.data as MusicUploadState;
+  const state = typeof raw.state === "string" ? raw.state.trim() : "";
+  const trackIdRaw = typeof raw.trackId === "string" ? raw.trackId : typeof raw.track_id === "string" ? raw.track_id : "";
+  const trackId = trackIdRaw.trim();
+  if (!state) {
+    return {
+      ...result,
+      ok: false,
+      error: "Kilode returned an invalid upload status. Check the upload again before continuing.",
+    };
+  }
   return {
     ...result,
     data: {
       ...raw,
-      trackId: typeof raw.trackId === "string" ? raw.trackId : typeof raw.track_id === "string" ? raw.track_id : undefined,
+      state,
+      trackId: trackId || undefined,
     },
   };
 }
