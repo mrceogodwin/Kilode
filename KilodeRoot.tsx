@@ -844,13 +844,13 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         </View>
       </Modal>
 
-      <Modal visible={createOpen} transparent animationType="fade" onRequestClose={() => setCreateOpen(false)}>
-        <View style={[s.modalRoot, { justifyContent: "center", paddingHorizontal: 24 }]}>
+      <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
+        <View style={[s.modalRoot, { justifyContent: "flex-end", paddingHorizontal: 14, paddingBottom: 92 }]}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
-          <View style={[s.sheet, { width: "100%", maxWidth: 330, maxHeight: "56%", alignSelf: "center", borderRadius: 20, paddingTop: 14, paddingBottom: 18 }]}>
-            <Text style={{ color: C.text2, fontSize: 11, marginBottom: 10 }}>Quick create · choose one</Text>
+          <View style={[s.sheet, { width: "100%", maxWidth: 320, maxHeight: "38%", alignSelf: "center", borderRadius: 18, paddingTop: 10, paddingBottom: 12 }]}>
+            <Text style={{ color: C.text2, fontSize: 11, marginBottom: 6 }}>Quick create · choose one</Text>
             <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
+            <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu"><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
             <View style={s.deskGrid}>{CREATE.map((o) => (
               <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
                 <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
