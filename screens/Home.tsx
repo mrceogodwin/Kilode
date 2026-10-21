@@ -31,6 +31,8 @@ const SYSTEMS = [
 const iconFor = (kind: string): any => ({
   Socials: "people-outline", Media: "newspaper-outline", Music: "musical-notes-outline",
   Events: "calendar-outline", Market: "bag-handle-outline", Jobs: "briefcase-outline",
+  Communities: "people-circle-outline", Cinema: "film-outline", Creators: "videocam-outline",
+  Ads: "megaphone-outline", "My Space": "person-circle-outline",
 }[kind] || "apps-outline");
 
 function firstText(...values: any[]) {
@@ -89,11 +91,24 @@ export function HomeScreen({
   const searchResults = submittedSearch ? feed.filter((x) => [x.title, x.body, x.kind, x.sub].join(" ").toLowerCase().includes(submittedSearch.toLowerCase())).slice(0, 8) : [];
 
   // Four genuinely distinct feature slides; never render five decorative dots for one card.
+  const featuredContentCards = [
+    ...(tracks[0] ? [{ kind: "Music", title: firstText(tracks[0].title, "New release"), sub: firstText(tracks[0].artist, tracks[0].artist_name, "Music on Kilode"), image: firstText(tracks[0].imageUrl, tracks[0].coverUrl, tracks[0].cover_url), onPress: () => onPlayTrack(tracks[0]) }] : []),
+    ...(news[0] ? [{ kind: "Media", title: firstText(news[0].title, "Top story"), sub: firstText(news[0].kicker, news[0].author, "Latest from Media"), image: firstText(news[0].imageUrl, news[0].image_url, news[0].image), onPress: () => onOpenMedia(String(news[0].id)) }] : []),
+    ...(events[0] ? [{ kind: "Events", title: firstText(events[0].title, "What's happening"), sub: firstText(events[0].venue, events[0].meta, "Discover events"), image: firstText(events[0].imageUrl, events[0].image_url, events[0].cover_url), onPress: () => onOpenItem("Events", events[0]) }] : []),
+    ...(takes[0] ? [{ kind: "Socials", title: firstText(takes[0].text, takes[0].body, takes[0].name, "What's happening on Socials"), sub: firstText(takes[0].handle, takes[0].author?.name, "Community post"), image: firstText(takes[0].mediaUrl, takes[0].imageUrl, takes[0].image_url), onPress: () => onOpenPost(takes[0]) }] : []),
+  ];
+  const featureFallbacks = [
+    { kind: "Communities", title: "Find your people", sub: "Explore communities", onPress: () => onOpenSystem("communities") },
+    { kind: "Cinema", title: "Discover cinema", sub: "Explore films and trailers", onPress: () => onOpenSystem("cinema") },
+    { kind: "Creators", title: "Meet creators", sub: "Explore creator spaces", onPress: () => onOpenSystem("creators") },
+    { kind: "Market", title: "Explore Market", sub: "Discover listings", onPress: onOpenMarket },
+    { kind: "Jobs", title: "Explore Jobs", sub: "Discover opportunities", onPress: onOpenJobs },
+    { kind: "Ads", title: "Business & Ads", sub: "Explore business tools", onPress: () => onOpenSystem("creators") },
+    { kind: "My Space", title: "Your Kilode space", sub: "Open your workspace", onPress: () => onOpenSystem("myspace") },
+  ];
   const featuredCards = [
-    ...(tracks[0] ? [{ kind: "Music", raw: tracks[0], title: firstText(tracks[0].title, "New release"), sub: firstText(tracks[0].artist, tracks[0].artist_name, "Music on Kilode"), image: firstText(tracks[0].imageUrl, tracks[0].coverUrl, tracks[0].cover_url), onPress: () => onPlayTrack(tracks[0]) }] : []),
-    ...(news[0] ? [{ kind: "Media", raw: news[0], title: firstText(news[0].title, "Top story"), sub: firstText(news[0].kicker, news[0].author, "Latest from Media"), image: firstText(news[0].imageUrl, news[0].image_url, news[0].image), onPress: () => onOpenMedia(String(news[0].id)) }] : []),
-    ...(events[0] ? [{ kind: "Events", raw: events[0], title: firstText(events[0].title, "What's happening"), sub: firstText(events[0].venue, events[0].meta, "Discover events"), image: firstText(events[0].imageUrl, events[0].image_url, events[0].cover_url), onPress: () => onOpenItem("Events", events[0]) }] : []),
-    ...(takes[0] ? [{ kind: "Socials", raw: takes[0], title: firstText(takes[0].text, takes[0].body, takes[0].name, "What's happening on Socials"), sub: firstText(takes[0].handle, takes[0].author?.name, "Community post"), image: firstText(takes[0].mediaUrl, takes[0].imageUrl, takes[0].image_url), onPress: () => onOpenPost(takes[0]) }] : []),
+    ...featuredContentCards,
+    ...featureFallbacks.filter((fallback) => !featuredContentCards.some((card) => card.kind === fallback.kind)),
   ].slice(0, 4);
 
   const renderFeedCard = (item: any) => {
@@ -112,9 +127,7 @@ export function HomeScreen({
             <Text style={{ color: C.text, fontSize: 13, fontWeight: "700" }} numberOfLines={1}>{item.title}</Text>
             <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }}>{item.kind} · {item.sub}</Text>
           </View>
-          <TouchableOpacity onPress={() => show(item.kind + " options")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="ellipsis-horizontal" size={18} color={C.text3} />
-          </TouchableOpacity>
+
         </View>
         {wideImage ? (
           <>
