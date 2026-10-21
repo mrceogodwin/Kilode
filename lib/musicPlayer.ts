@@ -204,20 +204,24 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
 }
 
 export async function seekMusicPlayback(position: number): Promise<void> {
-  if (!sound || !Number.isFinite(position) || position < 0) return;
+  const source = sound;
+  if (!source || !Number.isFinite(position) || position < 0) return;
   try {
-    const status = await sound.getStatusAsync();
-    if (!status.isLoaded) return;
+    const status = await source.getStatusAsync();
+    if (source !== sound || !status.isLoaded) return;
 
     // Do not accidentally jump to 0 while the stream's duration is still unknown.
     const knownDuration = status.durationMillis ?? durationMillis;
     if (!Number.isFinite(knownDuration) || knownDuration <= 0) return;
 
     const next = Math.max(0, Math.min(Math.floor(position), knownDuration));
-    await sound.setPositionAsync(next);
+    await source.setPositionAsync(next);
+    // A next/stop action may replace the sound while native seeking is in flight.
+    if (source !== sound) return;
     // Read the native player's resulting position rather than assuming the seek
     // completed at the requested timestamp (some streams seek to a nearby point).
-    const updated = await sound.getStatusAsync();
+    const updated = await source.getStatusAsync();
+    if (source !== sound) return;
     if (updated.isLoaded) {
       positionMillis = updated.positionMillis;
       durationMillis = updated.durationMillis ?? knownDuration;
@@ -232,14 +236,23 @@ export async function seekMusicPlayback(position: number): Promise<void> {
 }
 
 export async function toggleMusicPlayback(): Promise<void> {
-  if (!sound) return;
+  const source = sound;
+  if (!source) return;
   try {
-    const status = await sound.getStatusAsync();
-    if (!status.isLoaded) return;
-    if (status.isPlaying) await sound.pauseAsync();
-    else if (status.didJustFinish) await sound.replayAsync();
-    else await sound.playAsync();
+    const status = await source.getStatusAsync();
+    if (source !== sound || !status.isLoaded) return;
+    if (status.isPlaying) await source.pauseAsync();
+    else if (status.didJustFinish) await source.replayAsync();
+    else await source.playAsync();
+    if (source !== sound) return;
+    const updated = await source.getStatusAsync();
+    if (source !== sound || !updated.isLoaded) return;
+    positionMillis = updated.positionMillis;
+    durationMillis = updated.durationMillis || 0;
+    isPlaying = updated.isPlaying;
+    publish();
   } catch {
+    if (source !== sound) return;
     isPlaying = false;
     publish();
   }
