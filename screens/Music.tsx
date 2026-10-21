@@ -84,6 +84,14 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
     ])
   ).values());
   const chartTracks = filteredTracks.slice(0, 10);
+  const newTracks = filteredTracks.filter((track: any) => {
+    const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
+    if (!rawDate) return false;
+    const timestamp = Date.parse(String(rawDate));
+    if (!Number.isFinite(timestamp)) return false;
+    const age = Date.now() - timestamp;
+    return age >= -86400000 && age <= 45 * 86400000;
+  });
   const visibleArtists = artists.filter((a: any) => a.name.toLowerCase().includes(search.trim().toLowerCase()));
 
   useEffect(() => {
@@ -201,7 +209,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.h1}>Music</Text>
-            <Text style={s.sub}>{catalogueSource === "live" ? "Drops · charts · artists · live catalogue" : catalogueSource === "loading" ? "Loading music catalogue…" : "Drops · charts · artists · preview catalogue"}</Text>
+            <Text style={s.sub}>{catalogueSource === "live" ? "Discover tracks · artists · live catalogue" : catalogueSource === "loading" ? "Loading music catalogue…" : "Discover tracks · artists · preview catalogue"}</Text>
           </View>
           {canUpload ? <TouchableOpacity onPress={() => setUploadOpen(true)} accessibilityRole="button" accessibilityLabel="Upload a music track" style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}><Ionicons name="cloud-upload-outline" size={21} color={C.accent} /></TouchableOpacity> : null}
         </View>
@@ -281,7 +289,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
       {tab === "new" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>New drops</Text>
+            <Text style={s.sectionTitle}>Recently released</Text>
           </View>
           {filteredTracks.length === 0 ? (
             <EmptyState
@@ -294,7 +302,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
             />
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
-              {filteredTracks.map((t: any) => (
+              {newTracks.map((t: any) => (
                 <TouchableOpacity
                   key={t.id}
                   style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
@@ -314,7 +322,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
             </ScrollView>
           )}
           <Text style={[s.meta, s.padH, { marginTop: 12 }]}>
-            Choose a track to view its details. Playback requires a valid audio URL from the catalogue.
+            Recent releases are based on catalogue release dates. Choose a track to view details; playback requires a valid audio URL or secure playback link.
           </Text>
         </>
       )}
