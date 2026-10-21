@@ -207,32 +207,6 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
         </View>
       </View>
 
-      {discoveryReady && discoveryShelves.map((shelf) => (
-        <View key={shelf.id} style={{ marginTop: 18 }}>
-          <View style={s.sectionHead}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.sectionTitle}>{shelf.title}</Text>
-              <Text style={[s.meta, { marginTop: 3 }]}>{shelf.subtitle}</Text>
-            </View>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
-            {shelf.tracks.map((track: any) => (
-              <TouchableOpacity
-                key={musicTrackIdentity(track)}
-                style={[s.trackCard, { backgroundColor: track.color || C.accent }]}
-                onPress={() => selectTrack(track)}
-                accessibilityRole="button"
-                accessibilityLabel={`Open ${track.title} from ${shelf.title}`}
-              >
-                <Ionicons name="headset-outline" size={18} color="#fff" style={{ marginBottom: 6 }} />
-                <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
-                <Text style={s.trackArtist} numberOfLines={1}>{track.artist || "Kilode artist"}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      ))}
-
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
         {(["new", "charts", "artists"] as const).map((t) => (
           <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
@@ -258,6 +232,33 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
           {search.length > 0 ? <TouchableOpacity onPress={() => setSearch("")} accessibilityRole="button" accessibilityLabel="Clear search"><Ionicons name="close-circle" size={17} color={C.text3} /></TouchableOpacity> : null}
         </View>
       </View>
+
+      {discoveryReady && tab === "new" && !search.trim() && discoveryShelves.map((shelf) => (
+        <View key={shelf.id} style={{ marginTop: 18 }}>
+          <View style={s.sectionHead}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.sectionTitle}>{shelf.title}</Text>
+              <Text style={[s.meta, { marginTop: 3 }]}>{shelf.subtitle}</Text>
+            </View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
+            {shelf.tracks.map((track: any) => (
+              <TouchableOpacity
+                key={musicTrackIdentity(track)}
+                style={[s.trackCard, { backgroundColor: track.color || C.accent }]}
+                onPress={() => selectTrack(track)}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${track.title} from ${shelf.title}`}
+              >
+                <Ionicons name="headset-outline" size={18} color="#fff" style={{ marginBottom: 6 }} />
+                <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+                <Text style={s.trackArtist} numberOfLines={1}>{track.artist || "Kilode artist"}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      ))}
+
 
       {tab === "new" && (
         <>
