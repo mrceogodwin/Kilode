@@ -11,7 +11,6 @@ import {
   Platform,
   ScrollView,
   useWindowDimensions,
-  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Video, ResizeMode } from "expo-av";
@@ -86,7 +85,6 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind | null>(null);
   const [busy, setBusy] = useState(false);
-  const [portraitFailed, setPortraitFailed] = useState(false);
 
   const submit = async () => {
     if (mode === "up" && !kind) {
@@ -389,7 +387,7 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   sceneTile: {
-    width: "18.6%",
+    width: "18%",
     height: "48%",
     borderRadius: 8,
     overflow: "hidden",
