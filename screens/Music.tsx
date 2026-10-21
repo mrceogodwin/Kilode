@@ -29,7 +29,7 @@ type Props = {
 };
 
 export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Props) {
-  const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
+  const [tab, setTab] = useState<"forYou" | "charts" | "new" | "artists">("forYou");
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState<any[]>(TRACKS as any[]);
   const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
@@ -208,10 +208,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-        {(["new", "charts", "artists"] as const).map((t) => (
+        {(["forYou", "charts", "new", "artists"] as const).map((t) => (
           <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
             <Text style={[s.chipText, tab === t && s.chipTextOn]}>
-              {t === "new" ? "New drops" : t === "charts" ? "Tracks" : "Artists"}
+              {t === "forYou" ? "For You" : t === "new" ? "New" : t === "charts" ? "Explore" : "Artists"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -233,7 +233,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
         </View>
       </View>
 
-      {discoveryReady && tab === "new" && !search.trim() && discoveryShelves.map((shelf) => (
+      {discoveryReady && tab === "forYou" && !search.trim() && discoveryShelves.map((shelf) => (
         <View key={shelf.id} style={{ marginTop: 18 }}>
           <View style={s.sectionHead}>
             <View style={{ flex: 1 }}>
@@ -259,6 +259,24 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
         </View>
       ))}
 
+
+      {tab === "forYou" && (
+        <View style={{ marginTop: 14, paddingHorizontal: 14 }}>
+          <Text style={s.sectionTitle}>Made for your next mood</Text>
+          <Text style={[s.meta, { marginTop: 5, lineHeight: 17 }]}>
+            Kilode shapes these picks on your device as you listen. Your listening history stays local in this first version.
+          </Text>
+          {!discoveryShelves.length ? (
+            <View style={{ marginTop: 16, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+              <Text style={{ color: C.text, fontSize: 15, fontWeight: "700" }}>Your sound starts here</Text>
+              <Text style={[s.meta, { marginTop: 6, lineHeight: 17 }]}>Explore a few tracks. Kilode will use your listening activity to shape your personal shelves.</Text>
+              <TouchableOpacity onPress={() => setTab("charts")} style={{ marginTop: 12, alignSelf: "flex-start" }}>
+                <Text style={s.link}>Explore music →</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        </View>
+      )}
 
       {tab === "new" && (
         <>
