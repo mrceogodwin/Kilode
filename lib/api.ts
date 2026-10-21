@@ -396,6 +396,31 @@ export async function fetchTop100Chart(
   if (!payload || typeof payload !== "object" || !Array.isArray(payload.entries)) {
     return { ok: false, data: null, source: "error", error: "Chart response is missing entries", fn: "getTop100Chart" };
   }
+  const chartId = String(payload.chartId ?? payload.chart_id ?? "").trim();
+  const responsePeriod = String(payload.period ?? "");
+  const responseRegion = String(payload.region ?? "").trim().toUpperCase();
+  const generatedAt = String(payload.generatedAt ?? payload.generated_at ?? "");
+  const windowStart = String(payload.windowStart ?? payload.window_start ?? "");
+  const windowEnd = String(payload.windowEnd ?? payload.window_end ?? "");
+  const methodologyVersion = String(payload.methodologyVersion ?? payload.methodology_version ?? "").trim();
+  if (
+    !chartId ||
+    responsePeriod !== period ||
+    responseRegion !== region.toUpperCase() ||
+    !Number.isFinite(Date.parse(generatedAt)) ||
+    !Number.isFinite(Date.parse(windowStart)) ||
+    !Number.isFinite(Date.parse(windowEnd)) ||
+    Date.parse(windowStart) >= Date.parse(windowEnd) ||
+    !methodologyVersion
+  ) {
+    return { ok: false, data: null, source: "error", error: "Chart snapshot metadata is incomplete or does not match the requested chart", fn: "getTop100Chart" };
+  }
+  if (Date.now() - Date.parse(generatedAt) > 48 * 60 * 60 * 1000 || Date.parse(generatedAt) > Date.now() + 5 * 60 * 1000) {
+    return { ok: false, data: null, source: "error", error: "Chart snapshot is stale or has a future timestamp", fn: "getTop100Chart" };
+  }
+  if (payload.entries.length > 100) {
+    return { ok: false, data: null, source: "error", error: "Chart snapshot exceeds 100 entries", fn: "getTop100Chart" };
+  }
   const seenIds = new Set<string>();
   const seenRanks = new Set<number>();
   const entries: Top100ChartEntry[] = [];
@@ -425,13 +450,13 @@ export async function fetchTop100Chart(
     source: "live",
     fn: "getTop100Chart",
     data: {
-      chartId: String(payload.chartId ?? payload.chart_id ?? ""),
-      period: payload.period,
-      region: String(payload.region ?? ""),
-      generatedAt: String(payload.generatedAt ?? payload.generated_at ?? ""),
-      windowStart: String(payload.windowStart ?? payload.window_start ?? ""),
-      windowEnd: String(payload.windowEnd ?? payload.window_end ?? ""),
-      methodologyVersion: String(payload.methodologyVersion ?? payload.methodology_version ?? ""),
+      chartId,
+      period,
+      region: responseRegion,
+      generatedAt,
+      windowStart,
+      windowEnd,
+      methodologyVersion,
       entries,
     },
   };
