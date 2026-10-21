@@ -613,7 +613,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
 
   const body = () => {
     if (artistEarningsOpen && session?.kind === "artist") return <ArtistEarningsScreen s={s} C={C} onBack={() => setArtistEarningsOpen(false)} />;
-    if (artistReleasePlannerOpen && session?.kind === "artist") return <ArtistReleasePlanner s={s} C={C} onBack={() => setArtistReleasePlannerOpen(false)} show={show} artistName={session?.name || session?.handle || "Artist"} />;
+    if (artistReleasePlannerOpen && session?.kind === "artist") return <ArtistReleasePlanner s={s} C={C} onBack={() => setArtistReleasePlannerOpen(false)} show={show} artistName={session?.name || session?.handle || "Artist"} artistHandle={session?.handle || "artist"} />;
     if (settingsOpen) return (
       <SettingsScreen
         s={s}
