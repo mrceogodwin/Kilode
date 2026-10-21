@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -55,8 +55,11 @@ export function CommentsSheet({
   const [loadingComments, setLoadingComments] = useState(false);
   const [sending, setSending] = useState(false);
   const commentStorageKey = `kilode:social-comments:${String(storageScope || "guest").toLowerCase()}:${String(takeId)}`;
+  const currentContextRef = useRef({ takeId, commentStorageKey });
+  currentContextRef.current = { takeId, commentStorageKey };
 
   useEffect(() => {
+    setSending(false);
     if (!visible || !takeId) {
       setDraft("");
       return;
@@ -214,6 +217,8 @@ export function CommentsSheet({
                 if (sending || loadingComments || !draft.trim()) return;
                 setSending(true);
                 const submittedText = draft.trim();
+                const submittedTakeId = takeId;
+                const submittedStorageKey = commentStorageKey;
                 let r;
                 try {
                   r = await postComment(takeId, submittedText, token ?? undefined);
@@ -222,6 +227,12 @@ export function CommentsSheet({
                   show("Comment could not be sent. Try again.");
                   return;
                 }
+                // The sheet may have switched to another post while the request was pending.
+                // Never append an old response into the newly selected post.
+                if (
+                  currentContextRef.current.takeId !== submittedTakeId ||
+                  currentContextRef.current.commentStorageKey !== submittedStorageKey
+                ) return;
                 if (!r.ok && r.error === "Dedicated Kilode API is not configured") {
                   // Explicit offline preview path: save locally, never imply this reached the server.
                   const nextComment: Comment = {
