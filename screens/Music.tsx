@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
+import { fetchTracks } from "../lib/api";
 import { EmptyState } from "../components/ui/EmptyState";
 
 type Props = {
@@ -29,9 +30,30 @@ const ARTISTS = [
 export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
   const [search, setSearch] = useState("");
+  const [tracks, setTracks] = useState<any[]>(TRACKS as any[]);
+  const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
+
+  useEffect(() => {
+    let active = true;
+    fetchTracks().then((result) => {
+      if (!active) return;
+      if (result.ok && Array.isArray(result.data)) {
+        setTracks(result.data);
+        setCatalogueSource("live");
+      } else {
+        // Keep the offline sample catalogue visible, but never label it as live.
+        setTracks(TRACKS as any[]);
+        setCatalogueSource("preview");
+      }
+    }).catch(() => {
+      if (!active) return;
+      setTracks(TRACKS as any[]);
+      setCatalogueSource("preview");
+    });
+    return () => { active = false; };
+  }, []);
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
-  const tracks = TRACKS || [];
   const filteredTracks = tracks.filter((t: any) => `${t.title || ""} ${t.artist || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
 
   const selectTrack = (t: any) => {
@@ -51,7 +73,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           </View>
           <Text style={s.h1}>{activeTrack.title}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
-          <Text style={[s.meta, { marginTop: 14 }]}>Track details · preview catalogue</Text>
+          <Text style={[s.meta, { marginTop: 14 }]}>Track details · {catalogueSource === "live" ? "live catalogue" : "preview catalogue"}</Text>
           <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={() => { onPlay(activeTrack); show("Track selected. Streaming audio is not connected yet."); }}>
             <Ionicons name="play" size={17} color="#fff" />
             <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Select track</Text>
@@ -109,7 +131,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.h1}>Music</Text>
-            <Text style={s.sub}>Drops · charts · artists · seed catalogue</Text>
+            <Text style={s.sub}>{catalogueSource === "live" ? "Drops · charts · artists · live catalogue" : catalogueSource === "loading" ? "Loading music catalogue…" : "Drops · charts · artists · preview catalogue"}</Text>
           </View>
         </View>
       </View>
@@ -148,7 +170,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           {filteredTracks.length === 0 ? (
             <EmptyState
               title={search ? "No matches" : "No tracks yet"}
-              body={search ? "Try another track or artist name." : "Catalogue will appear when the music API is live."}
+              body={search ? "Try another track or artist name." : "The live catalogue is empty or unavailable. Try again when the music service is connected."}
               textColor={C.text}
               mutedColor={C.text2}
               accentColor={C.accent}
