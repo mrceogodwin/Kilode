@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Palette } from "../themeStyles";
 
@@ -122,7 +122,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName, artistHan
             <Text style={{ color: C.text2, fontSize: 11, marginTop: 4 }}>{draft.releaseType} · {draft.genre}{draft.releaseDate ? ` · ${draft.releaseDate}` : ""}</Text>
             <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 6 }}>Load draft</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => void deleteDraft(draft)} accessibilityRole="button" accessibilityLabel={`Delete ${draft.title} release draft`} style={{ alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 4, marginTop: 4 }}>
+          <TouchableOpacity onPress={() => Alert.alert("Delete release draft?", `“${draft.title}” will be removed from this device. This cannot be undone.`, [{ text: "Cancel", style: "cancel" }, { text: "Delete draft", style: "destructive", onPress: () => void deleteDraft(draft) }])} accessibilityRole="button" accessibilityLabel={`Delete ${draft.title} release draft`} style={{ alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 4, marginTop: 4 }}>
             <Text style={{ color: C.danger, fontSize: 12, fontWeight: "700" }}>Delete draft</Text>
           </TouchableOpacity>
         </View>)}
