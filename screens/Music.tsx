@@ -127,9 +127,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
         })
         .filter((track): track is NonNullable<typeof track> => Boolean(track))
     : exploreTracks;
-  // Keep the chart ordered by explicit, positive API ranks when present. Tracks
-  // without a verified rank stay after ranked tracks and retain catalogue order.
-    const newTracks = filteredTracks.filter((track: any) => {
+  const newTracks = filteredTracks.filter((track: any) => {
     const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
     if (!rawDate) return false;
     const timestamp = Date.parse(String(rawDate));
