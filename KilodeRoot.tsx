@@ -48,6 +48,9 @@ function KilodeApp() {
   const [source, setSource] = useState<"live" | "mock" | "error" | "mixed">("mock");
   const [takesSource, setTakesSource] = useState<"live" | "mock" | "error">("error");
   const [takes, setTakes] = useState<any[]>([]);
+  const [takesNextCursor, setTakesNextCursor] = useState<string | null>(null);
+  const [takesHasMore, setTakesHasMore] = useState(false);
+  const [loadingMoreTakes, setLoadingMoreTakes] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
@@ -79,6 +82,8 @@ function KilodeApp() {
     const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity()]);
     setTakes(Array.isArray(t.data) ? t.data : []);
     setTakesSource(t.source);
+    setTakesNextCursor(t.nextCursor || null);
+    setTakesHasMore(Boolean(t.hasMore && t.nextCursor));
     setRooms(Array.isArray(r.data) ? r.data : []);
     setNews(Array.isArray(n.data) ? n.data : []);
     setTracks(Array.isArray(tr.data) ? tr.data : []);
@@ -105,6 +110,29 @@ function KilodeApp() {
     })();
     return () => { cancelled = true; };
   }, [loadAll]);
+
+  const loadMoreTakes = useCallback(async () => {
+    if (loadingMoreTakes || !takesHasMore || !takesNextCursor || takesSource !== "live") return;
+    setLoadingMoreTakes(true);
+    try {
+      const page = await fetchTakes(takesNextCursor);
+      if (!page.ok || page.source !== "live") {
+        show(page.error || "Could not load more posts. Try again.");
+        return;
+      }
+      setTakes((current) => {
+        const known = new Set(current.map((item: any) => String(item.id)));
+        const additions = page.data.filter((item: any) => !known.has(String(item.id)));
+        return [...current, ...additions];
+      });
+      setTakesNextCursor(page.nextCursor || null);
+      setTakesHasMore(Boolean(page.hasMore && page.nextCursor));
+    } catch {
+      show("Could not load more posts. Try again.");
+    } finally {
+      setLoadingMoreTakes(false);
+    }
+  }, [loadingMoreTakes, takesHasMore, takesNextCursor, takesSource]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -273,6 +301,17 @@ function KilodeApp() {
           />
         </View>
       ))}
+      {takesSource === "live" && takesHasMore && takesNextCursor ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Load more posts"
+          disabled={loadingMoreTakes}
+          onPress={() => { void loadMoreTakes(); }}
+          style={{ marginHorizontal: 14, marginTop: 4, marginBottom: 14, paddingVertical: 13, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, alignItems: "center", opacity: loadingMoreTakes ? 0.65 : 1 }}
+        >
+          {loadingMoreTakes ? <ActivityIndicator color={C.accent} /> : <Text style={{ color: C.accent, fontSize: 13, fontWeight: "700" }}>Load more posts</Text>}
+        </TouchableOpacity>
+      ) : null}
       <View style={{ height: 20 }} />
     </ScrollView>
   );
