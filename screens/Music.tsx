@@ -279,6 +279,19 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     return score(b) - score(a);
   });
   const destinationName = destination ?? "";
+  const isChartDestination = destination === "Top 100" || destination === "Top 50";
+  const chartCategoryMatches = (track: any) => {
+    if (!selectedGenre || selectedGenre === "All" || !isChartDestination) return true;
+    const metadata = [track.genre, track.genres, track.region, track.country, track.artist_country]
+      .filter(Boolean).join(" ").toLowerCase();
+    if (selectedGenre === "Emerging") return Boolean(track.is_emerging || track.emerging);
+    if (selectedGenre === "Nigeria") return /nigeria|nigerian|naija/.test(metadata);
+    if (selectedGenre === "Afrobeats") return /afro.?beat|afrobeats/.test(metadata);
+    if (selectedGenre === "Hip Hop") return /hip.?hop|rap/.test(metadata);
+    if (selectedGenre === "R&B") return /r&b|rnb|rhythm.?and.?blues/.test(metadata);
+    if (selectedGenre === "Amapiano") return /amapiano/.test(metadata);
+    return true;
+  };
   const destinationTracks = destination === "Library"
     ? catalogueTracks.filter((track: any) => savedTrackIds[String(track.id ?? track.title)])
     : destination === "Recently Played"
@@ -290,34 +303,31 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           : destination === "Albums" || destination === "Releases"
             ? catalogueTracks.filter((track: any) => track.album || track.release_type || track.release_title)
             : destination === "Tailored to You"
-          ? tailoredTracks
-          : destination === "Top 100" || destination === "Top 50"
-            ? [...catalogueTracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, destination === "Top 50" ? 50 : 100)
-            : destination === "The Discovery List"
-              ? catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)))
-              : destination === "New & Noted"
-                ? [...catalogueTracks].sort((a: any, b: any) => new Date(b.release_date ?? b.created_at ?? 0).getTime() - new Date(a.release_date ?? a.created_at ?? 0).getTime())
-                : destination === "Afrobeats Essentials"
-                  ? catalogueTracks.filter((track: any) => String(track.genre ?? track.genres ?? "").toLowerCase().includes("afro"))
-                  : destination === "Focus Mode"
-                    ? catalogueTracks.filter((track: any) => /r&b|ambient|acoustic|chill|lo.?fi|instrumental/i.test(String(track.genre ?? track.genres ?? track.mood ?? "")))
-                    : destination === "Naija Now"
-                      ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
-                      : catalogueTracks;
-  // Chart category chips must filter the actual chart list, not just change their highlight.
-  const visibleDestinationTracks = (destination === "Top 100" || destination === "Top 50") && selectedGenre && selectedGenre !== "All"
-    ? destinationTracks.filter((track: any) => {
-        const metadata = [track.genre, track.genres, track.region, track.country, track.artist_country]
-          .filter(Boolean).join(" ").toLowerCase();
-        if (selectedGenre === "Emerging") return Boolean(track.is_emerging || track.emerging);
-        if (selectedGenre === "Nigeria") return /nigeria|nigerian|naija/.test(metadata);
-        if (selectedGenre === "Afrobeats") return /afro.?beat|afrobeats/.test(metadata);
-        if (selectedGenre === "Hip Hop") return /hip.?hop|rap/.test(metadata);
-        if (selectedGenre === "R&B") return /r&b|rnb|rhythm.?and.?blues/.test(metadata);
-        if (selectedGenre === "Amapiano") return /amapiano/.test(metadata);
-        return true;
-      })
-    : destinationTracks;
+              ? tailoredTracks
+              : isChartDestination
+                ? catalogueTracks
+                    .filter(chartCategoryMatches)
+                    .sort((a: any, b: any) => {
+                      const playsA = Number(a.play_count ?? a.plays ?? a.stream_count ?? 0);
+                      const playsB = Number(b.play_count ?? b.plays ?? b.stream_count ?? 0);
+                      const safeA = Number.isFinite(playsA) ? playsA : 0;
+                      const safeB = Number.isFinite(playsB) ? playsB : 0;
+                      return safeB - safeA;
+                    })
+                    .slice(0, destination === "Top 50" ? 50 : 100)
+                : destination === "The Discovery List"
+                  ? catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)))
+                  : destination === "New & Noted"
+                    ? [...catalogueTracks].sort((a: any, b: any) => new Date(b.release_date ?? b.created_at ?? 0).getTime() - new Date(a.release_date ?? a.created_at ?? 0).getTime())
+                    : destination === "Afrobeats Essentials"
+                      ? catalogueTracks.filter((track: any) => String(track.genre ?? track.genres ?? "").toLowerCase().includes("afro"))
+                      : destination === "Focus Mode"
+                        ? catalogueTracks.filter((track: any) => /r&b|ambient|acoustic|chill|lo.?fi|instrumental/i.test(String(track.genre ?? track.genres ?? track.mood ?? "")))
+                        : destination === "Naija Now"
+                          ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
+                          : catalogueTracks;
+  // Filter chart categories before limiting to 50/100, so a genre chart can fill its full ranking.
+  const visibleDestinationTracks = destinationTracks;
   const hasVerifiedChartSignals = (destination === "Top 100" || destination === "Top 50") && visibleDestinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
   const albumGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.album).map((track: any) => [String(track.album), track])).entries()).map(([album, track]: any) => ({ title: String(album), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, trackCount: catalogueTracks.filter((item: any) => String(item.album) === String(album)).length }));
   const releaseGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.release_title || track.release || track.album).map((track: any) => [String(track.release_title || track.release || track.album), track])).entries()).map(([title, track]: any) => ({ title: String(title), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, type: String(track.release_type || "release"), trackCount: catalogueTracks.filter((item: any) => String(item.release_title || item.release || item.album) === String(title)).length }));
