@@ -75,6 +75,14 @@ The notes below are historical and must not be used as current configuration: th
 - The browser preview is not an iPhone simulator or proof of native-device behavior.
 - A successful JavaScript bundle or TypeScript check is **not** a completed native iOS binary build.
 
+## Latest automated validation (2026-10-21)
+
+Commit `c2cc6763ef8e83eb1eb21844dd1a8ee7719cb2af` completed both GitHub Actions validation workflows successfully:
+
+- Native validation: TypeScript, Expo Doctor, iOS JavaScript export, and native artifact upload all passed. Artifact: `kilode-native-preview-c2cc6763ef8e83eb1eb21844dd1a8ee7719cb2af`.
+- Browser preview: TypeScript, Expo web export, entry-point verification, and web artifact upload all passed. Artifact: `kilode-expo-web-preview-c2cc6763ef8e83eb1eb21844dd1a8ee7719cb2af`.
+- These are validation/export results, **not** evidence of an installable iOS binary, physical-device testing, TestFlight availability, or live backend connectivity.
+
 ## Automated iOS preview build
 
 The manual GitHub Actions workflow is **Actions → Kilode native validation → Run workflow** (`.github/workflows/native-preview.yml`). Its default push run performs TypeScript, Expo Doctor and iOS JavaScript export checks. The `eas-ios-preview` job runs only on manual dispatch or when a commit message contains `[ios-build]`; it builds an installable iOS preview through EAS.
