@@ -405,7 +405,25 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         fail(ticket.error || "The dedicated Kilode music upload service is not connected.");
         return;
       }
-      // Preserve the server upload ID immediately so an interrupted transfer can be inspected/recovered.
+      // Persist the upload ticket before sending bytes. React state effects are
+      // asynchronous and may not finish before the app is backgrounded or killed.
+      const ticketRecovery: PendingUploadRecovery = {
+        sessionFingerprint: sessionFingerprint(token),
+        title: title.trim(),
+        genre: genre.trim(),
+        audio,
+        rightsConfirmed,
+        uploadId,
+        uploadUrl,
+        uploadExpiresAt: ticket.data.expiresAt || null,
+      };
+      if (canPersistRecovery) {
+        try {
+          await AsyncStorage.setItem(recoveryScope, JSON.stringify(ticketRecovery));
+        } catch {
+          // Continue the upload, but recovery cannot be guaranteed if local storage fails.
+        }
+      }
       setPendingUploadId(uploadId);
       setPendingUploadUrl(uploadUrl);
       setPendingUploadExpiresAt(ticket.data.expiresAt || null);
@@ -415,6 +433,19 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       if (!uploaded.ok) {
         fail(`${uploaded.error || "Audio upload failed."} You can retry this transfer while its secure upload link is valid.`);
         return;
+      }
+      // The signed URL may be single-use. Persist its removal before asking
+      // the server to process the upload, so a restart won't offer a stale retry.
+      if (canPersistRecovery) {
+        try {
+          await AsyncStorage.setItem(recoveryScope, JSON.stringify({
+            ...ticketRecovery,
+            uploadUrl: null,
+            uploadExpiresAt: null,
+          } satisfies PendingUploadRecovery));
+        } catch {
+          // The server status endpoint remains the source of truth after restart.
+        }
       }
       setPendingUploadUrl(null);
       setPendingUploadExpiresAt(null);
