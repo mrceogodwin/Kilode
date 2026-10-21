@@ -123,33 +123,38 @@ function KilodeApp() {
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const playQueueTrack = async (track: any) => {
     const requestId = ++musicPlayRequestId.current;
-    let playableTrack = track;
-    if (tracksSource === "live") {
-      if (!track?.id || !session?.token) {
-        show("Sign in to get a secure Kilode playback link.");
-        return;
+    try {
+      let playableTrack = track;
+      if (tracksSource === "live") {
+        if (!track?.id || !session?.token) {
+          show("Sign in to get a secure Kilode playback link.");
+          return;
+        }
+        const playback = await getMusicPlayback(session.token, String(track.id));
+        if (requestId !== musicPlayRequestId.current) return;
+        if (!playback.ok || !playback.data?.url || !/^https:\/\//i.test(playback.data.url)) {
+          show(playback.error || "Kilode could not create a secure playback link for this track.");
+          return;
+        }
+        playableTrack = { ...track, audioUrl: playback.data.url, audio_url: undefined, streamUrl: undefined, stream_url: undefined, previewUrl: undefined, preview_url: undefined };
       }
-      const playback = await getMusicPlayback(session.token, String(track.id));
       if (requestId !== musicPlayRequestId.current) return;
-      if (!playback.ok || !playback.data?.url || !/^https:\/\//i.test(playback.data.url)) {
-        show(playback.error || "Kilode could not create a secure playback link for this track.");
+      const result = await playMusicTrack(playableTrack);
+      if (requestId !== musicPlayRequestId.current) return;
+      if (!result.ok) {
+        show(result.message || "This track cannot be played yet.");
         return;
       }
-      playableTrack = { ...track, audioUrl: playback.data.url, audio_url: undefined, streamUrl: undefined, stream_url: undefined, previewUrl: undefined, preview_url: undefined };
+      if (tracksSource === "live" && track?.id && session?.token) {
+        void recordMusicEvent(session.token, String(track.id), "play_started");
+      }
+      setMusicPlayerExpanded(true);
+    } catch {
+      if (requestId === musicPlayRequestId.current) {
+        show("Kilode couldn't start this track. Check your connection and try again.");
+      }
     }
-    if (requestId !== musicPlayRequestId.current) return;
-    const result = await playMusicTrack(playableTrack);
-    if (requestId !== musicPlayRequestId.current) return;
-    if (!result.ok) {
-      show(result.message || "This track cannot be played yet.");
-      return;
-    }
-    if (tracksSource === "live" && track?.id && session?.token) {
-      void recordMusicEvent(session.token, String(track.id), "play_started");
-    }
-    setMusicPlayerExpanded(true);
   };
-
   const playAdjacentTrack = async (direction: -1 | 1) => {
     const playable = tracks.filter((item: any) => tracksSource === "live"
       ? Boolean(item.id)
@@ -656,7 +661,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
             <Text style={s.playerBtn}>{isMusicPlaying ? "Ⅱ" : "▶"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => void stopMusicPlayback()}
+            onPress={() => { musicPlayRequestId.current += 1; void stopMusicPlayback(); }}
             accessibilityRole="button"
             accessibilityLabel="Stop music"
             style={{ minWidth: 36, minHeight: 44, alignItems: "center", justifyContent: "center" }}
