@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { CHAT_THREADS } from "../data";
 
 type Props = {
@@ -26,7 +26,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
   if (active) {
     const thread = threads.find((t) => t.id === active.id) || active;
     return (
-      <View style={s.flex}>
+      <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
         <View style={[s.header, { borderBottomWidth: 1, borderBottomColor: C.border }]}>
           <TouchableOpacity onPress={() => setActive(null)}>
             <Text style={s.link}>‹ Back</Text>
@@ -36,7 +36,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             <Text style={s.meta}>•••</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView style={s.flex} contentContainerStyle={{ padding: 14, gap: 10 }}>
+        <ScrollView style={s.flex} contentContainerStyle={{ padding: 14, gap: 10 }} keyboardShouldPersistTaps="handled">
           {thread.messages.map((m) => (
             <View
               key={m.id}
@@ -89,6 +89,9 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             onChangeText={setDraft}
           />
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
+            disabled={!draft.trim()}
             style={[s.postBtn, { opacity: draft.trim() ? 1 : 0.5 }]}
             onPress={() => {
               if (!draft.trim()) return;
@@ -113,7 +116,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             <Text style={s.postBtnText}>Send</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     );
   }
 
