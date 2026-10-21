@@ -53,9 +53,12 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   ).values());
   const chartTracks = filteredTracks.slice(0, 10);
 
-  useEffect(() => subscribeMusicPlayer((track, playing) => {
-    setIsPlaying(Boolean(track && activeTrack && String(track.id) === String(activeTrack.id) && playing));
-  }), [activeTrack]);
+  useEffect(() => {
+    const unsubscribe = subscribeMusicPlayer((track, playing) => {
+      setIsPlaying(Boolean(track && activeTrack && String(track.id) === String(activeTrack.id) && playing));
+    });
+    return () => { unsubscribe(); };
+  }, [activeTrack]);
 
   const togglePlayback = async (track: any) => {
     if (playbackBusy) return;
