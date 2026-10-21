@@ -193,4 +193,7 @@ export async function stopMusicPlayback(): Promise<void> {
   await oldSound.unloadAsync().catch(() => undefined);
 }
 
-\nexport function setMusicRepeat(enabled: boolean): void {\n  repeatCurrentTrack = enabled;\n}\n
+
+export function setMusicRepeat(enabled: boolean): void {
+  repeatCurrentTrack = enabled;
+}
