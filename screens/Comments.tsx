@@ -35,15 +35,7 @@ type Props = {
   show: (m: string) => void;
 };
 
-const SEED: Record<string, Comment[]> = {
-  "1": [
-    { id: "c1", takeId: "1", text: "This is what Lagos needs — real tools for market women.", name: "Femi Bankole", time: "1h" },
-    { id: "c2", takeId: "1", text: "When is the public pilot?", name: "Amaka Nwosu", time: "45m" },
-  ],
-  "2": [
-    { id: "c3", takeId: "2", text: "On repeat already 🔥", name: "Tunde Okoye", time: "3h" },
-  ],
-};
+
 
 export function CommentsSheet({
   visible,
@@ -57,7 +49,7 @@ export function CommentsSheet({
   isDark,
   show,
 }: Props) {
-  const [list, setList] = useState<Comment[]>(() => SEED[takeId] || []);
+  const [list, setList] = useState<Comment[]>([]);
   const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
@@ -89,12 +81,12 @@ export function CommentsSheet({
           }
         }
         setLocalComments(saved);
-        setList([...(SEED[takeId] || []), ...saved]);
+        setList(saved);
       })
       .catch(() => {
         if (active) {
           setLocalComments([]);
-          setList(SEED[takeId] || []);
+          setList([]);
         }
       })
       .finally(() => {
