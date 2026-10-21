@@ -19,11 +19,11 @@ type Props = { s: any; C: any; onBack: () => void; show: (m: string) => void; ac
 const FILTERS = ["All", "Full-time", "Part-time", "Remote"];
 
 export const JOBS: Job[] = [
-  { id: "j1", title: "Frontend Developer", company: "Paystack Labs", location: "Lagos, Nigeria", type: "Full-time", salary: "₦250k – ₦400k/month", color: "#3B82F6", tags: ["React", "TypeScript"] },
-  { id: "j2", title: "Marketing Executive", company: "Flutterwave", location: "Lagos, Nigeria", type: "Full-time", salary: "₦150k – ₦250k/month", color: "#A855F7", tags: ["Growth", "Brand"] },
-  { id: "j3", title: "UI/UX Designer", company: "Kuda Bank", location: "Remote", type: "Full-time", salary: "₦200k – ₦350k/month", color: "#06B6D4", tags: ["Figma", "Product"] },
-  { id: "j4", title: "Business Analyst", company: "Interswitch", location: "Abuja, Nigeria", type: "Full-time", salary: "₦180k – ₦300k/month", color: "#F59E0B", tags: ["Data", "Strategy"] },
-  { id: "j5", title: "Content Writer", company: "Kilode Media", location: "Abuja, Nigeria", type: "Part-time", salary: "Contract", color: "#F08A4B", tags: ["Editorial"] },
+  { id: "j1", title: "Frontend Developer", company: "Paystack Labs", location: "Lagos, Nigeria", type: "Full-time", salary: "₦250k – ₦400k/month", color: "#D4AF37", tags: ["React", "TypeScript"] },
+  { id: "j2", title: "Marketing Executive", company: "Flutterwave", location: "Lagos, Nigeria", type: "Full-time", salary: "₦150k – ₦250k/month", color: "#B89A55", tags: ["Growth", "Brand"] },
+  { id: "j3", title: "UI/UX Designer", company: "Kuda Bank", location: "Remote", type: "Full-time", salary: "₦200k – ₦350k/month", color: "#8A8A8F", tags: ["Figma", "Product"] },
+  { id: "j4", title: "Business Analyst", company: "Interswitch", location: "Abuja, Nigeria", type: "Full-time", salary: "₦180k – ₦300k/month", color: "#E5C158", tags: ["Data", "Strategy"] },
+  { id: "j5", title: "Content Writer", company: "Kilode Media", location: "Abuja, Nigeria", type: "Part-time", salary: "Contract", color: "#6F6F75", tags: ["Editorial"] },
   { id: "j6", title: "React Native Engineer", company: "Andela", location: "Remote", type: "Full-time", salary: "₦400k – ₦650k/month", color: "#E5C158", tags: ["Expo", "iOS"] },
 ];
 
