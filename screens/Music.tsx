@@ -336,6 +336,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const activeReleaseTitle = destinationName.startsWith("Release · ") ? destinationName.slice(10) : null;
   const activeAlbum = activeAlbumTitle ? albumGroups.find((item) => item.title === activeAlbumTitle) : undefined;
   const activeRelease = activeReleaseTitle ? releaseGroups.find((item) => item.title === activeReleaseTitle) : undefined;
+  const datedNewTracks = catalogueTracks
+    .map((track: any) => {
+      const rawDate = track.release_date ?? track.created_at;
+      const timestamp = rawDate ? new Date(rawDate).getTime() : Number.NaN;
+      return { track, timestamp };
+    })
+    .filter((item) => Number.isFinite(item.timestamp) && item.timestamp > 0)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .map((item) => item.track);
   const playlistItems = EDITORIAL_PLAYLISTS.filter((playlist) => playlistCategory === "all" || playlist.category === playlistCategory);
   const activePlaylist = EDITORIAL_PLAYLISTS.find((playlist) => playlist.title === destination);
   const activePlaylistTracks = activePlaylist?.category === "tailored"
@@ -904,14 +913,16 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         ))}
       </View>
 
-      {(tab === "Home" || tab === "Charts" || tab === "Discover") ? (
+      {(tab === "Home" || tab === "Discover" || tab === "Charts") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Picked for discovery" : "Popular in the catalogue"}</Text>
-          <TouchableOpacity onPress={() => openMusicDestination("Top 100")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Explore Top 100</Text></TouchableOpacity>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>
+            {tab === "Discover" ? "Explore the catalogue" : tab === "Charts" ? "New & Noted" : "Popular in the catalogue"}
+          </Text>
+          {tab !== "Charts" ? <TouchableOpacity onPress={() => openMusicDestination("Top 100")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Explore Top 100</Text></TouchableOpacity> : null}
         </View>
       ) : null}
 
-      {(tab === "Charts" || tab === "Home" || tab === "Discover" ? [...tracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, tab === "Charts" ? 100 : 5) : []).map((track: any, index: number) => {
+      {(tab === "Home" ? [...tracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, 5) : tab === "Charts" ? datedNewTracks.slice(0, 100) : []).map((track: any, index: number) => {
         const id = String(track.id ?? track.title);
         const title = String(track.title || "Untitled track");
         const artistName = String(track.artist || track.artist_name || "Unknown artist");
@@ -929,22 +940,33 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               const indicatorColor = isUp ? "#E5C158" : isDown ? "#C98778" : C.text3;
               return (
                 <View style={{ width: 28, alignItems: "center", justifyContent: "center" }}>
-                  <Text style={{ color: C.text3, fontWeight: "800", fontSize: 12 }}>{index + 1}</Text>
-                  {isNew ? <Text style={{ color: "#E5C158", fontSize: 8, fontWeight: "900", marginTop: 1 }}>NEW</Text>
-                    : hasExplicitMovement && (isUp || isDown || isSteady) ? <Text style={{ color: indicatorColor, fontSize: 10, lineHeight: 11, fontWeight: "900" }}>{isUp ? "▴" : isDown ? "▾" : "▸"}</Text>
-                    : null}
+                  {tab === "Charts"
+                    ? <Ionicons name="calendar-outline" size={15} color={C.text3} />
+                    : <>
+                        <Text style={{ color: C.text3, fontWeight: "800", fontSize: 12 }}>{index + 1}</Text>
+                        {isNew ? <Text style={{ color: "#E5C158", fontSize: 8, fontWeight: "900", marginTop: 1 }}>NEW</Text>
+                          : hasExplicitMovement && (isUp || isDown || isSteady) ? <Text style={{ color: indicatorColor, fontSize: 10, lineHeight: 11, fontWeight: "900" }}>{isUp ? "▴" : isDown ? "▾" : "▸"}</Text>
+                          : null}
+                      </>}
                 </View>
               );
             })()}
             {artwork ? <Image source={{ uri: artwork }} style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: C.elevated }} /> : <View style={{ width: 42, height: 42, borderRadius: 8, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="musical-notes" size={18} color={C.text3} /></View>}
             <View style={{ flex: 1 }}>
               <Text numberOfLines={1} style={{ color: C.text, fontWeight: "600", fontSize: 13, letterSpacing: -0.1 }}>{title}</Text>
-              <Text numberOfLines={1} style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{artistName}</Text>
+              <Text numberOfLines={1} style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{tab === "Charts" && (track.release_date || track.created_at) ? `${artistName} · ${new Date(track.release_date ?? track.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}` : artistName}</Text>
             </View>
             <Ionicons name="play-circle" size={28} color={C.accent} />
           </TouchableOpacity>
         );
       })}
+      {tab === "Charts" && datedNewTracks.length === 0 ? (
+        <View style={{ marginHorizontal: 16, marginTop: 14, padding: 18, borderRadius: 12, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+          <Ionicons name="calendar-outline" size={22} color={C.accent} />
+          <Text style={{ color: C.text, fontSize: 14, fontWeight: "700", marginTop: 9 }}>No dated releases yet</Text>
+          <Text style={{ color: C.text3, fontSize: 12, lineHeight: 17, marginTop: 4 }}>New music will appear here when the catalogue provides a release date or upload date. We won't guess what's new.</Text>
+        </View>
+      ) : null}
       {(tab === "Home" || tab === "Discover") ? (
         <TouchableOpacity onPress={() => openMusicDestination("Tailored to You")} style={{ marginHorizontal: 16, marginTop: 18, padding: 14, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, flexDirection: "row", alignItems: "center", gap: 12 }}>
           <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="sparkles-outline" size={22} color={C.accent} /></View>
