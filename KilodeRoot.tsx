@@ -25,6 +25,7 @@ import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
 import { ArtistEarningsScreen } from "./screens/ArtistEarnings";
+import { ArtistReleasePlanner } from "./screens/ArtistReleasePlanner";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -70,6 +71,7 @@ function KilodeApp() {
   const musicPlayRequestId = useRef(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [artistEarningsOpen, setArtistEarningsOpen] = useState(false);
+  const [artistReleasePlannerOpen, setArtistReleasePlannerOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
@@ -200,7 +202,7 @@ function KilodeApp() {
   });
 
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setArtistEarningsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setArtistEarningsOpen(false); setArtistReleasePlannerOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
   };
 
   const loadAll = useCallback(async () => {
@@ -559,7 +561,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
             { title: "Earnings & Royalties", detail: "Fan earnings, transactions and payout status", icon: "₦", action: () => setArtistEarningsOpen(true) },
             { title: "Audience & Fans", detail: "Followers and fan engagement", icon: "♡", action: () => show("Artist audience tools will use verified follower and engagement data when available.") },
             { title: "Public Artist Profile", detail: "Your artist identity, biography and discography", icon: "◉", action: () => show("Artist profile editing is not connected yet.") },
-            { title: "Release Planner", detail: "Prepare release details and promotional checklist", icon: "▦", action: () => show("Release planning is not connected yet.") },
+            { title: "Release Planner", detail: "Prepare release details and promotional checklist", icon: "▦", action: () => setArtistReleasePlannerOpen(true) },
           ].map((item) => (
             <TouchableOpacity key={item.title} accessibilityRole="button" accessibilityLabel={item.title} onPress={item.action} style={[s.roomRow, { marginHorizontal: 14, paddingVertical: 13 }]}>
               <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}>
@@ -611,6 +613,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
 
   const body = () => {
     if (artistEarningsOpen && session?.kind === "artist") return <ArtistEarningsScreen s={s} C={C} onBack={() => setArtistEarningsOpen(false)} />;
+    if (artistReleasePlannerOpen && session?.kind === "artist") return <ArtistReleasePlanner s={s} C={C} onBack={() => setArtistReleasePlannerOpen(false)} show={show} artistName={session?.name || session?.handle || "Artist"} />;
     if (settingsOpen) return (
       <SettingsScreen
         s={s}
@@ -676,7 +679,9 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
     return <Home />;
   };
 
-  const headerTitle = artistEarningsOpen
+  const headerTitle = artistReleasePlannerOpen
+    ? "Release Planner"
+    : artistEarningsOpen
     ? "Fan Earnings"
     : settingsOpen
     ? "Settings"
