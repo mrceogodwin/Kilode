@@ -7,7 +7,10 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "kilode",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "splash": {
       "backgroundColor": "#0B0B0F",
       "resizeMode": "contain"
@@ -19,7 +22,10 @@
       "infoPlist": {
         "UIStatusBarStyle": "UIStatusBarStyleLightContent",
         "NSCameraUsageDescription": "Kilode needs camera for posts and profile.",
-        "NSPhotoLibraryUsageDescription": "Kilode needs photos for posts and profile."
+        "NSPhotoLibraryUsageDescription": "Kilode needs photos for posts and profile.",
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -32,7 +38,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "extra": {
       "eas": {
         "projectId": "b9f2e786-665d-46e5-9a7c-7af7ab25e0ea"
