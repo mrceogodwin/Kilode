@@ -259,11 +259,16 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
     const state = normalizeState(result.data?.state) || "submitted";
     setMessage(`Track submitted · status: ${state.replace(/_/g, " ")}`);
     show(`Track submitted · ${state.replace(/_/g, " ")}`);
-    setPendingUploadId(null);
-    setPendingUploadUrl(null);
-    setPendingUploadExpiresAt(null);
-    onPublished();
-    return true;
+    // A successful submission response is not proof that the track is public.
+    // Keep the upload recoverable until the server explicitly reports published.
+    if (state === "published") {
+      setPendingUploadId(null);
+      setPendingUploadUrl(null);
+      setPendingUploadExpiresAt(null);
+      onPublished();
+      return true;
+    }
+    return false;
   };
 
   const checkProcessing = async () => {
