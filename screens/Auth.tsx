@@ -14,6 +14,7 @@ import {
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Video, ResizeMode } from "expo-av";
 import { ACCOUNT_GROUPS, ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 import { KilodeWordmark } from "../components/KilodeWordmark";
 
@@ -30,6 +31,42 @@ type Props = {
   onContinue?: () => void;
   show: (m: string) => void;
 };
+
+const WELCOME_SCENES = [
+  "https://videos.pexels.com/video-files/5805069/5805069-uhd_2160_3840_25fps.mp4",
+  "https://videos.pexels.com/video-files/9690764/9690764-uhd_2160_3840_30fps.mp4",
+  "https://videos.pexels.com/video-files/8027282/8027282-uhd_2160_3840_25fps.mp4",
+  "https://videos.pexels.com/video-files/6940477/6940477-uhd_1440_2560_25fps.mp4",
+  "https://videos.pexels.com/video-files/12322749/12322749-hd_1080_1920_30fps.mp4",
+  "https://videos.pexels.com/video-files/9653700/9653700-hd_1920_1080_25fps.mp4",
+  "https://videos.pexels.com/video-files/6940485/6940485-uhd_1440_2560_25fps.mp4",
+  "https://videos.pexels.com/video-files/9187818/9187818-hd_1080_1920_25fps.mp4",
+  "https://videos.pexels.com/video-files/8929212/8929212-hd_1080_1920_30fps.mp4",
+  "https://videos.pexels.com/video-files/9690755/9690755-uhd_2160_3840_30fps.mp4"
+];
+const WELCOME_FALLBACK = WELCOME_SCENES[0];
+
+function WelcomeScene({ source, index }: { source: string; index: number }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <View style={styles.sceneTile}>
+      <Video
+        source={{ uri: failed ? WELCOME_FALLBACK : source }}
+        style={styles.sceneVideo}
+        resizeMode={ResizeMode.COVER}
+        isMuted
+        shouldPlay
+        isLooping
+        useNativeControls={false}
+        progressUpdateIntervalMillis={1000}
+        onError={() => { if (!failed) setFailed(true); }}
+        accessible
+        accessibilityLabel={`Kilode culture scene ${index + 1}`}
+      />
+      <View pointerEvents="none" style={styles.sceneShade} />
+    </View>
+  );
+}
 
 const FLOAT = [
   { key: "music", title: "Music", sub: "New sounds", icon: "musical-notes" as const, style: { top: "12%" as const, left: 12 } },
@@ -87,23 +124,28 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
 
           <View style={[styles.hero, compact && { height: 240 }]}>
             <View style={styles.arc} />
-            <View style={styles.portrait}>
-              {portraitFailed ? (
-                <View style={[styles.portraitImg, { alignItems: "center", justifyContent: "center", backgroundColor: "#242329" }]}>
-                  <Ionicons name="person" size={76} color={ACCENT} />
-                  <Text style={{ color: "rgba(255,255,255,0.55)", fontSize: 9, letterSpacing: 1.5, marginTop: 5 }}>KILODE</Text>
-                </View>
-              ) : (
-                <Image
-                  source={{
-                    uri: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=600&q=80",
-                  }}
-                  style={styles.portraitImg}
-                  resizeMode="cover"
-                  onError={() => setPortraitFailed(true)}
-                />
-              )}
-              <View style={styles.portraitFade} />
+            <View style={styles.sceneGrid}>
+              {WELCOME_SCENES.map((source, index) => (
+                <WelcomeScene key={`welcome-scene-${index}`} source={source} index={index} />
+              ))}
+            </View>
+            <View style={styles.sceneHero}>
+              <Video
+                source={{ uri: WELCOME_SCENES[0] }}
+                style={styles.sceneHeroVideo}
+                resizeMode={ResizeMode.COVER}
+                isMuted
+                shouldPlay
+                isLooping
+                useNativeControls={false}
+                onError={() => show("Welcome videos are loading slowly. Check your connection and try again.")}
+                accessibilityLabel="Kilode welcome culture video"
+              />
+              <View pointerEvents="none" style={styles.sceneHeroShade} />
+              <View pointerEvents="none" style={styles.sceneHeroLabel}>
+                <Text style={styles.sceneHeroEyebrow}>● LIVE CULTURE</Text>
+                <Text style={styles.sceneHeroCount}>01 / 10</Text>
+              </View>
             </View>
             {FLOAT.map((f) => (
               <View key={f.key} style={[styles.floatCard, f.style as any]}>
@@ -334,22 +376,68 @@ const styles = StyleSheet.create({
     left: "50%",
     marginLeft: -140,
   },
-  portrait: {
-    position: "absolute",
-    left: "50%",
-    marginLeft: -70,
-    top: 40,
-    width: 140,
-    height: 180,
-    borderRadius: 70,
-    overflow: "hidden",
-    backgroundColor: "#2A2A30",
-  },
-  portraitImg: { width: "100%", height: "100%" },
-  portraitFade: {
+  sceneGrid: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(13,13,16,0.28)",
+    top: 8,
+    left: 8,
+    right: 8,
+    bottom: 8,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 5,
+    alignContent: "stretch",
+    opacity: 0.82,
   },
+  sceneTile: {
+    width: "18.6%",
+    height: "48%",
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#242329",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  sceneVideo: { width: "100%", height: "100%" },
+  sceneShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(13,13,16,0.18)",
+  },
+  sceneHero: {
+    position: "absolute",
+    zIndex: 2,
+    width: 112,
+    height: 190,
+    top: "50%",
+    left: "50%",
+    marginLeft: -56,
+    marginTop: -95,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.62)",
+    backgroundColor: "#18181C",
+    shadowColor: "#000",
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  sceneHeroVideo: { width: "100%", height: "100%" },
+  sceneHeroShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(13,13,16,0.16)",
+  },
+  sceneHeroLabel: {
+    position: "absolute",
+    left: 8,
+    right: 8,
+    top: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sceneHeroEyebrow: { color: "#fff", fontSize: 7, fontWeight: "800", letterSpacing: 0.3 },
+  sceneHeroCount: { color: "#fff", fontSize: 7, fontWeight: "800" },
   floatCard: {
     position: "absolute",
     backgroundColor: "rgba(20,20,24,0.92)",
