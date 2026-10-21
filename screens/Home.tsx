@@ -98,13 +98,13 @@ export function HomeScreen({
     ...(takes[0] ? [{ kind: "Socials", title: firstText(takes[0].text, takes[0].body, takes[0].name, "What's happening on Socials"), sub: firstText(takes[0].handle, takes[0].author?.name, "Community post"), image: firstText(takes[0].mediaUrl, takes[0].imageUrl, takes[0].image_url), onPress: () => onOpenPost(takes[0]) }] : []),
   ];
   const featureFallbacks = [
-    { kind: "Communities", title: "Find your people", sub: "Explore communities", onPress: () => onOpenSystem("communities") },
-    { kind: "Cinema", title: "Discover cinema", sub: "Explore films and trailers", onPress: () => onOpenSystem("cinema") },
-    { kind: "Creators", title: "Meet creators", sub: "Explore creator spaces", onPress: () => onOpenSystem("creators") },
-    { kind: "Market", title: "Explore Market", sub: "Discover listings", onPress: onOpenMarket },
-    { kind: "Jobs", title: "Explore Jobs", sub: "Discover opportunities", onPress: onOpenJobs },
-    { kind: "Ads", title: "Business & Ads", sub: "Explore business tools", onPress: () => onOpenSystem("creators") },
-    { kind: "My Space", title: "Your Kilode space", sub: "Open your workspace", onPress: () => onOpenSystem("myspace") },
+    { kind: "Communities", title: "Find your people", sub: "Explore communities", image: "", onPress: () => onOpenSystem("communities") },
+    { kind: "Cinema", title: "Discover cinema", sub: "Explore films and trailers", image: "", onPress: () => onOpenSystem("cinema") },
+    { kind: "Creators", title: "Meet creators", sub: "Explore creator spaces", image: "", onPress: () => onOpenSystem("creators") },
+    { kind: "Market", title: "Explore Market", sub: "Discover listings", image: "", onPress: onOpenMarket },
+    { kind: "Jobs", title: "Explore Jobs", sub: "Discover opportunities", image: "", onPress: onOpenJobs },
+    { kind: "Ads", title: "Business & Ads", sub: "Explore business tools", image: "", onPress: () => onOpenSystem("creators") },
+    { kind: "My Space", title: "Your Kilode space", sub: "Open your workspace", image: "", onPress: () => onOpenSystem("myspace") },
   ];
   const featuredCards = [
     ...featuredContentCards,
