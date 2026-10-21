@@ -156,15 +156,31 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
 }
 
 export async function seekMusicPlayback(position: number): Promise<void> {
-  if (!sound || !Number.isFinite(position)) return;
+  if (!sound || !Number.isFinite(position) || position < 0) return;
   try {
     const status = await sound.getStatusAsync();
     if (!status.isLoaded) return;
-    const next = Math.max(0, Math.min(Math.floor(position), status.durationMillis || 0));
+
+    // Do not accidentally jump to 0 while the stream's duration is still unknown.
+    const knownDuration = status.durationMillis ?? durationMillis;
+    if (!Number.isFinite(knownDuration) || knownDuration <= 0) return;
+
+    const next = Math.max(0, Math.min(Math.floor(position), knownDuration));
     await sound.setPositionAsync(next);
-    positionMillis = next;
+    // Read the native player's resulting position rather than assuming the seek
+    // completed at the requested timestamp (some streams seek to a nearby point).
+    const updated = await sound.getStatusAsync();
+    if (updated.isLoaded) {
+      positionMillis = updated.positionMillis;
+      durationMillis = updated.durationMillis ?? knownDuration;
+      isPlaying = updated.isPlaying;
+    } else {
+      positionMillis = next;
+    }
     publish();
-  } catch { /* Seeking is best-effort when the audio source does not support it. */ }
+  } catch {
+    // Unsupported or temporarily unavailable stream seeking should not crash the player.
+  }
 }
 
 export async function toggleMusicPlayback(): Promise<void> {
