@@ -231,11 +231,29 @@ export function CommentsSheet({
                     name: "You",
                     time: "now",
                   };
-                  const nextLocalComments = [...localComments, nextComment];
-                  setList((prev) => [...prev, nextComment]);
-                  setLocalComments(nextLocalComments);
                   try {
+                    // Re-read inside the write path so rapid submissions cannot overwrite
+                    // comments loaded before another save completed.
+                    const raw = await AsyncStorage.getItem(commentStorageKey);
+                    let latest: Comment[] = [];
+                    if (raw) {
+                      try {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) {
+                          latest = parsed.filter((item) =>
+                            item && typeof item.id === "string" &&
+                            typeof item.text === "string" &&
+                            String(item.takeId) === String(takeId)
+                          );
+                        }
+                      } catch {
+                        latest = [];
+                      }
+                    }
+                    const nextLocalComments = [...latest, nextComment];
                     await AsyncStorage.setItem(commentStorageKey, JSON.stringify(nextLocalComments));
+                    setLocalComments(nextLocalComments);
+                    setList(nextLocalComments);
                     setDraft("");
                     show("Saved on this device only — not shared with Kilode.");
                   } catch {
