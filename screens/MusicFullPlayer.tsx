@@ -67,14 +67,14 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
             onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))}
             onStartShouldSetResponder={() => durationMillis > 0}
             onMoveShouldSetResponder={() => durationMillis > 0}
-            onResponderGrant={(_event, gestureState) => {
-              positionFromPageX(gestureState.x0, setScrubPosition);
+            onResponderGrant={(event) => {
+              positionFromPageX(event.nativeEvent.pageX, setScrubPosition);
             }}
-            onResponderMove={(_event, gestureState) => {
-              positionFromPageX(gestureState.moveX, setScrubPosition);
+            onResponderMove={(event) => {
+              positionFromPageX(event.nativeEvent.pageX, setScrubPosition);
             }}
-            onResponderRelease={(_event, gestureState) => {
-              positionFromPageX(gestureState.moveX, (position) => {
+            onResponderRelease={(event) => {
+              positionFromPageX(event.nativeEvent.pageX, (position) => {
                 setScrubPosition(null);
                 void seekMusicPlayback(position);
               });
