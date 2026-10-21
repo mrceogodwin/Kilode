@@ -363,6 +363,80 @@ export function recordMusicEvent(token: string, trackId: string, eventType: "pla
   );
 }
 
+export type Top100ChartEntry = {
+  trackId: string;
+  rank: number;
+  previousRank: number | null;
+  movement: number | null;
+};
+
+export type Top100ChartSnapshot = {
+  chartId: string;
+  period: "week" | "month" | "all_time";
+  region: string;
+  generatedAt: string;
+  windowStart: string;
+  windowEnd: string;
+  methodologyVersion: string;
+  entries: Top100ChartEntry[];
+};
+
+/**
+ * Fetches a dedicated, server-ranked chart snapshot. Catalogue results are
+ * deliberately not used as a fallback because catalogue order is not ranking.
+ */
+export async function fetchTop100Chart(
+  period: Top100ChartSnapshot["period"] = "week",
+  region = "NG"
+): Promise<ApiResult<Top100ChartSnapshot | null>> {
+  const params = new URLSearchParams({ period, region });
+  const r = await tryLiveJson<any>(`/api/mobile/music/charts/top-100?${params.toString()}`, null, "getTop100Chart");
+  if (!r.ok) return { ...r, data: null };
+  const payload = r.data?.chart ?? r.data?.data ?? r.data;
+  if (!payload || typeof payload !== "object" || !Array.isArray(payload.entries)) {
+    return { ok: false, data: null, source: "error", error: "Chart response is missing entries", fn: "getTop100Chart" };
+  }
+  const seenIds = new Set<string>();
+  const seenRanks = new Set<number>();
+  const entries: Top100ChartEntry[] = [];
+  for (const item of payload.entries) {
+    const trackId = typeof item?.trackId === "string" ? item.trackId : typeof item?.track_id === "string" ? item.track_id : "";
+    const rawRank = item?.rank;
+    const rank = typeof rawRank === "number" ? rawRank : typeof rawRank === "string" && rawRank.trim() ? Number(rawRank) : NaN;
+    const rawPrevious = item?.previousRank ?? item?.previous_rank;
+    const previousRank = rawPrevious === null || rawPrevious === undefined
+      ? null
+      : typeof rawPrevious === "number" ? rawPrevious
+      : typeof rawPrevious === "string" && rawPrevious.trim() ? Number(rawPrevious) : NaN;
+    if (!trackId || !Number.isInteger(rank) || rank < 1 || rank > 100 || seenIds.has(trackId) || seenRanks.has(rank)) {
+      return { ok: false, data: null, source: "error", error: "Chart snapshot contains duplicate or invalid track ranks", fn: "getTop100Chart" };
+    }
+    if (previousRank !== null && (!Number.isInteger(previousRank) || previousRank < 1 || previousRank > 100)) {
+      return { ok: false, data: null, source: "error", error: "Chart snapshot contains an invalid previous rank", fn: "getTop100Chart" };
+    }
+    const movement = previousRank === null ? null : previousRank - rank;
+    seenIds.add(trackId);
+    seenRanks.add(rank);
+    entries.push({ trackId, rank, previousRank, movement });
+  }
+  entries.sort((a, b) => a.rank - b.rank);
+  return {
+    ok: true,
+    source: "live",
+    fn: "getTop100Chart",
+    data: {
+      chartId: String(payload.chartId ?? payload.chart_id ?? ""),
+      period: payload.period,
+      region: String(payload.region ?? ""),
+      generatedAt: String(payload.generatedAt ?? payload.generated_at ?? ""),
+      windowStart: String(payload.windowStart ?? payload.window_start ?? ""),
+      windowEnd: String(payload.windowEnd ?? payload.window_end ?? ""),
+      methodologyVersion: String(payload.methodologyVersion ?? payload.methodology_version ?? ""),
+      entries,
+    },
+  };
+}
+
 export async function fetchTracks(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/music/tracks", { tracks: TRACKS }, "listTracks");
   if (r.ok) {
