@@ -21,6 +21,7 @@
       "buildNumber": "1",
       "infoPlist": {
         "UIStatusBarStyle": "UIStatusBarStyleLightContent",
+        "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Kilode needs camera for posts and profile.",
         "NSPhotoLibraryUsageDescription": "Kilode needs photos for posts and profile.",
         "UIBackgroundModes": [
