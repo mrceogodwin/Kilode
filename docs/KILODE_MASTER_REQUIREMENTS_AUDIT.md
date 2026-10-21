@@ -172,3 +172,13 @@ Before any claim of iOS readiness, collect evidence for: (1) current branch comm
 - The prior native run `39656437566` was cancelled during dependency installation after a newer run superseded it. Do not count it as a test failure or a pass; use the completed successful run above.
 - Acceptance tracking: `docs/KILODE_ACCEPTANCE_REGISTER.md` currently has stable IDs `KIL-001`–`KIL-055`. This is a traceable starting register, not the 1,000-item list the user refers to. The exact historical 1,000-item Kilode list has not been recoverable from repository files or prior-context retrieval. Do not claim it is tracked; continue preserving the user's expectation by expanding only from approved, evidenced Kilode requirements and keeping this discrepancy visible until the original list is recovered or a clearly labelled reconstructed register is agreed.
 - Native-first remaining release gate: Apple/EAS signing credentials still need authorised setup before a genuine internal iOS build can be run. No physical-device install, TestFlight processing, or real-iPhone welcome-screen verification is established by these workflow results.
+
+
+## Native UI asset re-audit — 2026-10-21
+
+- Inspected `screens/Auth.tsx`, `components/KilodeWordmark.tsx`, and the `assets/` directory on `preview/web`.
+- Confirmed welcome gap: Auth still loads one remote Unsplash portrait and falls back to a person icon. `assets/` contains only `.gitkeep`; the required ten short welcome videos and prominent dancing-person scene are not present. Do not mark the welcome acceptance as complete or use remote portrait as a substitute for the requested montage.
+- Confirmed logo gap: `KilodeWordmark.tsx` draws a native approximation in code. The approved final transparent metallic-white entangled logo asset has not been integrated. This is now reflected in `docs/KILODE_ACCEPTANCE_REGISTER.md` as `KIL-006` and `KIL-007` in progress, with missing-asset evidence.
+- Latest verified ready Vercel deployment before this register update: commit `56ed2480717d5188f88106321386a5e13838f0c4`, deployment `dpl_AQbu5ekJEoH3AgtHSNxiRd4jPgBy`. The next register change triggers a new preview deployment; verify its state after it finishes.
+- Native validation for `56ed2480` has passed TypeScript and Expo Doctor and was still running iOS bundle export at the last check. Do not label that run complete until GitHub reports success.
+- Historical-list clarification from retrieved prior context: no 1,000-item Kilode engineering list was found; prior 1,000 count was a separate Subme/MyHappr curated request-template target. Preserve this distinction; do not claim the original 1,000 Kilode items are tracked. The 55-item register is the only currently verified numbered Kilode acceptance register.
