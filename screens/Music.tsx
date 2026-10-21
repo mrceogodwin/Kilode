@@ -256,7 +256,31 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
       || (selectedGenre === "Nigeria" ? /nigeria|naija|nigerian/i.test(trackTags) : false)
       || (selectedGenre === "Emerging" ? Boolean(track.is_emerging || track.emerging) : false)
       || trackTags.includes(selectedGenre.toLowerCase());
-    const queryMatch = !query || [track.title, track.artist, track.album, track.genre].some((value) => String(value || "").toLowerCase().includes(query));
+    // Search every user-facing catalogue field so artist names and release metadata
+    // remain discoverable even when the API uses alternate field names.
+    const searchableTrackFields = [
+      track.title,
+      track.artist,
+      track.artist_name,
+      track.artist_display_name,
+      track.artist_handle,
+      track.album,
+      track.release_title,
+      track.release,
+      track.genre,
+      track.genres,
+      track.region,
+      track.country,
+      track.mood,
+    ];
+    const queryMatch = !query || searchableTrackFields.some((value) => {
+      const normalized = Array.isArray(value)
+        ? value.map((item) => typeof item === "string" || typeof item === "number" ? String(item) : "").join(" ")
+        : typeof value === "string" || typeof value === "number"
+          ? String(value)
+          : "";
+      return normalized.toLowerCase().includes(query);
+    });
     return genreMatch && queryMatch;
   });
 
