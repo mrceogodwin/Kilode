@@ -181,3 +181,14 @@ For every new finding, add: severity (P0/P1/P2), system, exact file/line, eviden
 4. Account-kind tampering tests against the backend.
 5. Live contract test against the dedicated API for sign-up, sign-in, session, recovery and verification.
 6. Confirm public catalogue endpoints expose no private user data and protected endpoints reject guest/invalid tokens.
+
+
+## 11. Follow-up audit — root navigation and account-type flow (2026-10-21)
+
+- **Verified positive finding:** `screens/Auth.tsx` has an account-type selector populated from `ACCOUNT_KINDS`, exposes accessibility labels/selected state, and passes the selected kind to the sign-up handler. The current working branch does include account-type selection at registration. The remaining concern is authoritative server-side role validation and whether each kind gets the correct independent tools; do not mark the selector itself as missing on this branch.
+- **P1 — Sign-in role/account-kind authority needs verification:** the sign-in form calls `onSignIn(handle, password)` without sending the currently selected kind. The client maps `data.user.kind` or a default to its local session. The backend must return the authoritative account kind and enforce it for every protected endpoint; UI selection must never grant privileged artist/business/admin access.
+- **P2 — Native app startup uses the welcome screen while auth is loading:** `KilodeRoot.tsx` returns `AuthScreen` when `authLoading` is true, then transitions to the signed-in app when persisted auth resolves. This meets the welcome-first visual requirement, but must be tested on a physical device for flicker, duplicate welcome display and guest/session transition.
+- **P2 — Boot loading only applies after a session is present:** `KilodeRoot.tsx` checks `!session` before the feed/music boot spinner. Test signed-out, guest, valid-session, expired-session and malformed-stored-session paths so users see the right state and never see stale private content.
+- **P2 — Native app/splash colours are not fully aligned:** `app.json` uses `#0B0B0F` for splash/adaptive-icon background while the design token is `#0D0D10`. Align only when final splash/icon assets are ready, then validate the real native launch screen.
+- **P2 — iOS permissions and capabilities require product review:** `app.json` declares camera/photo library usage strings and audio background mode. Verify each capability is used and justified, test permission denial/revocation, and complete required App Store privacy disclosures. Background audio should remain only if supported by the final music implementation.
+- **Source review coverage update:** in this pass I inspected the complete auth provider and relevant navigation gates in `KilodeRoot.tsx`, plus the account-type selector in `screens/Auth.tsx` and API request helper behavior in `lib/api.ts`. Semantic audit is still in progress across the remaining source files.
