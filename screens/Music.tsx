@@ -214,7 +214,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             </ScrollView>
           )}
           <Text style={[s.meta, s.padH, { marginTop: 12 }]}>
-            Playback controls select a track only — no stream is started until audio is wired.
+            Choose a track to view its details. Playback requires a valid audio URL from the catalogue.
           </Text>
         </>
       )}
