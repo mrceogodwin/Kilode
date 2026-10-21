@@ -142,9 +142,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <Text style={s.h1}>{activeTrack.title}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
           <Text style={[s.meta, { marginTop: 14 }]}>Track details · {catalogueSource === "live" ? "live catalogue" : "preview catalogue"}</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={() => { onPlay(activeTrack); show("Track selected. Streaming audio is not connected yet."); }}>
-            <Ionicons name="play" size={17} color="#fff" />
-            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Select track</Text>
+          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22, opacity: playbackBusy ? 0.65 : 1 }]} onPress={() => void togglePlayback(activeTrack)} disabled={playbackBusy}>
+            <Ionicons name={isPlaying ? "pause" : "play"} size={17} color="#fff" />
+            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>{playbackBusy ? "Loading audio…" : isPlaying ? "Pause track" : "Play track"}</Text>
           </TouchableOpacity>
           <Text style={[s.meta, { marginTop: 12 }]}>Playback works when a catalogue track provides a valid audio URL. Tracks without one cannot play yet.</Text>
         </View>
