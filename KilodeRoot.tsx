@@ -411,6 +411,7 @@ function KilodeApp() {
         onTab={(id) => go(id)}
         onCreate={() => setCreateOpen(true)}
         isDark={isDark}
+        accent={C.accent}
       />
 
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
