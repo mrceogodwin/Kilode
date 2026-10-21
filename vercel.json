@@ -3,6 +3,7 @@
   "github": {
     "enabled": false
   },
+  "installCommand": "true",
   "buildCommand": "mkdir -p dist && cp docs/kilode-ios-preview.html dist/index.html",
   "outputDirectory": "dist",
   "framework": null
