@@ -332,11 +332,18 @@ function KilodeApp() {
   // Resolve saved authentication first, but never make first-launch guests wait
   // for feed/music bootstrap before showing the welcome experience.
   if (authLoading) {
+    // Keep the approved welcome screen visible on cold launch while stored
+    // credentials are checked. If a session is found, the app transitions
+    // to the signed-in experience as soon as auth resolves.
     return (
-      <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
-        <ActivityIndicator color={C.accent} size="large" />
-        <Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text>
-      </SafeAreaView>
+      <AuthScreen
+        isDark={isDark}
+        C={C}
+        onSignIn={signIn}
+        onSignUp={signUp}
+        onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
+        show={show}
+      />
     );
   }
 
