@@ -873,6 +873,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         ))}
       </ScrollView>
 
+      {(tab === "Home" || tab === "Discover") ? (
+        <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>More to Explore</Text>
+          <TouchableOpacity onPress={() => openMusicDestination("Playlists")}><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>All collections</Text></TouchableOpacity>
+        </View>
+      ) : null}
+      {(tab === "Home" || tab === "Discover") ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 10 }}>
+        {[
+          { title: "Explore Tracks", detail: "Find your next repeat", icon: "musical-notes-outline", target: "The Discovery List" },
+          { title: "Fresh Releases", detail: "Singles, EPs & albums", icon: "disc-outline", target: "Releases" },
+          { title: "Meet the Artists", detail: "Discover artists on Kilode", icon: "people-outline", target: "Artists" },
+        ].map((item) => <TouchableOpacity key={item.title} onPress={() => item.target === "Artists" ? setTab("Artists") : openMusicDestination(item.target)} accessibilityRole="button" style={{ width: 148, minHeight: 112, padding: 13, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+          <Ionicons name={item.icon as any} size={21} color={C.accent} />
+          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13, marginTop: 12 }}>{item.title}</Text>
+          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 4 }}>{item.detail}</Text>
+        </TouchableOpacity>)}
+      </ScrollView> : null}
       <View style={{ marginHorizontal: 16, marginTop: 14, padding: 4, flexDirection: "row", borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
         {TABS.map((t) => (
           <TouchableOpacity
@@ -889,8 +906,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
 
       {(tab === "Home" || tab === "Charts" || tab === "Discover") ? (
         <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Picked for discovery" : "Kilode Top 100"}</Text>
-          <TouchableOpacity onPress={() => openMusicDestination("Top 100")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Open Top 100</Text></TouchableOpacity>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", letterSpacing: -0.25, flex: 1 }}>{tab === "Discover" ? "Picked for discovery" : "Popular in the catalogue"}</Text>
+          <TouchableOpacity onPress={() => openMusicDestination("Top 100")} accessibilityRole="button"><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Explore Top 100</Text></TouchableOpacity>
         </View>
       ) : null}
 
@@ -936,23 +953,6 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         </TouchableOpacity>
       ) : null}
 
-      {(tab === "Home" || tab === "Discover") ? (
-        <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700", flex: 1 }}>More to Explore</Text>
-          <TouchableOpacity onPress={() => openMusicDestination("Playlists")}><Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>All collections</Text></TouchableOpacity>
-        </View>
-      ) : null}
-      {(tab === "Home" || tab === "Discover") ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingTop: 10 }}>
-        {[
-          { title: "Explore Tracks", detail: "Find your next repeat", icon: "musical-notes-outline", target: "The Discovery List" },
-          { title: "Fresh Releases", detail: "Singles, EPs & albums", icon: "disc-outline", target: "Releases" },
-          { title: "Meet the Artists", detail: "Discover artists on Kilode", icon: "people-outline", target: "Artists" },
-        ].map((item) => <TouchableOpacity key={item.title} onPress={() => item.target === "Artists" ? setTab("Artists") : openMusicDestination(item.target)} accessibilityRole="button" style={{ width: 148, minHeight: 112, padding: 13, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
-          <Ionicons name={item.icon as any} size={21} color={C.accent} />
-          <Text style={{ color: C.text, fontWeight: "800", fontSize: 13, marginTop: 12 }}>{item.title}</Text>
-          <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 4 }}>{item.detail}</Text>
-        </TouchableOpacity>)}
-      </ScrollView> : null}
       {(tab === "Home" || tab === "Discover") ? <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, paddingHorizontal: 16, marginTop: 18, marginBottom: 9 }}>Genres</Text> : null}
       {(tab === "Home" || tab === "Discover") ? <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
         {GENRES.map((g) => (
