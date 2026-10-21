@@ -123,3 +123,29 @@ For every new finding, add: severity (P0/P1/P2), system, exact file/line, eviden
 - Dependency/build risk: `package.json` uses Expo SDK `~51.0.28`, React Native `0.74.5`, and `expo-av ~14.0.7`. This is an older stack for a 2026 release. Schedule a compatibility-first upgrade review and migrate audio APIs deliberately; do not mass-upgrade without Expo Doctor, bundle export, and real-device regression tests.
 - Release asset configuration issue: `app.json` does not declare an app `icon` or splash `image`; Android `adaptiveIcon` has a background color but no foreground image. This matches the missing-assets finding above.
 - CI status for this exact register update/commit: not yet verified. Previous green CI runs apply to their own SHAs only.
+
+
+## 9. Follow-up code inspection — 2026-10-21
+
+### Confirmed from source
+
+- `lib/auth.tsx` stores session data through AsyncStorage. Review whether production bearer tokens are persisted there; prefer the platform-appropriate secure credential store for sensitive tokens and test logout/session revocation. This is a security review item, not yet a proven exploit.
+- `lib/auth.tsx` explicitly returns a backend-not-connected error when `API_BASE` is empty. This is expected fail-closed behavior; it confirms live sign-in cannot work until the dedicated backend is configured.
+- `lib/moderation.ts` explicitly describes report/block storage as local-only and notes reports are not delivered to staff and blocks are not enforced across devices.
+- `screens/Auth.tsx` loads welcome hero art from Unsplash at runtime. This creates network dependency for the launch experience and does not satisfy the requested bundled cinematic montage/approved logo.
+- `app.config.js` passes `EXPO_PUBLIC_API_URL` through to runtime config but defaults it to an empty string. No legacy API fallback was found in this configuration path.
+- Shared button/tab components include some accessibility roles and labels; coverage still needs a full accessibility audit across all screens and modal/drawer controls.
+- The repository's prior `docs/KILODE_NATIVE_TEST_REPORT.md` contained an outdated recommendation to deploy Kilode-v2 as the backend. It has now been marked historical and corrected to the current decision: use a dedicated Kilode backend, separate from the native app's web preview.
+
+### New P1/P2 work items
+
+- [ ] **P1 — Secure session storage review:** trace all session/token fields written by `lib/auth.tsx`, confirm whether sensitive server credentials are persisted in AsyncStorage, and migrate sensitive tokens to secure storage if applicable.
+- [ ] **P1 — Expo SDK lifecycle review:** plan an incremental upgrade from Expo SDK 51 / React Native 0.74 and review `expo-av` compatibility. Establish target SDK, migration notes and regression coverage before changing versions.
+- [ ] **P1 — Runtime launch asset dependency:** bundle approved welcome artwork locally; no remote Unsplash image should be required to render the entry screen.
+- [ ] **P2 — Accessibility pass:** audit every screen, button, modal, drawer, create popover and tab for labels, roles, selected/disabled state, focus order, VoiceOver and dynamic type.
+- [ ] **P2 — Documentation consistency:** keep the master register authoritative; label historical investigations and make sure feature-status, test, App Store and backend docs agree on the dedicated-backend decision.
+
+### Latest CI state
+
+- The register inventory update commit `08436abf8ab464e7883d74f36f9d13a899626c35` had native validation run `39626974658` in progress when checked. Do not call it green until the workflow completes successfully.
+- The follow-up historical-document correction commit is `9c5273290e765e1a9eecb6d3fe3634bbb4d267ff`; its exact-SHA CI result still needs confirmation.
