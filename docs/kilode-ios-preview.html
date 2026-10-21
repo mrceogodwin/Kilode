@@ -6,12 +6,12 @@
 <title>Kilode · Native preview (reflects mrceogodwin/Kilode)</title>
 <style>
   :root{
-    --bg:#0A0A0A;--card:#141414;--elev:#1A1A1A;--border:#2A2A2A;
-    --text:#F5F5F5;--text2:#A3A3A3;--text3:#737373;
-    --accent:#22C55E;--accentSoft:#0F2A1A;--danger:#F43F5E;
+    --bg:#0D0D10;--card:#18181C;--elev:#202025;--border:#2A2A30;
+    --text:#F7F7F8;--text2:#B8B8BC;--text3:#85858B;
+    --accent:#D4AF37;--accentSoft:#292315;--danger:#F06464;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;background:#111;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;background:#111113;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
   h1{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:8px;text-align:center}
   .note{font-size:11px;color:var(--text3);max-width:390px;text-align:center;margin-bottom:14px;line-height:1.4}
   .badge{display:inline-block;background:var(--accentSoft);color:var(--accent);border:1px solid #1A3D28;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;margin-bottom:12px}
@@ -20,8 +20,8 @@
   .notch span{width:100px;height:22px;background:#000;border-radius:12px}
   .status{height:18px;padding:0 20px;display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--text)}
   .header{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--border)}
-  .brand{font-size:19px;font-weight:800;letter-spacing:-.4px}
-  .brand em{color:var(--accent);font-style:normal}
+   .brand{font-size:17px;font-weight:900;letter-spacing:1.2px}.brand em{color:var(--accent);font-style:normal;font-size:22px;margin-left:1px}
+  
   .hdr-right{display:flex;gap:8px;align-items:center}
   .pill{font-size:10px;font-weight:700;padding:4px 8px;border-radius:999px;background:var(--card);border:1px solid var(--border);color:var(--text2)}
   .av{width:32px;height:32px;border-radius:16px;background:var(--accent);display:grid;place-items:center;font-weight:700;font-size:12px}
@@ -59,7 +59,7 @@
   .dock{display:flex;align-items:center;justify-content:space-around;padding:8px 6px 16px;border-top:1px solid var(--border);background:var(--bg)}
   .tab{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:56px;color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;background:none;border:0}
   .tab.on{color:var(--accent)}
-  .plus{width:48px;height:48px;border-radius:24px;background:var(--accent);color:#fff;font-size:28px;display:grid;place-items:center;margin-top:-16px;border:3px solid var(--bg);cursor:pointer}
+  .plus{width:42px;height:42px;border-radius:21px;background:var(--accent);color:#17140A;font-size:26px;font-weight:500;display:grid;place-items:center;margin-top:-10px;border:3px solid var(--bg);cursor:pointer;box-shadow:0 5px 18px #0008}.create-pop{display:none;position:absolute;z-index:5;bottom:76px;left:50%;transform:translateX(-50%);background:#202024;border:1px solid #393940;border-radius:15px;padding:6px;min-width:170px;box-shadow:0 12px 34px #0009}.create-pop.open{display:block;animation:pop .16s ease-out}@keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}.create-pop button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;background:transparent;color:var(--text);font-size:13px;text-align:left;border-radius:9px;cursor:pointer}.create-pop button:active{background:#33333A}
   .desk{text-align:center;padding:32px 20px}
   .desk .ico{font-size:40px;margin-bottom:8px}
   .list{margin:0 14px}
@@ -70,15 +70,15 @@
 <body>
   <div class="badge">PREVIEW · mirrors Kilode Expo app structure · seed data labeled</div>
   <h1>Kilode iOS visual preview</h1>
-  <p class="note">Not Expo runtime — interactive HTML reflecting <b>mrceogodwin/Kilode</b> dark + green identity, Home / Socials / Activity / My Space / desks. Open on phone for best feel.</p>
+  <p class="note">Interactive web mirror of the Kilode Expo app — not the native runtime. Dark premium identity, compact create menu, Home / Socials / Activity / My Space / systems. Preview content is labelled.</p>
 
   <div class="phone" id="phone">
     <div class="notch"><span></span></div>
     <div class="status"><span>9:41</span><span>Kilode</span><span>100%</span></div>
     <div class="header">
-      <div class="brand" id="hdrTitle">Kilode<em>!</em></div>
+      <div class="brand" id="hdrTitle">KILODE<em>!</em></div>
       <div class="hdr-right">
-        <span class="pill">seed</span>
+        <span class="pill">PREVIEW</span>
         <div class="av" onclick="go('myspace')">G</div>
       </div>
     </div>
@@ -86,10 +86,11 @@
     <div class="dock">
       <button class="tab on" data-tab="home" onclick="go('home')">🏠<span>Home</span></button>
       <button class="tab" data-tab="socials" onclick="go('socials')">👥<span>Socials</span></button>
-      <div class="plus" onclick="toast('Create sheet')">+</div>
+      <button class="plus" aria-label="Create" onclick="toggleCreate(event)">+</button>
       <button class="tab" data-tab="activity" onclick="go('activity')">🔔<span>Activity</span></button>
       <button class="tab" data-tab="myspace" onclick="go('myspace')">👤<span>My Space</span></button>
     </div>
+    <div class="create-pop" id="createPop"><button onclick="createAction('Post')">✳ <span>Post</span></button><button onclick="createAction('Story')">◉ <span>Story</span></button><button onclick="createAction('Music')">♫ <span>Upload music</span></button><button onclick="createAction('Event')">◇ <span>Create event</span></button></div>
     <div class="toast" id="toast"></div>
   </div>
 
@@ -114,11 +115,14 @@ const NEWS=[
 ];
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)}
+function toggleCreate(e){if(e)e.stopPropagation();document.getElementById('createPop').classList.toggle('open')}
+function createAction(label){document.getElementById('createPop').classList.remove('open');toast(label+' · preview only; not published')}
+document.addEventListener('click',e=>{if(!e.target.closest('.create-pop')&&!e.target.closest('.plus'))document.getElementById('createPop').classList.remove('open')});
 
 function go(tab){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   const title=document.getElementById('hdrTitle');
-  if(tab==='home') title.innerHTML='Kilode<em>!</em>';
+  if(tab==='home') title.innerHTML='KILODE<em>!</em>';
   else if(tab==='socials') title.textContent='Socials';
   else if(tab==='activity') title.textContent='Notifications';
   else if(tab==='myspace') title.textContent='My Space';
@@ -133,19 +137,19 @@ function go(tab){
 
 function homeHTML(){
   return `
-  <div class="pad"><div class="h1">Good morning</div><div class="sub">@guest · member · seed data</div></div>
+  <div class="pad" style="padding-top:16px"><div class="h1" style="font-size:20px">Your world, in one place</div><div class="sub">Discover across Kilode</div></div>
   <div class="carousel">
-    <div class="slide" style="background:linear-gradient(135deg,#14532d,#22c55e)"><b>Tonight in Lagos</b><span>Rooms · live debates</span></div>
-    <div class="slide" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6)"><b>Afrobeats week</b><span>New drops on Music</span></div>
+    <div class="slide" style="background:linear-gradient(135deg,#42351A,#171719);border:1px solid #6B5724"><b>Tonight in Lagos</b><span>Events · culture · people</span></div>
+    <div class="slide" style="background:linear-gradient(135deg,#292329,#171719);border:1px solid #40323E"><b>Afrobeats week</b><span>Discover new music</span></div>
   </div>
   <div class="chips">
     <div class="chip on">For you</div><div class="chip">Trending</div><div class="chip">Rooms</div><div class="chip">News</div>
   </div>
   <div class="sec"><h3>Explore</h3><a onclick="toast('More desks')">More</a></div>
   <div class="grid">${DESKS.map(d=>`<div class="cell" onclick="go('${d.id}')"><span>${d.icon}</span>${d.label}</div>`).join('')}</div>
-  <div class="sec"><h3>News for you</h3></div>
+  <div class="sec"><h3>Media</h3><a onclick="go('media')">Explore</a></div>
   ${NEWS.map(n=>`<div class="card row"><div class="media" style="width:64px;height:64px;margin:0;background:${n.tone}"></div><div><div class="meta" style="color:var(--accent)">${n.kicker}</div><div class="name">${n.title}</div></div></div>`).join('')}
-  <div class="sec"><h3>Trending takes</h3><a onclick="go('socials')">Socials</a></div>
+  <div class="sec"><h3>Socials · Trending</h3><a onclick="go('socials')">Open</a></div>
   ${TAKES.map(t=>`<div class="card"><div class="row"><div class="av">${t.name[0]}</div><div><div class="name">${t.name}</div><div class="meta">@${t.handle}</div></div></div><div class="body">${t.text}</div><div class="fact"><span style="color:var(--accent)">FACT ${t.fact}%</span><div class="bar"><i style="flex:${t.fact}"></i><i style="flex:${100-t.fact}"></i></div><span style="color:var(--danger)">CAP ${100-t.fact}%</span></div></div>`).join('')}
   `;
 }
