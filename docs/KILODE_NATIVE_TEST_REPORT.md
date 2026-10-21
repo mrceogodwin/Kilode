@@ -1,6 +1,9 @@
 # Kilode native test report
 
-Updated: 2026-10-19 (deployment root cause)
+Updated: 2026-10-19 (deployment root cause; historical evidence)
+
+> **Superseded direction (2026-10-21):** This report documents an earlier investigation, not the current backend plan. The current product decision is that the Expo iOS app must use Kilode's dedicated backend and must not silently depend on Kilode-v2 or Kilode-nine. Do not execute the old recommendation below to deploy Kilode-v2 as the native app's backend without an explicit new decision. The old probe results are historical and must be re-run against the actual dedicated backend once it is provisioned.
+
 
 ## Verified: why `/api/mobile/*` is not live
 
@@ -36,11 +39,7 @@ Therefore production host `kilode-nine.vercel.app` cannot serve `/api/mobile/*` 
 - `create_git_project` for `mrceogodwin/Kilode-v2` → **403** scope auth on Vercel connector
 - Domain listing → **403** same scope
 
-**Blocker requiring user action:** Re-auth Vercel connector and/or in Vercel dashboard:
-1. Create or relink a project to **`mrceogodwin/Kilode-v2`** (production branch `main`).
-2. Deploy production.
-3. Point `kilode-nine.vercel.app` (or keep separate API host) at that deployment.
-4. Do **not** keep deploying the Expo RN repo as the web product (`kilodenew` currently does).
+**Historical blocker at time of report:** The old bridge was not live on the checked hosts. This is not the current implementation plan. Provision a dedicated backend for Kilode, set the native app's explicit API URL to that backend, and validate its health/auth/data contracts. Keep the Vercel browser mirror separate from the native API service.
 
 ### RN client
 - Points at `API_BASE` + `/api/mobile/*`
