@@ -139,8 +139,25 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
       { shouldPlay: true, progressUpdateIntervalMillis: 500 },
       onStatus
     );
+
+    if (!created.status.isLoaded) {
+      // createAsync can resolve with an unloaded status for some source failures.
+      // Do not leave the UI believing a track started when the native player did not load it.
+      created.sound.setOnPlaybackStatusUpdate(null);
+      await created.sound.unloadAsync().catch(() => undefined);
+      sound = null;
+      currentTrack = null;
+      isPlaying = false;
+      positionMillis = 0;
+      durationMillis = 0;
+      publish();
+      return { ok: false, message: "Kilode couldn't load this audio source. Try another track or try again later." };
+    }
+
     sound = created.sound;
-    isPlaying = created.status.isLoaded ? created.status.isPlaying : false;
+    isPlaying = created.status.isPlaying;
+    positionMillis = created.status.positionMillis;
+    durationMillis = created.status.durationMillis || 0;
     publish();
     return { ok: true };
   } catch {
