@@ -427,16 +427,25 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
             <Ionicons name="musical-notes-outline" size={18} color={C.accent} />
           </View>
           {exploreTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : exploreTracks.slice(0, 100).map((track: any, index: number) => {
-            const rankChange = Number.isFinite(track.rankChange) ? track.rankChange : null;
-            const previousRank = Number.isFinite(track.previousRank) ? track.previousRank : null;
-            const change = rankChange !== null ? rankChange : previousRank !== null ? previousRank - (index + 1) : null;
+            const numeric = (value: unknown): number | null => {
+              if (typeof value === "number" && Number.isFinite(value)) return value;
+              if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
+              return null;
+            };
+            const reportedRank = numeric(track.rank ?? track.currentRank ?? track.current_rank);
+            const position = reportedRank !== null && reportedRank > 0 ? reportedRank : index + 1;
+            const rankChange = numeric(track.rankChange ?? track.rank_change);
+            const previousRank = numeric(track.previousRank ?? track.previous_rank);
+            const change = previousRank !== null && previousRank > 0
+              ? previousRank - position
+              : rankChange;
             const movementIcon = change === null || change === 0 ? "remove-outline" : change > 0 ? "arrow-up" : "arrow-down";
             const movementColor = change === null || change === 0 ? C.text3 : change > 0 ? "#59C98A" : "#E58A78";
             const rankAccent = index === 0 ? "#E5C158" : index === 1 ? "#B8C0CC" : index === 2 ? "#B87951" : C.border;
             const curatedIcon = index === 0 ? "crown-outline" : index === 1 ? "medal-outline" : index === 2 ? "ribbon-outline" : index % 7 === 0 ? "sparkles-outline" : index % 5 === 0 ? "flame-outline" : "musical-note-outline";
             return (
-              <TouchableOpacity key={musicTrackIdentity(track)} style={{ marginHorizontal: 14, marginBottom: 5, minHeight: 57, flexDirection: "row", alignItems: "center", paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: index < 3 ? "#75613A" : C.border, backgroundColor: C.card, gap: 8 }} onPress={() => selectTrack(track)} accessibilityRole="button" accessibilityLabel={`Rank ${index + 1}, ${track.title}, ${track.artist || "Kilode artist"}`}>
-                <View style={{ width: 31, alignItems: "center", justifyContent: "center" }}><Text style={{ color: index < 3 ? rankAccent : C.text2, fontSize: index < 3 ? 19 : 15, fontWeight: "900", fontVariant: ["tabular-nums"], letterSpacing: -0.6 }}>{String(index + 1).padStart(2, "0")}</Text>{index < 3 ? <View style={{ height: 2, width: 15, borderRadius: 1, backgroundColor: rankAccent, marginTop: 2 }} /> : null}</View>
+              <TouchableOpacity key={musicTrackIdentity(track)} style={{ marginHorizontal: 14, marginBottom: 5, minHeight: 57, flexDirection: "row", alignItems: "center", paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: index < 3 ? "#75613A" : C.border, backgroundColor: C.card, gap: 8 }} onPress={() => selectTrack(track)} accessibilityRole="button" accessibilityLabel={`Rank ${position}, ${track.title}, ${track.artist || "Kilode artist"}`}>
+                <View style={{ width: 31, alignItems: "center", justifyContent: "center" }}><Text style={{ color: index < 3 ? rankAccent : C.text2, fontSize: index < 3 ? 19 : 15, fontWeight: "900", fontVariant: ["tabular-nums"], letterSpacing: -0.6 }}>{String(position).padStart(2, "0")}</Text>{index < 3 ? <View style={{ height: 2, width: 15, borderRadius: 1, backgroundColor: rankAccent, marginTop: 2 }} /> : null}</View>
                 <View style={{ width: 34, height: 36, borderRadius: 9, backgroundColor: index < 3 ? "#242329" : C.input, borderWidth: 1, borderColor: index < 3 ? rankAccent : C.border, alignItems: "center", justifyContent: "center" }}><Ionicons name={curatedIcon as any} size={15} color={index < 3 ? rankAccent : C.accent} /></View>
                 <View style={{ flex: 1, minWidth: 0 }}><Text style={{ color: C.text, fontSize: 12, fontWeight: "800" }} numberOfLines={1}>{track.title}</Text><Text style={{ color: C.text2, fontSize: 10, marginTop: 2 }} numberOfLines={1}>{track.artist || "Kilode artist"}</Text></View>
                 <View style={{ alignItems: "center", justifyContent: "center", minWidth: 27, paddingVertical: 4, borderRadius: 7, backgroundColor: change === null || change === 0 ? C.input : change > 0 ? "rgba(89,201,138,0.10)" : "rgba(229,138,120,0.10)" }}><Ionicons name={movementIcon as any} size={14} color={movementColor} /><Text style={{ color: movementColor, fontSize: 9, fontWeight: "900", marginTop: 1 }}>{change === null ? "—" : change > 0 ? `+${change}` : change < 0 ? String(change) : "—"}</Text></View>
