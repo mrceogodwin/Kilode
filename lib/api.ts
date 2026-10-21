@@ -415,8 +415,14 @@ export async function fetchTop100Chart(
   ) {
     return { ok: false, data: null, source: "error", error: "Chart snapshot metadata is incomplete or does not match the requested chart", fn: "getTop100Chart" };
   }
-  if (Date.now() - Date.parse(generatedAt) > 48 * 60 * 60 * 1000 || Date.parse(generatedAt) > Date.now() + 5 * 60 * 1000) {
-    return { ok: false, data: null, source: "error", error: "Chart snapshot is stale or has a future timestamp", fn: "getTop100Chart" };
+  const generatedAtMs = Date.parse(generatedAt);
+  const windowEndMs = Date.parse(windowEnd);
+  if (
+    Date.now() - generatedAtMs > 48 * 60 * 60 * 1000 ||
+    generatedAtMs > Date.now() + 5 * 60 * 1000 ||
+    windowEndMs > generatedAtMs + 5 * 60 * 1000
+  ) {
+    return { ok: false, data: null, source: "error", error: "Chart snapshot is stale or its time window is in the future", fn: "getTop100Chart" };
   }
   if (payload.entries.length === 0) {
     return { ok: false, data: null, source: "error", error: "Chart snapshot contains no ranked tracks", fn: "getTop100Chart" };
