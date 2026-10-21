@@ -146,11 +146,6 @@ function isDeviceSession(session: { token?: string; localOnly?: boolean } | null
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
-  useEffect(() => {
-    const homePreview = Platform.OS === "web" && typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("preview") === "home";
-    if (homePreview && !authLoading && !session) signInGuest("Guest");
-  }, [authLoading, session, signInGuest]);
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
