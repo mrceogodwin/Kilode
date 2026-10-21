@@ -60,7 +60,7 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);
+  const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);\n  const [musicPositionMillis, setMusicPositionMillis] = useState(0);\n  const [musicDurationMillis, setMusicDurationMillis] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
