@@ -106,17 +106,19 @@ Backend constraint: do not silently default the native app to Kilode v2 or kilod
 - [ ] No hardcoded secrets, no fabricated live data, no local-only action described as server-persisted.
 - [ ] Test account isolation, ownership, invalid input, permission-denied cases, failed uploads/payments and network interruption.
 
-## Latest execution audit — 2026-10-21 19:40 WAT
+## Latest execution audit — 2026-10-21 19:45 WAT
 
-- Latest app-code commit under test: `7445ffa44d843d58c43757d6b736e18a140f457b` (`[ios-build] Fix native-incompatible create popover width`).
-- GitHub Actions native validation job `119406178630` completed SUCCESS for that commit: dependency installation, TypeScript, Expo Doctor, iOS JavaScript bundle export, and artifact upload all passed. This is meaningful native-project validation, but it is not a compiled iOS app.
-- EAS installable-preview job `119406731610` passed the EAS credential presence/project-ID match check and dependency installation, but the workflow was cancelled before an installable build result was produced. The branch workflow uses `cancel-in-progress: true`; a later audit commit superseded the running build. This is NOT a successful iOS build. The next `[ios-build]` audit commit deliberately re-triggers validation followed by a fresh EAS preview build.
-- GitHub Actions web-preview check `39653075838` completed SUCCESS for commit `7445ffa44d843d58c43757d6b736e18a140f457b`.
-- Vercel deployment `dpl_FJsQxvXjaekXeAsKScwH5DYjeGzk`, tied to commit `7445ffa44d843d58c43757d6b736e18a140f457b`, reached READY. This confirms web export deployment only; it is not physical iPhone or TestFlight verification.
+- Latest native app-code commit under test remains `7445ffa44d843d58c43757d6b736e18a140f457b` (`[ios-build] Fix native-incompatible create popover width`). Latest audit-only commit is `2b28f59b234d7fae3cffe3947271b8c5f2b3c4d8`.
+- GitHub Actions native validation for audit commit `2b28f59b234d7fae3cffe3947271b8c5f2b3c4d8` passed: dependency installation, TypeScript, Expo Doctor, iOS JavaScript bundle export, and artifact upload. Run: `39654061736`.
+- EAS installable iOS preview job `119410206511` FAILED before an EAS build was created. Exact log cause: EAS used remote iOS credentials but could not find credentials suitable for internal distribution in non-interactive mode. Required next action: configure/create an iOS distribution certificate and Ad Hoc provisioning profile for bundle ID `ng.kilode.app` in EAS credentials (one-time interactive setup by an authorized account), then rerun the preview build. Do not report an installable build or artifact until EAS returns a build ID and final successful status.
+- The EAS credential presence/project-ID check and dependency installation both passed. The blocker is specifically missing suitable iOS internal-distribution credentials, not missing GitHub `EXPO_TOKEN` or project-ID mismatch.
+- EAS also warned that `ios.infoPlist.ITSAppUsesNonExemptEncryption` is unset and manual App Store Connect configuration is required; determine encryption declaration accurately before setting it. EAS noted `ios.buildNumber` is ignored when remote version source is enabled; clean this config after confirming intended version management.
+- GitHub Actions web-preview check for commit `2b28f59b234d7fae3cffe3947271b8c5f2b3c4d8` passed: run `39654062019`.
+- Vercel deployment `dpl_4newtjVUJ12U6CE81Dam3qeui51o`, tied to commit `2b28f59b234d7fae3cffe3947271b8c5f2b3c4d8`, reached READY and carries the canonical preview alias. This confirms web export deployment only, not native-device verification.
 - Native create-popover width was corrected from web-only CSS-style `min(340px, 92%)` to React Native-compatible `width: "92%", maxWidth: 340`.
 - Auth source inspection confirms account type is a required step before signup credentials. Actual server-side account permission enforcement and production auth persistence remain unverified.
 - `app.json` declares Expo app `Kilode`, slug `kilode`, owner `mudino`, iOS bundle ID `ng.kilode.app`, and EAS project ID `b9f2e786-665d-46e5-9a7c-7af7ab25e0ea`. `eas.json` has development, preview and production profiles.
-- Existing native validation workflow: `.github/workflows/native-preview.yml`. It runs npm install, TypeScript, Expo Doctor, and exports an iOS JavaScript bundle. The separate EAS job builds an internal iOS preview only after validation and credential checks.
+- Existing native validation workflow: `.github/workflows/native-preview.yml`. It runs npm install, TypeScript, Expo Doctor, and exports an iOS JavaScript bundle. EAS build job runs only after validation and credential checks. Avoid adding another `[ios-build]` trigger until distribution credentials are configured, to avoid repeating the same known failure.
 - No `package-lock.json`, `npm-shrinkwrap.json`, or `yarn.lock` exists on `preview/web`; dependency installs are not lockfile-reproducible yet.
 - `lib/config.ts` has no default host to Kilode-v2 or kilode-nine; absent dedicated env configuration it resolves to offline mode. Supabase backend setup, migrations/RLS and real-account validation remain unverified.
 - The welcome screen still displays one remote Unsplash portrait with a local fallback. The ten-video montage and approved final logo asset are not integrated/verified.
