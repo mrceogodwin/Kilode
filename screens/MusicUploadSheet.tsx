@@ -312,10 +312,12 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
     if (pendingUploadExpiresAt) {
       const expiresAt = Date.parse(pendingUploadExpiresAt);
       if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
-        setPendingUploadId(null);
+        // The server may already have received the object even when the local
+        // transfer appeared interrupted. Keep the upload ID and check server
+        // status before allowing a replacement upload, to avoid duplicate tracks.
         setPendingUploadUrl(null);
         setPendingUploadExpiresAt(null);
-        fail("This secure upload link has expired. Select the file again and start a new upload.");
+        fail("This secure upload link has expired. Check processing status first so Kilode can confirm whether the existing upload was received.");
         return;
       }
     }
