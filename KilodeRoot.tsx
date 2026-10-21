@@ -168,6 +168,8 @@ function KilodeApp() {
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
+  // Re-show the native entry screen on each cold launch, including for saved sessions.
+  const [launchIntroDone, setLaunchIntroDone] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock" | "error">("mock");
   const [takes, setTakes] = useState<any[]>([]);
@@ -528,6 +530,9 @@ function KilodeApp() {
 
   if (session && (authLoading || boot)) {
     return (<SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}><ActivityIndicator color={C.accent} size="large" /><Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text></SafeAreaView>);
+  }
+  if (session && !launchIntroDone) {
+    return (<AuthScreen isDark={isDark} C={C} hasSession onContinue={() => setLaunchIntroDone(true)} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
   }
   if (!session) {
     return (<AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
