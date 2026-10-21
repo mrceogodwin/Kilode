@@ -228,16 +228,7 @@ export function CommentsSheet({
                 setSending(false);
                 if (r.ok && r.data) {
                   const saved = r.data.comment || r.data.reply || r.data;
-                  setList((prev) => [
-                    ...prev,
-                    {
-                      id: String(saved.id || ("local-" + Date.now())),
-                      takeId,
-                      text: saved.text || saved.body || submittedText,
-                      name: saved.name || saved.author?.name || "You",
-                      time: saved.time || "now",
-                    },
-                  ];
+
                   const nextComment: Comment = {
                     id: String(saved.id || ("local-" + Date.now())),
                     takeId,
