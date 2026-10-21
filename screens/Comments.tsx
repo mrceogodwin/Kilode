@@ -239,13 +239,18 @@ export function CommentsSheet({
                   setList((prev) => [...prev, nextComment]);
                   const nextLocalComments = [...localComments, nextComment];
                   setLocalComments(nextLocalComments);
+                  let cacheFailed = false;
                   try {
                     await AsyncStorage.setItem(commentStorageKey, JSON.stringify(nextLocalComments));
                   } catch {
-                    show("Comment sent, but couldn't save it on this device.");
+                    cacheFailed = true;
                   }
                   setDraft("");
-                  show(r.source === "live" ? "Comment sent to Kilode" : "Comment added to this preview");
+                  show(cacheFailed
+                    ? "Comment sent, but couldn't save it on this device."
+                    : r.source === "live"
+                      ? "Comment sent to Kilode"
+                      : "Comment added to this preview");
                 } else {
                   show(r.error ? ("Comment not sent: " + r.error) : "Comment could not be sent");
                 }
