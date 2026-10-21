@@ -474,7 +474,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
       </View>
       <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
       <View style={s.roomRow}>
-        <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Paystack · backend when live</Text></View>
+        <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Payments not connected</Text></View>
         <TouchableOpacity style={s.joinBtn} onPress={() => show("Top up soon")}><Text style={s.joinBtnText}>Top up</Text></TouchableOpacity>
       </View>
     </ScrollView>
