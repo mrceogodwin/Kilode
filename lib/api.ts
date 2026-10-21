@@ -442,6 +442,11 @@ export async function fetchTop100Chart(
       ? null
       : typeof rawPrevious === "number" ? rawPrevious
       : typeof rawPrevious === "string" && rawPrevious.trim() ? Number(rawPrevious) : NaN;
+    const rawMovement = item?.movement;
+    const suppliedMovement = rawMovement === null || rawMovement === undefined
+      ? null
+      : typeof rawMovement === "number" ? rawMovement
+      : typeof rawMovement === "string" && rawMovement.trim() ? Number(rawMovement) : NaN;
     if (!trackId || !Number.isInteger(rank) || rank < 1 || rank > 100 || seenIds.has(trackId) || seenRanks.has(rank)) {
       return { ok: false, data: null, source: "error", error: "Chart snapshot contains duplicate or invalid track ranks", fn: "getTop100Chart" };
     }
@@ -449,6 +454,13 @@ export async function fetchTop100Chart(
       return { ok: false, data: null, source: "error", error: "Chart snapshot contains an invalid previous rank", fn: "getTop100Chart" };
     }
     const movement = previousRank === null ? null : previousRank - rank;
+    if (
+      (rawMovement !== undefined && rawMovement !== null && !Number.isInteger(suppliedMovement)) ||
+      (previousRank === null && suppliedMovement !== null) ||
+      (previousRank !== null && suppliedMovement !== null && suppliedMovement !== movement)
+    ) {
+      return { ok: false, data: null, source: "error", error: "Chart snapshot contains inconsistent rank movement", fn: "getTop100Chart" };
+    }
     seenIds.add(trackId);
     seenRanks.add(rank);
     entries.push({ trackId, rank, previousRank, movement });
