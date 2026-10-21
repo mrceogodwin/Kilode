@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
@@ -42,6 +42,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
   const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
   const [top100Snapshot, setTop100Snapshot] = useState<Top100ChartSnapshot | null>(null);
   const [chartRefreshing, setChartRefreshing] = useState(false);
+  const screenMounted = useRef(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -90,18 +91,22 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     setChartRefreshing(true);
     try {
       const result = await fetchTop100Chart("week", "NG");
+      if (!screenMounted.current) return;
       setTop100Snapshot(result.ok ? result.data : null);
       if (!result.ok && !silent) show("The official Top 100 snapshot is unavailable right now. The catalogue preview remains separate.");
     } catch {
+      if (!screenMounted.current) return;
       setTop100Snapshot(null);
       if (!silent) show("Could not refresh the Top 100 chart. Please try again.");
     } finally {
-      setChartRefreshing(false);
+      if (screenMounted.current) setChartRefreshing(false);
     }
   };
 
   useEffect(() => {
+    screenMounted.current = true;
     void refreshTop100(true);
+    return () => { screenMounted.current = false; };
   }, []);
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
