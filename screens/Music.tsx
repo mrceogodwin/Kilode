@@ -291,8 +291,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             ? catalogueTracks.filter((track: any) => track.album || track.release_type || track.release_title)
             : destination === "Tailored to You"
           ? tailoredTracks
-          : destination === "Top 100"
-            ? [...catalogueTracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, 100)
+          : destination === "Top 100" || destination === "Top 50"
+            ? [...catalogueTracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, destination === "Top 50" ? 50 : 100)
             : destination === "The Discovery List"
               ? catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)))
               : destination === "New & Noted"
@@ -305,7 +305,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                       ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
                       : catalogueTracks;
   // Chart category chips must filter the actual chart list, not just change their highlight.
-  const visibleDestinationTracks = destination === "Top 100" && selectedGenre && selectedGenre !== "All"
+  const visibleDestinationTracks = (destination === "Top 100" || destination === "Top 50") && selectedGenre && selectedGenre !== "All"
     ? destinationTracks.filter((track: any) => {
         const metadata = [track.genre, track.genres, track.region, track.country, track.artist_country]
           .filter(Boolean).join(" ").toLowerCase();
@@ -318,7 +318,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         return true;
       })
     : destinationTracks;
-  const hasVerifiedChartSignals = destination === "Top 100" && visibleDestinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
+  const hasVerifiedChartSignals = (destination === "Top 100" || destination === "Top 50") && visibleDestinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
   const albumGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.album).map((track: any) => [String(track.album), track])).entries()).map(([album, track]: any) => ({ title: String(album), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, trackCount: catalogueTracks.filter((item: any) => String(item.album) === String(album)).length }));
   const releaseGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.release_title || track.release || track.album).map((track: any) => [String(track.release_title || track.release || track.album), track])).entries()).map(([title, track]: any) => ({ title: String(title), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, type: String(track.release_type || "release"), trackCount: catalogueTracks.filter((item: any) => String(item.release_title || item.release || item.album) === String(title)).length }));
   const activeAlbumTitle = destinationName.startsWith("Album · ") ? destinationName.slice(8) : null;
@@ -540,11 +540,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               )}
             </View>
           ) : null}
-          {destination === "Top 100" ? (
+          {destination === "Top 100" || destination === "Top 50" ? (
             <>
               <View style={{ backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, padding: 12, marginBottom: 12 }}>
-                <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>Kilode Top 100</Text>
-                <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 4 }}>{hasVerifiedChartSignals ? "Ranked using available play-count signals. Official chart rules and verified listening aggregation still need backend enforcement." : "Until verified member listening data is connected, this is a catalogue preview—not an official popularity ranking."}</Text>
+                <Text style={{ color: C.text, fontWeight: "800", fontSize: 13 }}>{destination === "Top 50" ? "Kilode Top 50" : "Kilode Top 100"}</Text>
+                <Text style={{ color: C.text3, fontSize: 11, lineHeight: 17, marginTop: 4 }}>{hasVerifiedChartSignals ? "Sorted by available play-count signals. Official chart rules and verified listening aggregation still need backend enforcement." : "Until verified member listening data is connected, this is a catalogue preview—not an official popularity ranking."}</Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 14 }}>
                 {TOP100_CATEGORIES.map((category) => (
@@ -846,6 +846,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         {[
           { label: "Search", icon: "search-outline" },
           { label: "Top 100", icon: "podium-outline" },
+          { label: "Top 50", icon: "trending-up-outline" },
           { label: "Releases", icon: "albums-outline" },
           { label: "Albums", icon: "disc-outline" },
           { label: "Playlists", icon: "list-outline" },
