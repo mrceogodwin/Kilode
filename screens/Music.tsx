@@ -147,7 +147,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
         void recordMusicEvent(token, String(track.id), "play_started");
       }
       void recordMusicDiscoveryAction(track, "played", undefined, accountScope);
-      void readMusicDiscoveryProfile().then(setDiscoveryProfile);
+      void readMusicDiscoveryProfile(accountScope).then(setDiscoveryProfile);
       onPlay(playableTrack);
     } catch {
       show("Kilode could not start this track. Check your connection and try again.");
@@ -160,7 +160,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     setActiveArtist(null);
     setActiveTrack(t);
     // Track opens are stored locally to improve discovery without a server request.
-    void recordMusicDiscoveryAction(t, "opened", undefined, accountScope).then(() => readMusicDiscoveryProfile().then(setDiscoveryProfile));
+    void recordMusicDiscoveryAction(t, "opened", undefined, accountScope).then(() => readMusicDiscoveryProfile(accountScope).then(setDiscoveryProfile));
   };
 
   if (activeTrack) {
