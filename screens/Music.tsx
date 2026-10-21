@@ -85,6 +85,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [supportPages, setSupportPages] = useState<any[]>([]);
   const [loadingSupportPages, setLoadingSupportPages] = useState(false);
   const [creatingSupportPage, setCreatingSupportPage] = useState(false);
+  const [campaignTrackId, setCampaignTrackId] = useState("");
+  const [campaignPlacements, setCampaignPlacements] = useState<string[]>(["Music"]);
+  const [campaignBudget, setCampaignBudget] = useState("5000");
+  const [campaignDays, setCampaignDays] = useState("7");
+  const [savingCampaignBrief, setSavingCampaignBrief] = useState(false);
   const tracks = tracksProp ?? TRACKS;
   const canList = can(accountKind, "music_list");
 
@@ -412,11 +417,80 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             </View>
           ) : null}
           {destination === "Push Link" ? (
-            <View style={{ padding: 16, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, marginBottom: 16 }}>
-              <Ionicons name="megaphone-outline" size={26} color={C.accent} />
-              <Text style={{ color: C.text, fontWeight: "800", fontSize: 16, marginTop: 10 }}>Promote music across Kilode</Text>
-              <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 7 }}>Create a campaign for an eligible track or release, choose placements and a budget, and review verified results. Campaign payments and activation are not connected yet.</Text>
-              <TouchableOpacity onPress={() => show(canList ? "Artist campaign setup requires the trusted Push Link payment and activation workflow." : "Push Link campaign creation is available to eligible artist accounts.")} style={{ alignSelf: "flex-start", marginTop: 13, backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 }}><Text style={{ color: "#111", fontWeight: "800", fontSize: 12 }}>Explore promotion</Text></TouchableOpacity>
+            <View style={{ padding: 15, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, marginBottom: 16 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <View style={{ width: 42, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.accent + "20" }}><Ionicons name="megaphone-outline" size={23} color={C.accent} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.text, fontWeight: "800", fontSize: 16 }}>Push Link · Music promotion</Text>
+                  <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>Prepare a campaign brief for review</Text>
+                </View>
+              </View>
+              <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18, marginTop: 12 }}>Choose a release, placements, budget and duration. This saves a private draft on this device only; it does not charge you, publish a campaign or promise reach.</Text>
+              {!canList ? (
+                <View style={{ marginTop: 14, padding: 12, borderRadius: 10, backgroundColor: C.elevated }}>
+                  <Text style={{ color: C.text, fontWeight: "700", fontSize: 12 }}>Artist account required</Text>
+                  <Text style={{ color: C.text3, fontSize: 11, lineHeight: 16, marginTop: 4 }}>Switch to an eligible artist account to prepare music promotion.</Text>
+                </View>
+              ) : (
+                <>
+                  <Text style={{ color: C.text, fontSize: 12, fontWeight: "800", marginTop: 17, marginBottom: 8 }}>1 · Choose a track or release</Text>
+                  {tracks.slice(0, 8).map((track: any, index: number) => {
+                    const id = String(track.id ?? track.title ?? index);
+                    const selected = campaignTrackId === id;
+                    return <TouchableOpacity key={id} onPress={() => setCampaignTrackId(id)} style={{ flexDirection: "row", alignItems: "center", gap: 9, padding: 10, marginBottom: 6, borderRadius: 10, borderWidth: 1, borderColor: selected ? C.accent : C.border, backgroundColor: selected ? C.accent + "12" : C.elevated }}>
+                      <Ionicons name={selected ? "radio-button-on" : "radio-button-off"} size={17} color={selected ? C.accent : C.text3} />
+                      <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: C.text, fontSize: 12, fontWeight: "700" }}>{track.title || "Untitled track"}</Text><Text numberOfLines={1} style={{ color: C.text3, fontSize: 10, marginTop: 2 }}>{track.artist || track.artist_name || "Artist release"}</Text></View>
+                    </TouchableOpacity>;
+                  })}
+                  {!tracks.length ? <Text style={{ color: C.text3, fontSize: 11 }}>No catalogue tracks are available to select yet.</Text> : null}
+                  <Text style={{ color: C.text, fontSize: 12, fontWeight: "800", marginTop: 14, marginBottom: 8 }}>2 · Placements</Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                    {["Music", "Socials", "Media", "Events", "My Space"].map((placement) => {
+                      const selected = campaignPlacements.includes(placement);
+                      return <TouchableOpacity key={placement} onPress={() => setCampaignPlacements((current) => selected ? current.filter((x) => x !== placement) : [...current, placement])} style={{ paddingHorizontal: 11, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: selected ? C.accent : C.border, backgroundColor: selected ? C.accent + "18" : C.elevated }}>
+                        <Text style={{ color: selected ? C.accent : C.text2, fontSize: 11, fontWeight: "700" }}>{placement}</Text>
+                      </TouchableOpacity>;
+                    })}
+                  </View>
+                  <Text style={{ color: C.text, fontSize: 12, fontWeight: "800", marginTop: 14, marginBottom: 8 }}>3 · Budget (NGN) and duration</Text>
+                  <View style={{ flexDirection: "row", gap: 9 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: C.text3, fontSize: 10, marginBottom: 5 }}>Budget in naira</Text>
+                      <TextInput value={campaignBudget} onChangeText={(v) => setCampaignBudget(v.replace(/[^0-9]/g, "").slice(0, 8))} keyboardType="number-pad" placeholder="5000" placeholderTextColor={C.text3} style={{ color: C.text, backgroundColor: C.elevated, borderRadius: 10, borderWidth: 1, borderColor: C.border, paddingHorizontal: 11, paddingVertical: 10, fontSize: 13 }} />
+                    </View>
+                    <View style={{ width: 100 }}>
+                      <Text style={{ color: C.text3, fontSize: 10, marginBottom: 5 }}>Days</Text>
+                      <TextInput value={campaignDays} onChangeText={(v) => setCampaignDays(v.replace(/[^0-9]/g, "").slice(0, 3))} keyboardType="number-pad" placeholder="7" placeholderTextColor={C.text3} style={{ color: C.text, backgroundColor: C.elevated, borderRadius: 10, borderWidth: 1, borderColor: C.border, paddingHorizontal: 11, paddingVertical: 10, fontSize: 13 }} />
+                    </View>
+                  </View>
+                  <TouchableOpacity disabled={savingCampaignBrief} onPress={async () => {
+                    if (!userId) { show("Sign in to save a Push Link campaign brief."); return; }
+                    if (!campaignTrackId) { show("Choose a track or release first."); return; }
+                    if (!campaignPlacements.length) { show("Choose at least one placement."); return; }
+                    const budget = Number(campaignBudget);
+                    const days = Number(campaignDays);
+                    if (!Number.isFinite(budget) || budget < 1000 || !Number.isInteger(days) || days < 1 || days > 90) { show("Enter a budget of at least ₦1,000 and a duration of 1–90 days."); return; }
+                    setSavingCampaignBrief(true);
+                    try {
+                      const key = `kilode.pushlink.music.briefs.v1.${userId}`;
+                      const raw = await AsyncStorage.getItem(key);
+                      const prior = raw ? JSON.parse(raw) : [];
+                      const list = Array.isArray(prior) ? prior : [];
+                      const chosen = tracks.find((track: any, index: number) => String(track.id ?? track.title ?? index) === campaignTrackId);
+                      list.unshift({ id: `local-${Date.now()}`, trackId: campaignTrackId, trackTitle: chosen?.title || "Untitled track", placements: campaignPlacements, budgetNaira: budget, durationDays: days, status: "local_draft", createdAt: new Date().toISOString() });
+                      await AsyncStorage.setItem(key, JSON.stringify(list.slice(0, 20)));
+                      show("Campaign brief saved on this device. Checkout and campaign submission are not connected yet.");
+                    } catch {
+                      show("Could not save the campaign brief on this device.");
+                    } finally {
+                      setSavingCampaignBrief(false);
+                    }
+                  }} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 16, paddingVertical: 12, borderRadius: 11, backgroundColor: C.accent, opacity: savingCampaignBrief ? 0.6 : 1 }}>
+                    <Ionicons name="save-outline" size={16} color="#111" /><Text style={{ color: "#111", fontSize: 12, fontWeight: "800" }}>{savingCampaignBrief ? "Saving…" : "Save campaign brief"}</Text>
+                  </TouchableOpacity>
+                  <Text style={{ color: C.text3, fontSize: 10, lineHeight: 15, marginTop: 9 }}>No payment is taken. A saved local draft is not an active promotion, and its reach or results are not measured.</Text>
+                </>
+              )}
             </View>
           ) : null}
           {destination === "Top 100" ? (
