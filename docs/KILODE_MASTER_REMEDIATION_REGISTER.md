@@ -149,3 +149,35 @@ For every new finding, add: severity (P0/P1/P2), system, exact file/line, eviden
 
 - The register inventory update commit `08436abf8ab464e7883d74f36f9d13a899626c35` had native validation run `39626974658` in progress when checked. Do not call it green until the workflow completes successfully.
 - The follow-up historical-document correction commit is `9c5273290e765e1a9eecb6d3fe3634bbb4d267ff`; its exact-SHA CI result still needs confirmation.
+
+
+## 10. Follow-up audit — auth/API flow review (2026-10-21)
+
+### Validation confirmation
+
+- The register update at `803c0f80540f9b3a675efb3cb9f0dac6be79647b` passed GitHub Actions run `39627140004`.
+- The historical backend report correction at `9c5273290e765e1a9eecb6d3fe3634bbb4d267ff` passed run `39627054581`.
+- The inventory commit passed run `39626974658`; initial register creation passed run `39625635713`.
+- These are docs/native CI validations, not a physical-device build or end-to-end backend test.
+
+### Additional confirmed findings
+
+- **P1 — Server session revocation absent in native sign-out path:** `lib/auth.tsx` clears local React state and removes the locally persisted session, but does not call a server sign-out/revocation endpoint. The dedicated backend must define revocation/expiry semantics; implement remote revocation if supported, and ensure invalid/expired tokens are rejected by the server.
+- **P1 — Token persistence remains an unresolved security decision:** the full session object, including its `token`, is JSON-serialized into AsyncStorage at `lib/auth.tsx`. This is confirmed source behavior. Move sensitive bearer tokens to SecureStore (or another reviewed secure credential store), keep non-sensitive profile fields separate, and test migration, logout, reinstall and session expiry.
+- **P1 — Authentication contract is assumed, not validated against a live backend:** native auth posts to `/api/auth/sign-in/email` and `/api/auth/sign-up/email`, expects `data.token` or `data.session.token`, and maps handles to a synthetic `@users.kilode.ng` email when the entered identifier is not an email. The dedicated backend must explicitly support that contract or the client/backend must be updated together. Do not treat it as working until tested against the actual service.
+- **P1 — Sign-up uses a generated email namespace:** registration submits `<username>@users.kilode.ng`, not a user-verified email address. Decide and implement the identity model (username-only, verified email, phone, or combination) before launch; add uniqueness, verification, recovery and abuse controls on the server.
+- **P2 — Generic API helper does not send auth credentials:** `tryLiveJson` in `lib/api.ts` sends only Accept and User-Agent headers. Current callers are public read endpoints (takes, chart, track catalogue), but future protected endpoints must use the authenticated helper and server-side permission checks. Keep the distinction explicit in API contracts.
+- **P2 — Mock mode can report successful mock results:** `FORCE_MOCK` intentionally returns `source: "mock"` with `ok: true`; UI must display this as sample/offline content, never as a live publish or successful server write. Audit every consumer of `ApiResult.source` and ensure mock mutations cannot be mistaken for production success.
+- **P2 — Session persistence failures are swallowed:** `persist` catches storage errors without surfacing them. A server login can return success even if local session persistence fails, so the user may be logged out on relaunch. Decide whether this should become a visible warning/error and add tests for storage failure.
+- **P2 — Guest sessions are persisted like other sessions:** a guest marker is written to AsyncStorage and restored on relaunch. This is intentional guest continuity, but ensure all protected APIs reject the literal `guest` token and all guest-created content has a clear non-persistent/demo policy.
+- **P2 — Account-kind trust boundary:** client-side `kind` can be chosen or mapped from response data. The server must determine authoritative roles/permissions and must not trust client-supplied account kind for privileged operations.
+- **P2 — Auth contract has no password recovery or verification methods in AuthCtx:** the current auth context exposes guest, sign-in, sign-up and sign-out only. Add verified recovery and account/email verification flows before production release.
+
+### Tests required before closing these findings
+
+1. Unit tests for sign-in/sign-up response parsing, empty/malformed responses, timeout, offline and non-JSON server responses.
+2. Secure token storage migration and failure tests.
+3. Expired/revoked token behaviour and logout on two devices.
+4. Account-kind tampering tests against the backend.
+5. Live contract test against the dedicated API for sign-up, sign-in, session, recovery and verification.
+6. Confirm public catalogue endpoints expose no private user data and protected endpoints reject guest/invalid tokens.
