@@ -11,9 +11,15 @@ type Props = {
   onClose: () => void;
   positionMillis: number;
   durationMillis: number;
+  onNext: () => void;
+  onPrevious: () => void;
+  shuffle: boolean;
+  repeat: boolean;
+  onToggleShuffle: () => void;
+  onToggleRepeat: () => void;
 };
 
-export function MusicFullPlayer({ visible, track, playing, C, onClose, positionMillis, durationMillis }: Props) {
+export function MusicFullPlayer({ visible, track, playing, C, onClose, positionMillis, durationMillis, onNext, onPrevious, shuffle, repeat, onToggleShuffle, onToggleRepeat }: Props) {
   const [progressWidth, setProgressWidth] = useState(1);
   if (!track) return null;
   const artwork = track.artworkUrl || track.artwork_url || track.coverUrl || track.cover_url || track.image;
@@ -55,13 +61,13 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
             <Text style={{ color: "#9A9A9E", fontSize: 11 }}>{formatTime(durationMillis)}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 20 }}>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Shuffle" onPress={() => {}} style={{ padding: 10 }}><Ionicons name="shuffle" size={22} color="#9A9A9E" /></TouchableOpacity>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Previous track" onPress={() => {}} style={{ padding: 10 }}><Ionicons name="play-skip-back" size={27} color="#FFFFFF" /></TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Shuffle" onPress={onToggleShuffle} style={{ padding: 10 }}><Ionicons name="shuffle" size={22} color={shuffle ? "#D4AF37" : "#9A9A9E"} /></TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Previous track" onPress={onPrevious} style={{ padding: 10 }}><Ionicons name="play-skip-back" size={27} color="#FFFFFF" /></TouchableOpacity>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={playing ? "Pause track" : "Play track"} onPress={() => void toggleMusicPlayback()} style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: "#D4AF37", alignItems: "center", justifyContent: "center" }}>
               <Ionicons name={playing ? "pause" : "play"} size={29} color="#0D0D10" />
             </TouchableOpacity>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Next track" onPress={() => {}} style={{ padding: 10 }}><Ionicons name="play-skip-forward" size={27} color="#FFFFFF" /></TouchableOpacity>
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Repeat" onPress={() => {}} style={{ padding: 10 }}><Ionicons name="repeat" size={22} color="#9A9A9E" /></TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Next track" onPress={onNext} style={{ padding: 10 }}><Ionicons name="play-skip-forward" size={27} color="#FFFFFF" /></TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Repeat current track" onPress={onToggleRepeat} style={{ padding: 10 }}><Ionicons name="repeat" size={22} color={repeat ? "#D4AF37" : "#9A9A9E"} /></TouchableOpacity>
           </View>
           <Text style={{ color: "#9A9A9E", fontSize: 11, textAlign: "center", marginTop: 22 }}>KILODE · YOUR SOUND, YOUR SPACE</Text>
         </View>
