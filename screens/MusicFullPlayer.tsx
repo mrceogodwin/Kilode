@@ -23,13 +23,31 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
   const [progressWidth, setProgressWidth] = useState(1);
   const [scrubPosition, setScrubPosition] = useState<number | null>(null);
   const progressRef = useRef<View>(null);
+  const progressBounds = useRef({ x: 0, width: 1, measured: false });
 
-  const positionFromPageX = (pageX: number, onMeasured: (position: number) => void) => {
-    if (!durationMillis || !Number.isFinite(pageX)) return;
+  const positionForPageX = (pageX: number, bounds = progressBounds.current) => {
+    if (!durationMillis || !Number.isFinite(pageX) || !bounds.measured) return null;
+    const measuredWidth = Math.max(1, bounds.width || progressWidth);
+    const ratio = Math.max(0, Math.min(1, (pageX - bounds.x) / measuredWidth));
+    return ratio * durationMillis;
+  };
+
+  const measureProgress = (onMeasured?: (x: number, width: number) => void) => {
     progressRef.current?.measureInWindow((x, _y, width) => {
-      const measuredWidth = Math.max(1, width || progressWidth);
-      const ratio = Math.max(0, Math.min(1, (pageX - x) / measuredWidth));
-      onMeasured(ratio * durationMillis);
+      progressBounds.current = { x, width: Math.max(1, width || progressWidth), measured: true };
+      onMeasured?.(x, Math.max(1, width || progressWidth));
+    });
+  };
+
+  const updateScrubPosition = (pageX: number) => {
+    const position = positionForPageX(pageX);
+    if (position !== null) {
+      setScrubPosition(position);
+      return;
+    }
+    measureProgress(() => {
+      const measuredPosition = positionForPageX(pageX);
+      if (measuredPosition !== null) setScrubPosition(measuredPosition);
     });
   };
   if (!track) return null;
@@ -68,16 +86,24 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
             onStartShouldSetResponder={() => durationMillis > 0}
             onMoveShouldSetResponder={() => durationMillis > 0}
             onResponderGrant={(event) => {
-              positionFromPageX(event.nativeEvent.pageX, setScrubPosition);
+              setScrubPosition(positionMillis);
+              measureProgress(() => updateScrubPosition(event.nativeEvent.pageX));
             }}
             onResponderMove={(event) => {
-              positionFromPageX(event.nativeEvent.pageX, setScrubPosition);
+              updateScrubPosition(event.nativeEvent.pageX);
             }}
             onResponderRelease={(event) => {
-              positionFromPageX(event.nativeEvent.pageX, (position) => {
-                setScrubPosition(null);
+              const pageX = event.nativeEvent.pageX;
+              const position = positionForPageX(pageX);
+              setScrubPosition(null);
+              if (position !== null) {
                 void seekMusicPlayback(position);
-              });
+              } else {
+                measureProgress(() => {
+                  const measuredPosition = positionForPageX(pageX);
+                  if (measuredPosition !== null) void seekMusicPlayback(measuredPosition);
+                });
+              }
             }}
             onResponderTerminate={() => setScrubPosition(null)}
             accessibilityRole="adjustable"
