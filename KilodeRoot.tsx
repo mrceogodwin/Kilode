@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
+  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Animated, Dimensions,
   useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Share,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
@@ -39,6 +39,20 @@ function KilodeApp() {
   const [tab, setTab] = useState("home");
   const [slide, setSlide] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
+  const drawerWidth = Math.min(Dimensions.get("window").width * 0.84, 340);
+  const drawerX = useRef(new Animated.Value(-drawerWidth)).current;
+  useEffect(() => {
+    if (moreOpen) {
+      Animated.timing(drawerX, { toValue: 0, duration: 240, useNativeDriver: true }).start();
+    } else {
+      drawerX.setValue(-drawerWidth);
+    }
+  }, [moreOpen, drawerWidth, drawerX]);
+  const closeMore = () => {
+    Animated.timing(drawerX, { toValue: -drawerWidth, duration: 200, useNativeDriver: true }).start(({ finished }) => {
+      if (finished) setMoreOpen(false);
+    });
+  };
   const [createOpen, setCreateOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [commentTake, setCommentTake] = useState<any | null>(null);
@@ -337,9 +351,6 @@ function KilodeApp() {
         <View style={[s.chip, { paddingVertical: 4, paddingHorizontal: 8 }]}>
           <Text style={[s.chipText, { fontSize: 10 }]}>{source}</Text>
         </View>
-        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
-          <Text style={s.iconBtnText}>{isDark ? "☀" : "☾"}</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={s.avatar} onPress={() => go("myspace")}>
           <Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
         </TouchableOpacity>
@@ -747,9 +758,11 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         onToggleRepeat={toggleMusicRepeat}
       />
       <KilodeTabBar
-        active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"}
+        active={tab === "home" || tab === "socials" || tab === "myspace" ? tab : "home"}
         onTab={(id) => go(id)}
         onCreate={() => setCreateOpen(true)}
+        onMore={() => setMoreOpen(true)}
+        showCreate={tab !== "chat"}
         isDark={isDark}
         accent={C.accent}
       />
@@ -788,14 +801,31 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
         </View>
       </Modal>
 
-      <Modal visible={moreOpen} transparent animationType="slide" onRequestClose={() => setMoreOpen(false)}>
-        <View style={s.modalRoot}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setMoreOpen(false)} />
-          <View style={s.sheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
-            <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><Text style={{ fontSize: 22 }}>{d.icon}</Text><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
-          </View>
+      <Modal visible={moreOpen} transparent animationType="none" onRequestClose={closeMore}>
+        <View style={{ flex: 1, flexDirection: "row", backgroundColor: "transparent" }}>
+          <TouchableOpacity style={[s.scrim, { right: 0 }]} activeOpacity={1} onPress={closeMore} />
+          <Animated.View style={{ width: drawerWidth, maxWidth: 340, flex: 1, backgroundColor: C.card, borderRightWidth: 1, borderRightColor: C.border, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 24, transform: [{ translateX: drawerX }] }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <Text style={{ color: C.text, fontSize: 22, fontWeight: "800" }}>Kilode<Text style={{ color: C.accent }}>!</Text></Text>
+              <TouchableOpacity onPress={closeMore} accessibilityRole="button" accessibilityLabel="Close menu" style={{ padding: 8 }}><Text style={{ color: C.text2, fontSize: 20 }}>✕</Text></TouchableOpacity>
+            </View>
+            <Text style={[s.meta, { marginBottom: 18 }]}>Explore your world</Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
+              <TouchableOpacity onPress={() => go("activity")} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                <Text style={{ fontSize: 18, width: 34 }}>◉</Text><Text style={{ color: C.text, fontSize: 14, fontWeight: "600" }}>Activity & notifications</Text>
+              </TouchableOpacity>
+              <Text style={{ color: C.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 20, marginBottom: 10 }}>DISCOVER</Text>
+              <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><Text style={{ fontSize: 22 }}>{d.icon}</Text><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>)}</View>
+              <Text style={{ color: C.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 22, marginBottom: 10 }}>PREFERENCES</Text>
+              <TouchableOpacity accessibilityRole="switch" accessibilityState={{ checked: isDark }} onPress={() => setThemeMode(isDark ? "light" : "dark")} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 13, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border }}>
+                <View style={{ flex: 1, paddingRight: 12 }}><Text style={{ color: C.text, fontSize: 14, fontWeight: "600" }}>Dark appearance</Text><Text style={[s.meta, { marginTop: 3 }]}>Switch Kilode between dark and light</Text></View>
+                <View style={{ minWidth: 48, alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: isDark ? C.accent : C.input }}><Text style={{ color: isDark ? "#fff" : C.text, fontSize: 12, fontWeight: "700" }}>{isDark ? "ON" : "OFF"}</Text></View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { closeMore(); setSettingsOpen(true); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14 }}>
+                <Text style={{ fontSize: 18, width: 34 }}>⚙</Text><Text style={{ color: C.text, fontSize: 14, fontWeight: "600" }}>Settings</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </Animated.View>
         </View>
       </Modal>
 
