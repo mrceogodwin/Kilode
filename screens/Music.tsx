@@ -13,20 +13,6 @@ type Props = {
   onPlay: (track: any) => void;
 };
 
-const CHARTS = [
-  { rank: 1, title: "Ojuelegba Nights", artist: "Simi Sola", plays: "12.4k" },
-  { rank: 2, title: "Danfo Dreams", artist: "Kemi Wave", plays: "9.1k" },
-  { rank: 3, title: "Eko Energy", artist: "Femi + Liza", plays: "7.8k" },
-  { rank: 4, title: "Water & Light", artist: "Ayo Blue", plays: "6.2k" },
-  { rank: 5, title: "Island Rain", artist: "Bola Keys", plays: "5.1k" },
-];
-
-const ARTISTS = [
-  { id: "a1", name: "Simi Sola", meta: "Afrobeats · Lagos", color: "#F97316" },
-  { id: "a2", name: "Kemi Wave", meta: "Amapiano · PH", color: "#7C3AED" },
-  { id: "a3", name: "Ayo Blue", meta: "R&B · Abuja", color: "#2563EB" },
-];
-
 export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
   const [search, setSearch] = useState("");
@@ -55,6 +41,13 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
   const filteredTracks = tracks.filter((t: any) => `${t.title || ""} ${t.artist || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
+  const artists = Array.from(new Map(
+    tracks.filter((t: any) => t.artist).map((t: any) => [
+      String(t.artist).toLowerCase(),
+      { id: String(t.artist).toLowerCase(), name: String(t.artist), meta: "Kilode artist", color: C.accent },
+    ])
+  ).values());
+  const chartTracks = filteredTracks.slice(0, 10);
 
   const selectTrack = (t: any) => {
     setActiveArtist(null);
@@ -208,19 +201,19 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Top charts</Text>
           </View>
-          {CHARTS.map((c) => (
+          {chartTracks.map((c: any, index: number) => (
             <TouchableOpacity
               key={c.rank}
               style={s.roomRow}
               onPress={() =>
-                selectTrack({ id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent })
+                selectTrack(c)
               }
             >
-              <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
+              <Text style={[s.roomName, { width: 28, color: C.accent }]}>{index + 1}</Text>
               <View style={s.flex}>
                 <Text style={s.roomName}>{c.title}</Text>
                 <Text style={s.meta}>
-                  {c.artist} · {c.plays} plays
+                  {c.artist || "Kilode artist"}
                 </Text>
               </View>
               <Ionicons name="play-circle-outline" size={28} color={C.accent} />
@@ -234,7 +227,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Featured artists</Text>
           </View>
-          {ARTISTS.map((a) => (
+          {artists.filter((a: any) => a.name.toLowerCase().includes(search.trim().toLowerCase())).map((a: any) => (
             <TouchableOpacity
               key={a.id}
               style={s.roomRow}
