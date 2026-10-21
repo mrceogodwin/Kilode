@@ -32,9 +32,10 @@ type Props = {
   onPlay: (track: any) => void;
   canUpload: boolean;
   token: string;
+  accountScope?: string;
 };
 
-export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Props) {
+export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, accountScope = "guest" }: Props) {
   const [tab, setTab] = useState<"forYou" | "charts" | "new" | "artists">("forYou");
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState<any[]>(TRACKS as any[]);
@@ -48,13 +49,13 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
 
   useEffect(() => {
     let active = true;
-    void readMusicDiscoveryProfile().then((profile) => {
+    void readMusicDiscoveryProfile(accountScope).then((profile) => {
       if (!active) return;
       setDiscoveryProfile(profile);
       setDiscoveryReady(true);
     });
     return () => { active = false; };
-  }, []);
+  }, [accountScope]);
 
   useEffect(() => {
     setDiscoveryShelves(buildMusicDiscoveryShelves(tracks, discoveryProfile));
@@ -143,7 +144,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
       if (catalogueSource === "live" && track?.id) {
         void recordMusicEvent(token, String(track.id), "play_started");
       }
-      void recordMusicDiscoveryAction(track, "played");
+      void recordMusicDiscoveryAction(track, "played", undefined, accountScope);
       void readMusicDiscoveryProfile().then(setDiscoveryProfile);
       onPlay(playableTrack);
     } catch {
@@ -157,7 +158,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
     setActiveArtist(null);
     setActiveTrack(t);
     // Track opens are stored locally to improve discovery without a server request.
-    void recordMusicDiscoveryAction(t, "opened").then(() => readMusicDiscoveryProfile().then(setDiscoveryProfile));
+    void recordMusicDiscoveryAction(t, "opened", undefined, accountScope).then(() => readMusicDiscoveryProfile().then(setDiscoveryProfile));
   };
 
   if (activeTrack) {
