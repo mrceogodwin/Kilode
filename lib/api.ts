@@ -29,6 +29,8 @@ export type ApiResult<T> = {
   source: DataSource;
   error?: string;
   fn?: string;
+  nextCursor?: string | null;
+  hasMore?: boolean;
 };
 
 const UA = "KilodeNative/1.0 (iOS; Expo)";
@@ -116,14 +118,32 @@ function normalizeTakes(payload: any): any[] {
   return [];
 }
 
-export async function fetchTakes(): Promise<ApiResult<any[]>> {
-  const r = await tryLiveJson<any>("/api/mobile/takes", { takes: TAKES }, "listTakes");
+export async function fetchTakes(cursor?: string | null): Promise<ApiResult<any[]>> {
+  const params = new URLSearchParams({ limit: "20" });
+  if (cursor) params.set("cursor", cursor);
+  const r = await tryLiveJson<any>(`/api/mobile/takes?${params.toString()}`, { takes: TAKES }, "listTakes");
   if (r.ok) {
     const list = normalizeTakes(r.data);
+    const nextCursor = typeof r.data?.nextCursor === "string"
+      ? r.data.nextCursor
+      : typeof r.data?.next_cursor === "string"
+        ? r.data.next_cursor
+        : typeof r.data?.pagination?.nextCursor === "string"
+          ? r.data.pagination.nextCursor
+          : null;
+    const hasMore = typeof r.data?.hasMore === "boolean"
+      ? r.data.hasMore
+      : typeof r.data?.has_more === "boolean"
+        ? r.data.has_more
+        : typeof r.data?.pagination?.hasMore === "boolean"
+          ? r.data.pagination.hasMore
+          : Boolean(nextCursor);
     return {
       ok: true,
       data: list,
       source: "live",
+      nextCursor,
+      hasMore: hasMore && Boolean(nextCursor),
       fn: "listTakes",
     };
   }
