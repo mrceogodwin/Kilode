@@ -329,7 +329,9 @@ function KilodeApp() {
     }
   };
 
-  if (boot || authLoading) {
+  // Resolve saved authentication first, but never make first-launch guests wait
+  // for feed/music bootstrap before showing the welcome experience.
+  if (authLoading) {
     return (
       <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator color={C.accent} size="large" />
@@ -348,6 +350,15 @@ function KilodeApp() {
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
         show={show}
       />
+    );
+  }
+
+  if (boot) {
+    return (
+      <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
+        <ActivityIndicator color={C.accent} size="large" />
+        <Text style={[s.sub, { marginTop: 12 }]}>Loading your Kilode space…</Text>
+      </SafeAreaView>
     );
   }
 
