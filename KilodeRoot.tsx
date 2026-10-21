@@ -830,7 +830,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
                 <Text style={{ fontSize: 18, width: 34 }}>◉</Text><Text style={{ color: C.text, fontSize: 14, fontWeight: "600" }}>Activity & notifications</Text>
               </TouchableOpacity>
               <Text style={{ color: C.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 20, marginBottom: 10 }}>DISCOVER</Text>
-              <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><Text style={{ fontSize: 22 }}>{d.icon}</Text><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>)}</View>
+              <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><Text style={{ fontSize: 22 }}>{d.icon}</Text><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
               <Text style={{ color: C.text3, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 22, marginBottom: 10 }}>PREFERENCES</Text>
               <TouchableOpacity accessibilityRole="switch" accessibilityState={{ checked: isDark }} onPress={() => setThemeMode(isDark ? "light" : "dark")} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 13, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border }}>
                 <View style={{ flex: 1, paddingRight: 12 }}><Text style={{ color: C.text, fontSize: 14, fontWeight: "600" }}>Dark appearance</Text><Text style={[s.meta, { marginTop: 3 }]}>Switch Kilode between dark and light</Text></View>
