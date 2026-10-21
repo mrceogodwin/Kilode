@@ -211,7 +211,7 @@ async function requestMusicJson<T>(
     return { ok: false, data: empty, source: "error", error: "Dedicated Kilode API is not configured", fn: "music" };
   }
   if (!token.trim() || token === "guest" || token === "local" || token === "live") {
-    return { ok: false, data: empty, source: "error", error: "Sign in with a real Kilode artist account to use music uploads.", fn: "music" };
+    return { ok: false, data: empty, source: "error", error: "Sign in with a real Kilode account to use music services.", fn: "music" };
   }
   try {
     const response = await fetchWithTimeout(`${API_BASE}${path}`, {
