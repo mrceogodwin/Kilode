@@ -159,6 +159,7 @@ function KilodeApp() {
   const navigationForwardRef = useRef<string[]>([]);
   const [homeSearchOpen, setHomeSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const drawerTranslateX = useRef(new Animated.Value(Dimensions.get("window").width)).current;
   const [createOpen, setCreateOpen] = useState(false);
   const [createContext, setCreateContext] = useState("home");
   const [composeOpen, setComposeOpen] = useState(false);
@@ -170,6 +171,12 @@ function KilodeApp() {
   const [boot, setBoot] = useState(true);
   // Re-show the native entry screen on each cold launch, including for saved sessions.
   const [launchIntroDone, setLaunchIntroDone] = useState(false);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    drawerTranslateX.setValue(Dimensions.get("window").width);
+    Animated.timing(drawerTranslateX, { toValue: 0, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [moreOpen, drawerTranslateX]);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock" | "error">("mock");
   const [takes, setTakes] = useState<any[]>([]);
@@ -852,21 +859,25 @@ function KilodeApp() {
           </View>
         </View>
       </Modal>
-      <Modal visible={moreOpen} transparent animationType="slide" onRequestClose={() => setMoreOpen(false)}>
-        <View style={s.modalRoot}>
+      <Modal visible={moreOpen} transparent animationType="none" onRequestClose={() => setMoreOpen(false)}>
+        <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-end", padding: 0, backgroundColor: "transparent" }]}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setMoreOpen(false)} />
-          <View style={s.sheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            <View style={s.deskGrid}>
-              {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "💬" }, { id: "chat", label: "Chat", icon: "💬" }, { id: "myspace", label: "My Space", icon: "🏠" }].map((d) => (
-                <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
-                  <Ionicons name={systemIconName(d.icon)} size={22} color={C.accent} />
-                  <Text style={s.deskGridLabel}>{d.label}</Text>
-                </TouchableOpacity>
-              ))}
+          <Animated.View style={{ width: "84%", maxWidth: 360, height: "100%", paddingTop: Platform.OS === "ios" ? 52 : 28, paddingHorizontal: 16, paddingBottom: 28, backgroundColor: C.card, borderLeftWidth: 1, borderLeftColor: C.border, transform: [{ translateX: drawerTranslateX }] }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: C.border, marginBottom: 14 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><KilodeWordmark size="small" /><Text style={{ color: C.text, fontSize: 14, fontWeight: "800" }}>Explore</Text></View>
+              <TouchableOpacity onPress={() => setMoreOpen(false)} accessibilityRole="button" accessibilityLabel="Close navigation drawer" hitSlop={10} style={{ padding: 6 }}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity>
             </View>
-          </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              <View style={s.deskGrid}>
+                {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "💬" }, { id: "chat", label: "Chat", icon: "💬" }, { id: "myspace", label: "My Space", icon: "🏠" }].map((d) => (
+                  <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
+                    <Ionicons name={systemIconName(d.icon)} size={22} color={C.accent} />
+                    <Text style={s.deskGridLabel}>{d.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </Animated.View>
         </View>
       </Modal>
       <Modal visible={profileEditorOpen} transparent animationType="slide" onRequestClose={() => setProfileEditorOpen(false)}>
