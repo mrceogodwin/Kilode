@@ -11,6 +11,7 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { postComment } from "../lib/api";
 
 export type Comment = {
@@ -28,6 +29,7 @@ type Props = {
   takeAuthor: string;
   takeText: string;
   token?: string | null;
+  storageScope?: string | null;
   C: any;
   isDark: boolean;
   show: (m: string) => void;
@@ -50,18 +52,57 @@ export function CommentsSheet({
   takeAuthor,
   takeText,
   token,
+  storageScope,
   C,
   isDark,
   show,
 }: Props) {
   const [list, setList] = useState<Comment[]>(() => SEED[takeId] || []);
+  const [localComments, setLocalComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState("");
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [sending, setSending] = useState(false);
+  const commentStorageKey = `kilode:social-comments:${String(storageScope || "guest").toLowerCase()}:${String(takeId)}`;
 
   useEffect(() => {
-    setList(SEED[takeId] || []);
+    if (!visible || !takeId) {
+      setDraft("");
+      return;
+    }
+    let active = true;
+    setLoadingComments(true);
+    AsyncStorage.getItem(commentStorageKey)
+      .then((raw) => {
+        if (!active) return;
+        let saved: Comment[] = [];
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              saved = parsed.filter((item) =>
+                item && typeof item.id === "string" &&
+                typeof item.text === "string" && String(item.takeId) === String(takeId)
+              );
+            }
+          } catch {
+            saved = [];
+          }
+        }
+        setLocalComments(saved);
+        setList([...(SEED[takeId] || []), ...saved]);
+      })
+      .catch(() => {
+        if (active) {
+          setLocalComments([]);
+          setList(SEED[takeId] || []);
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingComments(false);
+      });
     setDraft("");
-  }, [takeId, visible]);
-  const [sending, setSending] = useState(false);
+    return () => { active = false; };
+  }, [commentStorageKey, takeId, visible]);
 
   const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: C.bg },
@@ -143,7 +184,9 @@ export function CommentsSheet({
         </View>
 
         <ScrollView style={{ flex: 1 }}>
-          {list.length === 0 ? (
+          {loadingComments ? (
+            <Text style={styles.empty}>Loading comments…</Text>
+          ) : list.length === 0 ? (
             <Text style={styles.empty}>No comments yet — be first</Text>
           ) : (
             list.map((c) => (
@@ -169,10 +212,19 @@ export function CommentsSheet({
             />
             <TouchableOpacity
               style={[styles.send, { opacity: draft.trim() && !sending ? 1 : 0.5 }]}
-              disabled={!draft.trim() || sending}
+              disabled={!draft.trim() || sending || loadingComments}
               onPress={async () => {
+                if (sending || loadingComments || !draft.trim()) return;
                 setSending(true);
-                const r = await postComment(takeId, draft, token ?? undefined);
+                const submittedText = draft.trim();
+                let r;
+                try {
+                  r = await postComment(takeId, submittedText, token ?? undefined);
+                } catch {
+                  setSending(false);
+                  show("Comment could not be sent. Try again.");
+                  return;
+                }
                 setSending(false);
                 if (r.ok && r.data) {
                   const saved = r.data.comment || r.data.reply || r.data;
@@ -181,11 +233,26 @@ export function CommentsSheet({
                     {
                       id: String(saved.id || ("local-" + Date.now())),
                       takeId,
-                      text: saved.text || saved.body || draft.trim(),
+                      text: saved.text || saved.body || submittedText,
                       name: saved.name || saved.author?.name || "You",
                       time: saved.time || "now",
                     },
-                  ]);
+                  ];
+                  const nextComment: Comment = {
+                    id: String(saved.id || ("local-" + Date.now())),
+                    takeId,
+                    text: saved.text || saved.body || submittedText,
+                    name: saved.name || saved.author?.name || "You",
+                    time: saved.time || "now",
+                  };
+                  setList((prev) => [...prev, nextComment]);
+                  const nextLocalComments = [...localComments, nextComment];
+                  setLocalComments(nextLocalComments);
+                  try {
+                    await AsyncStorage.setItem(commentStorageKey, JSON.stringify(nextLocalComments));
+                  } catch {
+                    show("Comment sent, but couldn't save it on this device.");
+                  }
                   setDraft("");
                   show(r.source === "live" ? "Comment sent to Kilode" : "Comment added to this preview");
                 } else {
