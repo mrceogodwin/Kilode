@@ -99,6 +99,12 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     .map((artist: any) => ({ ...artist, meta: artist.trackCount + (artist.trackCount === 1 ? " track in catalogue" : " tracks in catalogue") }))
     .sort((a: any, b: any) => a.name.localeCompare(b.name));
     const exploreTracks = filteredTracks;
+  const chartMetadataAvailable = catalogueSource === "live" && exploreTracks.some((track: any) => {
+    const rank = track?.rank ?? track?.currentRank ?? track?.current_rank;
+    const change = track?.rankChange ?? track?.rank_change;
+    const previous = track?.previousRank ?? track?.previous_rank;
+    return (rank !== undefined && rank !== null) || (change !== undefined && change !== null) || (previous !== undefined && previous !== null);
+  });
   const newTracks = filteredTracks.filter((track: any) => {
     const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
     if (!rawDate) return false;
@@ -412,11 +418,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}><Ionicons name="sparkles" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "900", letterSpacing: 1.8 }}>KILODE CHARTS · FLAGSHIP</Text></View>
                   <Text style={{ color: C.text, fontSize: 22, fontWeight: "900", letterSpacing: 0.3 }}>TOP 100</Text>
                   <Text style={{ color: C.text2, fontSize: 11, marginTop: 3 }}>The songs moving the culture.</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 7 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: catalogueSource === "live" ? "#B8C0CC" : "#E5C158" }} /><Text style={{ color: catalogueSource === "live" ? "#B8C0CC" : "#E5C158", fontSize: 9, fontWeight: "800", letterSpacing: 0.7 }}>{catalogueSource === "live" ? "CATALOGUE CONNECTED · CHART DATA PENDING" : "PREVIEW MODE · NOT OFFICIAL RANKINGS"}</Text></View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 7 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: catalogueSource === "live" ? "#B8C0CC" : "#E5C158" }} /><Text style={{ color: catalogueSource === "live" ? "#B8C0CC" : "#E5C158", fontSize: 9, fontWeight: "800", letterSpacing: 0.7 }}>{catalogueSource !== "live" ? "PREVIEW MODE · NOT OFFICIAL RANKINGS" : chartMetadataAvailable ? "LIVE CATALOGUE · CHART METADATA FOUND" : "CATALOGUE CONNECTED · CHART DATA PENDING"}</Text></View>
                 </View>
               </View>
               <View style={{ height: 1, backgroundColor: C.border, marginTop: 14, marginBottom: 10 }} />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}><Ionicons name="trending-up-outline" size={15} color="#59C98A" /><Text style={{ color: C.text2, fontSize: 10, flex: 1, lineHeight: 15 }}>Rank arrows will reflect verified chart movement—not guesses.</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderWidth: 1, borderColor: "#75613A", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 }}><Ionicons name="shield-checkmark-outline" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "800" }}>FAIR PLAY</Text></View></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}><Ionicons name="trending-up-outline" size={15} color="#59C98A" /><Text style={{ color: C.text2, fontSize: 10, flex: 1, lineHeight: 15 }}>Movement stays neutral unless live catalogue data supplies rank history. Preview order is not an official chart.</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderWidth: 1, borderColor: "#75613A", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 }}><Ionicons name="shield-checkmark-outline" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "800" }}>FAIR PLAY</Text></View></View>
             </View>
           </View>
           <View style={[s.sectionHead, { marginBottom: 6 }]}>
@@ -432,10 +438,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
               return null;
             };
-            const reportedRank = numeric(track.rank ?? track.currentRank ?? track.current_rank);
+            const reportedRank = catalogueSource === "live" ? numeric(track.rank ?? track.currentRank ?? track.current_rank) : null;
             const position = reportedRank !== null && reportedRank > 0 ? reportedRank : index + 1;
-            const rankChange = numeric(track.rankChange ?? track.rank_change);
-            const previousRank = numeric(track.previousRank ?? track.previous_rank);
+            const rankChange = catalogueSource === "live" ? numeric(track.rankChange ?? track.rank_change) : null;
+            const previousRank = catalogueSource === "live" ? numeric(track.previousRank ?? track.previous_rank) : null;
             const change = previousRank !== null && previousRank > 0
               ? previousRank - position
               : rankChange;
