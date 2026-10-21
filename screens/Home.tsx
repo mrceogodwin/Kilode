@@ -130,22 +130,28 @@ export function HomeScreen({
             {!!item.image && <Image source={{ uri: item.image }} style={{ width: 94, height: 76, borderRadius: 9, backgroundColor: C.elevated }} resizeMode="cover" />}
           </View>
         )}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 22, marginTop: 10 }}>
-          <TouchableOpacity onPress={() => social ? onLikePost(String(item.raw.id)) : show(`${item.kind} likes are not available here yet`)} accessibilityRole="button" accessibilityLabel={social ? (liked[String(item.raw.id)] ? "Unlike post" : "Like post") : `${item.kind} likes`} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Ionicons name={social && liked[String(item.raw.id)] ? "heart" : "heart-outline"} size={18} color={social && liked[String(item.raw.id)] ? "#FF4965" : C.text3} />
-            <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.likes_count ?? item.raw.likes ?? ""}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => social ? onCommentPost(item.raw) : show(`${item.kind} comments are not available here yet`)} accessibilityRole="button" accessibilityLabel={social ? "Open comments" : `${item.kind} comments`} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Ionicons name="chatbubble-outline" size={17} color={C.text3} />
-            <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.comments_count ?? item.raw.comments ?? ""}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => onSharePost(item.raw)} accessibilityRole="button" accessibilityLabel="Share post" style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Ionicons name="share-social-outline" size={17} color={C.text3} />
-            <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.shares_count ?? ""}</Text>
-          </TouchableOpacity>
-          <View style={{ flex: 1 }} />
-          <Ionicons name="bookmark-outline" size={18} color={C.text3} />
-        </View>
+        {social ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 22, marginTop: 10 }}>
+            <TouchableOpacity onPress={() => onLikePost(String(item.raw.id))} accessibilityRole="button" accessibilityLabel={liked[String(item.raw.id)] ? "Unlike post" : "Like post"} style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <Ionicons name={liked[String(item.raw.id)] ? "heart" : "heart-outline"} size={18} color={liked[String(item.raw.id)] ? "#FF4965" : C.text3} />
+              <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.likes_count ?? item.raw.likes ?? ""}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onCommentPost(item.raw)} accessibilityRole="button" accessibilityLabel="Open comments" style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <Ionicons name="chatbubble-outline" size={17} color={C.text3} />
+              <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.comments_count ?? item.raw.comments ?? ""}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onSharePost(item.raw)} accessibilityRole="button" accessibilityLabel="Share post" style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <Ionicons name="share-social-outline" size={17} color={C.text3} />
+              <Text style={{ color: C.text3, fontSize: 11 }}>{item.raw.shares_count ?? ""}</Text>
+            </TouchableOpacity>
+            <View style={{ flex: 1 }} />
+          </View>
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", marginTop: 8 }}>
+            <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700" }}>Open {item.kind}</Text>
+            <Ionicons name="arrow-forward" size={13} color={C.accent} style={{ marginLeft: 5 }} />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
