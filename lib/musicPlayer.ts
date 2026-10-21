@@ -85,7 +85,10 @@ function onStatus(status: AVPlaybackStatus) {
   positionMillis = status.positionMillis;
   durationMillis = status.durationMillis || 0;
   isPlaying = status.isPlaying;
-  if (status.didJustFinish) {
+  if (status.didJustFinish && repeatCurrentTrack && sound) {
+    void sound.replayAsync().catch(() => undefined);
+    isPlaying = true;
+  } else if (status.didJustFinish) {
     isPlaying = false;
   }
   publish();
