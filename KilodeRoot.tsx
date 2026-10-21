@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
@@ -66,6 +66,7 @@ function KilodeApp() {
   const [musicDurationMillis, setMusicDurationMillis] = useState(0);
   const [musicShuffle, setMusicShuffle] = useState(false);
   const [musicRepeat, setMusicRepeatState] = useState(false);
+  const musicPlayRequestId = useRef(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
@@ -121,6 +122,7 @@ function KilodeApp() {
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const playQueueTrack = async (track: any) => {
+    const requestId = ++musicPlayRequestId.current;
     let playableTrack = track;
     if (tracksSource === "live") {
       if (!track?.id || !session?.token) {
@@ -128,13 +130,16 @@ function KilodeApp() {
         return;
       }
       const playback = await getMusicPlayback(session.token, String(track.id));
+      if (requestId !== musicPlayRequestId.current) return;
       if (!playback.ok || !playback.data?.url || !/^https:\/\//i.test(playback.data.url)) {
         show(playback.error || "Kilode could not create a secure playback link for this track.");
         return;
       }
       playableTrack = { ...track, audioUrl: playback.data.url, audio_url: undefined, streamUrl: undefined, stream_url: undefined, previewUrl: undefined, preview_url: undefined };
     }
+    if (requestId !== musicPlayRequestId.current) return;
     const result = await playMusicTrack(playableTrack);
+    if (requestId !== musicPlayRequestId.current) return;
     if (!result.ok) {
       show(result.message || "This track cannot be played yet.");
       return;
