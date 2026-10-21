@@ -45,7 +45,13 @@ function clearActiveSound(source: Audio.Sound) {
   positionMillis = 0;
   durationMillis = 0;
   finishedSound = null;
-  source.setOnPlaybackStatusUpdate(null);
+  // Callback detachment is best-effort: a native bridge error must not prevent
+  // the sound from being unloaded after the app state has already been cleared.
+  try {
+    source.setOnPlaybackStatusUpdate(null);
+  } catch {
+    // Continue with native resource cleanup.
+  }
   void source.unloadAsync().catch(() => undefined);
   publish();
 }
@@ -106,10 +112,9 @@ function onStatus(status: AVPlaybackStatus, source: Audio.Sound) {
   isPlaying = status.isPlaying;
   if (status.didJustFinish && repeatCurrentTrack) {
     void source.replayAsync().catch(() => {
-      if (sound === source) {
-        isPlaying = false;
-        publish();
-      }
+      // A failed repeat must release the broken source, not leave a dead
+      // track selected with playback permanently stopped.
+      clearActiveSound(source);
     });
     isPlaying = true;
   } else if (status.didJustFinish) {
@@ -346,7 +351,11 @@ export async function stopMusicPlayback(): Promise<void> {
   positionMillis = 0;
   durationMillis = 0;
   publish();
-  oldSound.setOnPlaybackStatusUpdate(null);
+  try {
+    oldSound.setOnPlaybackStatusUpdate(null);
+  } catch {
+    // Continue stopping and unloading even if the native bridge throws.
+  }
   await oldSound.stopAsync().catch(() => undefined);
   await oldSound.unloadAsync().catch(() => undefined);
 }
