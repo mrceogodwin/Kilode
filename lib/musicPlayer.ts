@@ -131,8 +131,8 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
   if (!url) {
     return { ok: false, message: "This track has no playable audio source yet." };
   }
-  if (isLoading) return { ok: false, message: "The player is preparing another track. Try again shortly." };
-
+  // A newer Play request supersedes an older source still loading. Request IDs
+  // make the older operation dispose of any late native result safely.
   isLoading = true;
   const requestId = ++playbackRequestId;
   try {
