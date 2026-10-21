@@ -194,6 +194,10 @@ export type MusicUploadTicket = {
   uploadUrl: string;
   audioAssetKey?: string;
   expiresAt?: string;
+  upload_id?: string;
+  upload_url?: string;
+  audio_asset_key?: string;
+  expires_at?: string;
 };
 
 async function requestMusicJson<T>(
@@ -247,8 +251,20 @@ async function requestMusicJson<T>(
   }
 }
 
-export function requestMusicUpload(token: string, input: MusicUploadRequest): Promise<ApiResult<MusicUploadTicket>> {
-  return requestMusicJson<MusicUploadTicket>("/api/mobile/music/uploads", "POST", token, input);
+export async function requestMusicUpload(token: string, input: MusicUploadRequest): Promise<ApiResult<MusicUploadTicket>> {
+  const result = await requestMusicJson<MusicUploadTicket>("/api/mobile/music/uploads", "POST", token, input);
+  if (!result.ok || !result.data) return result;
+  const raw = result.data;
+  return {
+    ...result,
+    data: {
+      ...raw,
+      uploadId: typeof raw.uploadId === "string" ? raw.uploadId : String(raw.upload_id || ""),
+      uploadUrl: typeof raw.uploadUrl === "string" ? raw.uploadUrl : String(raw.upload_url || ""),
+      audioAssetKey: raw.audioAssetKey || raw.audio_asset_key,
+      expiresAt: raw.expiresAt || raw.expires_at,
+    },
+  };
 }
 
 
@@ -325,10 +341,20 @@ export function publishMusicTrack(token: string, trackId: string, input: {
   );
 }
 
-export function getMusicPlayback(token: string, trackId: string): Promise<ApiResult<{ url: string; expiresAt?: string }>> {
-  return requestMusicJson<{ url: string; expiresAt?: string }>(
+export async function getMusicPlayback(token: string, trackId: string): Promise<ApiResult<{ url: string; expiresAt?: string; playback_url?: string; signed_url?: string; expires_at?: string }>> {
+  const result = await requestMusicJson<{ url?: string; expiresAt?: string; playback_url?: string; signed_url?: string; expires_at?: string }>(
     `/api/mobile/music/tracks/${encodeURIComponent(trackId)}/playback`, "GET", token
   );
+  if (!result.ok || !result.data) return result as ApiResult<{ url: string; expiresAt?: string; playback_url?: string; signed_url?: string; expires_at?: string }>;
+  const raw = result.data;
+  return {
+    ...result,
+    data: {
+      ...raw,
+      url: typeof raw.url === "string" ? raw.url : typeof raw.playback_url === "string" ? raw.playback_url : typeof raw.signed_url === "string" ? raw.signed_url : "",
+      expiresAt: raw.expiresAt || raw.expires_at,
+    },
+  };
 }
 
 export function recordMusicEvent(token: string, trackId: string, eventType: "play_started" | "play_completed" | "like" | "unlike"): Promise<ApiResult<{ accepted: boolean }>> {
