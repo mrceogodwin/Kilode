@@ -1,4 +1,4 @@
-import { Audio, AVPlaybackStatus } from "expo-av";
+import { Audio, AVPlaybackStatus, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
 
 type MusicTrack = {
   id?: string | number;
@@ -67,8 +67,8 @@ async function configureAudioMode() {
   await Audio.setAudioModeAsync({
     playsInSilentModeIOS: true,
     staysActiveInBackground: true,
-    interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-    interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+    interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+    interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
     shouldDuckAndroid: true,
   });
   audioModeConfigured = true;
