@@ -37,6 +37,15 @@ export function subscribeMusicPlayer(listener: PlayerListener): () => void {
   return () => listeners.delete(listener);
 }
 
+function trackIdentity(track: MusicTrack): string {
+  if (track.id !== undefined && track.id !== null && String(track.id).trim()) {
+    return `id:${String(track.id)}`;
+  }
+  const url = getPlayableUrl(track);
+  if (url) return `url:${url}`;
+  return `meta:${String(track.title || "").trim().toLowerCase()}:${String(track.artist || "").trim().toLowerCase()}`;
+}
+
 function getPlayableUrl(track: MusicTrack): string | null {
   const candidate =
     track.audioUrl ??
@@ -87,7 +96,7 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
   isLoading = true;
   try {
     await configureAudioMode();
-    if (sound && currentTrack && String(currentTrack.id) === String(track.id)) {
+    if (sound && currentTrack && trackIdentity(currentTrack) === trackIdentity(track)) {
       const status = await sound.getStatusAsync();
       if (status.isLoaded) {
         if (status.isPlaying) {
