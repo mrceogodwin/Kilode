@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   Modal,
   Linking,
-  Alert,
-  Platform,
 } from "react-native";
 import type { Palette } from "../themeStyles";
 
@@ -137,27 +135,25 @@ export function SettingsScreen({
           <View style={[s.sheet, { borderRadius: 16, maxHeight: undefined }]}>
             <Text style={s.sheetTitle}>Delete account?</Text>
             <Text style={[s.sub, { marginVertical: 12 }]}>
-              This signs you out and clears local data for @{sessionHandle}. Backend account wipe
-              runs only when the server supports it.
+              In-app account deletion is not available yet because Kilode's secure server deletion endpoint is not connected. Nothing will be deleted from this screen. Contact support to request help with your account.
             </Text>
             <TouchableOpacity
-              style={[s.primaryBtn, { backgroundColor: C.danger, marginBottom: 10 }]}
+              style={[s.primaryBtn, { marginBottom: 10 }]}
               disabled={deleting}
+              accessibilityRole="button"
+              accessibilityLabel="Contact Kilode support about account deletion"
               onPress={() => {
-                if (Platform.OS === "web") {
-                  confirmDelete();
-                  return;
-                }
-                Alert.alert("Confirm deletion", "This cannot be undone from this device.", [
-                  { text: "Cancel", style: "cancel" },
-                  { text: "Delete", style: "destructive", onPress: confirmDelete },
-                ]);
+                const subject = encodeURIComponent("Kilode account deletion request");
+                const body = encodeURIComponent(`Please help me request account deletion for @${sessionHandle}.\n\nI understand that in-app server deletion is not currently available.`);
+                Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`)
+                  .then(() => setDeleteOpen(false))
+                  .catch(() => show(`Email ${SUPPORT_EMAIL} to request account deletion.`));
               }}
             >
-              <Text style={s.primaryBtnText}>{deleting ? "Deleting…" : "Delete account"}</Text>
+              <Text style={s.primaryBtnText}>Contact support</Text>
             </TouchableOpacity>
             <TouchableOpacity style={s.ghostBtn} onPress={() => setDeleteOpen(false)}>
-              <Text style={[s.ghostBtnText, { textAlign: "center" }]}>Cancel</Text>
+              <Text style={[s.ghostBtnText, { textAlign: "center" }]}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
