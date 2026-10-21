@@ -103,7 +103,7 @@ export function HomeScreen({
     { kind: "Creators", title: "Meet creators", sub: "Explore creator spaces", image: "", onPress: () => onOpenSystem("creators") },
     { kind: "Market", title: "Explore Market", sub: "Discover listings", image: "", onPress: onOpenMarket },
     { kind: "Jobs", title: "Explore Jobs", sub: "Discover opportunities", image: "", onPress: onOpenJobs },
-    { kind: "Ads", title: "Business & Ads", sub: "Explore business tools", image: "", onPress: () => onOpenSystem("creators") },
+    { kind: "Ads", title: "Business & Ads", sub: "Explore business tools", image: "", onPress: () => onOpenSystem("ads") },
     { kind: "My Space", title: "Your Kilode space", sub: "Open your workspace", image: "", onPress: () => onOpenSystem("myspace") },
   ];
   const featuredCards = [
