@@ -304,7 +304,21 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                     : destination === "Naija Now"
                       ? catalogueTracks.filter((track: any) => /afro|naija|nigerian|amapiano/i.test(String(track.genre ?? track.genres ?? track.region ?? "")))
                       : catalogueTracks;
-  const hasVerifiedChartSignals = destination === "Top 100" && destinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
+  // Chart category chips must filter the actual chart list, not just change their highlight.
+  const visibleDestinationTracks = destination === "Top 100" && selectedGenre && selectedGenre !== "All"
+    ? destinationTracks.filter((track: any) => {
+        const metadata = [track.genre, track.genres, track.region, track.country, track.artist_country]
+          .filter(Boolean).join(" ").toLowerCase();
+        if (selectedGenre === "Emerging") return Boolean(track.is_emerging || track.emerging);
+        if (selectedGenre === "Nigeria") return /nigeria|nigerian|naija/.test(metadata);
+        if (selectedGenre === "Afrobeats") return /afro.?beat|afrobeats/.test(metadata);
+        if (selectedGenre === "Hip Hop") return /hip.?hop|rap/.test(metadata);
+        if (selectedGenre === "R&B") return /r&b|rnb|rhythm.?and.?blues/.test(metadata);
+        if (selectedGenre === "Amapiano") return /amapiano/.test(metadata);
+        return true;
+      })
+    : destinationTracks;
+  const hasVerifiedChartSignals = destination === "Top 100" && visibleDestinationTracks.some((track: any) => Number.isFinite(Number(track.play_count ?? track.plays ?? track.stream_count)) && Number(track.play_count ?? track.plays ?? track.stream_count) > 0);
   const albumGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.album).map((track: any) => [String(track.album), track])).entries()).map(([album, track]: any) => ({ title: String(album), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, trackCount: catalogueTracks.filter((item: any) => String(item.album) === String(album)).length }));
   const releaseGroups = Array.from(new Map(catalogueTracks.filter((track: any) => track.release_title || track.release || track.album).map((track: any) => [String(track.release_title || track.release || track.album), track])).entries()).map(([title, track]: any) => ({ title: String(title), artist: String(track.artist || track.artist_name || "Unknown artist"), artwork: track.imageUrl || track.cover_url || track.artwork_url, type: String(track.release_type || "release"), trackCount: catalogueTracks.filter((item: any) => String(item.release_title || item.release || item.album) === String(title)).length }));
   const activeAlbumTitle = destinationName.startsWith("Album · ") ? destinationName.slice(8) : null;
@@ -575,9 +589,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
             <>
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
                 <Text style={{ color: C.text, fontSize: 15, fontWeight: "800", flex: 1 }}>{activePlaylist ? "Tracklist" : destination === "Library" ? "Saved tracks" : destination === "Recently Played" ? "Recently played" : destination === "Albums" || destination === "Releases" ? "Available releases" : selectedGenre || destination}</Text>
-                <Text style={{ color: C.text3, fontSize: 11 }}>{(activePlaylist ? activePlaylistTracks : destinationTracks).length} items</Text>
+                <Text style={{ color: C.text3, fontSize: 11 }}>{(activePlaylist ? activePlaylistTracks : visibleDestinationTracks).length} items</Text>
               </View>
-              {(activePlaylist ? activePlaylistTracks : destinationTracks).map((track: any, index: number) => {
+              {(activePlaylist ? activePlaylistTracks : visibleDestinationTracks).map((track: any, index: number) => {
                 const id = String(track.id ?? track.title);
                 const title = String(track.title || "Untitled track");
                 const artistName = String(track.artist || track.artist_name || "Unknown artist");
