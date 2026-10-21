@@ -41,6 +41,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
   const [tracks, setTracks] = useState<any[]>(TRACKS as any[]);
   const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
   const [top100Snapshot, setTop100Snapshot] = useState<Top100ChartSnapshot | null>(null);
+  const [chartRefreshing, setChartRefreshing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -84,17 +85,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     });
     return () => { active = false; };
   }, []);
-  useEffect(() => {
-    let active = true;
-    // The chart endpoint is independent of the catalogue endpoint. A missing or
-    // invalid chart snapshot never falls back to catalogue order as official rank.
-    void fetchTop100Chart("week", "NG").then((result) => {
-      if (!active) return;
+  const refreshTop100 = async () => {
+    if (chartRefreshing) return;
+    setChartRefreshing(true);
+    try {
+      const result = await fetchTop100Chart("week", "NG");
       setTop100Snapshot(result.ok ? result.data : null);
-    }).catch(() => {
-      if (active) setTop100Snapshot(null);
-    });
-    return () => { active = false; };
+      if (!result.ok) show("The official Top 100 snapshot is unavailable right now. The catalogue preview remains separate.");
+    } catch {
+      setTop100Snapshot(null);
+      show("Could not refresh the Top 100 chart. Please try again.");
+    } finally {
+      setChartRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshTop100();
   }, []);
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
@@ -468,6 +475,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               <Text style={s.sectionTitle}>The Top 100</Text>
               <Text style={[s.meta, { marginTop: 3 }]}>Every track has a place. Tap a row to open it.</Text>
             </View>
+            <TouchableOpacity onPress={() => void refreshTop100()} disabled={chartRefreshing} accessibilityRole="button" accessibilityLabel="Refresh Kilode Top 100 chart" style={{ width: 36, height: 36, borderRadius: 11, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", opacity: chartRefreshing ? 0.55 : 1, marginRight: 4 }}>
+              <Ionicons name={chartRefreshing ? "time-outline" : "refresh-outline"} size={17} color={C.accent} />
+            </TouchableOpacity>
             <Ionicons name="musical-notes-outline" size={18} color={C.accent} />
           </View>
           {chartTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : chartTracks.slice(0, 100).map((track: any, index: number) => {
