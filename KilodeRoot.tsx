@@ -7,6 +7,7 @@ import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
+import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -51,6 +52,7 @@ function KilodeApp() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
@@ -58,6 +60,11 @@ function KilodeApp() {
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
+
+  useEffect(() => subscribeMusicPlayer((track, playing) => {
+    setNowPlaying(track);
+    setIsMusicPlaying(playing);
+  }), []);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
@@ -438,7 +445,10 @@ function KilodeApp() {
         <View style={s.player}>
           <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
           <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}</Text></View>
-          <TouchableOpacity onPress={() => setNowPlaying(null)}><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => void toggleMusicPlayback()} accessibilityRole="button" accessibilityLabel={isMusicPlaying ? "Pause music" : "Resume music"} style={{ paddingHorizontal: 10 }}>
+            <Text style={s.playerBtn}>{isMusicPlaying ? "Ⅱ" : "▶"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => void stopMusicPlayback()} accessibilityRole="button" accessibilityLabel="Stop music"><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
         </View>
       ) : null}
       <KilodeTabBar
