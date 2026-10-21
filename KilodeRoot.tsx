@@ -157,33 +157,45 @@ function KilodeApp() {
         show(page.error || "Could not load more posts. Try again.");
         return;
       }
-      const knownIds = new Set<string>();
+      // Compute the page merge outside the state updater. React may invoke
+      // updater functions more than once in development; they must stay pure.
+      const knownIds = new Set(takes.map((item: any) => String(item.id)));
+      const additions = page.data.filter((item: any) => {
+        const id = String(item.id);
+        if (knownIds.has(id)) return false;
+        knownIds.add(id);
+        return true;
+      });
+
+      // Stop if the server repeats its cursor without returning new posts;
+      // otherwise the user could repeatedly request the same page forever.
+      const cursorStalled = Boolean(page.nextCursor && page.nextCursor === takesNextCursor);
+      if (cursorStalled && additions.length === 0) {
+        setTakesHasMore(false);
+        setTakesNextCursor(null);
+      } else {
+        setTakesNextCursor(page.nextCursor || null);
+        setTakesHasMore(Boolean(page.hasMore && page.nextCursor));
+      }
+
+      // Keep the updater pure and re-check IDs against the latest state in
+      // case another refresh added a post while this page request was in flight.
       setTakes((current) => {
-        current.forEach((item: any) => knownIds.add(String(item.id)));
-        const additions = page.data.filter((item: any) => {
+        const currentIds = new Set(current.map((item: any) => String(item.id)));
+        const uniqueAdditions = additions.filter((item: any) => {
           const id = String(item.id);
-          if (knownIds.has(id)) return false;
-          knownIds.add(id);
+          if (currentIds.has(id)) return false;
+          currentIds.add(id);
           return true;
         });
-        // Stop if the server repeats its cursor without returning new posts;
-        // otherwise the user could repeatedly request the same page forever.
-        const cursorStalled = Boolean(page.nextCursor && page.nextCursor === takesNextCursor);
-        if (cursorStalled && additions.length === 0) {
-          setTakesHasMore(false);
-          setTakesNextCursor(null);
-        } else {
-          setTakesNextCursor(page.nextCursor || null);
-          setTakesHasMore(Boolean(page.hasMore && page.nextCursor));
-        }
-        return [...current, ...additions];
+        return uniqueAdditions.length ? [...current, ...uniqueAdditions] : current;
       });
     } catch {
       show("Could not load more posts. Try again.");
     } finally {
       setLoadingMoreTakes(false);
     }
-  }, [loadingMoreTakes, takesHasMore, takesNextCursor, takesSource]);
+  }, [loadingMoreTakes, takesHasMore, takesNextCursor, takesSource, takes]);
 
   const onRefresh = async () => {
     setRefreshing(true);
