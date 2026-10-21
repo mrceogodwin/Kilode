@@ -105,6 +105,24 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     const previous = track?.previousRank ?? track?.previous_rank;
     return (rank !== undefined && rank !== null) || (change !== undefined && change !== null) || (previous !== undefined && previous !== null);
   });
+  // Keep the chart ordered by explicit, positive API ranks when present. Tracks
+  // without a verified rank stay after ranked tracks and retain catalogue order.
+  const chartTracks = catalogueSource === "live"
+    ? exploreTracks.map((track: any, originalIndex: number) => {
+        const rawRank = track?.rank ?? track?.currentRank ?? track?.current_rank;
+        const rank = typeof rawRank === "number" && Number.isFinite(rawRank)
+          ? rawRank
+          : typeof rawRank === "string" && rawRank.trim() && Number.isFinite(Number(rawRank))
+            ? Number(rawRank)
+            : null;
+        return { track, originalIndex, rank: rank !== null && rank > 0 ? rank : null };
+      }).sort((a, b) => {
+        if (a.rank !== null && b.rank !== null) return a.rank - b.rank || a.originalIndex - b.originalIndex;
+        if (a.rank !== null) return -1;
+        if (b.rank !== null) return 1;
+        return a.originalIndex - b.originalIndex;
+      }).map(({ track }) => track)
+    : exploreTracks;
   const newTracks = filteredTracks.filter((track: any) => {
     const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
     if (!rawDate) return false;
@@ -432,7 +450,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
             </View>
             <Ionicons name="musical-notes-outline" size={18} color={C.accent} />
           </View>
-          {exploreTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : exploreTracks.slice(0, 100).map((track: any, index: number) => {
+          {chartTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : chartTracks.slice(0, 100).map((track: any, index: number) => {
             const numeric = (value: unknown): number | null => {
               if (typeof value === "number" && Number.isFinite(value)) return value;
               if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
@@ -459,7 +477,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               </TouchableOpacity>
             );
           })}
-          {exploreTracks.length > 0 ? <Text style={[s.meta, { paddingHorizontal: 14, marginTop: 7, marginBottom: 18, lineHeight: 16 }]}>This list currently follows available catalogue order. Official chart positions and movement will appear only when verified chart data is connected.</Text> : null}
+          {chartTracks.length > 0 ? <Text style={[s.meta, { paddingHorizontal: 14, marginTop: 7, marginBottom: 18, lineHeight: 16 }]}>This list currently follows available catalogue order. Official chart positions and movement will appear only when verified chart data is connected.</Text> : null}
         </>
       )}
 
