@@ -49,3 +49,46 @@ jobs:
             artifacts-ios/
           if-no-files-found: error
           retention-days: 14
+
+  eas-ios-preview:
+    name: Build installable iOS preview with EAS
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate-and-export
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+    steps:
+      - name: Check out native app
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate EAS credentials without printing secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${EXPO_TOKEN}" ]]; then
+            echo "::error::Missing EXPO_TOKEN repository secret. Add it in GitHub Actions secrets before running the EAS iOS build."
+            exit 1
+          fi
+          if [[ -z "${EAS_PROJECT_ID}" ]]; then
+            echo "::error::Missing EAS_PROJECT_ID repository secret. Add it in GitHub Actions secrets before running the EAS iOS build."
+            exit 1
+          fi
+          APP_PROJECT_ID="$(node -p "require('./app.json').expo.extra.eas.projectId || ''")"
+          if [[ -z "${APP_PROJECT_ID}" || "${APP_PROJECT_ID}" != "${EAS_PROJECT_ID}" ]]; then
+            echo "::error::EAS_PROJECT_ID must match app.json expo.extra.eas.projectId. Secret values are not printed."
+            exit 1
+          fi
+          echo "EAS credentials are present and the project IDs match."
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build iOS internal preview on EAS
+        run: npx eas-cli build --platform ios --profile preview --non-interactive
