@@ -530,6 +530,48 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
           <Text style={s.ghostBtnText}>Sign out</Text>
         </TouchableOpacity>
       </View>
+      {session.kind === "artist" ? (
+        <View style={{ marginTop: 8, marginBottom: 8 }}>
+          <View style={s.sectionHead}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.sectionTitle}>Artist Studio</Text>
+              <Text style={[s.meta, { marginTop: 4 }]}>Your music career, releases and audience tools.</Text>
+            </View>
+            <View style={[s.chip, { borderColor: C.accent }]}>
+              <Text style={[s.chipText, { color: C.accent }]}>ARTIST</Text>
+            </View>
+          </View>
+          <View style={{ marginHorizontal: 14, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>Build your next release</Text>
+            <Text style={{ color: C.text2, fontSize: 12, lineHeight: 18, marginTop: 5 }}>Manage your catalogue, improve your artist profile and prepare music for discovery. Live audience and earnings metrics will appear when those data services are connected.</Text>
+            <TouchableOpacity accessibilityRole="button" onPress={() => go("music")} style={[s.primaryBtn, { marginTop: 12, alignSelf: "flex-start", paddingHorizontal: 16 }]}>
+              <Text style={s.primaryBtnText}>Open Music Studio</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={s.sectionHead}><Text style={s.sectionTitle}>Artist tools</Text></View>
+          {[
+            { title: "My Music & Releases", detail: "Open tracks, catalogue and available upload tools", icon: "♫", action: () => go("music") },
+            { title: "Grow & Discovery", detail: "Discovery opportunities and growth guidance", icon: "↗", action: () => show("Growth recommendations will be enabled when Kilode has verified artist performance data.") },
+            { title: "Promote Music", detail: "Campaign tools and promotion results", icon: "◎", action: () => go("pushlink") },
+            { title: "Analytics", detail: "Streams, listeners and audience trends", icon: "▥", action: () => show("Artist analytics are not connected yet. No figures are being estimated or invented.") },
+            { title: "Earnings & Royalties", detail: "Statements, balances and payout status", icon: "₦", action: () => show("Artist earnings and royalty payouts are not connected yet.") },
+            { title: "Audience & Fans", detail: "Followers and fan engagement", icon: "♡", action: () => show("Artist audience tools will use verified follower and engagement data when available.") },
+            { title: "Public Artist Profile", detail: "Your artist identity, biography and discography", icon: "◉", action: () => show("Artist profile editing is not connected yet.") },
+            { title: "Release Planner", detail: "Prepare release details and promotional checklist", icon: "▦", action: () => show("Release planning is not connected yet.") },
+          ].map((item) => (
+            <TouchableOpacity key={item.title} accessibilityRole="button" accessibilityLabel={item.title} onPress={item.action} style={[s.roomRow, { marginHorizontal: 14, paddingVertical: 13 }]}>
+              <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: C.accent, fontSize: 19, fontWeight: "700" }}>{item.icon}</Text>
+              </View>
+              <View style={[s.flex, { marginLeft: 12 }]}>
+                <Text style={s.roomName}>{item.title}</Text>
+                <Text style={[s.meta, { marginTop: 3 }]}>{item.detail}</Text>
+              </View>
+              <Text style={{ color: C.text3, fontSize: 20 }}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
       <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
       <View style={s.roomRow}>
         <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Payments not connected</Text></View>
