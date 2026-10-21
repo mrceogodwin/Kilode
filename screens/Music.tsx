@@ -463,10 +463,12 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
               return null;
             };
-            const reportedRank = top100Snapshot || catalogueSource === "live" ? numeric(track.rank ?? track.currentRank ?? track.current_rank) : null;
+            // Catalogue metadata is not authoritative chart history. Only a
+            // validated snapshot may supply official position or movement.
+            const reportedRank = top100Snapshot ? numeric(track.rank) : null;
             const position = reportedRank !== null && reportedRank > 0 ? reportedRank : index + 1;
-            const rankChange = top100Snapshot || catalogueSource === "live" ? numeric(track.rankChange ?? track.rank_change) : null;
-            const previousRank = top100Snapshot || catalogueSource === "live" ? numeric(track.previousRank ?? track.previous_rank) : null;
+            const rankChange = top100Snapshot ? numeric(track.rankChange) : null;
+            const previousRank = top100Snapshot ? numeric(track.previousRank) : null;
             const change = previousRank !== null && previousRank > 0
               ? previousRank - position
               : rankChange;
