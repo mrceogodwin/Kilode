@@ -49,6 +49,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
 
   useEffect(() => {
     let active = true;
+    setDiscoveryReady(false);
+    setDiscoveryProfile({ version: 1, events: [], hiddenTrackKeys: [] });
     void readMusicDiscoveryProfile(accountScope).then((profile) => {
       if (!active) return;
       setDiscoveryProfile(profile);
