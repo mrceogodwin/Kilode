@@ -418,6 +418,9 @@ export async function fetchTop100Chart(
   if (Date.now() - Date.parse(generatedAt) > 48 * 60 * 60 * 1000 || Date.parse(generatedAt) > Date.now() + 5 * 60 * 1000) {
     return { ok: false, data: null, source: "error", error: "Chart snapshot is stale or has a future timestamp", fn: "getTop100Chart" };
   }
+  if (payload.entries.length === 0) {
+    return { ok: false, data: null, source: "error", error: "Chart snapshot contains no ranked tracks", fn: "getTop100Chart" };
+  }
   if (payload.entries.length > 100) {
     return { ok: false, data: null, source: "error", error: "Chart snapshot exceeds 100 entries", fn: "getTop100Chart" };
   }
@@ -425,7 +428,7 @@ export async function fetchTop100Chart(
   const seenRanks = new Set<number>();
   const entries: Top100ChartEntry[] = [];
   for (const item of payload.entries) {
-    const trackId = typeof item?.trackId === "string" ? item.trackId : typeof item?.track_id === "string" ? item.track_id : "";
+    const trackId = (typeof item?.trackId === "string" ? item.trackId : typeof item?.track_id === "string" ? item.track_id : "").trim();
     const rawRank = item?.rank;
     const rank = typeof rawRank === "number" ? rawRank : typeof rawRank === "string" && rawRank.trim() ? Number(rawRank) : NaN;
     const rawPrevious = item?.previousRank ?? item?.previous_rank;
