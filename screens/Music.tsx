@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -28,9 +28,11 @@ const ARTISTS = [
 
 export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
+  const [search, setSearch] = useState("");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
   const tracks = TRACKS || [];
+  const filteredTracks = tracks.filter((t: any) => `${t.title || ""} ${t.artist || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
 
   const selectTrack = (t: any) => {
     setActiveArtist(null);
@@ -122,15 +124,31 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         ))}
       </ScrollView>
 
+      <View style={{ paddingHorizontal: 14, marginTop: 2, marginBottom: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+          <Ionicons name="search" size={17} color={C.text3} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search tracks or artists"
+            placeholderTextColor={C.text3}
+            returnKeyType="search"
+            style={{ flex: 1, color: C.text, fontSize: 14, padding: 0 }}
+            accessibilityLabel="Search tracks or artists"
+          />
+          {search.length > 0 ? <TouchableOpacity onPress={() => setSearch("")} accessibilityRole="button" accessibilityLabel="Clear search"><Ionicons name="close-circle" size={17} color={C.text3} /></TouchableOpacity> : null}
+        </View>
+      </View>
+
       {tab === "new" && (
         <>
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>New drops</Text>
           </View>
-          {tracks.length === 0 ? (
+          {filteredTracks.length === 0 ? (
             <EmptyState
-              title="No tracks yet"
-              body="Catalogue will appear when the music API is live."
+              title={search ? "No matches" : "No tracks yet"}
+              body={search ? "Try another track or artist name." : "Catalogue will appear when the music API is live."}
               textColor={C.text}
               mutedColor={C.text2}
               accentColor={C.accent}
@@ -138,7 +156,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             />
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
-              {tracks.map((t: any) => (
+              {filteredTracks.map((t: any) => (
                 <TouchableOpacity
                   key={t.id}
                   style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
