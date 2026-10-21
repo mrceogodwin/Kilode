@@ -315,40 +315,38 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
         </View>
       </View>
 
-      {!search.trim() && (
-        <View style={{ marginTop: 16 }}>
-          <View style={[s.sectionHead, { paddingHorizontal: 14, marginBottom: 10 }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.sectionTitle}>More to Explore</Text>
-              <Text style={[s.meta, { marginTop: 3 }]}>Find your next favourite sound on Kilode</Text>
-            </View>
+      <View style={{ marginTop: 16, paddingHorizontal: 14 }}>
+        <View style={[s.sectionHead, { marginBottom: 10 }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.sectionTitle}>More to Explore</Text>
+            <Text style={[s.meta, { marginTop: 3 }]}>Find your next favourite sound on Kilode</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.tracksRow, { paddingHorizontal: 14, gap: 10 }]}>
-            {([
-              { id: "explore", title: "Explore tracks", detail: "Browse the catalogue", icon: "musical-notes-outline", target: "charts" as const },
-              { id: "new", title: "Fresh releases", detail: "Hear what's new", icon: "sparkles-outline", target: "new" as const },
-              { id: "artists", title: "Meet the artists", detail: "Find your next favourite", icon: "people-outline", target: "artists" as const },
-              { id: "top100", title: "Kilode Top 100", detail: "The songs moving culture", icon: "trophy-outline", target: "charts" as const },
-            ]).map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => setTab(item.target)}
-                accessibilityRole="button"
-                accessibilityLabel={item.title}
-                style={{ width: 154, minHeight: 112, padding: 13, borderRadius: 16, borderWidth: 1, borderColor: item.id === "top100" ? "#75613A" : C.border, backgroundColor: item.id === "top100" ? "#201D16" : C.card, justifyContent: "space-between", overflow: "hidden" }}
-              >
-                <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: item.id === "top100" ? "#3A3020" : C.elevated || C.border, alignItems: "center", justifyContent: "center" }}>
-                  <Ionicons name={item.icon as any} size={19} color={C.accent} />
-                </View>
-                <View style={{ marginTop: 12 }}>
-                  <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{item.title}</Text>
-                  <Text style={[s.meta, { marginTop: 3 }]}>{item.detail}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
-      )}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+          {([
+            { id: "explore", title: "Explore tracks", detail: "Browse the catalogue", icon: "musical-notes-outline", target: "charts" as const },
+            { id: "new", title: "Fresh releases", detail: "Hear what's new", icon: "sparkles-outline", target: "new" as const },
+            { id: "artists", title: "Meet the artists", detail: "Find your next favourite", icon: "people-outline", target: "artists" as const },
+            { id: "top100", title: "Kilode Top 100", detail: "Songs moving culture", icon: "trophy-outline", target: "charts" as const },
+          ]).map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              onPress={() => setTab(item.target)}
+              accessibilityRole="button"
+              accessibilityLabel={item.title}
+              style={{ width: "48%", minHeight: 112, flexGrow: 1, flexBasis: "44%", padding: 13, borderRadius: 16, borderWidth: 1, borderColor: item.id === "top100" ? "#75613A" : C.border, backgroundColor: item.id === "top100" ? "#201D16" : C.card, justifyContent: "space-between", overflow: "hidden" }}
+            >
+              <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: item.id === "top100" ? "#3A3020" : C.elevated || C.border, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name={item.icon as any} size={19} color={C.accent} />
+              </View>
+              <View style={{ marginTop: 12 }}>
+                <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{item.title}</Text>
+                <Text style={[s.meta, { marginTop: 3 }]}>{item.detail}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
 
       {discoveryReady && tab === "forYou" && !search.trim() && discoveryShelves.map((shelf) => (
         <View key={shelf.id} style={{ marginTop: 18 }}>
