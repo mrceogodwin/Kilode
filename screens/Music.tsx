@@ -42,6 +42,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
   const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
   const [top100Snapshot, setTop100Snapshot] = useState<Top100ChartSnapshot | null>(null);
   const [chartRefreshing, setChartRefreshing] = useState(false);
+  const chartRefreshInFlight = useRef(false);
   const screenMounted = useRef(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
@@ -87,7 +88,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     return () => { active = false; };
   }, []);
   const refreshTop100 = async (silent = false) => {
-    if (chartRefreshing) return;
+    // State updates are asynchronous; this ref blocks rapid duplicate taps.
+    if (chartRefreshInFlight.current) return;
+    chartRefreshInFlight.current = true;
     setChartRefreshing(true);
     try {
       const result = await fetchTop100Chart("week", "NG");
@@ -99,6 +102,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
       setTop100Snapshot(null);
       if (!silent) show("Could not refresh the Top 100 chart. Please try again.");
     } finally {
+      chartRefreshInFlight.current = false;
       if (screenMounted.current) setChartRefreshing(false);
     }
   };
