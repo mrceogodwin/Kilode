@@ -9,6 +9,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const BLOCK_KEY = "@kilode/blocked_users";
 const REPORT_KEY = "@kilode/reports";
 
+function scopedKey(base: string, scope?: string): string {
+  const account = (scope || "guest").trim().toLowerCase().replace(/[^a-z0-9_.-]/g, "_") || "guest";
+  return `${base}:${account}`;
+}
+
 export type ReportReason =
   | "spam"
   | "harassment"
@@ -27,33 +32,36 @@ export type ReportRecord = {
   createdAt: string;
 };
 
-export async function getBlockedUsers(): Promise<string[]> {
+export async function getBlockedUsers(scope?: string): Promise<string[]> {
   try {
-    const raw = await AsyncStorage.getItem(BLOCK_KEY);
+    const raw = await AsyncStorage.getItem(scopedKey(BLOCK_KEY, scope));
     return raw ? (JSON.parse(raw) as string[]) : [];
   } catch {
     return [];
   }
 }
 
-export async function blockUser(handle: string): Promise<void> {
-  const list = await getBlockedUsers();
+export async function blockUser(handle: string, scope?: string): Promise<void> {
+  const key = scopedKey(BLOCK_KEY, scope);
+  const list = await getBlockedUsers(scope);
   if (!list.includes(handle)) {
     list.push(handle);
-    await AsyncStorage.setItem(BLOCK_KEY, JSON.stringify(list));
+    await AsyncStorage.setItem(key, JSON.stringify(list));
   }
 }
 
-export async function unblockUser(handle: string): Promise<void> {
-  const list = (await getBlockedUsers()).filter((h) => h !== handle);
-  await AsyncStorage.setItem(BLOCK_KEY, JSON.stringify(list));
+export async function unblockUser(handle: string, scope?: string): Promise<void> {
+  const key = scopedKey(BLOCK_KEY, scope);
+  const list = (await getBlockedUsers(scope)).filter((h) => h !== handle);
+  await AsyncStorage.setItem(key, JSON.stringify(list));
 }
 
 export async function submitReport(
   targetType: ReportRecord["targetType"],
   targetId: string,
   reason: ReportReason,
-  note?: string
+  note?: string,
+  scope?: string
 ): Promise<ReportRecord> {
   const record: ReportRecord = {
     id: `rpt-${Date.now()}`,
@@ -64,10 +72,11 @@ export async function submitReport(
     createdAt: new Date().toISOString(),
   };
   try {
-    const raw = await AsyncStorage.getItem(REPORT_KEY);
+    const key = scopedKey(REPORT_KEY, scope);
+    const raw = await AsyncStorage.getItem(key);
     const list: ReportRecord[] = raw ? JSON.parse(raw) : [];
     list.unshift(record);
-    await AsyncStorage.setItem(REPORT_KEY, JSON.stringify(list.slice(0, 200)));
+    await AsyncStorage.setItem(key, JSON.stringify(list.slice(0, 200)));
   } catch {
     /* local only */
   }
