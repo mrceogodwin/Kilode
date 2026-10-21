@@ -2,6 +2,19 @@ name: Kilode iOS Preview Build
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - preview/web
+    paths:
+      - "App.tsx"
+      - "app.json"
+      - "eas.json"
+      - "package.json"
+      - "screens/**"
+      - "components/**"
+      - "lib/**"
+      - "supabase/**"
+      - ".github/workflows/kilode-ios-preview.yml"
 
 permissions:
   contents: read
