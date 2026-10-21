@@ -14,7 +14,6 @@ type Props = {
   C: Palette;
   isDark: boolean;
   onBack: () => void;
-  onDeleteAccount: () => Promise<{ ok: boolean; error?: string }>;
   show: (m: string) => void;
   sessionHandle: string;
 };
@@ -27,32 +26,11 @@ export function SettingsScreen({
   s,
   C,
   onBack,
-  onDeleteAccount,
   show,
   sessionHandle,
 }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  const confirmDelete = async () => {
-    if (deleting) return;
-    setDeleting(true);
-    try {
-      const r = await onDeleteAccount();
-      if (r.ok) {
-        setDeleteOpen(false);
-        show("Account deleted");
-      } else {
-        show(r.error || "Could not delete account. Please try again.");
-      }
-    } catch {
-      show("Could not delete account. Check your connection and try again.");
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   const row = (label: string, onPress: () => void, danger?: boolean) => (
     <TouchableOpacity
       style={[s.roomRow, danger && { borderColor: C.danger }]}
@@ -139,7 +117,6 @@ export function SettingsScreen({
             </Text>
             <TouchableOpacity
               style={[s.primaryBtn, { marginBottom: 10 }]}
-              disabled={deleting}
               accessibilityRole="button"
               accessibilityLabel="Contact Kilode support about account deletion"
               onPress={() => {
