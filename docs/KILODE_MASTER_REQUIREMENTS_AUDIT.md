@@ -106,11 +106,11 @@ Backend constraint: do not silently default the native app to Kilode v2 or kilod
 - [ ] No hardcoded secrets, no fabricated live data, no local-only action described as server-persisted.
 - [ ] Test account isolation, ownership, invalid input, permission-denied cases, failed uploads/payments and network interruption.
 
-## Latest execution audit — 2026-10-21 19:35 WAT
+## Latest execution audit — 2026-10-21 19:40 WAT
 
 - Latest app-code commit under test: `7445ffa44d843d58c43757d6b736e18a140f457b` (`[ios-build] Fix native-incompatible create popover width`).
 - GitHub Actions native validation job `119406178630` completed SUCCESS for that commit: dependency installation, TypeScript, Expo Doctor, iOS JavaScript bundle export, and artifact upload all passed. This is meaningful native-project validation, but it is not a compiled iOS app.
-- The EAS installable-preview job `119406731610` successfully passed the EAS credential presence/project-ID match check. At the last check, dependency installation was still in progress and the EAS build command had not started. Final iOS build status is therefore still pending.
+- EAS installable-preview job `119406731610` passed the EAS credential presence/project-ID match check and dependency installation, but the workflow was cancelled before an installable build result was produced. The branch workflow uses `cancel-in-progress: true`; a later audit commit superseded the running build. This is NOT a successful iOS build. The next `[ios-build]` audit commit deliberately re-triggers validation followed by a fresh EAS preview build.
 - GitHub Actions web-preview check `39653075838` completed SUCCESS for commit `7445ffa44d843d58c43757d6b736e18a140f457b`.
 - Vercel deployment `dpl_FJsQxvXjaekXeAsKScwH5DYjeGzk`, tied to commit `7445ffa44d843d58c43757d6b736e18a140f457b`, reached READY. This confirms web export deployment only; it is not physical iPhone or TestFlight verification.
 - Native create-popover width was corrected from web-only CSS-style `min(340px, 92%)` to React Native-compatible `width: "92%", maxWidth: 340`.
