@@ -8,7 +8,7 @@ import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
 import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake, getMusicPlayback, recordMusicEvent } from "./lib/api";
-import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback, playMusicTrack, seekMusicPlayback, setMusicRepeat } from "./lib/musicPlayer";
+import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback, playMusicTrack, seekMusicPlayback, setMusicRepeat, setMusicTrackFinishedHandler } from "./lib/musicPlayer";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
@@ -162,6 +162,16 @@ function KilodeApp() {
     nextIndex = currentIndex < 0 ? (direction === 1 ? 0 : playable.length - 1) : (currentIndex + direction + playable.length) % playable.length;
     await playQueueTrack(playable[nextIndex]);
   };
+
+  useEffect(() => {
+    // Advance the queue after natural completion, using the same secure playback
+    // path as manual next/previous controls.
+    setMusicTrackFinishedHandler(() => {
+      void playAdjacentTrack(1);
+    });
+    return () => setMusicTrackFinishedHandler(null);
+  }, [tracks, tracksSource, nowPlaying, musicShuffle, session?.token]);
+
   const toggleMusicShuffle = () => setMusicShuffle((value) => !value);
   const toggleMusicRepeat = () => setMusicRepeatState((value) => {
     setMusicRepeat(!value);
