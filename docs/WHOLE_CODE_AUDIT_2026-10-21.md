@@ -4,7 +4,7 @@ Scope: Expo React Native app in `mrceogodwin/Kilode`, working branch `music-comp
 
 ## Current automated checks
 
-- Latest completed native validation before this audit: TypeScript, Expo Doctor, and iOS JavaScript bundle export passed on commit `0d26214b`.
+- Latest completed native validation: TypeScript, Expo Doctor, and iOS JavaScript bundle export passed on commit `52ad7e17` after adding the missing `expo-font` peer dependency.
 - Vercel static mirror deployment for that commit is READY. It only copies `docs/kilode-ios-preview.html` to static output; it does not render or build the React Native app.
 - Physical-iPhone EAS preview is **not verified**. The last device build reached EAS but failed because no suitable iOS signing credentials were available for internal distribution.
 - No real-device end-to-end test or App Store submission/approval has been verified.
