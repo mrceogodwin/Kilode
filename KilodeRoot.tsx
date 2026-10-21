@@ -852,7 +852,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu"><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
             <View style={s.deskGrid}>{CREATE.map((o) => (
-              <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
+              <TouchableOpacity key={o.label} style={s.deskGridItem} accessibilityRole="button" accessibilityLabel={`Create ${o.label}`} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
                 <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
               </TouchableOpacity>
             ))}</View>
