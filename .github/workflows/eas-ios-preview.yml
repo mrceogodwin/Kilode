@@ -41,8 +41,8 @@ jobs:
           EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
           EXPO_PUBLIC_APP_ENV: preview
         run: |
-          npx expo config --type public > /tmp/kilode-expo-config.json
-          node -e 'const c=require("/tmp/kilode-expo-config.json"); const id=c.extra?.eas?.projectId; if (!id || id !== process.env.EAS_PROJECT_ID) { console.error("Expo project ID is missing or does not match EAS_PROJECT_ID"); process.exit(1); } if (c.ios?.bundleIdentifier !== "ng.kilode.app") { console.error("Unexpected iOS bundle identifier"); process.exit(1); } console.log("Expo project ID and iOS bundle identifier verified.");'
+          npx expo config --type public --json > /tmp/kilode-expo-config.json
+          node -e 'const c=JSON.parse(require("node:fs").readFileSync("/tmp/kilode-expo-config.json", "utf8")); const id=c.extra?.eas?.projectId; if (!id || id !== process.env.EAS_PROJECT_ID) { console.error("Expo project ID is missing or does not match EAS_PROJECT_ID"); process.exit(1); } if (c.ios?.bundleIdentifier !== "ng.kilode.app") { console.error("Unexpected iOS bundle identifier"); process.exit(1); } console.log("Expo project ID and iOS bundle identifier verified.");'
 
       - name: Build iOS preview on EAS
         env:
