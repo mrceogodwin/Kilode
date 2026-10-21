@@ -121,28 +121,51 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
   const requestId = ++playbackRequestId;
   try {
     await configureAudioMode();
-    if (sound && currentTrack && trackIdentity(currentTrack) === trackIdentity(track)) {
-      const status = await sound.getStatusAsync();
+    // Stop may be pressed while audio-session setup is awaiting native code.
+    if (requestId !== playbackRequestId) {
+      return { ok: false, message: "Playback was cancelled." };
+    }
+
+    const existingSound = sound;
+    if (existingSound && currentTrack && trackIdentity(currentTrack) === trackIdentity(track)) {
+      const status = await existingSound.getStatusAsync();
+      if (requestId !== playbackRequestId || existingSound !== sound) {
+        return { ok: false, message: "Playback was cancelled." };
+      }
       if (status.isLoaded) {
         if (status.isPlaying) {
-          await sound.pauseAsync();
-          isPlaying = false;
+          await existingSound.pauseAsync();
         } else if (status.didJustFinish) {
-          await sound.replayAsync();
-          isPlaying = true;
+          await existingSound.replayAsync();
         } else {
-          await sound.playAsync();
-          isPlaying = true;
+          await existingSound.playAsync();
         }
+        if (requestId !== playbackRequestId || existingSound !== sound) {
+          return { ok: false, message: "Playback was cancelled." };
+        }
+        const updated = await existingSound.getStatusAsync();
+        if (requestId !== playbackRequestId || existingSound !== sound || !updated.isLoaded) {
+          return { ok: false, message: "Playback was cancelled." };
+        }
+        isPlaying = updated.isPlaying;
+        positionMillis = updated.positionMillis;
+        durationMillis = updated.durationMillis || 0;
         publish();
         return { ok: true };
       }
     }
 
-    if (sound) {
-      sound.setOnPlaybackStatusUpdate(null);
-      await sound.unloadAsync().catch(() => undefined);
-      sound = null;
+    if (existingSound) {
+      existingSound.setOnPlaybackStatusUpdate(null);
+      await existingSound.unloadAsync().catch(() => undefined);
+      if (requestId !== playbackRequestId) {
+        return { ok: false, message: "Playback was cancelled." };
+      }
+      if (sound === existingSound) sound = null;
+    }
+
+    if (requestId !== playbackRequestId) {
+      return { ok: false, message: "Playback was cancelled." };
     }
 
     currentTrack = track;
