@@ -80,6 +80,7 @@ export function CommentsSheet({
             saved = [];
           }
         }
+        if (!active) return;
         setLocalComments(saved);
         setList(saved);
       })
