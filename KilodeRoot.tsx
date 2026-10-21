@@ -177,6 +177,12 @@ function KilodeApp() {
     drawerTranslateX.setValue(Dimensions.get("window").width);
     Animated.timing(drawerTranslateX, { toValue: 0, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
   }, [moreOpen, drawerTranslateX]);
+
+  const closeMoreDrawer = useCallback(() => {
+    Animated.timing(drawerTranslateX, { toValue: Dimensions.get("window").width, duration: 180, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
+      if (finished) setMoreOpen(false);
+    });
+  }, [drawerTranslateX]);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock" | "error">("mock");
   const [takes, setTakes] = useState<any[]>([]);
@@ -859,9 +865,9 @@ function KilodeApp() {
           </View>
         </View>
       </Modal>
-      <Modal visible={moreOpen} transparent animationType="none" onRequestClose={() => setMoreOpen(false)}>
+      <Modal visible={moreOpen} transparent animationType="none" onRequestClose={closeMoreDrawer}>
         <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-end", padding: 0, backgroundColor: "transparent" }]}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setMoreOpen(false)} />
+          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={closeMoreDrawer} />
           <Animated.View style={{ width: "84%", maxWidth: 360, height: "100%", paddingTop: Platform.OS === "ios" ? 52 : 28, paddingHorizontal: 16, paddingBottom: 28, backgroundColor: C.card, borderLeftWidth: 1, borderLeftColor: C.border, transform: [{ translateX: drawerTranslateX }] }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: C.border, marginBottom: 14 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><KilodeWordmark size="small" /><Text style={{ color: C.text, fontSize: 14, fontWeight: "800" }}>Explore</Text></View>
