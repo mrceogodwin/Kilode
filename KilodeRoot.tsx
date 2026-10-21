@@ -31,6 +31,21 @@ function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
+  const [themeModeLoaded, setThemeModeLoaded] = useState(false);
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem("kilode:theme-mode").then((saved) => {
+      if (active && (saved === "dark" || saved === "light" || saved === "system")) setThemeMode(saved);
+    }).catch(() => {
+      // Keep the default dark appearance if preferences are unavailable.
+    }).finally(() => {
+      if (active) setThemeModeLoaded(true);
+    });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (themeModeLoaded) AsyncStorage.setItem("kilode:theme-mode", themeMode).catch(() => {});
+  }, [themeMode, themeModeLoaded]);
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
   const C = palettes[effective];
   const isDark = effective === "dark";
