@@ -894,7 +894,19 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Ionicons name={release.status === "published" ? "checkmark-circle" : release.status === "submitted" ? "shield-checkmark-outline" : "time-outline"} size={18} color={release.status === "published" ? C.accent : C.text3} />
             </View>
           )) : (
-            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{loadingReleases ? "Loading your releases…" : releaseLoadError || "Your private drafts and submissions will appear here."}</Text>
+            <View>
+              <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{loadingReleases ? "Loading your releases…" : releaseLoadError || "Your private drafts and submissions will appear here."}</Text>
+              {!loadingReleases && releaseLoadError ? (
+                <TouchableOpacity
+                  onPress={() => setReleaseRefreshKey((key) => key + 1)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retry loading your releases"
+                  style={{ alignSelf: "flex-start", marginTop: 9, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: C.accentSoft }}
+                >
+                  <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Try again</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
           )}
         </View>
       ) : null}
