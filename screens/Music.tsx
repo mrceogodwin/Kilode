@@ -42,6 +42,9 @@ const EDITORIAL_PLAYLISTS = [
   { title: "Late Night Rotation", subtitle: "A calmer after-hours selection", icon: "moon-outline", category: "mood" },
   { title: "New & Noted", subtitle: "Recent releases when catalogue dates are available", icon: "albums-outline", category: "new" },
   { title: "The Discovery List", subtitle: "Find artists and tracks you have not played yet", icon: "compass-outline", category: "community" },
+  { title: "Next Up Africa", subtitle: "Explore emerging sounds and new voices", icon: "trending-up-outline", category: "community" },
+  { title: "Made in Naija", subtitle: "Find music tagged with Nigerian roots", icon: "globe-outline", category: "naija" },
+  { title: "Kilode Selects", subtitle: "A flagship route through featured catalogue picks", icon: "star-outline", category: "community" },
   { title: "Focus Mode", subtitle: "A lighter background-listening selection", icon: "headset-outline", category: "focus" },
   { title: "Afrobeats Essentials", subtitle: "Explore tracks tagged Afrobeats", icon: "musical-notes-outline", category: "genre" },
 ];
@@ -1133,21 +1136,35 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
           </View>)}
         </View>;
       })() : null}
-      {(tab === "Home" || tab === "Discover") ? <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.2, paddingHorizontal: 16, marginTop: 18, marginBottom: 9 }}>Genres</Text> : null}
-      {(tab === "Home" || tab === "Discover") ? <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, gap: 8 }}>
-        {GENRES.map((g) => (
-          <TouchableOpacity
-            key={g.id}
-            onPress={() => openMusicDestination(g.label, g.label)}
-            style={{ width: "48%", minHeight: 52, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 11, paddingVertical: 10, borderRadius: 11, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}
-          >
-            <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: g.color, opacity: 0.9, alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="musical-note" size={14} color="#fff" />
+      {(tab === "Home" || tab === "Discover") ? (
+        <View style={{ marginTop: 22 }}>
+          <View style={{ paddingHorizontal: 16, flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: C.text, fontSize: 16, fontWeight: "800", letterSpacing: -0.25 }}>Explore sounds</Text>
+              <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>Pick a lane. Find your next favourite.</Text>
             </View>
-            <Text numberOfLines={1} style={{ color: C.text, fontWeight: "600", fontSize: 12 }}>{g.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View> : null}
+            <TouchableOpacity onPress={() => openMusicDestination("Genres")} accessibilityRole="button" accessibilityLabel="Explore all music genres">
+              <Text style={{ color: C.accent, fontSize: 11, fontWeight: "800" }}>All genres ↗</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around", paddingHorizontal: 12, rowGap: 16 }}>
+            {GENRES.map((g) => (
+              <TouchableOpacity
+                key={g.id}
+                onPress={() => openMusicDestination(g.label, g.label)}
+                accessibilityRole="button"
+                accessibilityLabel={`Explore ${g.label} music`}
+                style={{ width: "24%", minWidth: 72, alignItems: "center" }}
+              >
+                <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: g.color, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: C.border }}>
+                  <Ionicons name="musical-note" size={23} color="#fff" />
+                </View>
+                <Text numberOfLines={1} style={{ color: C.text, fontWeight: "700", fontSize: 11, marginTop: 8, textAlign: "center", width: "100%" }}>{g.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {tab === "Discover" ? (
         <View style={{ marginTop: 20 }}>
