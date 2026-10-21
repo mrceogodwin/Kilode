@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - music-compact-create-sheet
   pull_request:
     branches:
       - main
