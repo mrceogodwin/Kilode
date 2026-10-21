@@ -542,7 +542,7 @@ function KilodeApp() {
 
   const Header = ({ title }: { title?: string }) => (
     <View style={s.header}>
-      <View style={s.headerLeft}>{title ? <Text style={s.headerTitle}>{title}</Text> : <KilodeWordmark size="small" />}</View>
+      <View style={[s.headerLeft, { flexShrink: 1, minWidth: 0 }]}><KilodeWordmark size="small" />{title ? <Text style={[s.headerTitle, { fontSize: 12, marginLeft: 2, flexShrink: 1 }]} numberOfLines={1}>{title}</Text> : null}</View>
       <View style={[s.headerRight, { gap: 6 }]}>
         <TouchableOpacity style={s.iconBtn} onPress={() => { if (tab !== "home") { go("home"); setHomeSearchOpen(true); return; } setHomeSearchOpen((open) => !open); }} accessibilityRole="button" accessibilityLabel="Search"><Ionicons name="search-outline" size={18} color={C.text} /></TouchableOpacity>
         <TouchableOpacity style={s.iconBtn} onPress={() => go("activity")} accessibilityLabel="Notifications"><Ionicons name="notifications-outline" size={18} color={C.text} /></TouchableOpacity>
