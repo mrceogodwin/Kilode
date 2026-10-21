@@ -36,7 +36,7 @@ Never commit either value to the repository or print it in workflow logs.
 
 ## 3. Build a preview iOS app
 
-Once the project is linked and both secrets are configured, open GitHub Actions → **Kilode iOS EAS preview build** → Run workflow. It builds the `preview` profile for iOS and uploads the EAS build URL to the job log. This is a signed/internal distribution build, not a TestFlight submission.
+Once the project is linked and both secrets are configured, open GitHub Actions → **Kilode iOS device preview build** → Run workflow. It builds the `preview` profile for iOS and uploads the EAS build URL to the job log. This targets a physical iPhone (not the simulator) using the `preview` internal-distribution profile. It is not a TestFlight submission. EAS signing credentials and the required repository secrets must still be configured; a successful workflow is needed to confirm the build actually completes.
 
 The production build should only be run after preview installation and backend configuration have been verified.
 
