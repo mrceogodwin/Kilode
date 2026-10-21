@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   welcomeShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(5,5,7,0.30)" },
   welcomeTop: { alignItems: "center", paddingTop: Platform.OS === "ios" ? 18 : 14 },
   welcomeLogo: { color: "#FFFFFF", fontSize: 50, fontWeight: "800", letterSpacing: -3.4, textShadowColor: "rgba(255,255,255,0.18)", textShadowRadius: 12, textShadowOffset: { width: 0, height: 2 } },
-  welcomeDot: { color: "#D4AF37", letterSpacing: -3 },
+  welcomeDot: { color: "#2DBB75", letterSpacing: -3, textShadowColor: "rgba(45,187,117,0.28)", textShadowRadius: 8 },
   featureCard: { position: "absolute", width: 158, paddingHorizontal: 12, paddingVertical: 12, borderRadius: 18, backgroundColor: "rgba(15,15,17,0.82)", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
   featureMusic: { left: 18, top: "31%", transform: [{ rotate: "-5deg" }] },
   featureSocial: { right: 16, top: "42%", transform: [{ rotate: "4deg" }] },
