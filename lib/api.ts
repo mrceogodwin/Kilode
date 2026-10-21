@@ -287,16 +287,32 @@ export async function uploadMusicAsset(
   }
 }
 
-export function completeMusicUpload(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
-  return requestMusicJson<{ uploadId: string; state: string; trackId?: string }>(
-    `/api/mobile/music/uploads/${encodeURIComponent(uploadId)}/complete`, "POST", token, {}
-  );
+type MusicUploadState = { uploadId: string; state: string; trackId?: string; track_id?: string };
+
+async function normalizeMusicUploadState(result: ApiResult<MusicUploadState>): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
+  if (!result.ok || !result.data) return result as ApiResult<{ uploadId: string; state: string; trackId?: string }>;
+  const raw = result.data as MusicUploadState;
+  return {
+    ...result,
+    data: {
+      ...raw,
+      trackId: typeof raw.trackId === "string" ? raw.trackId : typeof raw.track_id === "string" ? raw.track_id : undefined,
+    },
+  };
 }
 
-export function getMusicUploadStatus(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
-  return requestMusicJson<{ uploadId: string; state: string; trackId?: string }>(
+export async function completeMusicUpload(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
+  const result = await requestMusicJson<MusicUploadState>(
+    `/api/mobile/music/uploads/${encodeURIComponent(uploadId)}/complete`, "POST", token, {}
+  );
+  return normalizeMusicUploadState(result);
+}
+
+export async function getMusicUploadStatus(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
+  const result = await requestMusicJson<MusicUploadState>(
     `/api/mobile/music/uploads/${encodeURIComponent(uploadId)}`, "GET", token
   );
+  return normalizeMusicUploadState(result);
 }
 
 export function publishMusicTrack(token: string, trackId: string, input: {
