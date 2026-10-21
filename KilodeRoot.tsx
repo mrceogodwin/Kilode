@@ -12,6 +12,7 @@ import { subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
+import { MusicFullPlayer } from "./screens/MusicFullPlayer";
 import { PushLinkScreen } from "./screens/PushLink";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
@@ -59,6 +60,7 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
@@ -558,7 +560,7 @@ function KilodeApp() {
       <Header title={headerTitle} />
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
-        <View style={s.player}>
+        <TouchableOpacity activeOpacity={0.92} onPress={() => setMusicPlayerExpanded(true)} accessibilityRole="button" accessibilityLabel="Expand full-screen music player" style={s.player}>
           <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
           <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}</Text></View>
           <TouchableOpacity onPress={() => void toggleMusicPlayback()} accessibilityRole="button" accessibilityLabel={isMusicPlaying ? "Pause music" : "Resume music"} style={{ paddingHorizontal: 10 }}>
