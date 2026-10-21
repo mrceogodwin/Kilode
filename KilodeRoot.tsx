@@ -294,7 +294,7 @@ function KilodeApp() {
           {takes.slice(0, 2).map((take: any) => (
             <TouchableOpacity
               key={String(take.id)}
-              onPress={() => { setSelectedPost(take); go("socials"); }}
+              onPress={() => { go("socials"); setSelectedPost(take); }}
               accessibilityRole="button"
               style={{ marginHorizontal: 14, marginBottom: 8, padding: 13, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}
             >
