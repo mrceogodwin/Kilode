@@ -136,3 +136,25 @@ export function summarizeFanEarnings(
 
   return summary;
 }
+
+
+/**
+ * Summarizes earnings for exactly one artist. Call this when reading a shared
+ * ledger so transactions belonging to other artists cannot be mixed into the
+ * requested artist's totals. The backend must still enforce authorization and
+ * return only records the requesting user is allowed to access.
+ */
+export function summarizeArtistFanEarnings(
+  transactions: FanEarningTransaction[],
+  artistId: string,
+  currency: string
+): ArtistEarningsSummary {
+  const normalizedArtistId = artistId.trim();
+  if (!normalizedArtistId) {
+    return summarizeFanEarnings([], currency);
+  }
+  return summarizeFanEarnings(
+    transactions.filter((row) => row.artistId === normalizedArtistId),
+    currency
+  );
+}
