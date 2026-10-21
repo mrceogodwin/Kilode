@@ -804,7 +804,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
       <Modal visible={moreOpen} transparent animationType="none" onRequestClose={closeMore}>
         <View style={{ flex: 1, flexDirection: "row", backgroundColor: "transparent" }}>
           <TouchableOpacity style={[s.scrim, { right: 0 }]} activeOpacity={1} onPress={closeMore} />
-          <Animated.View style={{ width: drawerWidth, maxWidth: 340, flex: 1, backgroundColor: C.card, borderRightWidth: 1, borderRightColor: C.border, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 24, transform: [{ translateX: drawerX }] }}>
+          <Animated.View style={{ width: drawerWidth, maxWidth: 340, height: "100%", backgroundColor: C.card, borderRightWidth: 1, borderRightColor: C.border, paddingTop: 16, paddingHorizontal: 16, paddingBottom: 24, transform: [{ translateX: drawerX }] }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <Text style={{ color: C.text, fontSize: 22, fontWeight: "800" }}>Kilode<Text style={{ color: C.accent }}>!</Text></Text>
               <TouchableOpacity onPress={closeMore} accessibilityRole="button" accessibilityLabel="Close menu" style={{ padding: 8 }}><Text style={{ color: C.text2, fontSize: 20 }}>✕</Text></TouchableOpacity>
