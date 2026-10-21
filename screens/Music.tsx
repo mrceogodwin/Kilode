@@ -5,6 +5,7 @@ import { TRACKS } from "../data";
 import { fetchTracks } from "../lib/api";
 import { playMusicTrack, subscribeMusicPlayer } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
+import { MusicUploadSheet } from "./MusicUploadSheet";
 
 function musicTrackIdentity(track: any): string {
   if (track?.id !== undefined && track?.id !== null && String(track.id).trim()) {
@@ -22,15 +23,18 @@ type Props = {
   onBack: () => void;
   show: (m: string) => void;
   onPlay: (track: any) => void;
+  canUpload: boolean;
+  token: string;
 };
 
-export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
+export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState<any[]>(TRACKS as any[]);
   const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
 
   useEffect(() => {
@@ -163,6 +167,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             <Text style={s.h1}>Music</Text>
             <Text style={s.sub}>{catalogueSource === "live" ? "Drops · charts · artists · live catalogue" : catalogueSource === "loading" ? "Loading music catalogue…" : "Drops · charts · artists · preview catalogue"}</Text>
           </View>
+          {canUpload ? <TouchableOpacity onPress={() => setUploadOpen(true)} accessibilityRole="button" accessibilityLabel="Upload a music track" style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}><Ionicons name="cloud-upload-outline" size={21} color={C.accent} /></TouchableOpacity> : null}
         </View>
       </View>
 
@@ -300,6 +305,21 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
       )}
 
       <View style={{ height: 24 }} />
+      <MusicUploadSheet
+        visible={uploadOpen}
+        token={token}
+        C={C}
+        onClose={() => setUploadOpen(false)}
+        show={show}
+        onPublished={() => {
+          void fetchTracks().then((result) => {
+            if (result.ok && Array.isArray(result.data)) {
+              setTracks(result.data);
+              setCatalogueSource("live");
+            }
+          });
+        }}
+      />
     </ScrollView>
   );
 }

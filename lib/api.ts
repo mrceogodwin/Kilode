@@ -1,3 +1,4 @@
+import * as FileSystem from "expo-file-system";
 /**
  * Kilode native API client → dedicated Kilode API (configured explicitly)
  *
@@ -250,8 +251,44 @@ export function requestMusicUpload(token: string, input: MusicUploadRequest): Pr
   return requestMusicJson<MusicUploadTicket>("/api/mobile/music/uploads", "POST", token, input);
 }
 
-export function completeMusicUpload(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string }>> {
-  return requestMusicJson<{ uploadId: string; state: string }>(
+
+export async function uploadMusicAsset(
+  uploadUrl: string,
+  fileUri: string,
+  contentType: string
+): Promise<{ ok: boolean; error?: string }> {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(uploadUrl);
+  } catch {
+    return { ok: false, error: "The music service returned an invalid upload URL." };
+  }
+  if (parsedUrl.protocol !== "https:") {
+    return { ok: false, error: "Secure HTTPS upload is required." };
+  }
+  if (!fileUri || (!fileUri.startsWith("file://") && !fileUri.startsWith("content://"))) {
+    return { ok: false, error: "The selected audio file is no longer accessible. Select it again." };
+  }
+  try {
+    const result = await FileSystem.uploadAsync(uploadUrl, fileUri, {
+      httpMethod: "PUT",
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: { "Content-Type": contentType || "application/octet-stream" },
+    });
+    if (result.status < 200 || result.status >= 300) {
+      return { ok: false, error: `Audio upload failed (HTTP ${result.status}).` };
+    }
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Audio upload failed. Check your connection and try again.",
+    };
+  }
+}
+
+export function completeMusicUpload(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
+  return requestMusicJson<{ uploadId: string; state: string; trackId?: string }>(
     `/api/mobile/music/uploads/${encodeURIComponent(uploadId)}/complete`, "POST", token, {}
   );
 }
