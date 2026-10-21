@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: kilode-native-${{ github.ref }}
+  group: kilode-native-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && 'manual' || 'push' }}
   cancel-in-progress: true
 
 jobs:
