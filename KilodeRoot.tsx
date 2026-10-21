@@ -263,12 +263,12 @@ function KilodeApp() {
             onLike={() => setLiked((prev) => ({ ...prev, [String(t.id)]: !prev[String(t.id)] }))}
             onComment={() => setCommentTake(t)}
             onShare={async () => { try { await Share.share({ message: `${t.name} (@${t.handle}) on Kilode:\n\n${t.text}` }); } catch { show("Could not open share options."); } }}
-            onReport={async () => { await submitReport("post", String(t.id), "other"); show("Reported · under review"); }}
+            onReport={async () => { await submitReport("post", String(t.id), "other"); show("Report saved on this device. Kilode review is not connected yet."); }}
             onBlock={async () => {
               const h = String(t.handle || t.name);
               await blockUser(h);
               setBlocked((prev) => (prev.includes(h) ? prev : [...prev, h]));
-              show(`Blocked @${h}`);
+              show(`Blocked @${h} on this device`);
             }}
           />
         </View>
