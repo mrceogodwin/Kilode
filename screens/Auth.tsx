@@ -47,6 +47,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind | null>(null);
   const [busy, setBusy] = useState(false);
+  const [portraitFailed, setPortraitFailed] = useState(false);
 
   const submit = async () => {
     if (mode === "up" && !kind) {
@@ -85,13 +86,21 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
           <View style={[styles.hero, compact && { height: 240 }]}>
             <View style={styles.arc} />
             <View style={styles.portrait}>
-              <Image
-                source={{
-                  uri: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=600&q=80",
-                }}
-                style={styles.portraitImg}
-                resizeMode="cover"
-              />
+              {portraitFailed ? (
+                <View style={[styles.portraitImg, { alignItems: "center", justifyContent: "center", backgroundColor: "#242329" }]}>
+                  <Ionicons name="person" size={76} color={ACCENT} />
+                  <Text style={{ color: "rgba(255,255,255,0.55)", fontSize: 9, letterSpacing: 1.5, marginTop: 5 }}>KILODE</Text>
+                </View>
+              ) : (
+                <Image
+                  source={{
+                    uri: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=600&q=80",
+                  }}
+                  style={styles.portraitImg}
+                  resizeMode="cover"
+                  onError={() => setPortraitFailed(true)}
+                />
+              )}
               <View style={styles.portraitFade} />
             </View>
             {FLOAT.map((f) => (
