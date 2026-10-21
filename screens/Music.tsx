@@ -143,23 +143,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
       : exploreTracks;
   // Keep the chart ordered by explicit, positive API ranks when present. Tracks
   // without a verified rank stay after ranked tracks and retain catalogue order.
-  const chartTracks = catalogueSource === "live"
-    ? exploreTracks.map((track: any, originalIndex: number) => {
-        const rawRank = track?.rank ?? track?.currentRank ?? track?.current_rank;
-        const rank = typeof rawRank === "number" && Number.isFinite(rawRank)
-          ? rawRank
-          : typeof rawRank === "string" && rawRank.trim() && Number.isFinite(Number(rawRank))
-            ? Number(rawRank)
-            : null;
-        return { track, originalIndex, rank: rank !== null && rank > 0 ? rank : null };
-      }).sort((a, b) => {
-        if (a.rank !== null && b.rank !== null) return a.rank - b.rank || a.originalIndex - b.originalIndex;
-        if (a.rank !== null) return -1;
-        if (b.rank !== null) return 1;
-        return a.originalIndex - b.originalIndex;
-      }).map(({ track }) => track)
-    : exploreTracks;
-  const newTracks = filteredTracks.filter((track: any) => {
+    const newTracks = filteredTracks.filter((track: any) => {
     const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
     if (!rawDate) return false;
     const timestamp = Date.parse(String(rawDate));
