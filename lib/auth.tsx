@@ -24,6 +24,21 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
+async function fetchAuthWithTimeout(url: string, init: RequestInit, timeoutMs = 12000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("Request timed out. Check your connection and try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function errorMessage(data: unknown, fallback: string): string {
   if (data && typeof data === "object") {
     const value = data as { message?: unknown; error?: unknown };
@@ -122,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/sign-in/email`, {
+      const res = await fetchAuthWithTimeout(`${API_BASE}/api/auth/sign-in/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
@@ -153,8 +168,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setGuest(false);
       await persist(s);
       return { ok: true };
-    } catch {
-      return { ok: false, error: "Could not reach Kilode sign-in. Check your connection and try again." };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : "Could not reach Kilode sign-in. Check your connection and try again." };
     } finally {
       setLoading(false);
     }
@@ -172,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/sign-up/email`, {
+      const res = await fetchAuthWithTimeout(`${API_BASE}/api/auth/sign-up/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
@@ -204,8 +219,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setGuest(false);
       await persist(s);
       return { ok: true };
-    } catch {
-      return { ok: false, error: "Could not reach Kilode registration. Check your connection and try again." };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : "Could not reach Kilode registration. Check your connection and try again." };
     } finally {
       setLoading(false);
     }
