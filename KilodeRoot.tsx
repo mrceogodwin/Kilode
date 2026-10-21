@@ -596,7 +596,7 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
             <Text style={s.playerBtn}>{isMusicPlaying ? "Ⅱ" : "▶"}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => void stopMusicPlayback()} accessibilityRole="button" accessibilityLabel="Stop music"><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       ) : null}
       <MusicFullPlayer
         visible={musicPlayerExpanded && Boolean(nowPlaying)}
