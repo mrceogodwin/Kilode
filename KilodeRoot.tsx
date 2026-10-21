@@ -60,7 +60,9 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);\n  const [musicPositionMillis, setMusicPositionMillis] = useState(0);\n  const [musicDurationMillis, setMusicDurationMillis] = useState(0);
+  const [musicPlayerExpanded, setMusicPlayerExpanded] = useState(false);
+  const [musicPositionMillis, setMusicPositionMillis] = useState(0);
+  const [musicDurationMillis, setMusicDurationMillis] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
@@ -383,7 +385,9 @@ function KilodeApp() {
             muted={C.text2}
             onLike={() => setLiked((prev) => ({ ...prev, [String(t.id)]: !prev[String(t.id)] }))}
             onComment={() => setCommentTake(t)}
-            onShare={async () => { try { await Share.share({ message: `${t.name} (@${t.handle}) on Kilode:\n\n${t.text}` }); } catch { show("Could not open share options."); } }}
+            onShare={async () => { try { await Share.share({ message: `${t.name} (@${t.handle}) on Kilode:
+
+${t.text}` }); } catch { show("Could not open share options."); } }}
             onReport={async () => { await submitReport("post", String(t.id), "other", undefined, session?.handle || session?.name || "guest"); show("Report saved on this device. Kilode review is not connected yet."); }}
             onBlock={async () => {
               const h = String(t.handle || t.name);
