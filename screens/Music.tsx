@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
-import { fetchTracks, getMusicPlayback, recordMusicEvent } from "../lib/api";
+import { fetchTracks, fetchTop100Chart, getMusicPlayback, recordMusicEvent, type Top100ChartSnapshot } from "../lib/api";
 import { playMusicTrack, subscribeMusicPlayer, toggleMusicPlayback } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
 import { MusicUploadSheet } from "./MusicUploadSheet";
@@ -40,6 +40,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState<any[]>(TRACKS as any[]);
   const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
+  const [top100Snapshot, setTop100Snapshot] = useState<Top100ChartSnapshot | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -83,6 +84,18 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     });
     return () => { active = false; };
   }, []);
+  useEffect(() => {
+    let active = true;
+    // The chart endpoint is independent of the catalogue endpoint. A missing or
+    // invalid chart snapshot never falls back to catalogue order as official rank.
+    void fetchTop100Chart("week", "NG").then((result) => {
+      if (!active) return;
+      setTop100Snapshot(result.ok ? result.data : null);
+    }).catch(() => {
+      if (active) setTop100Snapshot(null);
+    });
+    return () => { active = false; };
+  }, []);
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
   const filteredTracks = tracks.filter((t: any) => `${t.title || ""} ${t.artist || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
@@ -105,6 +118,29 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
     const previous = track?.previousRank ?? track?.previous_rank;
     return (rank !== undefined && rank !== null) || (change !== undefined && change !== null) || (previous !== undefined && previous !== null);
   });
+  const chartTracks = top100Snapshot
+    ? top100Snapshot.entries
+        .map((entry) => {
+          const track = tracks.find((candidate: any) => String(candidate?.id ?? candidate?.trackId ?? candidate?.track_id ?? "") === entry.trackId);
+          return track ? { ...track, rank: entry.rank, previousRank: entry.previousRank, rankChange: entry.movement } : null;
+        })
+        .filter((track): track is NonNullable<typeof track> => Boolean(track))
+    : catalogueSource === "live"
+      ? exploreTracks.map((track: any, originalIndex: number) => {
+          const rawRank = track?.rank ?? track?.currentRank ?? track?.current_rank;
+          const rank = typeof rawRank === "number" && Number.isFinite(rawRank)
+            ? rawRank
+            : typeof rawRank === "string" && rawRank.trim() && Number.isFinite(Number(rawRank))
+              ? Number(rawRank)
+              : null;
+          return { track, originalIndex, rank: rank !== null && rank > 0 ? rank : null };
+        }).sort((a, b) => {
+          if (a.rank !== null && b.rank !== null) return a.rank - b.rank || a.originalIndex - b.originalIndex;
+          if (a.rank !== null) return -1;
+          if (b.rank !== null) return 1;
+          return a.originalIndex - b.originalIndex;
+        }).map(({ track }) => track)
+      : exploreTracks;
   // Keep the chart ordered by explicit, positive API ranks when present. Tracks
   // without a verified rank stay after ranked tracks and retain catalogue order.
   const chartTracks = catalogueSource === "live"
@@ -436,7 +472,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}><Ionicons name="sparkles" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "900", letterSpacing: 1.8 }}>KILODE CHARTS · FLAGSHIP</Text></View>
                   <Text style={{ color: C.text, fontSize: 22, fontWeight: "900", letterSpacing: 0.3 }}>TOP 100</Text>
                   <Text style={{ color: C.text2, fontSize: 11, marginTop: 3 }}>The songs moving the culture.</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 7 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: catalogueSource === "live" ? "#B8C0CC" : "#E5C158" }} /><Text style={{ color: catalogueSource === "live" ? "#B8C0CC" : "#E5C158", fontSize: 9, fontWeight: "800", letterSpacing: 0.7 }}>{catalogueSource !== "live" ? "PREVIEW MODE · NOT OFFICIAL RANKINGS" : chartMetadataAvailable ? "LIVE CATALOGUE · CHART METADATA FOUND" : "CATALOGUE CONNECTED · CHART DATA PENDING"}</Text></View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 7 }}><View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: top100Snapshot ? "#59C98A" : catalogueSource === "live" ? "#B8C0CC" : "#E5C158" }} /><Text style={{ color: catalogueSource === "live" ? "#B8C0CC" : "#E5C158", fontSize: 9, fontWeight: "800", letterSpacing: 0.7 }}>{top100Snapshot ? "VERIFIED CHART SNAPSHOT · NIGERIA" : catalogueSource !== "live" ? "PREVIEW MODE · NOT OFFICIAL RANKINGS" : chartMetadataAvailable ? "LIVE CATALOGUE · CHART METADATA FOUND" : "CATALOGUE CONNECTED · CHART DATA PENDING"}</Text></View>
                 </View>
               </View>
               <View style={{ height: 1, backgroundColor: C.border, marginTop: 14, marginBottom: 10 }} />
@@ -477,7 +513,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               </TouchableOpacity>
             );
           })}
-          {chartTracks.length > 0 ? <Text style={[s.meta, { paddingHorizontal: 14, marginTop: 7, marginBottom: 18, lineHeight: 16 }]}>This list currently follows available catalogue order. Official chart positions and movement will appear only when verified chart data is connected.</Text> : null}
+          {chartTracks.length > 0 ? <Text style={[s.meta, { paddingHorizontal: 14, marginTop: 7, marginBottom: 18, lineHeight: 16 }]}>{top100Snapshot ? `Snapshot ${top100Snapshot.chartId || "verified"} · ${top100Snapshot.period} · ${top100Snapshot.generatedAt || "timestamp unavailable"}.` : "This list currently follows available catalogue order. Official chart positions and movement will appear only when a valid chart snapshot is connected."}</Text> : null}
         </>
       )}
 
