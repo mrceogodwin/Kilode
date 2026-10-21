@@ -13,8 +13,8 @@ type Props = { size?: "large" | "medium" | "small" };
 export function KilodeWordmark({ size = "medium" }: Props) {
   const scale = size === "large" ? 1 : size === "small" ? 0.58 : 0.78;
   const fontSize = 39 * scale;
-  const green = "#91C7A0";
-  const orange = "#FF8A3D";
+  const metallicWhite = "#F4F4F1";
+  const logoGreen = "#91C7A0";
   const stemWidth = Math.max(2.8, fontSize * 0.105);
   const stemHeight = fontSize * 0.72;
   const diagonalWidth = fontSize * 0.43;
@@ -35,8 +35,8 @@ export function KilodeWordmark({ size = "medium" }: Props) {
             top: fontSize * 0.03,
             width: stemWidth,
             height: stemHeight,
-            backgroundColor: green,
-            shadowColor: "#315D40",
+            backgroundColor: metallicWhite,
+            shadowColor: "#73777C",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.9,
             shadowRadius: 1.5,
@@ -47,7 +47,7 @@ export function KilodeWordmark({ size = "medium" }: Props) {
             top: fontSize * 0.27,
             width: diagonalWidth,
             height: stemWidth * 1.18,
-            backgroundColor: green,
+            backgroundColor: metallicWhite,
             transform: [{ rotate: "43deg" }],
           }]} />
           <View style={[styles.diagonal, {
@@ -55,7 +55,7 @@ export function KilodeWordmark({ size = "medium" }: Props) {
             top: fontSize * 0.55,
             width: diagonalWidth,
             height: stemWidth * 1.18,
-            backgroundColor: green,
+            backgroundColor: metallicWhite,
             transform: [{ rotate: "-43deg" }],
           }]} />
           {/* Orange punctuation dot sits below the shared exclamation/K stem. */}
@@ -65,7 +65,7 @@ export function KilodeWordmark({ size = "medium" }: Props) {
             width: dotSize,
             height: dotSize,
             borderRadius: dotSize / 2,
-            backgroundColor: orange,
+            backgroundColor: logoGreen,
             shadowColor: "#A8491C",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.85,
@@ -83,7 +83,7 @@ export function KilodeWordmark({ size = "medium" }: Props) {
             ilode
           </Text>
           <Text allowFontScaling={false} numberOfLines={1}
-            style={[styles.word, { fontSize, lineHeight: fontSize * 1.08, letterSpacing: -fontSize * 0.105, textShadowColor: "#315D40", textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1.5 }]}>
+            style={[styles.word, { fontSize, lineHeight: fontSize * 1.08, letterSpacing: -fontSize * 0.105, textShadowColor: "#73777C", textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1.5 }]}>
             ilode
           </Text>
         </View>
@@ -100,10 +100,10 @@ const styles = StyleSheet.create({
   diagonal: { position: "absolute", borderRadius: 3 },
   dot: { position: "absolute" },
   wordStack: { position: "relative", justifyContent: "center", overflow: "visible" },
-  wordDepth: { position: "absolute", left: 0, top: 2, color: "#315D40" },
-  wordHighlight: { position: "absolute", left: -0.5, top: -1, color: "#C4E6CB", opacity: 0.48 },
+  wordDepth: { position: "absolute", left: 0, top: 2, color: "#73777C" },
+  wordHighlight: { position: "absolute", left: -0.5, top: -1, color: "#FFFFFF", opacity: 0.48 },
   word: {
-    color: "#91C7A0",
+    color: "#F4F4F1",
     fontWeight: "900",
     includeFontPadding: false,
     textShadowOffset: { width: 0, height: 2 },
