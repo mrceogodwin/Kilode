@@ -180,6 +180,110 @@ export function fetchNews() {
   return tryLiveJson("/api/mobile/news", NEWS as any[], "listNews");
 }
 
+export type MusicUploadRequest = {
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+  title: string;
+  genre?: string;
+};
+
+export type MusicUploadTicket = {
+  uploadId: string;
+  uploadUrl: string;
+  audioAssetKey?: string;
+  expiresAt?: string;
+};
+
+async function requestMusicJson<T>(
+  path: string,
+  method: "GET" | "POST",
+  token: string,
+  body?: Record<string, unknown>
+): Promise<ApiResult<T>> {
+  const empty = null as T;
+  if (!API_BASE) {
+    return { ok: false, data: empty, source: "error", error: "Dedicated Kilode API is not configured", fn: "music" };
+  }
+  if (!token.trim() || token === "guest" || token === "local" || token === "live") {
+    return { ok: false, data: empty, source: "error", error: "Sign in with a real Kilode artist account to use music uploads.", fn: "music" };
+  }
+  try {
+    const response = await fetchWithTimeout(`${API_BASE}${path}`, {
+      method,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const contentType = response.headers.get("content-type") || "";
+    const payload = contentType.includes("json") ? await response.json() : null;
+    if (!response.ok) {
+      return {
+        ok: false,
+        data: empty,
+        source: "error",
+        error: payload && typeof payload === "object"
+          ? String((payload as any).message || (payload as any).error || `HTTP ${response.status}`)
+          : `HTTP ${response.status}`,
+        fn: "music",
+      };
+    }
+    if (!payload || typeof payload !== "object") {
+      return { ok: false, data: empty, source: "error", error: "Music API returned an invalid response.", fn: "music" };
+    }
+    return { ok: true, data: payload as T, source: "live", fn: "music" };
+  } catch (error) {
+    return {
+      ok: false,
+      data: empty,
+      source: "error",
+      error: error instanceof Error ? error.message : "Music request failed.",
+      fn: "music",
+    };
+  }
+}
+
+export function requestMusicUpload(token: string, input: MusicUploadRequest): Promise<ApiResult<MusicUploadTicket>> {
+  return requestMusicJson<MusicUploadTicket>("/api/mobile/music/uploads", "POST", token, input);
+}
+
+export function completeMusicUpload(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string }>> {
+  return requestMusicJson<{ uploadId: string; state: string }>(
+    `/api/mobile/music/uploads/${encodeURIComponent(uploadId)}/complete`, "POST", token, {}
+  );
+}
+
+export function getMusicUploadStatus(token: string, uploadId: string): Promise<ApiResult<{ uploadId: string; state: string; trackId?: string }>> {
+  return requestMusicJson<{ uploadId: string; state: string; trackId?: string }>(
+    `/api/mobile/music/uploads/${encodeURIComponent(uploadId)}`, "GET", token
+  );
+}
+
+export function publishMusicTrack(token: string, trackId: string, input: {
+  title: string;
+  genre?: string;
+  rightsConfirmation: boolean;
+}): Promise<ApiResult<{ trackId: string; state: string }>> {
+  return requestMusicJson<{ trackId: string; state: string }>(
+    `/api/mobile/music/tracks/${encodeURIComponent(trackId)}/publish`, "POST", token, input
+  );
+}
+
+export function getMusicPlayback(token: string, trackId: string): Promise<ApiResult<{ url: string; expiresAt?: string }>> {
+  return requestMusicJson<{ url: string; expiresAt?: string }>(
+    `/api/mobile/music/tracks/${encodeURIComponent(trackId)}/playback`, "GET", token
+  );
+}
+
+export function recordMusicEvent(token: string, trackId: string, eventType: "play_started" | "play_completed" | "like" | "unlike"): Promise<ApiResult<{ accepted: boolean }>> {
+  return requestMusicJson<{ accepted: boolean }>(
+    `/api/mobile/music/tracks/${encodeURIComponent(trackId)}/events`, "POST", token, { eventType }
+  );
+}
+
 export async function fetchTracks(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/music/tracks", { tracks: TRACKS }, "listTracks");
   if (r.ok) {
