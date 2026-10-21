@@ -80,7 +80,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
     return (
       <SafeAreaView style={styles.root}>
         <StatusBar barStyle="light-content" />
-        <View style={styles.welcome}>
+        <ScrollView contentContainerStyle={styles.welcome} showsVerticalScrollIndicator={false} bounces={false}>
           <View style={styles.logoWrap}>
             <KilodeWordmark size="large" />
           </View>
@@ -150,7 +150,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
               </TouchableOpacity>
             </>
           ) : null}
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -313,7 +313,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#0D0D10" },
-  welcome: { flex: 1, paddingHorizontal: 20, paddingBottom: 16 },
+  welcome: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 16 },
   logoWrap: { alignItems: "center", marginTop: 8, marginBottom: 8 },
   hero: {
     height: 300,
