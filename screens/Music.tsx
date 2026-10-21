@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Audio, type AVPlaybackStatus } from "expo-av";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { fetchTracks } from "../lib/api";
+import { playMusicTrack, subscribeMusicPlayer } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
 
 type Props = {
@@ -21,8 +21,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackBusy, setPlaybackBusy] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const soundTrackIdRef = useRef<string | null>(null);
+
 
   useEffect(() => {
     let active = true;
@@ -54,71 +53,21 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   ).values());
   const chartTracks = filteredTracks.slice(0, 10);
 
-  useEffect(() => {
-    return () => {
-      const sound = soundRef.current;
-      soundRef.current = null;
-      soundTrackIdRef.current = null;
-      if (sound) void sound.unloadAsync();
-    };
-  }, []);
+  useEffect(() => subscribeMusicPlayer((track, playing) => {
+    setIsPlaying(playing);
+    if (track && activeTrack && String(track.id) === String(activeTrack.id)) setIsPlaying(playing);
+  }), [activeTrack]);
 
   const togglePlayback = async (track: any) => {
     if (playbackBusy) return;
     setPlaybackBusy(true);
     try {
-      const source = track.audioUrl || track.audio_url || track.streamUrl || track.stream_url || track.previewUrl || track.preview_url;
-      if (!source || typeof source !== "string") {
-        show("This track has no playable audio source yet.");
+      const result = await playMusicTrack(track);
+      if (!result.ok) {
+        show(result.message || "This track cannot be played yet.");
         return;
       }
-      if (soundRef.current && soundTrackIdRef.current === String(track.id)) {
-        const status = await soundRef.current.getStatusAsync();
-        if (status.isLoaded && status.isPlaying) {
-          await soundRef.current.pauseAsync();
-          setIsPlaying(false);
-          return;
-        }
-        if (status.isLoaded && status.didJustFinish) {
-          await soundRef.current.setPositionAsync(0);
-        }
-        if (status.isLoaded) {
-          await soundRef.current.playAsync();
-          setIsPlaying(true);
-          onPlay(track);
-          return;
-        }
-      }
-      if (soundRef.current) {
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
-        soundTrackIdRef.current = null;
-      }
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
-      });
-      const created = await Audio.Sound.createAsync(
-        { uri: source },
-        { shouldPlay: true },
-        (status: AVPlaybackStatus) => {
-          if (status.isLoaded) {
-            setIsPlaying(status.isPlaying);
-            if (status.didJustFinish) setIsPlaying(false);
-          } else if (status.error) {
-            setIsPlaying(false);
-            show("Audio could not be played. Check the track source.");
-          }
-        }
-      );
-      soundRef.current = created.sound;
-      soundTrackIdRef.current = String(track.id);
-      setIsPlaying(created.status.isLoaded ? created.status.isPlaying : false);
       onPlay(track);
-    } catch {
-      setIsPlaying(false);
-      show("Playback failed. Check the track's audio URL and try again.");
     } finally {
       setPlaybackBusy(false);
     }
