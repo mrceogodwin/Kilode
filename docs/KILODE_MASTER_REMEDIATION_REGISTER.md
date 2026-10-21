@@ -10,8 +10,10 @@
 ## 1. Audit coverage and code size — be precise
 
 - GitHub repository metadata reports **5,726 KB repository size**. This is GitHub's repository-size figure, **not** a measured source-code-only size.
-- **Total source files, total source lines, and percent of the complete repository audited are not yet measured.** The available GitHub connector did not provide a recursive repository file/line inventory in this pass. Do not invent a percentage or call this a full line-by-line audit.
-- Targeted source files fetched for inspection include: `KilodeRoot.tsx`, `screens/Auth.tsx`, `screens/Music.tsx`, `screens/Settings.tsx`, `screens/PushLink.tsx`, `screens/ArtistEarnings.tsx`, `lib/auth.tsx`, `lib/api.ts`, `lib/config.ts`, `lib/moderation.ts`, `app.json`, `eas.json`, `.github/workflows/eas-ios-preview.yml`, `docs/FEATURE_STATUS.md`, `docs/EAS_SETUP_MUDINO.md`, `docs/kilode-ios-preview.html`, and the README. This is targeted coverage of core flows, not every screen/component/utility.
+- The recursive Git tree is complete (`truncated=false`): **69 tracked files**, **427,924 bytes (~418 KiB) of current tracked file content**, and **44 TypeScript/JavaScript source files totaling 7,328 lines**. A 49-file code/config inventory totals 7,489 lines. These counts exclude Markdown docs and the HTML preview from the source-line total. GitHub's reported 5,726 KB repository size includes repository/history overhead and is a different metric.
+- **Content retrieval/line-count coverage:** 44/44 tracked TS/TSX/JS source files were retrieved and line-counted during this pass. This is not equivalent to 100% semantic line-by-line audit: the complete source still needs systematic logic, edge-case, security and runtime review. Do not describe the app as 100% audited.
+- The tracked tree contains no package lockfile. The `assets/` directory contains only `.gitkeep` (0 bytes). `app.json` has splash background settings but no splash image or app icon path, and Android adaptive icon has only a background color. These are concrete release-preparation gaps.
+- Targeted core inspection includes `KilodeRoot.tsx`, all 15 screen files, all 12 UI component files, all 9 `lib/` modules, theme/data files, app/build config, preview and audit docs. Full semantic review is still in progress.
 - **Known compiler errors on the validated commit:** none in the completed CI job. This does not mean there are zero product, runtime, security, backend, visual, or accessibility issues.
 - **Latest verified automated checks in this audit record:** GitHub Actions runs 39623611076, 39624180758 and 39624203662 completed successfully for TypeScript, Expo Doctor, and iOS JavaScript bundle export. These checks do not establish a signed iPhone install, real-device correctness, backend availability, or App Store approval.
 - The latest checked PR head is `dddcc01649030598e95856eb9432f8b3977adb3d`; do not assume a green run for this exact SHA unless a matching run is checked.
@@ -107,3 +109,17 @@ The web preview must be a **secondary mirror of the native app**, not a substitu
 ## 7. Audit discipline
 
 For every new finding, add: severity (P0/P1/P2), system, exact file/line, evidence, user impact, required fix, test, status, commit and CI run. Mark an item done only after implementation + passing automated checks + the relevant flow tested; backend/device-dependent work additionally requires live backend/device evidence.
+
+
+## 8. Measured repository inventory — 2026-10-21
+
+- Recursive tree SHA: `77b4d39d9bff50ae2c85efb5375d6982e20b2e77`; tree was not truncated.
+- Tracked files: **69**.
+- Tracked current file content: **427,924 bytes (~418 KiB)**.
+- TypeScript/JavaScript source files: **44**, **7,328 lines** (line count includes source files, not Markdown documentation).
+- Code/config inventory counted: **49 files**, **7,489 lines**.
+- Full tracked source/docs/config list: 69 files. Full semantic audit completion: **not yet achieved**. A truthful percentage of code lines semantically reviewed cannot yet be assigned; line counts are not a proxy for audit coverage.
+- Files retrieved and line-counted in this pass: 44/44 tracked TS/TSX/JS source files. Next review must inspect logic in each module and record findings, not just count the files.
+- Dependency/build risk: `package.json` uses Expo SDK `~51.0.28`, React Native `0.74.5`, and `expo-av ~14.0.7`. This is an older stack for a 2026 release. Schedule a compatibility-first upgrade review and migrate audio APIs deliberately; do not mass-upgrade without Expo Doctor, bundle export, and real-device regression tests.
+- Release asset configuration issue: `app.json` does not declare an app `icon` or splash `image`; Android `adaptiveIcon` has a background color but no foreground image. This matches the missing-assets finding above.
+- CI status for this exact register update/commit: not yet verified. Previous green CI runs apply to their own SHAs only.
