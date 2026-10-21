@@ -457,7 +457,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
             </TouchableOpacity>
             <Ionicons name="musical-notes-outline" size={18} color={C.accent} />
           </View>
-          {chartTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : chartTracks.slice(0, 100).map((track: any, index: number) => {
+          {chartTracks.length === 0 ? <EmptyState title={top100Snapshot ? "Chart tracks not matched" : search ? "No matching tracks" : "No tracks available"} body={top100Snapshot ? "The chart snapshot loaded, but its track IDs did not match the available catalogue. Chart rows stay hidden until the records match." : search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : chartTracks.slice(0, 100).map((track: any, index: number) => {
             const numeric = (value: unknown): number | null => {
               if (typeof value === "number" && Number.isFinite(value)) return value;
               if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
