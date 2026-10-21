@@ -75,19 +75,34 @@ async function configureAudioMode() {
   audioModeConfigured = true;
 }
 
-function onStatus(status: AVPlaybackStatus) {
+function onStatus(status: AVPlaybackStatus, source: Audio.Sound) {
+  // Ignore late events from sounds that have already been stopped or replaced.
+  if (sound !== source) return;
+
   if (!status.isLoaded) {
     if (status.error) {
+      // A native decoder/network failure must not leave a dead track in the UI.
+      sound = null;
+      currentTrack = null;
       isPlaying = false;
+      positionMillis = 0;
+      durationMillis = 0;
       publish();
+      source.setOnPlaybackStatusUpdate(null);
+      void source.unloadAsync().catch(() => undefined);
     }
     return;
   }
   positionMillis = status.positionMillis;
   durationMillis = status.durationMillis || 0;
   isPlaying = status.isPlaying;
-  if (status.didJustFinish && repeatCurrentTrack && sound) {
-    void sound.replayAsync().catch(() => undefined);
+  if (status.didJustFinish && repeatCurrentTrack) {
+    void source.replayAsync().catch(() => {
+      if (sound === source) {
+        isPlaying = false;
+        publish();
+      }
+    });
     isPlaying = true;
   } else if (status.didJustFinish) {
     isPlaying = false;
@@ -138,8 +153,7 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
 
     const created = await Audio.Sound.createAsync(
       { uri: url },
-      { shouldPlay: true, progressUpdateIntervalMillis: 500 },
-      onStatus
+      { shouldPlay: true, progressUpdateIntervalMillis: 500 }
     );
 
     // A stop/close may have happened while the native source was loading.
@@ -166,6 +180,9 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
     }
 
     sound = created.sound;
+    // Register only after this sound becomes the active source. This prevents
+    // callbacks from a late/replaced source mutating the current player's state.
+    created.sound.setOnPlaybackStatusUpdate((status) => onStatus(status, created.sound));
     isPlaying = created.status.isPlaying;
     positionMillis = created.status.positionMillis;
     durationMillis = created.status.durationMillis || 0;
