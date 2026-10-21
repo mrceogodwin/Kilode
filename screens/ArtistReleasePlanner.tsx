@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Palette } from "../themeStyles";
 
@@ -15,6 +15,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
   const [credits, setCredits] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [saved, setSaved] = useState(false);
   const [rights, setRights] = useState(false);
   const [artwork, setArtwork] = useState(false);
@@ -23,6 +24,20 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
 
   const dateValid = useMemo(() => !releaseDate || /^\d{4}-\d{2}-\d{2}$/.test(releaseDate), [releaseDate]);
   const requiredReady = title.trim().length > 0 && genre.trim().length > 0 && dateValid;
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      if (!active || !raw) return;
+      try { const value = JSON.parse(raw); if (Array.isArray(value)) setDrafts(value.filter((x): x is Draft => x && typeof x.title === "string" && typeof x.genre === "string").slice(0, 20)); } catch { setDrafts([]); }
+    }).catch(() => { if (active) setDrafts([]); });
+    return () => { active = false; };
+  }, []);
+
+  const loadDraft = (draft: Draft) => {
+    setTitle(draft.title); setReleaseType(draft.releaseType || "Single"); setGenre(draft.genre); setReleaseDate(draft.releaseDate || ""); setCredits(draft.credits || ""); setNotes(draft.notes || ""); setSaved(true);
+    show("Release draft loaded.");
+  };
+
   const checklist = [
     { label: "Audio master prepared", value: audio, set: setAudio },
     { label: "Artwork prepared", value: artwork, set: setArtwork },
@@ -48,6 +63,7 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
       const draft: Draft = { title: title.trim(), releaseType, genre: genre.trim(), releaseDate: releaseDate.trim(), credits: credits.trim(), notes: notes.trim(), updatedAt: new Date().toISOString() };
       const next = [draft, ...(Array.isArray(existing) ? existing.filter((x) => !(x.title === draft.title && x.releaseType === draft.releaseType)) : [])].slice(0, 20);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      setDrafts(next);
       setSaved(true);
       show("Release plan saved on this device.");
     } catch {
@@ -78,6 +94,14 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName }: Props) 
           <Text style={{ color: "#0D0D10", fontWeight: "800" }}>{saving ? "Saving…" : saved ? "Draft saved ✓" : "Save release draft"}</Text>
         </TouchableOpacity>
       </View>
+      {drafts.length > 0 ? <View style={{ marginTop: 22 }}>
+        <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginBottom: 10 }}>Saved drafts on this device</Text>
+        {drafts.map((draft, index) => <TouchableOpacity key={`${draft.title}-${draft.releaseType}-${draft.updatedAt}-${index}`} onPress={() => loadDraft(draft)} accessibilityRole="button" style={{ padding: 13, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, marginBottom: 8 }}>
+          <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{draft.title}</Text>
+          <Text style={{ color: C.text2, fontSize: 11, marginTop: 4 }}>{draft.releaseType} · {draft.genre}{draft.releaseDate ? ` · ${draft.releaseDate}` : ""}</Text>
+          <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 6 }}>Load draft</Text>
+        </TouchableOpacity>)}
+      </View> : null}
       <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginTop: 24, marginBottom: 10 }}>Release readiness</Text>
       <View style={{ borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, overflow: "hidden" }}>
         {checklist.map((item) => <TouchableOpacity key={item.label} onPress={() => item.set(!item.value)} accessibilityRole="checkbox" accessibilityState={{ checked: item.value }} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
