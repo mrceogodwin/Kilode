@@ -20,6 +20,7 @@ let isPlaying = false;
 let isLoading = false;
 let positionMillis = 0;
 let durationMillis = 0;
+let repeatCurrentTrack = false;
 let audioModeConfigured = false;
 const listeners = new Set<PlayerListener>();
 
@@ -189,3 +190,4 @@ export async function stopMusicPlayback(): Promise<void> {
   await oldSound.unloadAsync().catch(() => undefined);
 }
 
+\nexport function setMusicRepeat(enabled: boolean): void {\n  repeatCurrentTrack = enabled;\n}\n
