@@ -194,6 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: `${h}@users.kilode.ng`,
           password,
           name: displayName?.trim() || h,
+          kind: asAccountKind(kind),
         }),
       });
       let data: any = {};
