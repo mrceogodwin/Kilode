@@ -376,19 +376,19 @@ export async function getMusicPlayback(token: string, trackId: string): Promise<
   const url = (typeof raw.url === "string" ? raw.url : typeof raw.playback_url === "string" ? raw.playback_url : typeof raw.signed_url === "string" ? raw.signed_url : "").trim();
   const expiresAt = typeof raw.expiresAt === "string" ? raw.expiresAt.trim() : typeof raw.expires_at === "string" ? raw.expires_at.trim() : undefined;
   if (!url) {
-    return { ...result, ok: false, error: "Kilode returned an empty playback link." };
+    return { ...result, ok: false, data: { ...raw, url: "" }, error: "Kilode returned an empty playback link." };
   }
   try {
     if (new URL(url).protocol !== "https:") {
-      return { ...result, ok: false, error: "Kilode returned an insecure playback link." };
+      return { ...result, ok: false, data: { ...raw, url: "" }, error: "Kilode returned an insecure playback link." };
     }
   } catch {
-    return { ...result, ok: false, error: "Kilode returned an invalid playback link." };
+    return { ...result, ok: false, data: { ...raw, url: "" }, error: "Kilode returned an invalid playback link." };
   }
   if (expiresAt) {
     const expiry = Date.parse(expiresAt);
     if (!Number.isFinite(expiry) || expiry <= Date.now()) {
-      return { ...result, ok: false, error: "This playback link is expired or has an invalid expiry time. Try playing the track again." };
+      return { ...result, ok: false, data: { ...raw, url: "" }, error: "This playback link is expired or has an invalid expiry time. Try playing the track again." };
     }
   }
   return { ...result, data: { ...raw, url, expiresAt } };
