@@ -54,8 +54,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const chartTracks = filteredTracks.slice(0, 10);
 
   useEffect(() => subscribeMusicPlayer((track, playing) => {
-    setIsPlaying(playing);
-    if (track && activeTrack && String(track.id) === String(activeTrack.id)) setIsPlaying(playing);
+    setIsPlaying(Boolean(track && activeTrack && String(track.id) === String(activeTrack.id) && playing));
   }), [activeTrack]);
 
   const togglePlayback = async (track: any) => {
