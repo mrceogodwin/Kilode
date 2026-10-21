@@ -602,6 +602,7 @@ function KilodeApp() {
         takeAuthor={commentTake?.name || ""}
         takeText={commentTake?.text || ""}
         token={session.token}
+        storageScope={session?.handle || session?.name || "guest"}
         C={C}
         isDark={isDark}
         show={show}
