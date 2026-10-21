@@ -460,7 +460,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
                 </View>
               </View>
               <View style={{ height: 1, backgroundColor: C.border, marginTop: 14, marginBottom: 10 }} />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}><Ionicons name="trending-up-outline" size={15} color="#59C98A" /><Text style={{ color: C.text2, fontSize: 10, flex: 1, lineHeight: 15 }}>Movement stays neutral unless live catalogue data supplies rank history. Preview order is not an official chart.</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderWidth: 1, borderColor: "#75613A", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 }}><Ionicons name="shield-checkmark-outline" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "800" }}>FAIR PLAY</Text></View></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}><Ionicons name="trending-up-outline" size={15} color="#59C98A" /><Text style={{ color: C.text2, fontSize: 10, flex: 1, lineHeight: 15 }}>Movement comes from verified chart history when available. Preview order is not an official chart.</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderWidth: 1, borderColor: "#75613A", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 }}><Ionicons name="shield-checkmark-outline" size={11} color="#E5C158" /><Text style={{ color: "#E5C158", fontSize: 9, fontWeight: "800" }}>FAIR PLAY</Text></View></View>
             </View>
           </View>
           <View style={[s.sectionHead, { marginBottom: 6 }]}>
@@ -476,10 +476,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
               return null;
             };
-            const reportedRank = catalogueSource === "live" ? numeric(track.rank ?? track.currentRank ?? track.current_rank) : null;
+            const reportedRank = top100Snapshot || catalogueSource === "live" ? numeric(track.rank ?? track.currentRank ?? track.current_rank) : null;
             const position = reportedRank !== null && reportedRank > 0 ? reportedRank : index + 1;
-            const rankChange = catalogueSource === "live" ? numeric(track.rankChange ?? track.rank_change) : null;
-            const previousRank = catalogueSource === "live" ? numeric(track.previousRank ?? track.previous_rank) : null;
+            const rankChange = top100Snapshot || catalogueSource === "live" ? numeric(track.rankChange ?? track.rank_change) : null;
+            const previousRank = top100Snapshot || catalogueSource === "live" ? numeric(track.previousRank ?? track.previous_rank) : null;
             const change = previousRank !== null && previousRank > 0
               ? previousRank - position
               : rankChange;
