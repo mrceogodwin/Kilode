@@ -67,26 +67,48 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
   const [pendingUploadId, setPendingUploadId] = useState<string | null>(null);
   const [pendingUploadUrl, setPendingUploadUrl] = useState<string | null>(null);
   const [pendingUploadExpiresAt, setPendingUploadExpiresAt] = useState<string | null>(null);
-  const [recoveryLoaded, setRecoveryLoaded] = useState(false);
+  const [recoveryLoadedFor, setRecoveryLoadedFor] = useState<string | null>(null);
+  const canPersistRecovery = Boolean(token.trim()) && !["guest", "local", "live"].includes(token);
+  const recoveryScope = canPersistRecovery ? `${PENDING_UPLOAD_KEY}:${sessionFingerprint(token)}` : `${PENDING_UPLOAD_KEY}:no-session`;
 
   useEffect(() => {
     let active = true;
+    setRecoveryLoadedFor(null);
     (async () => {
       try {
-        const raw = await AsyncStorage.getItem(PENDING_UPLOAD_KEY);
-        if (!raw || !active) return;
+        if (!canPersistRecovery) {
+          if (!active) return;
+          setTitle("");
+          setGenre("");
+          setAudio(null);
+          setRightsConfirmed(false);
+          setPendingUploadId(null);
+          setPendingUploadUrl(null);
+          setPendingUploadExpiresAt(null);
+          setMessage("");
+          return;
+        }
+        const raw = await AsyncStorage.getItem(recoveryScope);
+        if (!active) return;
+        if (!raw) {
+          setTitle("");
+          setGenre("");
+          setAudio(null);
+          setRightsConfirmed(false);
+          setPendingUploadId(null);
+          setPendingUploadUrl(null);
+          setPendingUploadExpiresAt(null);
+          setMessage("");
+          return;
+        }
         const saved = JSON.parse(raw) as Partial<PendingUploadRecovery>;
         if (
-          typeof token !== "string" ||
-          !token.trim() ||
-          ["guest", "local", "live"].includes(token) ||
           saved.sessionFingerprint !== sessionFingerprint(token) ||
           typeof saved.uploadId !== "string" ||
           !saved.uploadId
         ) {
           return;
         }
-        if (!active) return;
         setTitle(typeof saved.title === "string" ? saved.title : "");
         setGenre(typeof saved.genre === "string" ? saved.genre : "");
         setRightsConfirmed(saved.rightsConfirmed === true);
@@ -112,24 +134,28 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         if (active) setMessage("Recovered an unfinished music upload. Check its status or retry the transfer if the secure link is still valid.");
       } catch {
         // A corrupt recovery record must never prevent the upload sheet from opening.
-        try {
-          await AsyncStorage.removeItem(PENDING_UPLOAD_KEY);
-        } catch {
-          // Storage may be unavailable.
+        if (active && canPersistRecovery) {
+          try {
+            await AsyncStorage.removeItem(recoveryScope);
+          } catch {
+            // Storage may be unavailable.
+          }
         }
       } finally {
-        if (active) setRecoveryLoaded(true);
+        if (active) setRecoveryLoadedFor(recoveryScope);
       }
     })();
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [token, canPersistRecovery, recoveryScope]);
 
   useEffect(() => {
-    if (!recoveryLoaded) return;
+    // Do not write state from the previous account while the new account is hydrating.
+    if (recoveryLoadedFor !== recoveryScope) return;
+    if (!canPersistRecovery) return;
     if (!pendingUploadId) {
-      void AsyncStorage.removeItem(PENDING_UPLOAD_KEY).catch(() => {});
+      void AsyncStorage.removeItem(recoveryScope).catch(() => {});
       return;
     }
     const recovery: PendingUploadRecovery = {
@@ -142,10 +168,10 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       uploadUrl: pendingUploadUrl,
       uploadExpiresAt: pendingUploadExpiresAt,
     };
-    void AsyncStorage.setItem(PENDING_UPLOAD_KEY, JSON.stringify(recovery)).catch(() => {
+    void AsyncStorage.setItem(recoveryScope, JSON.stringify(recovery)).catch(() => {
       // Uploads still work; persistence is a recovery aid, not a server guarantee.
     });
-  }, [recoveryLoaded, token, title, genre, audio, rightsConfirmed, pendingUploadId, pendingUploadUrl, pendingUploadExpiresAt]);
+  }, [recoveryLoadedFor, recoveryScope, canPersistRecovery, token, title, genre, audio, rightsConfirmed, pendingUploadId, pendingUploadUrl, pendingUploadExpiresAt]);
 
   const fail = (text: string) => {
     setMessage(text);
