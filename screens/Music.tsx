@@ -371,7 +371,13 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     : activePlaylist?.category === "community"
       ? catalogueTracks.filter((track: any) => !recentTrackIds.includes(String(track.id ?? track.title)))
       : activePlaylist?.category === "new"
-        ? [...catalogueTracks].sort((a: any, b: any) => new Date(b.release_date ?? b.created_at ?? 0).getTime() - new Date(a.release_date ?? a.created_at ?? 0).getTime())
+        ? [...catalogueTracks]
+            .filter((track: any) => {
+              const rawDate = track.release_date ?? track.created_at;
+              const timestamp = rawDate ? new Date(rawDate).getTime() : Number.NaN;
+              return Number.isFinite(timestamp) && timestamp > 0;
+            })
+            .sort((a: any, b: any) => new Date(b.release_date ?? b.created_at).getTime() - new Date(a.release_date ?? a.created_at).getTime())
         : activePlaylist?.category === "genre"
           ? catalogueTracks.filter((track: any) => String(track.genre ?? track.genres ?? "").toLowerCase().includes("afro"))
           : activePlaylist?.category === "focus"
@@ -941,7 +947,13 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
         </View>
       ) : null}
 
-      {(tab === "Home" ? [...tracks].sort((a: any, b: any) => Number(b.play_count ?? b.plays ?? b.stream_count ?? 0) - Number(a.play_count ?? a.plays ?? a.stream_count ?? 0)).slice(0, 5) : tab === "Charts" ? datedNewTracks.slice(0, 100) : []).map((track: any, index: number) => {
+      {(tab === "Home" ? [...tracks].sort((a: any, b: any) => {
+        const rawA = Number(a.play_count ?? a.plays ?? a.stream_count ?? 0);
+        const rawB = Number(b.play_count ?? b.plays ?? b.stream_count ?? 0);
+        const playsA = Number.isFinite(rawA) && rawA >= 0 ? rawA : 0;
+        const playsB = Number.isFinite(rawB) && rawB >= 0 ? rawB : 0;
+        return playsB - playsA;
+      }).slice(0, 5) : tab === "Charts" ? datedNewTracks.slice(0, 100) : []).map((track: any, index: number) => {
         const id = String(track.id ?? track.title);
         const title = String(track.title || "Untitled track");
         const artistName = String(track.artist || track.artist_name || "Unknown artist");
