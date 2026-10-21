@@ -222,6 +222,28 @@ export function CommentsSheet({
                   show("Comment could not be sent. Try again.");
                   return;
                 }
+                if (!r.ok && r.error === "Dedicated Kilode API is not configured") {
+                  // Explicit offline preview path: save locally, never imply this reached the server.
+                  const nextComment: Comment = {
+                    id: "local-" + Date.now(),
+                    takeId,
+                    text: submittedText,
+                    name: "You",
+                    time: "now",
+                  };
+                  const nextLocalComments = [...localComments, nextComment];
+                  setList((prev) => [...prev, nextComment]);
+                  setLocalComments(nextLocalComments);
+                  try {
+                    await AsyncStorage.setItem(commentStorageKey, JSON.stringify(nextLocalComments));
+                    setDraft("");
+                    show("Saved on this device only — not shared with Kilode.");
+                  } catch {
+                    show("Comment wasn't saved. Device storage failed.");
+                  }
+                  setSending(false);
+                  return;
+                }
                 if (r.ok && r.data) {
                   const saved = r.data.comment || r.data.reply || r.data;
 
