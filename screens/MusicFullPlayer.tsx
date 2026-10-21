@@ -8,12 +8,16 @@ type Props = {
   track: any;
   playing: boolean;
   C: any;
-  onClose: () => void;\n  positionMillis: number;\n  durationMillis: number;
+  onClose: () => void;
+  positionMillis: number;
+  durationMillis: number;
 };
 
-export function MusicFullPlayer({ visible, track, playing, C, onClose, positionMillis, durationMillis }: Props) {\n  const [progressWidth, setProgressWidth] = useState(1);
+export function MusicFullPlayer({ visible, track, playing, C, onClose, positionMillis, durationMillis }: Props) {
+  const [progressWidth, setProgressWidth] = useState(1);
   if (!track) return null;
-  const artwork = track.artworkUrl || track.artwork_url || track.coverUrl || track.cover_url || track.image;\n  const formatTime = (ms: number) => { const total = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`; };
+  const artwork = track.artworkUrl || track.artwork_url || track.coverUrl || track.cover_url || track.image;
+  const formatTime = (ms: number) => { const total = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`; };
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D10" />
@@ -41,12 +45,14 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
           </View>
         </View>
         <View style={{ width: "100%", maxWidth: 340, alignSelf: "center" }}>
-          <View style={{ height: 4, borderRadius: 2, backgroundColor: "#2A2A30", overflow: "hidden" }}>
-            <View style={{ width: "0%", height: 4, backgroundColor: "#D4AF37" }} />
+          <View onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))} onTouchEnd={(event) => { if (!durationMillis) return; const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth)); void seekMusicPlayback(ratio * durationMillis); }} accessibilityRole="adjustable" accessibilityLabel="Track position" style={{ height: 18, justifyContent: "center", borderRadius: 9 }}>
+            <View style={{ height: 4, borderRadius: 2, backgroundColor: "#2A2A30", overflow: "hidden" }}>
+              <View style={{ width: `${durationMillis ? Math.min(100, (positionMillis / durationMillis) * 100) : 0}%`, height: 4, backgroundColor: "#D4AF37" }} />
+            </View>
           </View>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
-            <Text style={{ color: "#9A9A9E", fontSize: 11 }}>—:—</Text>
-            <Text style={{ color: "#9A9A9E", fontSize: 11 }}>—:—</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 0 }}>
+            <Text style={{ color: "#9A9A9E", fontSize: 11 }}>{formatTime(positionMillis)}</Text>
+            <Text style={{ color: "#9A9A9E", fontSize: 11 }}>{formatTime(durationMillis)}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 20 }}>
             <TouchableOpacity accessibilityRole="button" accessibilityLabel="Shuffle" onPress={() => {}} style={{ padding: 10 }}><Ionicons name="shuffle" size={22} color="#9A9A9E" /></TouchableOpacity>
