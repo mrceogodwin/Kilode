@@ -143,6 +143,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
   const selectTrack = (t: any) => {
     setActiveArtist(null);
     setActiveTrack(t);
+    // Track opens are stored locally to improve discovery without a server request.
+    void recordMusicDiscoveryAction(t, "opened").then(() => readMusicDiscoveryProfile().then(setDiscoveryProfile));
   };
 
   if (activeTrack) {
