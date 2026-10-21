@@ -79,10 +79,18 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
   const filteredTracks = tracks.filter((t: any) => `${t.title || ""} ${t.artist || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
   const artists = Array.from(new Map(
     tracks.filter((t: any) => t.artist).map((t: any) => [
-      String(t.artist).toLowerCase(),
-      { id: String(t.artist).toLowerCase(), name: String(t.artist), meta: "Kilode artist", color: C.accent },
+      String(t.artist).trim().toLowerCase(),
+      {
+        id: String(t.artist).trim().toLowerCase(),
+        name: String(t.artist).trim(),
+        trackCount: tracks.filter((item: any) => String(item.artist || "").trim().toLowerCase() === String(t.artist).trim().toLowerCase()).length,
+        meta: "",
+        color: C.accent,
+      },
     ])
-  ).values());
+  ).values())
+    .map((artist: any) => ({ ...artist, meta: artist.trackCount + (artist.trackCount === 1 ? " track in catalogue" : " tracks in catalogue") }))
+    .sort((a: any, b: any) => a.name.localeCompare(b.name));
   const exploreTracks = filteredTracks;
   const newTracks = filteredTracks.filter((track: any) => {
     const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
