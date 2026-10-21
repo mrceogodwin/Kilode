@@ -26,6 +26,8 @@ type Props = {
   onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => Promise<{ ok: boolean; error?: string }>;
   onGuest: () => void;
   onGoogle: () => void;
+  hasSession?: boolean;
+  onContinue?: () => void;
   show: (m: string) => void;
 };
 
@@ -36,7 +38,7 @@ const FLOAT = [
   { key: "events", title: "Events", sub: "What's on", icon: "calendar" as const, style: { bottom: "16%" as const, right: 16 } },
 ];
 
-export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Props) {
+export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSession = false, onContinue }: Props) {
   const { height: windowHeight } = useWindowDimensions();
   const compact = windowHeight < 760;
   // Multi-step: welcome → pick account type → credentials
@@ -120,26 +122,34 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show }: Prop
           <TouchableOpacity
             style={styles.cta}
             onPress={() => {
+              if (hasSession) {
+                onContinue?.();
+                return;
+              }
               setKind(null);
               setMode("kind");
             }}
             activeOpacity={0.9}
           >
-            <Text style={styles.ctaText}>Get Started</Text>
+            <Text style={styles.ctaText}>{hasSession ? "Continue to Kilode" : "Get Started"}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryBtn} onPress={() => setMode("in")} activeOpacity={0.85}>
-            <Text style={styles.secondaryText}>I already have an account</Text>
-          </TouchableOpacity>
+          {!hasSession ? (
+            <>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setMode("in")} activeOpacity={0.85}>
+                <Text style={styles.secondaryText}>I already have an account</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.guestBtn} onPress={onGuest}>
-            <Text style={styles.guestText}>Continue as guest</Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.guestBtn} onPress={onGuest}>
+                <Text style={styles.guestText}>Continue as guest</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.googleBtn} onPress={onGoogle}>
-            <Ionicons name="logo-google" size={16} color="#fff" />
-            <Text style={styles.googleText}>Continue with Google</Text>
-          </TouchableOpacity>
+              <TouchableOpacity style={styles.googleBtn} onPress={onGoogle}>
+                <Ionicons name="logo-google" size={16} color="#fff" />
+                <Text style={styles.googleText}>Continue with Google</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
         </View>
       </SafeAreaView>
     );
