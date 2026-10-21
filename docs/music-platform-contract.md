@@ -75,3 +75,18 @@ Support allow-listed platforms (Spotify, Apple Music, YouTube, Audiomack, Instag
 ## Current repository status (2026-10-21)
 
 The native app has a basic player that can play a catalogue item only when a valid audio URL is already supplied. The current sample tracks do not contain audio assets. This repository branch has no confirmed dedicated music upload/storage/transcoding backend, so an end-to-end upload must not be presented as working until the contract above is implemented and tested.
+
+## Kilode Top 100 — verified chart contract
+
+The native Top 100 must not derive official positions from catalogue order. The dedicated backend should expose a separately versioned chart snapshot:
+
+- `GET /api/mobile/music/charts/top-100?period=week&region=NG`
+- Response envelope: `{ chartId, period, region, generatedAt, windowStart, windowEnd, methodologyVersion, entries }`.
+- Each entry must include `trackId`, `rank` (positive integer), `previousRank` (positive integer or null), and `movement` (integer or null). The client may derive movement as `previousRank - rank` only when both positions belong to comparable consecutive snapshots for the same chart, period and region.
+- The response must be a single consistent snapshot. Reject duplicate track IDs, duplicate ranks, invalid ranks, stale snapshots beyond the published freshness limit, and mismatched chart metadata.
+- Rank inputs must come from validated, deduplicated server-side listening activity under the documented qualified-play threshold. Button taps, sample/demo tracks, internal tests, bots and outbound external-link clicks must not count as plays.
+- Document the ranking window, eligibility rules, tie-breaking, region, minimum activity/privacy thresholds, fraud review and correction process. Never infer a chart rank from track creation time or the order returned by the catalogue endpoint.
+- Until this endpoint returns validated chart data, the native UI must retain its preview/pending label and neutral movement indicators. A successful catalogue request alone is not evidence that chart rankings are live.
+- Add backend contract tests for malformed/duplicate ranks, stale snapshots, missing previous positions, rank changes, empty charts, region/period boundaries and exclusion of unqualified plays.
+
+This contract defines required behaviour only. It does not assert that the endpoint, ranking pipeline or production chart snapshots currently exist.
