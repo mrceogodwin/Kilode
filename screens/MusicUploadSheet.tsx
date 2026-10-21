@@ -42,6 +42,8 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
   const [stage, setStage] = useState("");
   const [message, setMessage] = useState("");
   const [pendingUploadId, setPendingUploadId] = useState<string | null>(null);
+  const [pendingUploadUrl, setPendingUploadUrl] = useState<string | null>(null);
+  const [pendingUploadExpiresAt, setPendingUploadExpiresAt] = useState<string | null>(null);
 
   const fail = (text: string) => {
     setMessage(text);
@@ -126,6 +128,8 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
     setMessage(`Track submitted · status: ${state.replace(/_/g, " ")}`);
     show(`Track submitted · ${state.replace(/_/g, " ")}`);
     setPendingUploadId(null);
+    setPendingUploadUrl(null);
+    setPendingUploadExpiresAt(null);
     onPublished();
     return true;
   };
@@ -149,12 +153,64 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       } else if (state === "published" && trackId) {
         setMessage("This track is already published.");
         setPendingUploadId(null);
+        setPendingUploadUrl(null);
+        setPendingUploadExpiresAt(null);
         onPublished();
       } else {
         setMessage(`Audio status: ${state.replace(/_/g, " ") || "processing"}. Check again shortly.`);
       }
     } catch {
       fail("Could not check processing status. Try again.");
+    } finally {
+      setBusy(false);
+      setStage("");
+    }
+  };
+
+  const retryTransfer = async () => {
+    if (busy || !pendingUploadId || !pendingUploadUrl || !audio) return;
+    if (pendingUploadExpiresAt) {
+      const expiresAt = Date.parse(pendingUploadExpiresAt);
+      if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+        setPendingUploadUrl(null);
+        setPendingUploadExpiresAt(null);
+        fail("This secure upload link has expired. Start a new upload to receive a fresh link.");
+        return;
+      }
+    }
+    setBusy(true);
+    setMessage("");
+    try {
+      setStage("Retrying audio transfer…");
+      const uploaded = await uploadMusicAsset(pendingUploadUrl, audio.uri, audio.mimeType);
+      if (!uploaded.ok) {
+        fail(`${uploaded.error || "Audio upload failed."} The secure link may have expired; if it keeps failing, start a new upload.`);
+        return;
+      }
+      setPendingUploadUrl(null);
+      setPendingUploadExpiresAt(null);
+      setStage("Sending audio for processing…");
+      const completed = await completeMusicUpload(token, pendingUploadId);
+      if (!completed.ok || !completed.data) {
+        fail(completed.error || "Audio uploaded, but processing could not be started. Check status to retry.");
+        return;
+      }
+      const state = normalizeState(completed.data.state);
+      const trackId = completed.data.trackId;
+      if (["processed", "ready", "ready_to_publish", "complete", "completed"].includes(state) && trackId) {
+        await publishIfReady(String(trackId));
+      } else if (state === "published" && trackId) {
+        setMessage("This track is already published.");
+        setPendingUploadId(null);
+        onPublished();
+      } else if (["failed", "rejected", "error"].includes(state)) {
+        fail(`Kilode could not process this audio (${state.replace(/_/g, " ")}).`);
+      } else {
+        setMessage("Audio uploaded. Kilode is processing it before publication.");
+        show("Audio uploaded · processing pending");
+      }
+    } catch {
+      fail("Retry interrupted. Check your connection and try again.");
     } finally {
       setBusy(false);
       setStage("");
@@ -199,13 +255,17 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       }
       // Preserve the server upload ID immediately so an interrupted transfer can be inspected/recovered.
       setPendingUploadId(uploadId);
+      setPendingUploadUrl(uploadUrl);
+      setPendingUploadExpiresAt(ticket.data.expiresAt || null);
 
       setStage("Uploading original audio…");
       const uploaded = await uploadMusicAsset(uploadUrl, audio.uri, audio.mimeType);
       if (!uploaded.ok) {
-        fail(uploaded.error || "Audio upload failed.");
+        fail(`${uploaded.error || "Audio upload failed."} You can retry this transfer while its secure upload link is valid.`);
         return;
       }
+      setPendingUploadUrl(null);
+      setPendingUploadExpiresAt(null);
 
       setStage("Sending audio for processing…");
       const completed = await completeMusicUpload(token, uploadId);
@@ -276,6 +336,7 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
           <TouchableOpacity onPress={() => void submitUpload()} disabled={busy} accessibilityRole="button" style={{ backgroundColor: C.accent || "#D4AF37", borderRadius: 13, padding: 15, alignItems: "center", marginTop: 16, opacity: busy ? 0.6 : 1 }}>
             <Text style={{ color: "#0D0D10", fontWeight: "800", fontSize: 14 }}>{busy ? "Working…" : "Upload track"}</Text>
           </TouchableOpacity>
+          {pendingUploadId && pendingUploadUrl ? <TouchableOpacity onPress={() => void retryTransfer()} disabled={busy} accessibilityRole="button" style={{ borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 13, padding: 13, alignItems: "center", marginTop: 9, opacity: busy ? 0.6 : 1 }}><Text style={{ color: C.text || "#fff", fontWeight: "700", fontSize: 13 }}>Retry audio transfer</Text></TouchableOpacity> : null}
           {pendingUploadId ? <TouchableOpacity onPress={() => void checkProcessing()} disabled={busy} accessibilityRole="button" style={{ borderColor: C.border || "#2A2A30", borderWidth: 1, borderRadius: 13, padding: 13, alignItems: "center", marginTop: 9, opacity: busy ? 0.6 : 1 }}><Text style={{ color: C.text || "#fff", fontWeight: "700", fontSize: 13 }}>Check processing status</Text></TouchableOpacity> : null}
           <Text style={{ color: C.text3 || "#888", fontSize: 10, lineHeight: 15, marginTop: 12 }}>Tracks are not public until Kilode’s server finishes processing, rights checks and publication review.</Text>
         </View>
