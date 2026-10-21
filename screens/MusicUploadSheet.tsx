@@ -301,7 +301,10 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         setPendingUploadId(null);
         onPublished();
       } else if (["failed", "rejected", "error"].includes(state)) {
-        fail(`Kilode could not process this audio (${state.replace(/_/g, " ")}).`);
+        setPendingUploadId(null);
+        setPendingUploadUrl(null);
+        setPendingUploadExpiresAt(null);
+        fail(`Kilode could not process this audio (${state.replace(/_/g, " ")}). You can correct the issue and start a new upload.`);
       } else {
         setMessage("Audio uploaded. Kilode is processing it before publication.");
         show("Audio uploaded · processing pending");
