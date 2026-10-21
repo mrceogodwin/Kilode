@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
@@ -28,6 +29,28 @@ type Props = {
 };
 
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
+const PENDING_UPLOAD_KEY = "@kilode/music-upload-recovery";
+
+type PendingUploadRecovery = {
+  sessionFingerprint: string;
+  title: string;
+  genre: string;
+  audio: PickedAudio | null;
+  rightsConfirmed: boolean;
+  uploadId: string;
+  uploadUrl: string | null;
+  uploadExpiresAt: string | null;
+};
+
+function sessionFingerprint(token: string): string {
+  // A non-reversible local partition key; never persist the bearer token itself.
+  let hash = 2166136261;
+  for (let i = 0; i < token.length; i += 1) {
+    hash ^= token.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16);
+}
 
 function normalizeState(value: unknown): string {
   return typeof value === "string" ? value.trim().toLowerCase().replace(/[ -]+/g, "_") : "";
@@ -44,6 +67,85 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
   const [pendingUploadId, setPendingUploadId] = useState<string | null>(null);
   const [pendingUploadUrl, setPendingUploadUrl] = useState<string | null>(null);
   const [pendingUploadExpiresAt, setPendingUploadExpiresAt] = useState<string | null>(null);
+  const [recoveryLoaded, setRecoveryLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(PENDING_UPLOAD_KEY);
+        if (!raw || !active) return;
+        const saved = JSON.parse(raw) as Partial<PendingUploadRecovery>;
+        if (
+          typeof token !== "string" ||
+          !token.trim() ||
+          ["guest", "local", "live"].includes(token) ||
+          saved.sessionFingerprint !== sessionFingerprint(token) ||
+          typeof saved.uploadId !== "string" ||
+          !saved.uploadId
+        ) {
+          return;
+        }
+        if (!active) return;
+        setTitle(typeof saved.title === "string" ? saved.title : "");
+        setGenre(typeof saved.genre === "string" ? saved.genre : "");
+        setRightsConfirmed(saved.rightsConfirmed === true);
+        setPendingUploadId(saved.uploadId);
+        setPendingUploadUrl(typeof saved.uploadUrl === "string" ? saved.uploadUrl : null);
+        setPendingUploadExpiresAt(typeof saved.uploadExpiresAt === "string" ? saved.uploadExpiresAt : null);
+        const candidate = saved.audio;
+        if (candidate && typeof candidate.uri === "string" && typeof candidate.name === "string" && typeof candidate.mimeType === "string") {
+          try {
+            const info = await FileSystem.getInfoAsync(candidate.uri);
+            if (active && info.exists) {
+              setAudio({
+                uri: candidate.uri,
+                name: candidate.name,
+                mimeType: candidate.mimeType,
+                size: typeof candidate.size === "number" ? candidate.size : 0,
+              });
+            }
+          } catch {
+            // Status checks still work even if the temporary local audio file is gone.
+          }
+        }
+        if (active) setMessage("Recovered an unfinished music upload. Check its status or retry the transfer if the secure link is still valid.");
+      } catch {
+        // A corrupt recovery record must never prevent the upload sheet from opening.
+        try {
+          await AsyncStorage.removeItem(PENDING_UPLOAD_KEY);
+        } catch {
+          // Storage may be unavailable.
+        }
+      } finally {
+        if (active) setRecoveryLoaded(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (!recoveryLoaded) return;
+    if (!pendingUploadId) {
+      void AsyncStorage.removeItem(PENDING_UPLOAD_KEY).catch(() => {});
+      return;
+    }
+    const recovery: PendingUploadRecovery = {
+      sessionFingerprint: sessionFingerprint(token),
+      title,
+      genre,
+      audio,
+      rightsConfirmed,
+      uploadId: pendingUploadId,
+      uploadUrl: pendingUploadUrl,
+      uploadExpiresAt: pendingUploadExpiresAt,
+    };
+    void AsyncStorage.setItem(PENDING_UPLOAD_KEY, JSON.stringify(recovery)).catch(() => {
+      // Uploads still work; persistence is a recovery aid, not a server guarantee.
+    });
+  }, [recoveryLoaded, token, title, genre, audio, rightsConfirmed, pendingUploadId, pendingUploadUrl, pendingUploadExpiresAt]);
 
   const fail = (text: string) => {
     setMessage(text);
