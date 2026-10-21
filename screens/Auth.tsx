@@ -150,6 +150,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel={mode === "in" ? "Sign in to Kilode" : "Create Kilode account"}
+              accessibilityState={{ disabled: busy, busy }}
               style={[styles.primary, { opacity: busy ? 0.7 : 1 }]}
               disabled={busy}
               onPress={async () => {
@@ -177,7 +178,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
               <Text style={styles.switchMuted}>
                 {mode === "in" ? "New here?" : "Already have an account?"}
               </Text>
-              <TouchableOpacity onPress={() => setMode(mode === "in" ? "up" : "in")}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={mode === "in" ? "Switch to create account" : "Switch to sign in"} onPress={() => setMode(mode === "in" ? "up" : "in")}>
                 <Text style={styles.switchLink}>
                   {mode === "in" ? "Create account" : "Sign in"}
                 </Text>
@@ -192,7 +193,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
               <Text style={styles.legal}>.</Text>
             </View>
 
-            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Continue as guest" style={styles.guest} onPress={onGuest}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Continue as guest" accessibilityHint="Opens Kilode without signing in" style={styles.guest} onPress={onGuest}>
               <Text style={styles.guestText}>Continue as guest</Text>
             </TouchableOpacity>
             </View>
