@@ -41,6 +41,22 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName, artistHan
     show("Release draft loaded.");
   };
 
+  const deleteDraft = async (draft: Draft) => {
+    try {
+      const raw = await AsyncStorage.getItem(storageKey);
+      let existing: Draft[] = [];
+      try { existing = raw ? JSON.parse(raw) : []; } catch { existing = []; }
+      const next = (Array.isArray(existing) ? existing : []).filter((item) =>
+        !(item.title === draft.title && item.releaseType === draft.releaseType && item.updatedAt === draft.updatedAt)
+      );
+      await AsyncStorage.setItem(storageKey, JSON.stringify(next));
+      setDrafts(next);
+      show("Release draft deleted from this device.");
+    } catch {
+      show("Could not delete this draft. Try again.");
+    }
+  };
+
   const checklist = [
     { label: "Audio master prepared", value: audio, set: setAudio },
     { label: "Artwork prepared", value: artwork, set: setArtwork },
@@ -99,11 +115,16 @@ export function ArtistReleasePlanner({ s, C, onBack, show, artistName, artistHan
       </View>
       {drafts.length > 0 ? <View style={{ marginTop: 22 }}>
         <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginBottom: 10 }}>Saved drafts on this device</Text>
-        {drafts.map((draft, index) => <TouchableOpacity key={`${draft.title}-${draft.releaseType}-${draft.updatedAt}-${index}`} onPress={() => loadDraft(draft)} accessibilityRole="button" style={{ padding: 13, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, marginBottom: 8 }}>
-          <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{draft.title}</Text>
-          <Text style={{ color: C.text2, fontSize: 11, marginTop: 4 }}>{draft.releaseType} · {draft.genre}{draft.releaseDate ? ` · ${draft.releaseDate}` : ""}</Text>
-          <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 6 }}>Load draft</Text>
-        </TouchableOpacity>)}
+        {drafts.map((draft, index) => <View key={`${draft.title}-${draft.releaseType}-${draft.updatedAt}-${index}`} style={{ padding: 13, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, marginBottom: 8 }}>
+          <TouchableOpacity onPress={() => loadDraft(draft)} accessibilityRole="button" style={{ paddingVertical: 2 }}>
+            <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{draft.title}</Text>
+            <Text style={{ color: C.text2, fontSize: 11, marginTop: 4 }}>{draft.releaseType} · {draft.genre}{draft.releaseDate ? ` · ${draft.releaseDate}` : ""}</Text>
+            <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", marginTop: 6 }}>Load draft</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => void deleteDraft(draft)} accessibilityRole="button" accessibilityLabel={`Delete ${draft.title} release draft`} style={{ alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 4, marginTop: 4 }}>
+            <Text style={{ color: C.danger, fontSize: 12, fontWeight: "700" }}>Delete draft</Text>
+          </TouchableOpacity>
+        </View>)}
       </View> : null}
       <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", marginTop: 24, marginBottom: 10 }}>Release readiness</Text>
       <View style={{ borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, overflow: "hidden" }}>
