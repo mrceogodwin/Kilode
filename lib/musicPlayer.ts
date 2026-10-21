@@ -235,11 +235,17 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
     if (requestId !== playbackRequestId) {
       return { ok: false, message: "Playback was cancelled." };
     }
-    isPlaying = false;
-    positionMillis = 0;
-    durationMillis = 0;
-    if (!sound) currentTrack = null;
-    publish();
+    // A failed status/play/pause request on an existing sound must not leave
+    // that native source active while the UI reports playback stopped.
+    if (sound) {
+      clearActiveSound(sound);
+    } else {
+      currentTrack = null;
+      isPlaying = false;
+      positionMillis = 0;
+      durationMillis = 0;
+      publish();
+    }
     return { ok: false, message: "Playback failed. Please check the connection and try again." };
   } finally {
     // A cancelled older request must not clear the loading state of a newer one.
