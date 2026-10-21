@@ -83,7 +83,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
       { id: String(t.artist).toLowerCase(), name: String(t.artist), meta: "Kilode artist", color: C.accent },
     ])
   ).values());
-  const chartTracks = filteredTracks.slice(0, 10);
+  const exploreTracks = filteredTracks;
   const newTracks = filteredTracks.filter((track: any) => {
     const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
     if (!rawDate) return false;
@@ -330,11 +330,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
       {tab === "charts" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Tracks in catalogue</Text>
+            <Text style={s.sectionTitle}>Explore tracks</Text>
           </View>
-          {chartTracks.length === 0 ? <Text style={[s.meta, s.padH]}>No catalogue tracks match this search.</Text> : chartTracks.map((c: any, index: number) => (
+          {exploreTracks.length === 0 ? <EmptyState title={search ? "No matching tracks" : "No tracks available"} body={search ? "Try a different title or artist." : "Tracks will appear here when the catalogue is available."} textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="musical-notes-outline" /> : exploreTracks.map((c: any, index: number) => (
             <TouchableOpacity
-              key={c.id || `${c.title}-${index}`}
+              key={musicTrackIdentity(c)}
               style={s.roomRow}
               onPress={() =>
                 selectTrack(c)
