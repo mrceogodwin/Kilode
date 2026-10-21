@@ -255,14 +255,29 @@ export async function requestMusicUpload(token: string, input: MusicUploadReques
   const result = await requestMusicJson<MusicUploadTicket>("/api/mobile/music/uploads", "POST", token, input);
   if (!result.ok || !result.data) return result;
   const raw = result.data;
+  const uploadId = (typeof raw.uploadId === "string" ? raw.uploadId : String(raw.upload_id || "")).trim();
+  const uploadUrl = (typeof raw.uploadUrl === "string" ? raw.uploadUrl : String(raw.upload_url || "")).trim();
+  const expiresAt = raw.expiresAt || raw.expires_at;
+  let parsedUploadUrl: URL | null = null;
+  try {
+    parsedUploadUrl = new URL(uploadUrl);
+  } catch {
+    parsedUploadUrl = null;
+  }
+  if (!uploadId || !parsedUploadUrl || parsedUploadUrl.protocol !== "https:") {
+    return { ok: false, data: null as any, source: "error", error: "The music service returned an invalid or insecure upload ticket.", fn: "requestMusicUpload" };
+  }
+  if (expiresAt && (!Number.isFinite(Date.parse(String(expiresAt))) || Date.parse(String(expiresAt)) <= Date.now())) {
+    return { ok: false, data: null as any, source: "error", error: "The secure upload link has expired. Request a new upload link.", fn: "requestMusicUpload" };
+  }
   return {
     ...result,
     data: {
       ...raw,
-      uploadId: typeof raw.uploadId === "string" ? raw.uploadId : String(raw.upload_id || ""),
-      uploadUrl: typeof raw.uploadUrl === "string" ? raw.uploadUrl : String(raw.upload_url || ""),
+      uploadId,
+      uploadUrl,
       audioAssetKey: raw.audioAssetKey || raw.audio_asset_key,
-      expiresAt: raw.expiresAt || raw.expires_at,
+      expiresAt,
     },
   };
 }
