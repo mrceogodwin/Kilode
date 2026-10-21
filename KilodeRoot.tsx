@@ -61,10 +61,13 @@ function KilodeApp() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
 
-  useEffect(() => subscribeMusicPlayer((track, playing) => {
-    setNowPlaying(track);
-    setIsMusicPlaying(playing);
-  }), []);
+  useEffect(() => {
+    const unsubscribe = subscribeMusicPlayer((track, playing) => {
+      setNowPlaying(track);
+      setIsMusicPlaying(playing);
+    });
+    return () => { unsubscribe(); };
+  }, []);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
