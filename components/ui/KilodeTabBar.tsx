@@ -24,17 +24,17 @@ const TABS: {
   { id: "myspace", label: "My Space", icon: "person-outline", iconOn: "person" },
 ];
 
-/** Dock respects Kilode palette — green accent by default */
+/** Native five-slot dock, using the active Kilode palette. */
 export function KilodeTabBar({
   active,
   onTab,
   onCreate,
   isDark = true,
-  accent = "#22C55E",
+  accent = "#D4AF37",
 }: Props) {
-  const bg = isDark ? "#0A0A0A" : "#FFFFFF";
+  const bg = isDark ? "#0D0D10" : "#FFFFFF";
   const muted = isDark ? "#737373" : "#A1A1AA";
-  const border = isDark ? "#2A2A2A" : "#E4E4E7";
+  const border = isDark ? "#2A2A30" : "#E4E4E7";
 
   return (
     <View style={[styles.dock, { backgroundColor: bg, borderTopColor: border }]}>
