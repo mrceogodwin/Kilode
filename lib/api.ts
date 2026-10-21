@@ -5,7 +5,7 @@
  *   GET  /api/mobile/health
  *   GET  /api/mobile/takes
  *   POST /api/mobile/takes
- *   GET  /api/mobile/tracks
+ *   GET  /api/mobile/music/tracks
  *
  * Production truth: if the network call fails, source is "error".
  * Seed data may fill the UI for layout only — never reported as "live".
@@ -181,7 +181,7 @@ export function fetchNews() {
 }
 
 export async function fetchTracks(): Promise<ApiResult<any[]>> {
-  const r = await tryLiveJson<any>("/api/mobile/tracks", { tracks: TRACKS }, "listTracks");
+  const r = await tryLiveJson<any>("/api/mobile/music/tracks", { tracks: TRACKS }, "listTracks");
   if (r.ok) {
     const list = Array.isArray(r.data)
       ? r.data
