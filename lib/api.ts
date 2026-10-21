@@ -66,8 +66,8 @@ async function tryLiveJson<T>(
     return { ok: false, data: fallback, source: "error", error: "Dedicated Kilode API is not configured", fn: fnName };
   }
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const ctrl = new AbortController();
   try {
-    const ctrl = new AbortController();
     timer = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(`${API_BASE}${path}`, {
       signal: ctrl.signal,
