@@ -214,7 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         handle: h,
         name: data.user?.name || displayName?.trim() || h,
-        kind: asAccountKind(kind),
+        kind: asAccountKind(data.user?.kind || kind),
       };
       setSession(s);
       setGuest(false);
