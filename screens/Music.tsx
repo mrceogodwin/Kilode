@@ -954,7 +954,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               ) : null}
             </View>
           ) : null}
-          {!supportPages.length && !supportPagesError ? (
+          {!loadingSupportPages && !supportPages.length && !supportPagesError ? (
             <TouchableOpacity
               disabled={creatingSupportPage}
               onPress={async () => {
