@@ -278,6 +278,40 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
         </View>
       </View>
 
+      {tab === "forYou" && !search.trim() && (
+        <View style={{ marginTop: 16 }}>
+          <View style={[s.sectionHead, { paddingHorizontal: 14, marginBottom: 10 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.sectionTitle}>More to Explore</Text>
+              <Text style={[s.meta, { marginTop: 3 }]}>Find your next favourite sound on Kilode</Text>
+            </View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.tracksRow, { paddingHorizontal: 14, gap: 10 }]}>
+            {([
+              { id: "explore", title: "Explore tracks", detail: "Browse the catalogue", icon: "musical-notes-outline", target: "charts" as const },
+              { id: "new", title: "Fresh releases", detail: "Hear what's new", icon: "sparkles-outline", target: "new" as const },
+              { id: "artists", title: "Meet the artists", detail: "Find your next favourite", icon: "people-outline", target: "artists" as const },
+            ]).map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => setTab(item.target)}
+                accessibilityRole="button"
+                accessibilityLabel={item.title}
+                style={{ width: 168, minHeight: 112, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.card, justifyContent: "space-between" }}
+              >
+                <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: C.elevated || C.border, alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name={item.icon as any} size={19} color={C.accent} />
+                </View>
+                <View style={{ marginTop: 12 }}>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: "700" }}>{item.title}</Text>
+                  <Text style={[s.meta, { marginTop: 3 }]}>{item.detail}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {discoveryReady && tab === "forYou" && !search.trim() && discoveryShelves.map((shelf) => (
         <View key={shelf.id} style={{ marginTop: 18 }}>
           <View style={s.sectionHead}>
