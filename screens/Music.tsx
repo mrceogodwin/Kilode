@@ -77,21 +77,19 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
   const filteredTracks = tracks.filter((t: any) => `${t.title || ""} ${t.artist || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
-  const artists = Array.from(new Map(
-    tracks.filter((t: any) => t.artist).map((t: any) => [
-      String(t.artist).trim().toLowerCase(),
-      {
-        id: String(t.artist).trim().toLowerCase(),
-        name: String(t.artist).trim(),
-        trackCount: tracks.filter((item: any) => String(item.artist || "").trim().toLowerCase() === String(t.artist).trim().toLowerCase()).length,
-        meta: "",
-        color: C.accent,
-      },
-    ])
-  ).values())
+  const artistMap = new Map<string, any>();
+  tracks.forEach((track: any) => {
+    const name = String(track.artist || "").trim();
+    if (!name) return;
+    const key = name.toLowerCase();
+    const existing = artistMap.get(key);
+    if (existing) existing.trackCount += 1;
+    else artistMap.set(key, { id: key, name, trackCount: 1, color: C.accent });
+  });
+  const artists = Array.from(artistMap.values())
     .map((artist: any) => ({ ...artist, meta: artist.trackCount + (artist.trackCount === 1 ? " track in catalogue" : " tracks in catalogue") }))
     .sort((a: any, b: any) => a.name.localeCompare(b.name));
-  const exploreTracks = filteredTracks;
+    const exploreTracks = filteredTracks;
   const newTracks = filteredTracks.filter((track: any) => {
     const rawDate = track?.releaseDate || track?.release_date || track?.releasedAt || track?.released_at;
     if (!rawDate) return false;
