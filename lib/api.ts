@@ -33,6 +33,22 @@ export type ApiResult<T> = {
 
 const UA = "KilodeNative/1.0 (iOS; Expo)";
 
+// Writes must time out too: a stalled connection should never leave a composer
+// waiting indefinitely. Keep the timeout bounded for slower mobile networks.
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = 12000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function tryLiveJson<T>(
   path: string,
   fallback: T,
@@ -175,7 +191,7 @@ export async function postTake(
     return { ok: false, data: local, source: "error", error: "Dedicated Kilode API is not configured", fn: "saveTake" };
   }
   try {
-    const res = await fetch(`${API_BASE}/api/mobile/takes`, {
+    const res = await fetchWithTimeout(`${API_BASE}/api/mobile/takes`, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -224,7 +240,7 @@ export async function postComment(
     return { ok: false, data: local, source: "error", error: "Dedicated Kilode API is not configured", fn: "replyTake" };
   }
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `${API_BASE}/api/mobile/takes/${encodeURIComponent(takeId)}/replies`,
       {
         method: "POST",
