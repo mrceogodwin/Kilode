@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
 import {
   completeMusicUpload,
   getMusicUploadStatus,
@@ -64,19 +65,45 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         fail("Audio files must be 100 MB or smaller for this upload flow.");
         return;
       }
-      const mimeType = asset.mimeType || "application/octet-stream";
-      const extensionLooksAudio = /\.(mp3|m4a|aac|wav|flac|ogg|opus|aiff|aif)$/i.test(asset.name);
-      if (!mimeType.startsWith("audio/") && !extensionLooksAudio) {
+      const extension = asset.name.split(".").pop()?.toLowerCase() || "";
+      const mimeByExtension: Record<string, string> = {
+        mp3: "audio/mpeg",
+        m4a: "audio/mp4",
+        mp4: "audio/mp4",
+        aac: "audio/aac",
+        wav: "audio/wav",
+        flac: "audio/flac",
+        ogg: "audio/ogg",
+        opus: "audio/opus",
+        aiff: "audio/aiff",
+        aif: "audio/aiff",
+      };
+      const extensionMime = mimeByExtension[extension];
+      const reportedMime = asset.mimeType?.toLowerCase() || "";
+      if (!reportedMime.startsWith("audio/") && !extensionMime) {
         fail("Choose an audio file such as MP3, M4A, WAV, FLAC or AAC.");
+        return;
+      }
+      let fileSize = typeof asset.size === "number" ? asset.size : 0;
+      if (!fileSize) {
+        try {
+          const info = await FileSystem.getInfoAsync(asset.uri, { size: true });
+          if (info.exists && "size" in info && typeof info.size === "number") {
+            fileSize = info.size;
+          }
+        } catch {
+          // The server still validates the actual uploaded object and size.
+        }
+      }
+      if (fileSize > MAX_AUDIO_BYTES) {
+        fail("Audio files must be 100 MB or smaller for this upload flow.");
         return;
       }
       setAudio({
         uri: asset.uri,
         name: asset.name,
-        mimeType: mimeType === "application/octet-stream" && extensionLooksAudio
-          ? "audio/mpeg"
-          : mimeType,
-        size: typeof asset.size === "number" ? asset.size : 0,
+        mimeType: reportedMime.startsWith("audio/") ? reportedMime : (extensionMime || "application/octet-stream"),
+        size: fileSize,
       });
       setMessage("");
     } catch {
