@@ -98,7 +98,11 @@ async function tryLiveJson<T>(
     const data = (await res.json()) as T;
     return { ok: true, data, source: "live", fn: fnName };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "network";
+    const msg = ctrl.signal.aborted
+      ? "Request timed out. Check your connection and try again."
+      : e instanceof Error
+        ? e.message
+        : "Network request failed. Check your connection and try again.";
     return { ok: false, data: fallback, source: "error", error: msg, fn: fnName };
   } finally {
     if (timer) clearTimeout(timer);
