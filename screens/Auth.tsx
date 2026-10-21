@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Linking,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -26,6 +27,9 @@ type Props = {
 
 export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [mode, setMode] = useState<"in" | "up">("in");
+  const openLegal = (url: string, label: string) => {
+    Linking.openURL(url).catch(() => show(`${label} is not available right now.`));
+  };
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -70,10 +74,10 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <View style={styles.tabs}>
-              <TouchableOpacity style={[styles.tab, mode === "in" && styles.tabOn]} onPress={() => setMode("in")}>
+              <TouchableOpacity accessibilityRole="button" accessibilityState={{ selected: mode === "in" }} style={[styles.tab, mode === "in" && styles.tabOn]} onPress={() => setMode("in")}>
                 <Text style={[styles.tabText, mode === "in" && styles.tabTextOn]}>Sign in</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.tab, mode === "up" && styles.tabOn]} onPress={() => setMode("up")}>
+              <TouchableOpacity accessibilityRole="button" accessibilityState={{ selected: mode === "up" }} style={[styles.tab, mode === "up" && styles.tabOn]} onPress={() => setMode("up")}>
                 <Text style={[styles.tabText, mode === "up" && styles.tabTextOn]}>Create account</Text>
               </TouchableOpacity>
             </View>
@@ -90,6 +94,9 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                   {ACCOUNT_KINDS.map((k) => (
                     <TouchableOpacity
                       key={k.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${k.label} account type`}
+                      accessibilityState={{ selected: kind === k.id }}
                       style={[styles.kindCell, kind === k.id && styles.kindCellOn]}
                       onPress={() => setKind(k.id)}
                     >
@@ -102,6 +109,10 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                 </View>
                 <TextInput
                   style={styles.field}
+                  accessibilityLabel="Display name, optional"
+                  autoComplete="name"
+                  textContentType="name"
+                  returnKeyType="next"
                   placeholder="Display name (optional)"
                   placeholderTextColor="#71717A"
                   value={name}
@@ -112,6 +123,11 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 
             <TextInput
               style={styles.field}
+              accessibilityLabel="Username"
+              autoComplete="username"
+              textContentType="username"
+              autoCorrect={false}
+              returnKeyType="next"
               placeholder="Username"
               placeholderTextColor="#71717A"
               autoCapitalize="none"
@@ -120,6 +136,10 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
             />
             <TextInput
               style={styles.field}
+              accessibilityLabel={mode === "up" ? "Create password, at least 8 characters" : "Password"}
+              autoComplete={mode === "up" ? "new-password" : "current-password"}
+              textContentType={mode === "up" ? "newPassword" : "password"}
+              returnKeyType="go"
               placeholder={mode === "up" ? "Password (8+)" : "Password"}
               placeholderTextColor="#71717A"
               secureTextEntry
@@ -128,6 +148,8 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
             />
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={mode === "in" ? "Sign in to Kilode" : "Create Kilode account"}
               style={[styles.primary, { opacity: busy ? 0.7 : 1 }]}
               disabled={busy}
               onPress={async () => {
@@ -162,9 +184,15 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.legal}>By continuing you agree to Kilode Terms & Privacy</Text>
+            <View style={styles.legalRow}>
+              <Text style={styles.legal}>By continuing you agree to Kilode </Text>
+              <Text accessibilityRole="link" onPress={() => openLegal("https://kilode.ng/terms", "Terms of use")} style={styles.legalLink}>Terms</Text>
+              <Text style={styles.legal}> & </Text>
+              <Text accessibilityRole="link" onPress={() => openLegal("https://kilode.ng/privacy", "Privacy policy")} style={styles.legalLink}>Privacy</Text>
+              <Text style={styles.legal}>.</Text>
+            </View>
 
-            <TouchableOpacity style={styles.guest} onPress={onGuest}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Continue as guest" style={styles.guest} onPress={onGuest}>
               <Text style={styles.guestText}>Continue as guest</Text>
             </TouchableOpacity>
             </View>
@@ -276,7 +304,9 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: "row", justifyContent: "center", marginTop: 16 },
   switchMuted: { fontSize: 13, color: "#A1A1AA", marginRight: 6 },
   switchLink: { fontSize: 13, fontWeight: "600", color: "#E5C158" },
-  legal: { textAlign: "center", fontSize: 11, color: "#52525B", marginTop: 12, lineHeight: 16 },
+  legalRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", marginTop: 12 },
+  legal: { textAlign: "center", fontSize: 11, color: "#52525B", lineHeight: 16 },
+  legalLink: { fontSize: 11, color: "#E5C158", textDecorationLine: "underline", lineHeight: 16 },
   guest: { alignItems: "center", marginTop: 14 },
   guestText: { fontSize: 13, fontWeight: "600", color: "#E5C158" },
 });
