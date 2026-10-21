@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
+import { fetchTracks } from "../lib/api";
+import { playMusicTrack, subscribeMusicPlayer } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
 
 type Props = {
@@ -12,25 +14,66 @@ type Props = {
   onPlay: (track: any) => void;
 };
 
-const CHARTS = [
-  { rank: 1, title: "Ojuelegba Nights", artist: "Simi Sola", plays: "12.4k" },
-  { rank: 2, title: "Danfo Dreams", artist: "Kemi Wave", plays: "9.1k" },
-  { rank: 3, title: "Eko Energy", artist: "Femi + Liza", plays: "7.8k" },
-  { rank: 4, title: "Water & Light", artist: "Ayo Blue", plays: "6.2k" },
-  { rank: 5, title: "Island Rain", artist: "Bola Keys", plays: "5.1k" },
-];
-
-const ARTISTS = [
-  { id: "a1", name: "Simi Sola", meta: "Afrobeats · Lagos", color: "#F97316" },
-  { id: "a2", name: "Kemi Wave", meta: "Amapiano · PH", color: "#7C3AED" },
-  { id: "a3", name: "Ayo Blue", meta: "R&B · Abuja", color: "#2563EB" },
-];
-
 export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
+  const [search, setSearch] = useState("");
+  const [tracks, setTracks] = useState<any[]>(TRACKS as any[]);
+  const [catalogueSource, setCatalogueSource] = useState<"loading" | "live" | "preview">("loading");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackBusy, setPlaybackBusy] = useState(false);
+
+
+  useEffect(() => {
+    let active = true;
+    fetchTracks().then((result) => {
+      if (!active) return;
+      if (result.ok && Array.isArray(result.data)) {
+        setTracks(result.data);
+        setCatalogueSource("live");
+      } else {
+        // Keep the offline sample catalogue visible, but never label it as live.
+        setTracks(TRACKS as any[]);
+        setCatalogueSource("preview");
+      }
+    }).catch(() => {
+      if (!active) return;
+      setTracks(TRACKS as any[]);
+      setCatalogueSource("preview");
+    });
+    return () => { active = false; };
+  }, []);
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
-  const tracks = TRACKS || [];
+  const filteredTracks = tracks.filter((t: any) => `${t.title || ""} ${t.artist || ""}`.toLowerCase().includes(search.trim().toLowerCase()));
+  const artists = Array.from(new Map(
+    tracks.filter((t: any) => t.artist).map((t: any) => [
+      String(t.artist).toLowerCase(),
+      { id: String(t.artist).toLowerCase(), name: String(t.artist), meta: "Kilode artist", color: C.accent },
+    ])
+  ).values());
+  const chartTracks = filteredTracks.slice(0, 10);
+
+  useEffect(() => {
+    const unsubscribe = subscribeMusicPlayer((track, playing) => {
+      setIsPlaying(Boolean(track && activeTrack && String(track.id) === String(activeTrack.id) && playing));
+    });
+    return () => { unsubscribe(); };
+  }, [activeTrack]);
+
+  const togglePlayback = async (track: any) => {
+    if (playbackBusy) return;
+    setPlaybackBusy(true);
+    try {
+      const result = await playMusicTrack(track);
+      if (!result.ok) {
+        show(result.message || "This track cannot be played yet.");
+        return;
+      }
+      onPlay(track);
+    } finally {
+      setPlaybackBusy(false);
+    }
+  };
 
   const selectTrack = (t: any) => {
     setActiveArtist(null);
@@ -49,12 +92,12 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           </View>
           <Text style={s.h1}>{activeTrack.title}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
-          <Text style={[s.meta, { marginTop: 14 }]}>Track details · preview catalogue</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={() => { onPlay(activeTrack); show("Track selected. Streaming audio is not connected yet."); }}>
-            <Ionicons name="play" size={17} color="#fff" />
-            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Select track</Text>
+          <Text style={[s.meta, { marginTop: 14 }]}>Track details · {catalogueSource === "live" ? "live catalogue" : "preview catalogue"}</Text>
+          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22, opacity: playbackBusy ? 0.65 : 1 }]} onPress={() => void togglePlayback(activeTrack)} disabled={playbackBusy}>
+            <Ionicons name={isPlaying ? "pause" : "play"} size={17} color="#fff" />
+            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>{playbackBusy ? "Loading audio…" : isPlaying ? "Pause track" : "Play track"}</Text>
           </TouchableOpacity>
-          <Text style={[s.meta, { marginTop: 12 }]}>Selecting a track updates the in-app player bar; it does not start audio until a streaming source is connected.</Text>
+          <Text style={[s.meta, { marginTop: 12 }]}>Playback works when a catalogue track provides a valid audio URL. Tracks without one cannot play yet.</Text>
         </View>
       </ScrollView>
     );
@@ -107,7 +150,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.h1}>Music</Text>
-            <Text style={s.sub}>Drops · charts · artists · seed catalogue</Text>
+            <Text style={s.sub}>{catalogueSource === "live" ? "Drops · charts · artists · live catalogue" : catalogueSource === "loading" ? "Loading music catalogue…" : "Drops · charts · artists · preview catalogue"}</Text>
           </View>
         </View>
       </View>
@@ -116,21 +159,37 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
         {(["new", "charts", "artists"] as const).map((t) => (
           <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
             <Text style={[s.chipText, tab === t && s.chipTextOn]}>
-              {t === "new" ? "New drops" : t === "charts" ? "Top charts" : "Artists"}
+              {t === "new" ? "New drops" : t === "charts" ? "Tracks" : "Artists"}
             </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      <View style={{ paddingHorizontal: 14, marginTop: 2, marginBottom: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+          <Ionicons name="search" size={17} color={C.text3} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search tracks or artists"
+            placeholderTextColor={C.text3}
+            returnKeyType="search"
+            style={{ flex: 1, color: C.text, fontSize: 14, padding: 0 }}
+            accessibilityLabel="Search tracks or artists"
+          />
+          {search.length > 0 ? <TouchableOpacity onPress={() => setSearch("")} accessibilityRole="button" accessibilityLabel="Clear search"><Ionicons name="close-circle" size={17} color={C.text3} /></TouchableOpacity> : null}
+        </View>
+      </View>
 
       {tab === "new" && (
         <>
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>New drops</Text>
           </View>
-          {tracks.length === 0 ? (
+          {filteredTracks.length === 0 ? (
             <EmptyState
-              title="No tracks yet"
-              body="Catalogue will appear when the music API is live."
+              title={search ? "No matches" : "No tracks yet"}
+              body={search ? "Try another track or artist name." : "The live catalogue is empty or unavailable. Try again when the music service is connected."}
               textColor={C.text}
               mutedColor={C.text2}
               accentColor={C.accent}
@@ -138,7 +197,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             />
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
-              {tracks.map((t: any) => (
+              {filteredTracks.map((t: any) => (
                 <TouchableOpacity
                   key={t.id}
                   style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
@@ -158,7 +217,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
             </ScrollView>
           )}
           <Text style={[s.meta, s.padH, { marginTop: 12 }]}>
-            Playback controls select a track only — no stream is started until audio is wired.
+            Choose a track to view its details. Playback requires a valid audio URL from the catalogue.
           </Text>
         </>
       )}
@@ -166,21 +225,21 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
       {tab === "charts" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Top charts</Text>
+            <Text style={s.sectionTitle}>Tracks in catalogue</Text>
           </View>
-          {CHARTS.map((c) => (
+          {chartTracks.length === 0 ? <Text style={[s.meta, s.padH]}>No catalogue tracks match this search.</Text> : chartTracks.map((c: any, index: number) => (
             <TouchableOpacity
-              key={c.rank}
+              key={c.id || `${c.title}-${index}`}
               style={s.roomRow}
               onPress={() =>
-                selectTrack({ id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent })
+                selectTrack(c)
               }
             >
-              <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
+              <Text style={[s.roomName, { width: 28, color: C.accent }]}>{index + 1}</Text>
               <View style={s.flex}>
                 <Text style={s.roomName}>{c.title}</Text>
                 <Text style={s.meta}>
-                  {c.artist} · {c.plays} plays
+                  {c.artist || "Kilode artist"}
                 </Text>
               </View>
               <Ionicons name="play-circle-outline" size={28} color={C.accent} />
@@ -192,9 +251,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
       {tab === "artists" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Featured artists</Text>
+            <Text style={s.sectionTitle}>Artists in catalogue</Text>
           </View>
-          {ARTISTS.map((a) => (
+          {artists.filter((a: any) => a.name.toLowerCase().includes(search.trim().toLowerCase())).map((a: any) => (
             <TouchableOpacity
               key={a.id}
               style={s.roomRow}
