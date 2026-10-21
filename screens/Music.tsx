@@ -348,7 +348,9 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                     ? [...catalogueTracks].filter((track: any) => {
                         const value = track.release_date ?? track.created_at;
                         const timestamp = value ? new Date(value).getTime() : Number.NaN;
-                        return Number.isFinite(timestamp) && timestamp > 0;
+                        // "New & Noted" is for releases already out; scheduled releases
+                        // should not appear as if listeners can stream them now.
+                        return Number.isFinite(timestamp) && timestamp > 0 && timestamp <= Date.now();
                       }).sort((a: any, b: any) => new Date(b.release_date ?? b.created_at).getTime() - new Date(a.release_date ?? a.created_at).getTime())
                     : destination === "Afrobeats Essentials"
                       ? catalogueTracks.filter((track: any) => String(track.genre ?? track.genres ?? "").toLowerCase().includes("afro"))
