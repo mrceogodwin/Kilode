@@ -96,6 +96,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [editingReleaseId, setEditingReleaseId] = useState<string | null>(null);
   const [myReleases, setMyReleases] = useState<any[]>([]);
   const [loadingReleases, setLoadingReleases] = useState(false);
+  const [releaseLoadError, setReleaseLoadError] = useState("");
   const [submittingReleaseId, setSubmittingReleaseId] = useState<string | null>(null);
   const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
   const [supportPages, setSupportPages] = useState<any[]>([]);
@@ -154,16 +155,23 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     let active = true;
     if (!userId || !canList) {
       setMyReleases([]);
+      setReleaseLoadError("");
       setLoadingReleases(false);
       return () => { active = false; };
     }
     setLoadingReleases(true);
+    setReleaseLoadError("");
     listOwnMusicReleases(userId).then((result) => {
       if (!active) return;
       setMyReleases(result.ok ? result.data : []);
+      setReleaseLoadError(result.ok ? "" : (result.error || "Could not load your releases."));
       setLoadingReleases(false);
     }).catch(() => {
-      if (active) { setMyReleases([]); setLoadingReleases(false); }
+      if (active) {
+        setMyReleases([]);
+        setReleaseLoadError("Could not connect to load your releases. Check the backend connection and retry.");
+        setLoadingReleases(false);
+      }
     });
     return () => { active = false; };
   }, [userId, canList, releaseRefreshKey]);
@@ -886,7 +894,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Ionicons name={release.status === "published" ? "checkmark-circle" : release.status === "submitted" ? "shield-checkmark-outline" : "time-outline"} size={18} color={release.status === "published" ? C.accent : C.text3} />
             </View>
           )) : (
-            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{loadingReleases ? "Loading your releases…" : "Your private drafts and submissions will appear here."}</Text>
+            <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{loadingReleases ? "Loading your releases…" : releaseLoadError || "Your private drafts and submissions will appear here."}</Text>
           )}
         </View>
       ) : null}
