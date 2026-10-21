@@ -101,6 +101,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
   const [releaseRefreshKey, setReleaseRefreshKey] = useState(0);
   const [supportPages, setSupportPages] = useState<any[]>([]);
   const [loadingSupportPages, setLoadingSupportPages] = useState(false);
+  const [supportPagesError, setSupportPagesError] = useState("");
+  const [supportPagesRefreshKey, setSupportPagesRefreshKey] = useState(0);
   const [creatingSupportPage, setCreatingSupportPage] = useState(false);
   const [campaignTrackId, setCampaignTrackId] = useState("");
   const [campaignPlacements, setCampaignPlacements] = useState<string[]>(["Music"]);
@@ -180,19 +182,26 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
     let active = true;
     if (!userId || !canList) {
       setSupportPages([]);
+      setSupportPagesError("");
       setLoadingSupportPages(false);
       return () => { active = false; };
     }
     setLoadingSupportPages(true);
+    setSupportPagesError("");
     listOwnSupportPages(userId).then((result) => {
       if (!active) return;
       setSupportPages(result.ok ? result.data : []);
+      setSupportPagesError(result.ok ? "" : (result.error || "Could not load your support page."));
       setLoadingSupportPages(false);
     }).catch(() => {
-      if (active) { setSupportPages([]); setLoadingSupportPages(false); }
+      if (active) {
+        setSupportPages([]);
+        setSupportPagesError("Could not connect to load your support page. Check the backend connection and retry.");
+        setLoadingSupportPages(false);
+      }
     });
     return () => { active = false; };
-  }, [userId, canList]);
+  }, [userId, canList, supportPagesRefreshKey]);
 
   useEffect(() => {
     let active = true;
@@ -930,17 +939,37 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               <Ionicons name="checkmark-circle-outline" size={18} color={C.accent} />
             </View>
           ))}
-          {!supportPages.length ? (
+          {!supportPages.length && supportPagesError ? (
+            <View>
+              <Text style={{ color: C.text3, fontSize: 12, lineHeight: 18 }}>{supportPagesError}</Text>
+              {!loadingSupportPages ? (
+                <TouchableOpacity
+                  onPress={() => setSupportPagesRefreshKey((key) => key + 1)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retry loading your artist support page"
+                  style={{ alignSelf: "flex-start", marginTop: 9, borderRadius: 9, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: C.accentSoft }}
+                >
+                  <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Try again</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null}
+          {!supportPages.length && !supportPagesError ? (
             <TouchableOpacity
               disabled={creatingSupportPage}
               onPress={async () => {
                 if (!userId) { show("Sign in to your Artist account first."); return; }
                 setCreatingSupportPage(true);
-                const result = await createArtistSupportPage(userId, {});
-                setCreatingSupportPage(false);
-                if (!result.ok) { show(result.error || "Could not create your support page."); return; }
-                setSupportPages((pages) => [result.data, ...pages]);
-                show("Private support page draft created. It will not be visible to members until reviewed; payments are not enabled yet.");
+                try {
+                  const result = await createArtistSupportPage(userId, {});
+                  if (!result.ok) { show(result.error || "Could not create your support page."); return; }
+                  setSupportPages((pages) => [result.data, ...pages]);
+                  show("Private support page draft created. It will not be visible to members until reviewed; payments are not enabled yet.");
+                } catch {
+                  show("Could not create your support page because of a connection error. Please try again.");
+                } finally {
+                  setCreatingSupportPage(false);
+                }
               }}
               style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.border, opacity: creatingSupportPage ? 0.6 : 1 }}
             >
