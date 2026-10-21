@@ -291,10 +291,10 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Recently released</Text>
           </View>
-          {filteredTracks.length === 0 ? (
+          {newTracks.length === 0 ? (
             <EmptyState
-              title={search ? "No matches" : "No tracks yet"}
-              body={search ? "Try another track or artist name." : "The live catalogue is empty or unavailable. Try again when the music service is connected."}
+              title={search ? "No recent releases match" : "No recent releases yet"}
+              body={search ? "Try another track or artist name." : "Recent releases appear here when catalogue entries include release dates. Browse all available tracks in Explore."}
               textColor={C.text}
               mutedColor={C.text2}
               accentColor={C.accent}
