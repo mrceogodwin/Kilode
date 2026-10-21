@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-nativ
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { fetchTracks, getMusicPlayback, recordMusicEvent } from "../lib/api";
-import { playMusicTrack, subscribeMusicPlayer } from "../lib/musicPlayer";
+import { playMusicTrack, subscribeMusicPlayer, toggleMusicPlayback } from "../lib/musicPlayer";
 import { EmptyState } from "../components/ui/EmptyState";
 import { MusicUploadSheet } from "./MusicUploadSheet";
 import { buildMusicDiscoveryShelves, readMusicDiscoveryProfile, recordMusicDiscoveryAction, type MusicDiscoveryProfile, type MusicDiscoveryShelf } from "../lib/musicDiscovery";
@@ -111,6 +111,11 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
     if (playbackBusy) return;
     setPlaybackBusy(true);
     try {
+      // Pausing the active track should not request a fresh signed URL or count as a new play.
+      if (isPlaying) {
+        await toggleMusicPlayback();
+        return;
+      }
       let playableTrack = track;
       if (catalogueSource === "live") {
         if (!track?.id) {
