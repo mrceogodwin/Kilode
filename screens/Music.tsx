@@ -8,6 +8,12 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { MusicUploadSheet } from "./MusicUploadSheet";
 import { buildMusicDiscoveryShelves, readMusicDiscoveryProfile, recordMusicDiscoveryAction, type MusicDiscoveryProfile, type MusicDiscoveryShelf } from "../lib/musicDiscovery";
 
+function hasPlayableAudioSource(track: any): boolean {
+  const value = [track?.audioUrl, track?.audio_url, track?.streamUrl, track?.stream_url, track?.previewUrl, track?.preview_url]
+    .find((candidate) => typeof candidate === "string" && /^https?:\/\//i.test(candidate.trim()));
+  return Boolean(value);
+}
+
 function musicTrackIdentity(track: any): string {
   if (track?.id !== undefined && track?.id !== null && String(track.id).trim()) {
     return `id:${String(track.id)}`;
@@ -167,11 +173,24 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
           <Text style={s.h1}>{activeTrack.title}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
           <Text style={[s.meta, { marginTop: 14 }]}>Track details · {catalogueSource === "live" ? "live catalogue" : "preview catalogue"}</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22, opacity: playbackBusy ? 0.65 : 1 }]} onPress={() => void togglePlayback(activeTrack)} disabled={playbackBusy}>
+          <TouchableOpacity
+            style={[s.primaryBtn, { marginTop: 22, opacity: playbackBusy || (catalogueSource !== "live" && !hasPlayableAudioSource(activeTrack)) ? 0.5 : 1 }]}
+            onPress={() => void togglePlayback(activeTrack)}
+            disabled={playbackBusy || (catalogueSource !== "live" && !hasPlayableAudioSource(activeTrack))}
+            accessibilityRole="button"
+          >
             <Ionicons name={isPlaying ? "pause" : "play"} size={17} color="#fff" />
-            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>{playbackBusy ? "Loading audio…" : isPlaying ? "Pause track" : "Play track"}</Text>
+            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>
+              {playbackBusy ? "Loading audio…" : isPlaying ? "Pause track" : catalogueSource !== "live" && !hasPlayableAudioSource(activeTrack) ? "Audio unavailable" : "Play track"}
+            </Text>
           </TouchableOpacity>
-          <Text style={[s.meta, { marginTop: 12 }]}>Playback works when a catalogue track provides a valid audio URL. Tracks without one cannot play yet.</Text>
+          <Text style={[s.meta, { marginTop: 12 }]}>
+            {catalogueSource === "live"
+              ? "Kilode requests a secure playback link when you press play."
+              : hasPlayableAudioSource(activeTrack)
+                ? "Preview audio is available for this track."
+                : "This preview track has no audio file attached yet. Choose a track with a playable source."}
+          </Text>
         </View>
       </ScrollView>
     );
