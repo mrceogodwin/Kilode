@@ -51,7 +51,29 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
           </View>
         </View>
         <View style={{ width: "100%", maxWidth: 340, alignSelf: "center" }}>
-          <View onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))} onTouchEnd={(event) => { if (!durationMillis) return; const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth)); void seekMusicPlayback(ratio * durationMillis); }} accessibilityRole="adjustable" accessibilityLabel="Track position" style={{ height: 18, justifyContent: "center", borderRadius: 9 }}>
+          <View
+            onLayout={(event) => setProgressWidth(Math.max(1, event.nativeEvent.layout.width))}
+            onStartShouldSetResponder={() => durationMillis > 0}
+            onMoveShouldSetResponder={() => durationMillis > 0}
+            onResponderGrant={(event) => {
+              if (!durationMillis) return;
+              const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth));
+              void seekMusicPlayback(ratio * durationMillis);
+            }}
+            onResponderMove={(event) => {
+              if (!durationMillis) return;
+              const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth));
+              void seekMusicPlayback(ratio * durationMillis);
+            }}
+            onResponderRelease={(event) => {
+              if (!durationMillis) return;
+              const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / progressWidth));
+              void seekMusicPlayback(ratio * durationMillis);
+            }}
+            accessibilityRole="adjustable"
+            accessibilityLabel="Track position"
+            style={{ height: 28, justifyContent: "center", borderRadius: 9 }}
+          >
             <View style={{ height: 4, borderRadius: 2, backgroundColor: "#2A2A30", overflow: "hidden" }}>
               <View style={{ width: `${durationMillis ? Math.min(100, (positionMillis / durationMillis) * 100) : 0}%`, height: 4, backgroundColor: "#D4AF37" }} />
             </View>
