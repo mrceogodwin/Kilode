@@ -589,14 +589,37 @@ ${t.text}` }); } catch { show("Could not open share options."); } }}
       <Header title={headerTitle} />
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
-        <TouchableOpacity activeOpacity={0.92} onPress={() => setMusicPlayerExpanded(true)} accessibilityRole="button" accessibilityLabel="Expand full-screen music player" style={s.player}>
-          <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
-          <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}</Text></View>
-          <TouchableOpacity onPress={() => void toggleMusicPlayback()} accessibilityRole="button" accessibilityLabel={isMusicPlaying ? "Pause music" : "Resume music"} style={{ paddingHorizontal: 10 }}>
+        <View style={s.player}>
+          <TouchableOpacity
+            activeOpacity={0.92}
+            onPress={() => setMusicPlayerExpanded(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Expand player for ${nowPlaying.title || "current track"}`}
+            style={{ flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center" }}
+          >
+            <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
+            <View style={s.flex}>
+              <Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text>
+              <Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => void toggleMusicPlayback()}
+            accessibilityRole="button"
+            accessibilityLabel={isMusicPlaying ? "Pause music" : "Resume music"}
+            style={{ paddingHorizontal: 10, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+          >
             <Text style={s.playerBtn}>{isMusicPlaying ? "Ⅱ" : "▶"}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => void stopMusicPlayback()} accessibilityRole="button" accessibilityLabel="Stop music"><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => void stopMusicPlayback()}
+            accessibilityRole="button"
+            accessibilityLabel="Stop music"
+            style={{ minWidth: 36, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+          >
+            <Text style={s.playerBtn}>✕</Text>
+          </TouchableOpacity>
+        </View>
       ) : null}
       <MusicFullPlayer
         visible={musicPlayerExpanded && Boolean(nowPlaying)}
