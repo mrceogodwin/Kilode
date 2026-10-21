@@ -921,7 +921,7 @@ function KilodeApp() {
       <Modal visible={createOpen} transparent animationType="fade" onRequestClose={() => setCreateOpen(false)}>
         <View style={[s.modalRoot, { justifyContent: "flex-end", paddingBottom: 82, backgroundColor: "transparent" }]}>
           <TouchableOpacity style={[s.scrim, { backgroundColor: "rgba(0,0,0,0.12)" }]} activeOpacity={1} onPress={() => setCreateOpen(false)} />
-          <View style={{ alignSelf: "center", width: "min(340px, 92%)", maxHeight: 300, backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderRadius: 20, padding: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 18, elevation: 12 }}>
+          <View style={{ alignSelf: "center", width: "92%", maxWidth: 340, maxHeight: 300, backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderRadius: 20, padding: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 18, elevation: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 3, paddingBottom: 9 }}>
               <Text style={{ color: C.text, fontSize: 14, fontWeight: "800" }}>{createContext === "home" ? "Create on Kilode" : "Create in " + (headerTitle || createContext)}</Text>
               <TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu" hitSlop={10} style={{ padding: 4 }}><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
