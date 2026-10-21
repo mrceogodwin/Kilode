@@ -31,6 +31,24 @@ type Props = {
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const PENDING_UPLOAD_KEY = "@kilode/music-upload-recovery";
 
+// Serialize recovery writes/removals so an older React effect cannot finish
+// after a newer upload-ticket write and restore stale recovery data.
+let recoveryStorageQueue: Promise<void> = Promise.resolve();
+
+function enqueueRecoveryStorage(operation: () => Promise<void>): Promise<void> {
+  const next = recoveryStorageQueue.then(operation, operation);
+  recoveryStorageQueue = next.catch(() => undefined);
+  return next;
+}
+
+function saveRecovery(key: string, value: string): Promise<void> {
+  return enqueueRecoveryStorage(() => AsyncStorage.setItem(key, value));
+}
+
+function removeRecovery(key: string): Promise<void> {
+  return enqueueRecoveryStorage(() => AsyncStorage.removeItem(key));
+}
+
 type PendingUploadRecovery = {
   sessionFingerprint: string;
   title: string;
@@ -157,7 +175,7 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         }
         if (active && canPersistRecovery) {
           try {
-            await AsyncStorage.removeItem(recoveryScope);
+            await removeRecovery(recoveryScope);
           } catch {
             // Storage may be unavailable.
           }
@@ -176,7 +194,7 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
     if (recoveryLoadedFor !== recoveryScope) return;
     if (!canPersistRecovery) return;
     if (!pendingUploadId) {
-      void AsyncStorage.removeItem(recoveryScope).catch(() => {});
+      void removeRecovery(recoveryScope).catch(() => {});
       return;
     }
     const recovery: PendingUploadRecovery = {
@@ -189,7 +207,7 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       uploadUrl: pendingUploadUrl,
       uploadExpiresAt: pendingUploadExpiresAt,
     };
-    void AsyncStorage.setItem(recoveryScope, JSON.stringify(recovery)).catch(() => {
+    void saveRecovery(recoveryScope, JSON.stringify(recovery)).catch(() => {
       // Uploads still work; persistence is a recovery aid, not a server guarantee.
     });
   }, [recoveryLoadedFor, recoveryScope, canPersistRecovery, token, title, genre, audio, rightsConfirmed, pendingUploadId, pendingUploadUrl, pendingUploadExpiresAt]);
@@ -440,7 +458,7 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       };
       if (canPersistRecovery) {
         try {
-          await AsyncStorage.setItem(recoveryScope, JSON.stringify(ticketRecovery));
+          await saveRecovery(recoveryScope, JSON.stringify(ticketRecovery));
         } catch {
           // Continue the upload, but recovery cannot be guaranteed if local storage fails.
         }
@@ -459,7 +477,7 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
       // the server to process the upload, so a restart won't offer a stale retry.
       if (canPersistRecovery) {
         try {
-          await AsyncStorage.setItem(recoveryScope, JSON.stringify({
+          await saveRecovery(recoveryScope, JSON.stringify({
             ...ticketRecovery,
             uploadUrl: null,
             uploadExpiresAt: null,
