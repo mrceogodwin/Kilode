@@ -445,7 +445,7 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token, acco
               >
                 <View style={{ width: 27, alignItems: "center" }}>
                   <Text style={{ color: index < 3 ? "#E5C158" : C.text2, fontSize: index < 3 ? 19 : 16, fontWeight: "900", fontVariant: ["tabular-nums"] }}>{String(index + 1).padStart(2, "0")}</Text>
-                  {index === 0 ? <Ionicons name="crown" size={10} color="#E5C158" /> : index === 1 ? <Ionicons name="medal-outline" size={10} color="#B8C0CC" /> : index === 2 ? <Ionicons name="medal-outline" size={10} color="#B87951" /> : null}
+                  {index === 0 ? <Ionicons name="trophy-outline" size={10} color="#E5C158" /> : index === 1 ? <Ionicons name="medal-outline" size={10} color="#B8C0CC" /> : index === 2 ? <Ionicons name="medal-outline" size={10} color="#B87951" /> : null}
                 </View>
                 <View style={{ width: 38, height: 42, borderRadius: 9, backgroundColor: C.input, borderWidth: 1, borderColor: index < 3 ? "#8D7440" : C.border, alignItems: "center", justifyContent: "center" }}>
                   <Ionicons name={index === 0 ? "trophy-outline" : index % 5 === 0 ? "flame-outline" : "musical-note-outline"} size={17} color={index < 3 ? "#E5C158" : C.accent} />
