@@ -106,24 +106,26 @@ Backend constraint: do not silently default the native app to Kilode v2 or kilod
 - [ ] No hardcoded secrets, no fabricated live data, no local-only action described as server-persisted.
 - [ ] Test account isolation, ownership, invalid input, permission-denied cases, failed uploads/payments and network interruption.
 
-## Latest execution audit — 2026-10-21 19:30 WAT
+## Latest execution audit — 2026-10-21 19:35 WAT
 
-- `app.json` declares Expo app `Kilode`, slug `kilode`, owner `mudino`, iOS bundle ID `ng.kilode.app`, and EAS project ID `b9f2e786-665d-46e5-9a7c-7af7ab25e0ea`.
-- `eas.json` defines development, preview and production profiles. Preview iOS is internal distribution; production profile has `autoIncrement: true`.
-- `package.json` provides `typecheck`, `eas:build:ios`, `eas:build:android`, and `eas:build:preview` scripts.
-- Existing native validation workflow: `.github/workflows/native-preview.yml`. It runs npm install, TypeScript, Expo Doctor, and exports an iOS JavaScript bundle artifact. This is **not** a compiled/installable iOS app by itself.
-- That workflow now includes a separate EAS iOS internal-preview build job, intended to run only when manually dispatched or when the commit message contains `[ios-build]`. It checks `EXPO_TOKEN`, `EAS_PROJECT_ID`, and that the project ID matches `app.json` without printing secret values. A matching `[ios-build]` commit is being used to request an actual validation/build run; the final workflow result must be checked before reporting success.
-- The EAS workflow file was not found on the default `main` branch in this pass. GitHub's manual `workflow_dispatch` availability can depend on the workflow existing on the default branch; the explicit `[ios-build]` commit path is therefore provided on `preview/web`.
-- No `package-lock.json`, `npm-shrinkwrap.json`, or `yarn.lock` exists on `preview/web` at this audit. The workflow currently uses `npm install`; reproducible locked dependency installs remain a release hardening task.
-- The last inspected Vercel deployment for app code commit `2da635bed6a4cb8c6d0af3b69b2c7043baa96cee` reached READY, and its logs show Expo web export completed. The latest audit/workflow commits each trigger new preview deployments; their final states must be checked separately. A web export does not verify native iOS compilation, signing, installation or TestFlight.
-- `lib/config.ts` was re-read: no default host to Kilode-v2 or kilode-nine; absent dedicated env configuration it resolves to offline mode. Supabase migrations/backend still require a separately configured project and real-account validation.
-- The welcome screen still displays a single remote Unsplash portrait with a local fallback. The ten-video montage and approved final logo asset are not present/verified.
-- Jobs sample vacancies are removed, but Apply explicitly saves interest locally and job posting only shows an API-not-ready message. Neither is a live employer application/publishing workflow. The duplicate Job heading was not reproduced by the current `screens/Jobs.tsx` source inspection; verify on actual preview/device before changing navigation blindly.
-- Music source still states that official chart rules and verified listening aggregation require backend enforcement. No weekly chart API implementation was found by the available source searches in this pass.
-- Dependency audit remains unresolved: previous Vercel logs reported 62 npm vulnerabilities (3 low, 17 moderate, 41 high, 1 critical). Full audit details and tested non-breaking remediation are still needed.
+- Latest app-code commit under test: `7445ffa44d843d58c43757d6b736e18a140f457b` (`[ios-build] Fix native-incompatible create popover width`).
+- GitHub Actions native validation job `119406178630` completed SUCCESS for that commit: dependency installation, TypeScript, Expo Doctor, iOS JavaScript bundle export, and artifact upload all passed. This is meaningful native-project validation, but it is not a compiled iOS app.
+- The EAS installable-preview job `119406731610` successfully passed the EAS credential presence/project-ID match check. At the last check, dependency installation was still in progress and the EAS build command had not started. Final iOS build status is therefore still pending.
+- GitHub Actions web-preview check `39653075838` completed SUCCESS for commit `7445ffa44d843d58c43757d6b736e18a140f457b`.
+- Vercel deployment `dpl_FJsQxvXjaekXeAsKScwH5DYjeGzk`, tied to commit `7445ffa44d843d58c43757d6b736e18a140f457b`, reached READY. This confirms web export deployment only; it is not physical iPhone or TestFlight verification.
+- Native create-popover width was corrected from web-only CSS-style `min(340px, 92%)` to React Native-compatible `width: "92%", maxWidth: 340`.
+- Auth source inspection confirms account type is a required step before signup credentials. Actual server-side account permission enforcement and production auth persistence remain unverified.
+- `app.json` declares Expo app `Kilode`, slug `kilode`, owner `mudino`, iOS bundle ID `ng.kilode.app`, and EAS project ID `b9f2e786-665d-46e5-9a7c-7af7ab25e0ea`. `eas.json` has development, preview and production profiles.
+- Existing native validation workflow: `.github/workflows/native-preview.yml`. It runs npm install, TypeScript, Expo Doctor, and exports an iOS JavaScript bundle. The separate EAS job builds an internal iOS preview only after validation and credential checks.
+- No `package-lock.json`, `npm-shrinkwrap.json`, or `yarn.lock` exists on `preview/web`; dependency installs are not lockfile-reproducible yet.
+- `lib/config.ts` has no default host to Kilode-v2 or kilode-nine; absent dedicated env configuration it resolves to offline mode. Supabase backend setup, migrations/RLS and real-account validation remain unverified.
+- The welcome screen still displays one remote Unsplash portrait with a local fallback. The ten-video montage and approved final logo asset are not integrated/verified.
+- Jobs sample vacancies are removed, but Apply only saves interest locally and job posting displays an API-not-ready message. Live employer applications/publishing are not implemented/verified. Duplicate Job heading was not reproduced in current Jobs source; verify on the real preview/device before changing navigation blindly.
+- Music source still states official chart rules and verified listening aggregation require backend enforcement. No weekly chart API implementation was found in the available source search.
+- Dependency security remains unresolved: previous Vercel logs reported 62 npm audit findings (3 low, 17 moderate, 41 high, 1 critical). Full per-package audit details and tested remediation remain pending.
 
 ## Native-first release gate
-Before any claim of iOS readiness, collect evidence for: (1) current branch commit SHA, (2) Expo Doctor/typecheck results, (3) actual EAS iOS build ID and final status, (4) installable artifact, (5) physical iPhone launch and first-screen test, (6) sign-up/login and account-type flow, and (7) TestFlight processing if submission is attempted. Vercel READY is only a web-preview result and cannot satisfy this gate.
+Before any claim of iOS readiness, collect evidence for: (1) current branch commit SHA, (2) Expo Doctor/typecheck results, (3) actual EAS iOS build ID and final status, (4) installable artifact, (5) physical iPhone launch and first-screen test, (6) signup/login and account-type flow, and (7) TestFlight processing if submitted. Vercel READY is only a web-preview result and cannot satisfy this gate.
 
 ## Recent commits recorded
 - `511c92fcfd794bd93bf2e32d9086edd45770af0f`: Top 50/100 category filtering before ranking limits.
