@@ -291,7 +291,7 @@ function KilodeApp() {
             </View>
             <TouchableOpacity onPress={() => go("socials")}><Text style={s.link}>See all</Text></TouchableOpacity>
           </View>
-          {takes.slice(0, 2).map((take: any) => (
+          {takes.filter((take: any) => !blocked.includes(String(take.handle || "")) && !blocked.includes(String(take.name || ""))).slice(0, 2).map((take: any) => (
             <TouchableOpacity
               key={String(take.id)}
               onPress={() => { go("socials"); setSelectedPost(take); }}
