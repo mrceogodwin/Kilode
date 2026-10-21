@@ -135,6 +135,8 @@ export function MusicScreen({ s, C, onBack, show, onPlay, canUpload, token }: Pr
       void recordMusicDiscoveryAction(track, "played");
       void readMusicDiscoveryProfile().then(setDiscoveryProfile);
       onPlay(playableTrack);
+    } catch {
+      show("Kilode could not start this track. Check your connection and try again.");
     } finally {
       setPlaybackBusy(false);
     }
