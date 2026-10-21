@@ -756,9 +756,15 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
               setEditingReleaseId(releaseId);
             }
             if (selectedAudio) {
-              const upload = await uploadMusicReleaseAudio(userId, releaseId, selectedAudio);
+              let upload: Awaited<ReturnType<typeof uploadMusicReleaseAudio>>;
+              try {
+                upload = await uploadMusicReleaseAudio(userId, releaseId, selectedAudio);
+              } catch {
+                setReleaseRefreshKey((key) => key + 1);
+                show("Draft saved, but audio upload could not finish. Check your connection and retry.");
+                return;
+              }
               if (!upload.ok) {
-                setSavingDraft(false);
                 setReleaseRefreshKey((key) => key + 1);
                 show(`Draft saved. Audio upload failed: ${upload.error || "Choose the file again and retry"}`);
                 return;
@@ -855,11 +861,16 @@ export function MusicScreen({ s, C, onBack, show, onPlay, onOpenTrack, onOpenArt
                     onPress={async () => {
                       if (!userId) { show("Sign in to submit your release."); return; }
                       setSubmittingReleaseId(release.id);
-                      const result = await submitMusicReleaseForReview(userId, release.id);
-                      setSubmittingReleaseId(null);
-                      if (!result.ok) { show(result.error || "Could not submit release."); return; }
-                      setReleaseRefreshKey((key) => key + 1);
-                      show("Release submitted for review. It is still private until approved and published.");
+                      try {
+                        const result = await submitMusicReleaseForReview(userId, release.id);
+                        if (!result.ok) { show(result.error || "Could not submit release."); return; }
+                        setReleaseRefreshKey((key) => key + 1);
+                        show("Release submitted for review. It is still private until approved and published.");
+                      } catch {
+                        show("Could not submit the release because of a connection error. Please try again.");
+                      } finally {
+                        setSubmittingReleaseId(null);
+                      }
                     }}
                     style={{ alignSelf: "flex-start", marginTop: 7, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: C.accentSoft, opacity: submittingReleaseId === release.id ? 0.6 : 1 }}
                   >
