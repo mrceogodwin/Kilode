@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
   useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Share,
@@ -42,6 +43,7 @@ function KilodeApp() {
   const [posting, setPosting] = useState(false);
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [socialPrefsLoaded, setSocialPrefsLoaded] = useState(false);
   const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,6 +66,40 @@ function KilodeApp() {
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
+  const socialPrefsKey = `kilode:social-preferences:${String(session?.handle || session?.name || "guest").toLowerCase()}`;
+
+  useEffect(() => {
+    let active = true;
+    setSocialPrefsLoaded(false);
+    AsyncStorage.getItem(socialPrefsKey).then((raw) => {
+      if (!active) return;
+      if (raw) {
+        try {
+          const saved = JSON.parse(raw);
+          setLiked(saved?.liked && typeof saved.liked === "object" ? saved.liked : {});
+          setFollowing(saved?.following && typeof saved.following === "object" ? saved.following : {});
+        } catch {
+          setLiked({});
+          setFollowing({});
+        }
+      } else {
+        setLiked({});
+        setFollowing({});
+      }
+    }).catch(() => {
+      if (active) { setLiked({}); setFollowing({}); }
+    }).finally(() => {
+      if (active) setSocialPrefsLoaded(true);
+    });
+    return () => { active = false; };
+  }, [socialPrefsKey]);
+
+  useEffect(() => {
+    if (!socialPrefsLoaded) return;
+    AsyncStorage.setItem(socialPrefsKey, JSON.stringify({ liked, following })).catch(() => {
+      // Local preferences are best-effort; server-backed engagement is not implemented yet.
+    });
+  }, [following, liked, socialPrefsKey, socialPrefsLoaded]);
 
   useEffect(() => {
     const unsubscribe = subscribeMusicPlayer((track, playing) => {
