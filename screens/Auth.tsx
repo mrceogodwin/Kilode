@@ -307,10 +307,14 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
             style={styles.input}
             autoCapitalize="none"
             autoCorrect={false}
+            keyboardType={mode === "in" ? "email-address" : "default"}
+            textContentType={mode === "in" ? "emailAddress" : "username"}
+            autoComplete={mode === "in" ? "email" : "username"}
             placeholder={mode === "in" ? "you@example.com" : "@handle"}
             placeholderTextColor="rgba(255,255,255,0.35)"
             value={handle}
             onChangeText={setHandle}
+            returnKeyType="next"
           />
           <Text style={styles.label}>Password</Text>
           <TextInput
