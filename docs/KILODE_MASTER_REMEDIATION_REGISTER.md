@@ -192,3 +192,33 @@ For every new finding, add: severity (P0/P1/P2), system, exact file/line, eviden
 - **P2 — Native app/splash colours are not fully aligned:** `app.json` uses `#0B0B0F` for splash/adaptive-icon background while the design token is `#0D0D10`. Align only when final splash/icon assets are ready, then validate the real native launch screen.
 - **P2 — iOS permissions and capabilities require product review:** `app.json` declares camera/photo library usage strings and audio background mode. Verify each capability is used and justified, test permission denial/revocation, and complete required App Store privacy disclosures. Background audio should remain only if supported by the final music implementation.
 - **Source review coverage update:** in this pass I inspected the complete auth provider and relevant navigation gates in `KilodeRoot.tsx`, plus the account-type selector in `screens/Auth.tsx` and API request helper behavior in `lib/api.ts`. Semantic audit is still in progress across the remaining source files.
+
+
+## 12. Follow-up audit — music, creator tools, safety and account settings (2026-10-21)
+
+### Confirmed implementation boundaries
+
+- **Music catalogue and Top 100:** `screens/Music.tsx` distinguishes live catalogue from preview catalogue and labels the Top 100 as preview/not official when a verified chart snapshot is unavailable. The chart client rejects malformed, stale, duplicate-rank and inconsistent-movement snapshots. This is good anti-misrepresentation behavior; it does not prove a live chart feed exists.
+- **Playback:** the native flow requests a secure playback link and refuses an empty, invalid or insecure URL. Physical audio playback, expiry handling, analytics and real catalogue availability still need live service/device tests.
+- **Artist upload:** `screens/MusicUploadSheet.tsx` has upload-ticket and recovery scaffolding, including account-scoped pending recovery. The service is not connected in this repo state; validate ticket expiry, upload ownership, file type/size/duration, retry/cancel cleanup, duplicate uploads, and publication status against the dedicated backend.
+- **Artist release planner:** `screens/ArtistReleasePlanner.tsx` explicitly stores planning drafts on the device and states they do not upload, distribute or publish music. This must remain clearly labelled as a local planning tool until server persistence/distribution exists.
+- **Artist earnings:** `screens/ArtistEarnings.tsx` explicitly states the payment ledger is not connected and avoids displaying invented balances. Fan support, purchase entitlements, royalty accounting, reconciliation and payouts remain release blockers.
+- **Push Link:** `lib/pushLink.ts` and `screens/PushLink.tsx` only validate/classify destinations and generate a draft preview. The screen explicitly says it has not been published. Campaign submission, paid reach, billing, analytics, attribution and fraud controls remain unimplemented.
+- **Chat:** `screens/Chat.tsx` updates local preview thread state and states the messaging backend is not connected. New-chat selection and attachment actions are preview placeholders. Do not market it as live or secure messaging until server persistence, delivery, access control, abuse reporting and notification behavior are built.
+- **Report/block:** `lib/moderation.ts` is an AsyncStorage-only local store. The UI acknowledges reports are only saved on this device. This does not create a report for moderators or enforce a block on another device/account.
+- **Account deletion:** `screens/Settings.tsx` explicitly says the app cannot delete an account because the secure server deletion endpoint is not connected. It does not falsely claim deletion happened; the actual end-to-end deletion flow remains a hard launch blocker.
+- **Privacy/terms:** settings references `https://kilode.ng/privacy` and `https://kilode.ng/terms`, with an explicit reminder to publish them before App Store submission. Their public availability and contents have not been verified in this source audit.
+
+### Additional release gates
+
+1. **P0 — Safety workflows are not operational:** reporting and blocking are local-only. Implement authenticated report submission, staff review queue, moderation actions, appeals, cross-device enforcement, and abuse-rate limits before enabling public user-generated content.
+2. **P0 — Account deletion is not end-to-end:** add a server endpoint/workflow that revokes sessions and deletes or de-identifies user data according to the published retention policy; cover associated posts, uploads, messages, purchases and legally required records. Provide clear in-app confirmation and verified completion state.
+3. **P1 — Messaging is a visual/local preview:** implement authenticated thread membership, server persistence, message delivery states, pagination, abuse controls, notification preferences, and attachment storage/security before claiming real chat.
+4. **P1 — Music upload has no verified end-to-end production path:** connect signed upload-ticket issuance, direct HTTPS upload, server-side verification/processing, moderation/rights workflow, metadata persistence, publish state, and failure recovery.
+5. **P1 — Top 100 data requires trusted provenance:** the UI correctly distinguishes preview from official chart data. Production charts need documented time window, ranking methodology, deduplication, anti-manipulation signals, auditability and a signed/validated backend snapshot.
+6. **P1 — Privacy and terms URLs are unverified:** confirm they return valid public pages on mobile and desktop and match actual data collection, analytics, moderation, payments and deletion behavior. Add support contact and all store disclosures.
+7. **P2 — Preview controls need a complete interaction audit:** the chat attachment and new-chat actions are placeholder notices; verify every tappable element in each system either completes its labelled action or is explicitly marked as unavailable/preview.
+
+### Honest status rule
+
+UI completeness is not service completeness. Until backend endpoints and device behavior are tested, label music catalogue, charts, chat, uploads, Push Link, earnings, moderation and account deletion according to the boundaries above. Do not mark them production-ready based solely on source structure or CI passing.
