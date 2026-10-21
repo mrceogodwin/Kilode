@@ -17,7 +17,9 @@ type PlayerListener = (track: MusicTrack | null, playing: boolean, positionMilli
 let sound: Audio.Sound | null = null;
 let currentTrack: MusicTrack | null = null;
 let isPlaying = false;
-let isLoading = false;\nlet positionMillis = 0;\nlet durationMillis = 0;
+let isLoading = false;
+let positionMillis = 0;
+let durationMillis = 0;
 let audioModeConfigured = false;
 const listeners = new Set<PlayerListener>();
 
@@ -142,7 +144,19 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
   }
 }
 
-export async function seekMusicPlayback(position: number): Promise<void> {\n  if (!sound || !Number.isFinite(position)) return;\n  try {\n    const status = await sound.getStatusAsync();\n    if (!status.isLoaded) return;\n    const next = Math.max(0, Math.min(Math.floor(position), status.durationMillis || 0));\n    await sound.setPositionAsync(next);\n    positionMillis = next;\n    publish();\n  } catch { /* Seeking is best-effort when the audio source does not support it. */ }\n}\n\nexport async function toggleMusicPlayback(): Promise<void> {
+export async function seekMusicPlayback(position: number): Promise<void> {
+  if (!sound || !Number.isFinite(position)) return;
+  try {
+    const status = await sound.getStatusAsync();
+    if (!status.isLoaded) return;
+    const next = Math.max(0, Math.min(Math.floor(position), status.durationMillis || 0));
+    await sound.setPositionAsync(next);
+    positionMillis = next;
+    publish();
+  } catch { /* Seeking is best-effort when the audio source does not support it. */ }
+}
+
+export async function toggleMusicPlayback(): Promise<void> {
   if (!sound) return;
   try {
     const status = await sound.getStatusAsync();
