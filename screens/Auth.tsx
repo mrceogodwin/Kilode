@@ -123,7 +123,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
           <View style={[styles.hero, compact && { height: 240 }]}>
             <View style={styles.arc} />
             <View style={styles.sceneGrid}>
-              {WELCOME_SCENES.map((source, index) => (
+              {WELCOME_SCENES.slice(1).map((source, index) => (
                 <WelcomeScene key={`welcome-scene-${index}`} source={source} index={index} />
               ))}
             </View>
@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
     opacity: 0.82,
   },
   sceneTile: {
-    width: "18%",
-    height: "48%",
+    width: "31.5%",
+    height: "32%",
     borderRadius: 8,
     overflow: "hidden",
     backgroundColor: "#242329",
