@@ -36,7 +36,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             <Text style={s.meta}>•••</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView style={s.flex} contentContainerStyle={{ padding: 14, gap: 10 }} keyboardShouldPersistTaps="handled">
+        <ScrollView style={s.flex} contentContainerStyle={{ padding: 14, gap: 10, paddingBottom: 18 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}>
           {thread.messages.map((m) => (
             <View
               key={m.id}
@@ -63,7 +63,9 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
           style={{
             flexDirection: "row",
             gap: 8,
-            padding: 12,
+            paddingHorizontal: 12,
+            paddingTop: 10,
+            paddingBottom: Platform.OS === "ios" ? 8 : 10,
             borderTopWidth: 1,
             borderTopColor: C.border,
             alignItems: "center",
@@ -75,6 +77,8 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
           <TextInput
             style={{
               flex: 1,
+              minWidth: 0,
+              minHeight: 44,
               backgroundColor: C.input,
               borderRadius: 999,
               paddingHorizontal: 16,
@@ -92,7 +96,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Send message"
             disabled={!draft.trim()}
-            style={[s.postBtn, { opacity: draft.trim() ? 1 : 0.5 }]}
+            style={[s.postBtn, { minHeight: 44, minWidth: 62, paddingHorizontal: 12, alignItems: "center", justifyContent: "center", opacity: draft.trim() ? 1 : 0.5 }]}
             onPress={() => {
               if (!draft.trim()) return;
               const msg = {
@@ -110,7 +114,7 @@ export function ChatScreen({ s, C, onBack, show }: Props) {
                 )
               );
               setDraft("");
-              show("Sent");
+              show("Added to this preview · messaging backend not connected");
             }}
           >
             <Text style={s.postBtnText}>Send</Text>
