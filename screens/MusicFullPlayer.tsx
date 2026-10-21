@@ -108,6 +108,23 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
             onResponderTerminate={() => setScrubPosition(null)}
             accessibilityRole="adjustable"
             accessibilityLabel="Track position"
+            accessibilityValue={{
+              min: 0,
+              max: Math.max(0, durationMillis),
+              now: Math.round(scrubPosition ?? positionMillis),
+              text: `${formatTime(scrubPosition ?? positionMillis)} of ${formatTime(durationMillis)}`,
+            }}
+            accessibilityActions={[
+              { name: "increment", label: "Forward 10 seconds" },
+              { name: "decrement", label: "Back 10 seconds" },
+            ]}
+            onAccessibilityAction={(event) => {
+              const action = event.nativeEvent.actionName;
+              const delta = action === "increment" ? 10000 : action === "decrement" ? -10000 : 0;
+              if (delta !== 0 && durationMillis > 0) {
+                void seekMusicPlayback(Math.max(0, Math.min(durationMillis, positionMillis + delta)));
+              }
+            }}
             style={{ height: 28, justifyContent: "center", borderRadius: 9 }}
           >
             <View style={{ height: 4, borderRadius: 2, backgroundColor: "#2A2A30", overflow: "hidden" }}>
@@ -115,7 +132,7 @@ export function MusicFullPlayer({ visible, track, playing, C, onClose, positionM
             </View>
           </View>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 0 }}>
-            <Text style={{ color: "#9A9A9E", fontSize: 11 }}>{formatTime(positionMillis)}</Text>
+            <Text style={{ color: "#9A9A9E", fontSize: 11 }}>{formatTime(scrubPosition ?? positionMillis)}</Text>
             <Text style={{ color: "#9A9A9E", fontSize: 11 }}>{formatTime(durationMillis)}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 20 }}>
