@@ -77,7 +77,7 @@ The notes below are historical and must not be used as current configuration: th
 
 ## Automated iOS preview build
 
-A manual GitHub Actions workflow is available at **Actions → Kilode iOS EAS preview build → Run workflow** after the project is linked and repository secrets are set.
+The manual GitHub Actions workflow is **Actions → Kilode native validation → Run workflow** (`.github/workflows/native-preview.yml`). Its default push run performs TypeScript, Expo Doctor and iOS JavaScript export checks. The `eas-ios-preview` job runs only on manual dispatch or when a commit message contains `[ios-build]`; it builds an installable iOS preview through EAS.
 
 Required repository Actions secrets:
 
@@ -91,7 +91,7 @@ Do not paste Expo tokens, Apple credentials, database URLs, OAuth secrets, or Su
 
 ## Repair the current iOS preview signing failure (2026-10-21)
 
-The latest failed GitHub Actions run verified that `EXPO_TOKEN` is present and `EAS_PROJECT_ID` matches `app.json`. The failure is specifically that EAS has no usable iOS **internal-distribution (Ad Hoc)** signing credentials available in non-interactive CI. This is not a TypeScript, JavaScript bundle, or project-ID failure.
+The prior iOS preview attempt reported that `EXPO_TOKEN` was present and `EAS_PROJECT_ID` matched `app.json`, but EAS had no usable iOS **internal-distribution (Ad Hoc)** signing credentials available in non-interactive CI. Treat this as the last recorded signing diagnosis, not proof of the status of every later run. This is not inherently a TypeScript, JavaScript bundle, or project-ID failure.
 
 **One-time setup must be completed by someone authorised to manage the Apple Developer account.** EAS cannot create Apple signing credentials from the GitHub runner without that interactive Apple account authorisation.
 
@@ -110,7 +110,7 @@ The latest failed GitHub Actions run verified that `EXPO_TOKEN` is present and `
    Confirm `eas whoami` shows the authorised Expo account `mudino` and select **iOS** and the **preview** build profile when prompted.
 3. In the interactive credential flow, sign in to the correct Apple Developer team when asked. Configure/create an Apple Distribution certificate and an **Ad Hoc provisioning profile** for `ng.kilode.app`. Reuse a valid existing certificate if EAS offers it; do not revoke credentials just to retry.
 4. Register the iPhone that will install the preview: run `eas device:create` from the project, follow its registration link on the iPhone, and finish the device registration. Then rerun `eas credentials` if needed so the Ad Hoc profile includes that device.
-5. Exit the interactive CLI after it confirms credentials are configured. Then rerun **Actions → Kilode iOS EAS preview build → Run workflow**. The CI build can reuse valid credentials non-interactively. If the profile needs its device list refreshed, do that interactively first; do not put Apple passwords or private keys in GitHub source.
+5. Exit the interactive CLI after it confirms credentials are configured. Then rerun **Actions → Kilode native validation → Run workflow**. The CI build can reuse valid credentials non-interactively. If the profile needs its device list refreshed, do that interactively first; do not put Apple passwords or private keys in GitHub source.
 6. Verify that the new EAS run produces an installable `.ipa` and an EAS build URL. A green TypeScript/bundle validation alone is not an installable iOS build.
 
 Official guides: [Expo internal distribution](https://docs.expo.dev/build/internal-distribution/) and [Apple Developer roles and permissions](https://docs.expo.dev/app-signing/apple-developer-program-roles-and-permissions/).
