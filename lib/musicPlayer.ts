@@ -152,6 +152,9 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
         if (status.isPlaying) {
           await existingSound.pauseAsync();
         } else if (status.didJustFinish) {
+          // Reset the completion guard before replaying the same native sound.
+          // Otherwise the next completion could be mistaken for a duplicate event.
+          finishedSound = null;
           await existingSound.replayAsync();
         } else {
           await existingSound.playAsync();
@@ -291,8 +294,11 @@ export async function toggleMusicPlayback(): Promise<void> {
       return;
     }
     if (status.isPlaying) await source.pauseAsync();
-    else if (status.didJustFinish) await source.replayAsync();
-    else await source.playAsync();
+    else if (status.didJustFinish) {
+      // A replay is a new playback cycle even though the native sound is reused.
+      finishedSound = null;
+      await source.replayAsync();
+    } else await source.playAsync();
     if (source !== sound) return;
     const updated = await source.getStatusAsync();
     if (source !== sound) return;
