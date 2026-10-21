@@ -22,7 +22,7 @@ export function ArtistEarningsScreen({ s, C, onBack }: Props) {
   return (
     <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
       <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
-        <TouchableOpacity onPress={onBack} accessibilityRole="button" style={{ paddingVertical: 10, alignSelf: "flex-start" }}>
+        <TouchableOpacity onPress={onBack} accessibilityRole="button" accessibilityLabel="Back to Artist Studio" style={{ paddingVertical: 10, alignSelf: "flex-start" }}>
           <Text style={{ color: C.accent, fontWeight: "700" }}>‹ Back to Artist Studio</Text>
         </TouchableOpacity>
         <Text style={{ color: C.text, fontSize: 25, fontWeight: "800", marginTop: 6 }}>Fan earnings</Text>
