@@ -1,6 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "@kilode/music-discovery/v1";
+
+function storageKeyFor(accountScope = "guest"): string {
+  const scope = String(accountScope || "guest").trim().toLowerCase().replace(/^@/, "").replace(/[^a-z0-9_-]/g, "_").slice(0, 64) || "guest";
+  return `${STORAGE_KEY}:${scope}`;
+}
 const MAX_HISTORY = 250;
 
 export type MusicDiscoveryEvent = {
@@ -28,9 +33,9 @@ function emptyProfile(): MusicDiscoveryProfile {
   return { version: 1, events: [], hiddenTrackKeys: [] };
 }
 
-export async function readMusicDiscoveryProfile(): Promise<MusicDiscoveryProfile> {
+export async function readMusicDiscoveryProfile(accountScope = "guest"): Promise<MusicDiscoveryProfile> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = await AsyncStorage.getItem(storageKeyFor(accountScope));
     if (!raw) return emptyProfile();
     const parsed = JSON.parse(raw);
     if (parsed?.version !== 1 || !Array.isArray(parsed.events)) return emptyProfile();
@@ -47,11 +52,12 @@ export async function readMusicDiscoveryProfile(): Promise<MusicDiscoveryProfile
 export async function recordMusicDiscoveryAction(
   track: any,
   action: MusicDiscoveryEvent["action"],
-  listenedMs?: number
+  listenedMs?: number,
+  accountScope = "guest"
 ): Promise<void> {
   if (!track || !String(track.title || "").trim()) return;
   try {
-    const profile = await readMusicDiscoveryProfile();
+    const profile = await readMusicDiscoveryProfile(accountScope);
     const event: MusicDiscoveryEvent = {
       trackKey: keyFor(track),
       title: String(track.title),
@@ -63,7 +69,7 @@ export async function recordMusicDiscoveryAction(
     };
     profile.events.push(event);
     profile.events = profile.events.slice(-MAX_HISTORY);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+    await AsyncStorage.setItem(storageKeyFor(accountScope), JSON.stringify(profile));
   } catch {
     // Personalisation is an enhancement; storage failures must never block music.
   }
