@@ -197,6 +197,8 @@ export function MusicUploadSheet({ visible, token, C, onClose, show, onPublished
         fail(ticket.error || "The dedicated Kilode music upload service is not connected.");
         return;
       }
+      // Preserve the server upload ID immediately so an interrupted transfer can be inspected/recovered.
+      setPendingUploadId(uploadId);
 
       setStage("Uploading original audio…");
       const uploaded = await uploadMusicAsset(uploadUrl, audio.uri, audio.mimeType);
