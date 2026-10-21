@@ -46,6 +46,7 @@ function KilodeApp() {
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock" | "error">("mock");
+  const [takesSource, setTakesSource] = useState<"live" | "mock" | "error">("error");
   const [takes, setTakes] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
@@ -77,6 +78,7 @@ function KilodeApp() {
   const loadAll = useCallback(async () => {
     const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity()]);
     setTakes(Array.isArray(t.data) ? t.data : []);
+    setTakesSource(t.source);
     setRooms(Array.isArray(r.data) ? r.data : []);
     setNews(Array.isArray(n.data) ? n.data : []);
     setTracks(Array.isArray(tr.data) ? tr.data : []);
@@ -191,14 +193,27 @@ function KilodeApp() {
     </ScrollView>
   );
 
+  const visibleTakes = takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")));
+
   const Socials = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
+      {takesSource !== "live" ? (
+        <View style={{ marginHorizontal: 14, marginBottom: 10, padding: 11, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
+          <Text style={{ color: C.text, fontSize: 12, fontWeight: "700" }}>{takesSource === "error" ? "Preview feed · not connected" : "Sample feed"}</Text>
+          <Text style={{ color: C.text2, fontSize: 11, marginTop: 3, lineHeight: 16 }}>{takesSource === "error" ? "These posts are preview content. Live posts will appear when Kilode’s dedicated feed API is connected." : "You’re viewing sample posts, not a live community feed."}</Text>
+        </View>
+      ) : null}
       <View style={s.composer}>
         <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
         <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What is happening in Naija?</Text></TouchableOpacity>
         <TouchableOpacity style={s.postBtn} onPress={() => setComposeOpen(true)}><Text style={s.postBtnText}>Post</Text></TouchableOpacity>
       </View>
-      {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
+      {visibleTakes.length === 0 ? (
+        <View style={{ marginHorizontal: 14, marginTop: 18, padding: 22, borderRadius: 16, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: "center" }}>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: "700" }}>Your feed starts here</Text>
+          <Text style={{ color: C.text2, fontSize: 13, lineHeight: 19, textAlign: "center", marginTop: 6 }}>Follow people or publish the first take to start the conversation.</Text>
+        </View>
+      ) : visibleTakes.map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
             <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
