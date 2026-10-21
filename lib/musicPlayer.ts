@@ -222,7 +222,8 @@ export async function playMusicTrack(track: MusicTrack): Promise<{ ok: boolean; 
     publish();
     return { ok: false, message: "Playback failed. Please check the connection and try again." };
   } finally {
-    isLoading = false;
+    // A cancelled older request must not clear the loading state of a newer one.
+    if (requestId === playbackRequestId) isLoading = false;
   }
 }
 
@@ -283,8 +284,10 @@ export async function toggleMusicPlayback(): Promise<void> {
 
 export async function stopMusicPlayback(): Promise<void> {
   // Invalidate any source currently being prepared so its late completion
-  // cannot restart audio after this stop request.
+  // cannot restart audio after this stop request. Release the loading lock
+  // immediately so a new Play action can start without waiting for stale native work.
   playbackRequestId += 1;
+  isLoading = false;
   if (!sound) {
     currentTrack = null;
     isPlaying = false;
