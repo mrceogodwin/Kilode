@@ -218,7 +218,6 @@ export function CommentsSheet({
                   show("Comment could not be sent. Try again.");
                   return;
                 }
-                setSending(false);
                 if (r.ok && r.data) {
                   const saved = r.data.comment || r.data.reply || r.data;
 
@@ -239,12 +238,14 @@ export function CommentsSheet({
                     cacheFailed = true;
                   }
                   setDraft("");
+                  setSending(false);
                   show(cacheFailed
                     ? "Comment sent, but couldn't save it on this device."
                     : r.source === "live"
                       ? "Comment sent to Kilode"
                       : "Comment added to this preview");
                 } else {
+                  setSending(false);
                   show(r.error ? ("Comment not sent: " + r.error) : "Comment could not be sent");
                 }
               }}
