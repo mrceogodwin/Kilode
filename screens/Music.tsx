@@ -66,7 +66,15 @@ type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres" |
 function sameTrack(a: any, b: any) {
   if (!a || !b) return false;
   if (a.id != null && b.id != null) return String(a.id) === String(b.id);
-  return a === b;
+
+  // API/library layers can recreate metadata-only track objects. Compare stable
+  // metadata rather than object identity so the same track remains selected.
+  const titleA = String(a.title ?? "").trim().toLocaleLowerCase();
+  const titleB = String(b.title ?? "").trim().toLocaleLowerCase();
+  const artistA = String(a.artist ?? "").trim().toLocaleLowerCase();
+  const artistB = String(b.artist ?? "").trim().toLocaleLowerCase();
+  if (!titleA || !titleB || !artistA || !artistB) return a === b;
+  return titleA === titleB && artistA === artistB;
 }
 
 function formatTime(ms: number) {
