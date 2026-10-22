@@ -117,6 +117,18 @@ export function removeQueuedTrack(trackIndex: number) {
   publish();
 }
 
+export function clearUpcomingTracks() {
+  // Keep the selected/current item so clearing upcoming tracks never interrupts playback.
+  if (index >= 0 && index < queue.length) {
+    queue = [queue[index]];
+    index = 0;
+  } else {
+    queue = [];
+    index = -1;
+  }
+  publish();
+}
+
 export function moveQueuedTrack(fromIndex: number, toIndex: number) {
   if (fromIndex < 0 || fromIndex >= queue.length || toIndex < 0 || toIndex >= queue.length || fromIndex === toIndex) return;
   const [item] = queue.splice(fromIndex, 1);
