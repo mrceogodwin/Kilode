@@ -313,7 +313,12 @@ export async function playNextInQueue(): Promise<{ ok: boolean; message?: string
   // Do not advance the visible queue index onto an entry that cannot play.
   // Search forward for the next playable track, preserving the current index
   // if the remaining queue contains only metadata/sample entries.
-  const nextIndex = candidates.find((i) => !!getAudioUrl(queue[i]));
+  const playableCandidates = candidates.filter((i) => !!getAudioUrl(queue[i]));
+  // Shuffle must choose among playable candidates rather than always taking the
+  // lowest queue index; otherwise the shuffle control has no effect on Next.
+  const nextIndex = playableCandidates.length
+    ? playableCandidates[shuffle ? Math.floor(Math.random() * playableCandidates.length) : 0]
+    : undefined;
   if (nextIndex === undefined) {
     if (!candidates.length) {
       playing = false;
