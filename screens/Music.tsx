@@ -678,6 +678,28 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </TouchableOpacity>
             </View>
           </View>
+          <View style={[s.padH, { flexDirection: "row", gap: 10, marginTop: 12 }]}>
+            {(["50", "100"] as const).map((chartSize) => (
+              <TouchableOpacity
+                key={chartSize}
+                onPress={() => { setActiveChart(chartSize); setTab("charts"); }}
+                accessibilityRole="button"
+                accessibilityLabel={`Open Kilode Top ${chartSize} chart`}
+                style={{
+                  flex: 1, minHeight: 56, borderRadius: 14, paddingHorizontal: 13,
+                  flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+                  backgroundColor: C.elevated || "#18181C", borderWidth: 1,
+                  borderColor: chartSize === "50" ? (C.accent || "#D4AF37") : (C.border || "#2A2A30"),
+                }}
+              >
+                <View>
+                  <Text style={{ color: C.text || "#FFFFFF", fontSize: 15, fontWeight: "800" }}>Top {chartSize}</Text>
+                  <Text style={{ color: C.text3 || "#9A9A9E", fontSize: 10, marginTop: 3 }}>Kilode chart</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={17} color={C.accent || "#E5C158"} />
+              </TouchableOpacity>
+            ))}
+          </View>
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Find your sound</Text>
             <TouchableOpacity onPress={() => setTab("genres")} accessibilityRole="button"><Text style={s.link}>All genres</Text></TouchableOpacity>
