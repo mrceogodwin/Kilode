@@ -76,6 +76,13 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     };
   }, [refreshLibrary]);
 
+  useEffect(() => {
+    // Keep the open track detail in step with next/previous and auto-advance from the shared player.
+    if (activeTrack && player.track && String(activeTrack.id) !== String(player.track.id)) {
+      setActiveTrack(player.track);
+    }
+  }, [activeTrack, player.track]);
+
   const isSaved = (id: string) => saved.some((t) => t.id === String(id));
 
   const playQueue = async (list: any[], startIndex: number) => {
