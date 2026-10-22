@@ -32,6 +32,8 @@ type Props = {
   show: (m: string) => void;
   tracks?: any[];
   tracksSource?: "live" | "mock" | "error";
+  openNowPlaying?: boolean;
+  onNowPlayingOpened?: () => void;
   onPlay?: (track: any) => Promise<void> | void;
 };
 
@@ -60,7 +62,7 @@ function formatTime(ms: number) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSource }: Props) {
+export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSource, openNowPlaying, onNowPlayingOpened }: Props) {
   const [tab, setTab] = useState<Tab>("discover");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
@@ -87,6 +89,13 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
       unsub();
     };
   }, [refreshLibrary]);
+
+  useEffect(() => {
+    if (openNowPlaying && player.track) {
+      setActiveTrack(player.track);
+      onNowPlayingOpened?.();
+    }
+  }, [openNowPlaying, player.track, onNowPlayingOpened]);
 
   useEffect(() => {
     // Keep the open track detail in step with next/previous and auto-advance from the shared player.
