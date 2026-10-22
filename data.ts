@@ -1,4 +1,4 @@
-/** Seed — offline until Nine opens JSON. factPct mirrors Nine Fact/Cap. */
+/** Seed — offline until dedicated Kilode API opens JSON. factPct mirrors Nine Fact/Cap. */
 export const DESKS = [
   { id: "jobs", label: "Jobs", icon: "💼", blurb: "Roles across Nigeria · Staff approve" },
   { id: "market", label: "Market", icon: "🛍️", blurb: "Buy & sell local" },
@@ -197,13 +197,76 @@ export const ROOMS = [
   { id: "r5", av: "HT", name: "Hot Topics", meta: "8.2k · Trending", live: true, speaking: 14 },
 ];
 
+/**
+ * Seed catalogue with publicly reachable sample audio (SoundHelix demos).
+ * These exist so expo-av playback works in preview / localOnly mode.
+ * Real artist audio will come from the dedicated music API later.
+ */
 export const TRACKS = [
-  { id: "t1", title: "Ojuelegba Nights", artist: "Simi Sola", color: "#22C55E" },
-  { id: "t2", title: "Last Last", artist: "Burna Boy", color: "#15803D" },
-  { id: "t3", title: "Essence", artist: "Wizkid", color: "#166534" },
-  { id: "t4", title: "Danfo Dreams", artist: "Kemi Wave", color: "#14532D" },
-  { id: "t5", title: "Joro", artist: "Wizkid", color: "#16A34A" },
-  { id: "t6", title: "Balogun Bounce", artist: "Market Band", color: "#052E16" },
+  {
+    id: "t1",
+    title: "Ojuelegba Nights",
+    artist: "Simi Sola",
+    color: "#22C55E",
+    genre: "Afrobeats",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+  },
+  {
+    id: "t2",
+    title: "Last Last",
+    artist: "Burna Boy",
+    color: "#15803D",
+    genre: "Afrobeats",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+  },
+  {
+    id: "t3",
+    title: "Essence",
+    artist: "Wizkid",
+    color: "#166534",
+    genre: "Afrobeats",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+  },
+  {
+    id: "t4",
+    title: "Danfo Dreams",
+    artist: "Kemi Wave",
+    color: "#14532D",
+    genre: "Amapiano",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+  },
+  {
+    id: "t5",
+    title: "Joro",
+    artist: "Wizkid",
+    color: "#16A34A",
+    genre: "Afrobeats",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+  },
+  {
+    id: "t6",
+    title: "Balogun Bounce",
+    artist: "Market Band",
+    color: "#052E16",
+    genre: "Highlife",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
+  },
+  {
+    id: "t7",
+    title: "Island Rain",
+    artist: "Bola Keys",
+    color: "#0F766E",
+    genre: "R&B",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",
+  },
+  {
+    id: "t8",
+    title: "Eko Energy",
+    artist: "Femi + Liza",
+    color: "#B45309",
+    genre: "Afro-fusion",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+  },
 ];
 
 export const NEWS = [
