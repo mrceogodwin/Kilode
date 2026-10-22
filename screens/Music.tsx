@@ -111,10 +111,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   // ——— Track detail ———
   if (activeTrack) {
     const queue = player.queue.length ? player.queue : tracks;
-    const activeQueueIndex = queue.findIndex((t: any) => String(t?.id) === String(activeTrack.id));
-    const queueIndex = activeQueueIndex >= 0 ? activeQueueIndex : -1;
-    const canPrev = queueIndex > 0 || (queueIndex === 0 && !!player.track);
-    const canNext = queueIndex >= 0 && queueIndex < queue.length - 1;
+    const isCurrentPlayerTrack = String(player.track?.id) === String(activeTrack.id);
+    const activeQueueIndex = player.queue.findIndex((t: any) => String(t?.id) === String(activeTrack.id));
+    const queueIndex = isCurrentPlayerTrack ? player.index : activeQueueIndex;
+    const canPrev = isCurrentPlayerTrack && player.index >= 0 && player.queue.length > 0;
+    const canNext = isCurrentPlayerTrack && player.index >= 0 && player.index < player.queue.length - 1;
     const upNextStart = queueIndex >= 0 ? queueIndex + 1 : 0;
     return (
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
