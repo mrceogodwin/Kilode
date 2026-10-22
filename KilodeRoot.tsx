@@ -317,50 +317,35 @@ function KilodeApp() {
             <Text style={s.sectionTitle}>Discover creators</Text>
             <Text style={s.sub}>Artists, writers, publishers and people making things on Kilode.</Text>
           </View>
-          {takes.filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || ""))).filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
-        <View key={t.id} style={s.postCard}>
-          <View style={s.postTop}>
-            <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
-            <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
-              <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
-              <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.followBtn} onPress={() => setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] }))}><Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text></TouchableOpacity>
-          </View>
-          <Text style={s.postBody}>{t.text}</Text>
-          {t.mediaUrl ? (
-            <Image source={{ uri: t.mediaUrl }} style={s.postMedia} resizeMode="cover" />
-          ) : t.media ? (
-            <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} />
-          ) : null}
-          <View style={s.factCapRow}>
-            <Text style={[s.meta, { fontWeight: "700", color: C.success }]}>FACT {t.factPct ?? 50}%</Text>
-            <View style={s.factCapBar}>
-              <View style={[s.factFill, { flex: t.factPct ?? 50 }]} />
-              <View style={[s.capFill, { flex: 100 - (t.factPct ?? 50) }]} />
-            </View>
-            <Text style={[s.meta, { fontWeight: "700", color: C.danger }]}>CAP {100 - (t.factPct ?? 50)}%</Text>
-          </View>
-          <PostActions
-            liked={!!liked[t.id]}
-            likes={(t.likes || 0) + (liked[t.id] ? 1 : 0)}
-            comments={t.comments || 0}
-            accent={C.accent}
-            danger={C.danger}
-            muted={C.text2}
-            onLike={() => setLiked((prev) => ({ ...prev, [String(t.id)]: !prev[String(t.id)] }))}
-            onComment={() => setCommentTake(t)}
-            onShare={async () => { try { await Share.share({ message: `${t.name} (@${t.handle}) on Kilode:\n\n${t.text}` }); } catch { show("Could not open share options."); } }}
-            onReport={async () => { await submitReport("post", String(t.id), "other"); show("Reported · under review"); }}
-            onBlock={async () => {
-              const h = String(t.handle || t.name);
-              await blockUser(h);
-              setBlocked((prev) => (prev.includes(h) ? prev : [...prev, h]));
-              show(`Blocked @${h}`);
-            }}
-          />
-        </View>
-      ))}
+          {takes
+            .filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || "")))
+            .filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))
+            .filter((t: any, index: number, list: any[]) => list.findIndex((candidate: any) => String(candidate.handle || candidate.name) === String(t.handle || t.name)) === index)
+            .map((t: any) => (
+              <View key={String(t.handle || t.name)} style={[s.postCard, { paddingVertical: 13 }]}>
+                <View style={s.postTop}>
+                  <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button" accessibilityLabel={`View ${t.name}'s profile`}>
+                    <View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
+                    <View style={s.row}>
+                      <Text style={s.postName} numberOfLines={1}>{t.name}</Text>
+                      {t.verified ? <Text style={s.verified}>✓</Text> : null}
+                    </View>
+                    <Text style={s.meta} numberOfLines={1}>@{t.handle} · {t.role}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={s.followBtn}
+                    onPress={() => setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] }))}
+                    accessibilityRole="button"
+                    accessibilityLabel={following[String(t.handle || t.name)] ? `Unfollow ${t.name}` : `Follow ${t.name}`}
+                  >
+                    <Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={s.postBody} numberOfLines={2}>{t.text}</Text>
+              </View>
+            ))}
           <View style={{ height: 20 }} />
         </>
       ) : (
