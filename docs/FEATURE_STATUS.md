@@ -1,28 +1,24 @@
 # Kilode feature status (native repository inspection)
 
-This is a code-inspection audit, not a claim of complete production readiness.
+Code-inspection audit only — not production readiness.
 
-| System / capability | Current assessment | Notes |
+| System | Status | Notes |
 |---|---|---|
-| Home hybrid discovery | PARTIALLY IMPLEMENTED | Feed + seed fallback |
-| Media / news | UI ONLY / SEED | |
-| Socials | PARTIALLY IMPLEMENTED | Composer + local likes/follows |
+| Home / Socials | PARTIALLY IMPLEMENTED | Seed + local toggles |
 | Music | PARTIALLY IMPLEMENTED | Player, library, sample audio |
-| Artist release drafts | PARTIALLY IMPLEMENTED | Type, metadata, local audio URI, rights; Create → Track |
-| Events | PARTIALLY IMPLEMENTED | Local drafts; Create → Event; My Space; desk entry |
-| Jobs | PARTIALLY IMPLEMENTED | Local drafts (title, company, location, type, salary, notes); Create → Job; My Space; desk entry. Seed listings remain. No publish/applications |
-| Market / Rent / Ads / Cinema | UI ONLY / SEED | |
-| My Space | PARTIALLY IMPLEMENTED | Settings, artist/event/job draft shortcuts |
+| Artist releases | PARTIALLY IMPLEMENTED | Local drafts + local audio URI |
+| Events | PARTIALLY IMPLEMENTED | Local drafts · Create / My Space / desk |
+| Jobs | PARTIALLY IMPLEMENTED | Local drafts · Create / My Space / desk |
+| Market | PARTIALLY IMPLEMENTED | Local listing drafts · Create / My Space / desk. No orders/payments |
+| Cinema / Ads / Rent | UI ONLY / SEED | |
 | Auth | PARTIALLY IMPLEMENTED | Guest local; real API blocked |
 | Dedicated mobile API | BLOCKED | |
-| Payments / EAS | NOT IMPLEMENTED / UNVERIFIED | |
+| Payments / EAS | NOT IMPLEMENTED | |
 
 ## Guardrails
-- Native iOS is source of truth.
-- Local drafts ≠ published. No fake success.
-- Super Admin is staff permission, not public registration.
+- Native iOS source of truth. Local drafts ≠ published.
+- Super Admin = staff permission, not public registration.
 - Backend enforces real permissions and entitlements.
 
-## 2026-10-22
-- Artist: releaseType + local audio
-- Events + Jobs: local draft workspaces wired from Create, My Space, and desks
+## 2026-10-22 local-draft verticals
+Artist · Events · Jobs · Market — all device-only until dedicated APIs exist.
