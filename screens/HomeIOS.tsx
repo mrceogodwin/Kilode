@@ -95,11 +95,7 @@ export function HomeScreen({
 
       {/* One strong music feature replaces the tall, rotating generic banner. */}
       {featuredTrack ? (
-        <TouchableOpacity
-          onPress={() => go("music")}
-          activeOpacity={0.9}
-          accessibilityRole="button"
-          accessibilityLabel={"Open Music, featured track " + featuredTrack.title}
+        <View
           style={{ marginHorizontal: 14, marginBottom: 18, borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: C.border }}
         >
           <LinearGradient colors={["#31134C", "#171020", C.card]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ minHeight: 142, padding: 16, flexDirection: "row", alignItems: "center" }}>
@@ -126,7 +122,7 @@ export function HomeScreen({
               </View>
             </LinearGradient>
           </LinearGradient>
-        </TouchableOpacity>
+        </View>
       ) : null}
 
       {/* Trending tracks: one short horizontal strip. */}
@@ -166,7 +162,7 @@ export function HomeScreen({
       {featuredTake ? (
         <View style={{ marginHorizontal: 14, marginBottom: 18, padding: 13, borderRadius: 17, borderWidth: 1, borderColor: C.border, backgroundColor: C.card }}>
           {section("From Your People", "Open Socials", () => go("socials"), "◉")}
-          <TouchableOpacity onPress={() => { go("socials"); setSelectedProfile(featuredTake); }} activeOpacity={0.85} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <TouchableOpacity onPress={() => go("socials")} activeOpacity={0.85} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: C.accentSoft, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: C.accent, fontWeight: "800" }}>{String(featuredTake.name || "K").slice(0, 1).toUpperCase()}</Text>
             </View>
@@ -176,11 +172,11 @@ export function HomeScreen({
             </View>
             <Text style={{ color: C.text3, fontSize: 18 }}>···</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { go("socials"); setSelectedProfile(featuredTake); }} style={{ marginTop: 9 }}>
+          <TouchableOpacity onPress={() => go("socials")} style={{ marginTop: 9 }}>
             <Text numberOfLines={3} style={{ color: C.text, fontSize: 14, lineHeight: 20 }}>{featuredTake.text}</Text>
           </TouchableOpacity>
           {featuredTake.mediaUrl ? (
-            <TouchableOpacity onPress={() => { go("socials"); setSelectedProfile(featuredTake); }} activeOpacity={0.9} style={{ marginTop: 10 }}>
+            <TouchableOpacity onPress={() => go("socials")} activeOpacity={0.9} style={{ marginTop: 10 }}>
               <Image source={{ uri: featuredTake.mediaUrl }} resizeMode="cover" style={{ width: "100%", height: 142, borderRadius: 12, backgroundColor: C.elevated }} />
             </TouchableOpacity>
           ) : null}
