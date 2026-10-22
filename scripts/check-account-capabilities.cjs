@@ -23,4 +23,25 @@ assert.deepEqual([...capabilityIds].sort(), [...kindIds].sort(), "Every public a
 assert.match(capabilitiesSource, /socials:\s*true/, "Socials participation must remain a shared capability");
 assert.match(capabilitiesSource, /not an authorization boundary/i, "Client capabilities must remain documented as navigation hints, not security enforcement");
 
-console.log("Account capability invariants passed: 10 unique public kinds, complete capability coverage, safe fallback, and Socials role boundaries.");
+// Guard against accidental role-to-workspace regressions, not merely missing keys.
+const expectedCapabilities = {
+  member: ["jobDiscovery"],
+  artist: ["musicReleaseManagement", "advancedCreatorTools"],
+  writer: ["mediaAuthoring", "advancedCreatorTools"],
+  advertiser: ["advertisingCampaigns", "businessWorkspace"],
+  cinema: ["cinemaManagement", "advancedCreatorTools"],
+  job_poster: ["jobManagement"],
+  job_seeker: ["jobDiscovery"],
+  vendor: ["marketplaceSelling", "businessWorkspace"],
+  renter: ["rentalListingManagement"],
+  brand: ["advertisingCampaigns", "businessWorkspace", "advancedCreatorTools"],
+};
+for (const [kind, expected] of Object.entries(expectedCapabilities)) {
+  const entry = capabilityBlock[1].match(new RegExp("^  " + kind + ": \\{([\\s\\S]*?)^  \\}", "m"));
+  assert.ok(entry, kind + " must have a capability entry");
+  for (const capability of expected) {
+    assert.match(entry[1], new RegExp("\\b" + capability + ":\\s*true\\b"), kind + " must retain " + capability);
+  }
+}
+
+console.log("Account capability invariants passed: 10 unique kinds, full map coverage, safe fallback, Socials boundaries, and expected workspace capabilities.");
