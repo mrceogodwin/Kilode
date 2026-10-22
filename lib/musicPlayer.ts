@@ -75,10 +75,20 @@ export function addTracksToQueue(tracks: any[]) {
 
 export function playTrackNext(track: any) {
   if (!track) return;
-  const current = index >= 0 ? index : -1;
-  queue = queue.filter((t, i) => String(t?.id) !== String(track?.id) || i === current);
-  const insertAt = Math.max(0, index + 1);
+  const targetId = String(track?.id);
+  const currentTrackInQueue = index >= 0 && index < queue.length ? queue[index] : null;
+  if (currentTrackInQueue && String(currentTrackInQueue?.id) === targetId) {
+    publish();
+    return;
+  }
+  // Re-find the current item after removing duplicate target entries so its index cannot drift.
+  queue = queue.filter((item) => String(item?.id) !== targetId);
+  index = currentTrackInQueue
+    ? queue.findIndex((item) => item === currentTrackInQueue || String(item?.id) === String(currentTrackInQueue?.id))
+    : -1;
+  const insertAt = index >= 0 ? index + 1 : 0;
   queue.splice(insertAt, 0, track);
+  if (index < 0) index = 0;
   publish();
 }
 
