@@ -48,7 +48,7 @@ const WELCOME_FALLBACK = WELCOME_SCENES[0];
 function WelcomeScene({ source, index }: { source: string; index: number }) {
   const [failed, setFailed] = useState(false);
   // If one remote clip fails, try a different clip rather than retrying the same URL.
-  const fallback = WELCOME_SCENES[(index + 1) % WELCOME_SCENES.length];
+  const fallback = WELCOME_SCENES[(index + 2) % WELCOME_SCENES.length];
   return (
     <View style={styles.sceneTile}>
       <Video
