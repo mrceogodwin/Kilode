@@ -10,13 +10,34 @@ const envUrl =
 const envName =
   typeof process !== "undefined" ? process.env?.EXPO_PUBLIC_APP_ENV : undefined;
 
-/** Dedicated Kilode API host; empty until explicitly configured. */
-export const API_BASE = (envUrl && envUrl.trim())
-  ? envUrl.trim().replace(/\/+$/, "")
-  : "";
-
 /** development | preview | production */
 export const APP_ENV = (envName && envName.trim()) || "production";
+
+/**
+ * Never treat the legacy Kilode Nine web app as the native JSON API.
+ * Fail closed if it is accidentally configured: the client then reports that
+ * the dedicated API is missing instead of sending mobile requests to the web app.
+ */
+function resolveApiBase(value: string | undefined): string {
+  const candidate = value?.trim();
+  if (!candidate) return "";
+
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== "https:" && !(APP_ENV === "development" && url.protocol === "http:")) {
+      return "";
+    }
+    if (url.hostname.toLowerCase() === "kilode-nine.vercel.app") {
+      return "";
+    }
+    return url.toString().replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
+}
+
+/** Dedicated HTTPS API host; empty until explicitly configured and validated. */
+export const API_BASE = resolveApiBase(envUrl);
 
 /**
  * FORCE_MOCK must stay false in production builds.

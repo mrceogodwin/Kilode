@@ -54,3 +54,10 @@ assert.match(capabilitiesSource, /return CAPABILITIES_BY_KIND\[asAccountKind\(ki
 assert.match(capabilitiesSource, /socials:\s*true/, "Every account kind must retain the shared Socials baseline");
 
 console.log("Account capability invariants passed: exactly ten unique kinds, complete one-to-one mapping, exact role capabilities, safe fallback, and shared Socials access.");
+
+
+const configSource = fs.readFileSync(path.join(root, "lib/config.ts"), "utf8");
+assert.match(configSource, /function resolveApiBase\(/, "Native API host must be validated before requests");
+assert.match(configSource, /kilode-nine\.vercel\.app/, "Legacy Kilode Nine web host must be blocked as a native API");
+assert.match(configSource, /url\.protocol !== "https:"/, "Production API configuration must fail closed unless HTTPS is used");
+console.log("Native API configuration guard passed: explicit validated API host, HTTPS outside development, and legacy web host blocked.");
