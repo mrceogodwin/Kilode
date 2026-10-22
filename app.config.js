@@ -5,6 +5,8 @@
  */
 module.exports = ({ config }) => ({
   ...config,
+  // Vercel mirrors the native iOS UI, so explicitly allow Expo's web export.
+  platforms: ["ios", "android", "web"],
   owner: config.owner || "mudino",
   plugins: [...(config.plugins || []), "expo-font"],
   extra: {
