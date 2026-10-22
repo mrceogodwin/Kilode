@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { Alert, View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -914,7 +914,29 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               <TouchableOpacity onPress={() => { setEditingPlaylistId(p.id); setPlaylistName(p.name); }} accessibilityRole="button" accessibilityLabel={"Rename " + p.name} style={{ padding: 6 }}>
                 <Ionicons name="pencil-outline" size={17} color={C.text2} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={async () => { setPlaylists(await deleteMusicPlaylist(p.id)); show("Playlist deleted."); }} accessibilityRole="button" accessibilityLabel={"Delete " + p.name} style={{ padding: 6 }}>
+              <TouchableOpacity
+                onPress={() => Alert.alert(
+                  "Delete playlist?",
+                  '“' + p.name + '” will be removed from this device. This cannot be undone.',
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: () => {
+                      void deleteMusicPlaylist(p.id).then((next) => {
+                        setPlaylists(next);
+                        if (activePlaylistId === p.id) setActivePlaylistId(null);
+                        if (editingPlaylistId === p.id) {
+                          setEditingPlaylistId(null);
+                          setPlaylistName("");
+                        }
+                        show("Playlist deleted.");
+                      }).catch((e: any) => show(e?.message || "Could not delete playlist."));
+                    } },
+                  ],
+                )}
+                accessibilityRole="button"
+                accessibilityLabel={"Delete " + p.name}
+                style={{ padding: 6 }}
+              >
                 <Ionicons name="trash-outline" size={17} color={C.danger} />
               </TouchableOpacity>
             </View>
