@@ -170,7 +170,12 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
     queue = [track];
     index = 0;
   } else {
-    const existing = queue.findIndex((t) => String(t?.id) === String(track?.id));
+    const trackId = track?.id == null ? null : String(track.id);
+    const existing = queue.findIndex((t) =>
+      trackId !== null
+        ? t?.id != null && String(t.id) === trackId
+        : t === track
+    );
     if (existing >= 0) index = existing;
     else {
       queue = [...queue.slice(0, index + 1), track, ...queue.slice(index + 1)];
@@ -179,7 +184,12 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
   }
 
   try {
-    if (sound && String(currentTrack?.id) === String(track?.id)) {
+    const sameTrack = currentTrack && (
+      track?.id != null && currentTrack?.id != null
+        ? String(currentTrack.id) === String(track.id)
+        : currentTrack === track
+    );
+    if (sound && sameTrack) {
       const status = await sound.getStatusAsync();
       if (status.isLoaded && status.isPlaying) {
         await sound.pauseAsync();
@@ -257,7 +267,8 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
     playing = created.status.isLoaded ? !!created.status.isPlaying : false;
     positionMillis = created.status.isLoaded ? created.status.positionMillis || 0 : 0;
     durationMillis = created.status.isLoaded ? created.status.durationMillis || 0 : durationMillis;
-    void addRecentTrack(track);
+    // Local history must never turn a successful playback into an unhandled rejection.
+    void addRecentTrack(track).catch(() => {});
     publish();
     return { ok: true };
   } catch {
