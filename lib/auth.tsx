@@ -291,7 +291,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // the registration flow and account-specific UI can be exercised. This is
     // not a real Kilode account and must never be presented as server-registered.
     if (getBackendMode() === "offline") {
-      if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         setLoading(false);
         return { ok: false, error: "Enter a valid email address." };
       }
