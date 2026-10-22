@@ -885,6 +885,16 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           </View>
           <View style={[s.padH, { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }]}>
             <TextInput value={playlistName} onChangeText={setPlaylistName} placeholder={editingPlaylistId ? "Rename playlist…" : "New playlist name"} placeholderTextColor={C.text3} maxLength={48} accessibilityLabel="Playlist name" style={{ flex: 1, minHeight: 42, borderRadius: 12, paddingHorizontal: 12, color: C.text, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }} returnKeyType="done" />
+            {editingPlaylistId ? (
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Cancel playlist rename"
+                onPress={() => { setEditingPlaylistId(null); setPlaylistName(""); }}
+                style={{ width: 38, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}
+              >
+                <Ionicons name="close" size={19} color={C.text2} />
+              </TouchableOpacity>
+            ) : null}
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={editingPlaylistId ? "Save playlist name" : "Create playlist"} onPress={async () => {
               try {
                 if (editingPlaylistId) { setPlaylists(await renameMusicPlaylist(editingPlaylistId, playlistName)); show("Playlist renamed."); }
