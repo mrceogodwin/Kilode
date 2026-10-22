@@ -157,9 +157,13 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   };
 
   const onToggleSave = async (track: any) => {
-    const { saved: nowSaved } = await toggleSavedTrack(track);
-    await refreshLibrary();
-    show(nowSaved ? `Saved · ${track.title}` : `Removed · ${track.title}`);
+    try {
+      const { saved: nowSaved } = await toggleSavedTrack(track);
+      await refreshLibrary();
+      show(nowSaved ? `Saved · ${track.title}` : `Removed · ${track.title}`);
+    } catch (error: any) {
+      show(error?.message || "Couldn't update your music library. Please try again.");
+    }
   };
 
   // ——— Track detail ———
