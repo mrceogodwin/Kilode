@@ -786,10 +786,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 <TouchableOpacity
                   key={trackRenderKey(t, i, "new-drop")}
                   style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
-                  onPress={() => selectTrack(t)}
-                  onLongPress={() => playQueue(tracks, i)}
+                  onPress={() => { void playQueue(tracks, i); }}
+                  onLongPress={() => selectTrack(t)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Select ${t.title}`}
+                  accessibilityLabel={`Play ${t.title}`}
+                  accessibilityHint="Long press to open track details"
                 >
                   <Ionicons name="play" size={18} color="#fff" style={{ marginBottom: 6 }} />
                   <Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text>
