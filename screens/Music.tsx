@@ -78,7 +78,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const [playlists, setPlaylists] = useState<MusicPlaylist[]>([]);
   const [playlistName, setPlaylistName] = useState("");
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
-  const [player, setPlayer] = useState<MusicPlayerState>({ track: null, playing: false, queue: [], index: -1 });
+  const [player, setPlayer] = useState<MusicPlayerState>({ track: null, playing: false, queue: [], index: -1, positionMillis: 0, durationMillis: 0, shuffle: false, repeat: "off" });
 
   const hasLiveTracks = tracksSource === "live";
   const tracks = hasLiveTracks ? remoteTracks || [] : TRACKS || [];
@@ -93,7 +93,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
 
   useEffect(() => {
     void refreshLibrary();
-    const unsub = subscribeMusicPlayer((state) => setPlayer(state));
+    const unsub = subscribeMusicPlayer((state: MusicPlayerState) => setPlayer(state));
     return () => {
       unsub();
     };
