@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   listReleaseDrafts,
   createReleaseDraft,
+  updateReleaseDraft,
   deleteReleaseDraft,
   rightsDeclarationText,
   type ArtistReleaseDraft,
@@ -32,6 +33,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
   const [drafts, setDrafts] = useState<ArtistReleaseDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [composing, setComposing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [artistName, setArtistName] = useState(sessionName || "");
   const [genre, setGenre] = useState("Afrobeats");
@@ -51,6 +53,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
   }, [refresh]);
 
   const resetForm = () => {
+    setEditingId(null);
     setTitle("");
     setArtistName(sessionName || "");
     setGenre("Afrobeats");
@@ -58,21 +61,52 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
     setRights(false);
   };
 
+  const openNew = () => {
+    resetForm();
+    setComposing(true);
+  };
+
+  const openEdit = (d: ArtistReleaseDraft) => {
+    setEditingId(d.id);
+    setTitle(d.title);
+    setArtistName(d.artistName);
+    setGenre(d.genre || "Afrobeats");
+    setNotes(d.notes || "");
+    setRights(!!d.rightsAcknowledged);
+    setComposing(true);
+  };
+
   const onSaveDraft = async () => {
     setSaving(true);
-    const result = await createReleaseDraft({
-      title,
-      artistName,
-      genre,
-      notes,
-      rightsAcknowledged: rights,
-    });
-    setSaving(false);
-    if (!result.ok) {
-      show(result.message);
-      return;
+    if (editingId) {
+      const result = await updateReleaseDraft(editingId, {
+        title,
+        artistName,
+        genre,
+        notes,
+        rightsAcknowledged: rights,
+      });
+      setSaving(false);
+      if (!result.ok) {
+        show(result.message);
+        return;
+      }
+      show("Draft updated on this device");
+    } else {
+      const result = await createReleaseDraft({
+        title,
+        artistName,
+        genre,
+        notes,
+        rightsAcknowledged: rights,
+      });
+      setSaving(false);
+      if (!result.ok) {
+        show(result.message);
+        return;
+      }
+      show("Draft saved on this device");
     }
-    show("Draft saved on this device");
     resetForm();
     setComposing(false);
     await refresh();
@@ -81,6 +115,10 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
   const onDelete = async (id: string) => {
     await deleteReleaseDraft(id);
     show("Draft removed");
+    if (editingId === id) {
+      resetForm();
+      setComposing(false);
+    }
     await refresh();
   };
 
@@ -88,10 +126,17 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
     return (
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} keyboardShouldPersistTaps="handled">
         <View style={s.padH}>
-          <TouchableOpacity onPress={() => setComposing(false)} style={{ marginBottom: 12 }} accessibilityRole="button">
+          <TouchableOpacity
+            onPress={() => {
+              resetForm();
+              setComposing(false);
+            }}
+            style={{ marginBottom: 12 }}
+            accessibilityRole="button"
+          >
             <Text style={s.link}>‹ Back to drafts</Text>
           </TouchableOpacity>
-          <Text style={s.h1}>New release draft</Text>
+          <Text style={s.h1}>{editingId ? "Edit draft" : "New release draft"}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>
             Metadata only for now. Audio upload and server submit need the dedicated music API.
           </Text>
@@ -133,11 +178,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
           <Text style={[s.meta, { marginTop: 16, marginBottom: 8, fontWeight: "700" }]}>Genre</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
             {GENRE_OPTIONS.map((g) => (
-              <TouchableOpacity
-                key={g}
-                style={[s.chip, genre === g && s.chipOn]}
-                onPress={() => setGenre(g)}
-              >
+              <TouchableOpacity key={g} style={[s.chip, genre === g && s.chipOn]} onPress={() => setGenre(g)}>
                 <Text style={[s.chipText, genre === g && s.chipTextOn]}>{g}</Text>
               </TouchableOpacity>
             ))}
@@ -210,7 +251,9 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
             ) : (
               <>
                 <Ionicons name="save-outline" size={18} color="#fff" />
-                <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Save local draft</Text>
+                <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>
+                  {editingId ? "Update local draft" : "Save local draft"}
+                </Text>
               </>
             )}
           </TouchableOpacity>
@@ -250,7 +293,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
       </View>
 
       <View style={[s.padH, { marginTop: 8 }]}>
-        <TouchableOpacity style={s.primaryBtn} onPress={() => setComposing(true)}>
+        <TouchableOpacity style={s.primaryBtn} onPress={openNew}>
           <Ionicons name="add" size={18} color="#fff" />
           <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>New draft</Text>
         </TouchableOpacity>
@@ -268,7 +311,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
         }}
       >
         <Text style={[s.meta, { lineHeight: 18 }]}>
-          This is the artist release workspace. Drafts are stored on-device only. Upload sessions, review, credits, and publish require the dedicated Kilode music API (see docs/ARTIST_UPLOADS_MONETISATION.md).
+          This is the artist release workspace. Drafts are stored on-device only. Upload sessions, review, credits, and publish require the dedicated Kilode music API.
         </Text>
       </View>
 
@@ -289,7 +332,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
         />
       ) : (
         drafts.map((d) => (
-          <View key={d.id} style={[s.roomRow, { alignItems: "flex-start" }]}>
+          <TouchableOpacity key={d.id} style={[s.roomRow, { alignItems: "flex-start" }]} onPress={() => openEdit(d)}>
             <View style={[s.roomAv, { backgroundColor: C.accent }]}>
               <Ionicons name="musical-note" size={16} color="#fff" />
             </View>
@@ -299,7 +342,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
                 {d.artistName} · {d.genre}
               </Text>
               <Text style={[s.meta, { marginTop: 4 }]}>
-                Local draft · {new Date(d.updatedAt).toLocaleDateString()}
+                Local draft · {new Date(d.updatedAt).toLocaleDateString()} · tap to edit
               </Text>
             </View>
             <TouchableOpacity
@@ -310,7 +353,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
             >
               <Ionicons name="trash-outline" size={20} color={C.danger} />
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         ))
       )}
 
