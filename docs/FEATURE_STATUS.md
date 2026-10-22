@@ -17,7 +17,7 @@ Status legend:
 | Creators | SOCIALS SECTION | Creator discovery belongs inside Socials; not a separate top-level system or account kind |
 | Communities | SOCIALS SECTION | Community discovery belongs inside Socials; joining/persistence is not verified live |
 | Music | PARTIALLY IMPLEMENTED | Discover / Charts / Artists / Library / Genres; queue player (next/prev); saved + recent via AsyncStorage; seed tracks include sample audio for offline playback. Live catalogue/streaming API not connected |
-| Artist release drafts | PARTIALLY IMPLEMENTED | Local-only drafts (title, artist, genre, notes, rights ack) via AsyncStorage; My Space entry for musicReleaseManagement accounts. No audio file attach, no server upload, no credits, no publish |
+| Artist release drafts | PARTIALLY IMPLEMENTED | Local-only drafts (title, artist, genre, notes, rights ack) via AsyncStorage; My Space entry + Create → Track for musicReleaseManagement accounts. No audio file attach, no server upload, no credits, no publish |
 | Artist upload monetisation | DOCUMENTED, NOT IMPLEMENTED | Release-credit/subscription architecture documented in `docs/ARTIST_UPLOADS_MONETISATION.md` |
 | Push Link | NOT IMPLEMENTED | Paid promotion lifecycle, checkout, review, activation and reporting are not connected |
 | Events | UI ONLY / SEED | Desk exists; live event creation/RSVP persistence is not verified |
@@ -58,5 +58,6 @@ Status legend:
 - `screens/Music.tsx` — Discover / Charts / Artists / Library / Genres + track/artist/genre detail
 - Seed `TRACKS` include public sample audio URLs so playback works offline
 - `lib/artistReleases.ts` — local draft store only
-- `screens/ArtistReleases.tsx` — draft form + list; rights declaration; no file upload, no server submit
+- `screens/ArtistReleases.tsx` — draft form + list; rights declaration; `initialCompose` prop opens new-draft form directly
+- Create modal **Track** → opens Artist Releases compose when `musicReleaseManagement` is true; otherwise Music tab
 - Live music API, credits, checkout, and publish remain out of scope until dedicated backend is ready
