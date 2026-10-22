@@ -674,7 +674,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   </TouchableOpacity>
                 ))}
                 {results.map((t: any, i: number) => (
-              <TouchableOpacity key={trackRenderKey(t, i, "search")} style={[s.roomRow, s.padH]} onPress={() => selectTrack(t)} onLongPress={() => playQueue(results, i)} accessibilityRole="button">
+              <TouchableOpacity key={trackRenderKey(t, i, "search")} style={[s.roomRow, s.padH]} onPress={() => { void playQueue(results, i); }} onLongPress={() => selectTrack(t)} accessibilityRole="button" accessibilityLabel={`Play ${t.title}`} accessibilityHint="Long press to open track details">
                 <View style={{ width: 46, height: 46, borderRadius: 11, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
                   <Ionicons name="musical-note" size={20} color="#FFFFFF" />
                 </View>
