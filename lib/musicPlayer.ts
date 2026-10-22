@@ -349,8 +349,16 @@ export async function playNextInQueue(): Promise<{ ok: boolean; message?: string
     return { ok: false, message: "No playable audio source is available in the remaining queue." };
   }
 
+  const previousIndex = index;
   index = nextIndex;
-  return playMusicTrack(queue[index], { queue, index });
+  const result = await playMusicTrack(queue[index], { queue, index });
+  if (!result.ok) {
+    // A URL can be syntactically valid but fail to load. Keep the queue cursor
+    // stable so a failed Next tap does not silently skip the current entry.
+    index = previousIndex;
+    publish();
+  }
+  return result;
 }
 
 export async function playPreviousInQueue(): Promise<{ ok: boolean; message?: string }> {
@@ -364,8 +372,14 @@ export async function playPreviousInQueue(): Promise<{ ok: boolean; message?: st
     return { ok: false, message: candidates.length ? "No playable audio source is available earlier in the queue." : "Start of queue." };
   }
 
+  const previousIndex = index;
   index = prevIndex;
-  return playMusicTrack(queue[index], { queue, index });
+  const result = await playMusicTrack(queue[index], { queue, index });
+  if (!result.ok) {
+    index = previousIndex;
+    publish();
+  }
+  return result;
 }
 
 export function getMusicPlayerState(): MusicPlayerState {
