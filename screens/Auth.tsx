@@ -25,9 +25,18 @@ const AUTH_BACKGROUND_VIDEOS = [
 function AuthVideoBackdrop({ scale }: { scale: Animated.Value }) {
   const [videoIndex, setVideoIndex] = useState(0);
   const [videoFailed, setVideoFailed] = useState(false);
+  const failedVideos = useRef(0);
   const nextVideo = () => {
+    failedVideos.current = 0;
     setVideoIndex((index) => (index + 1) % AUTH_BACKGROUND_VIDEOS.length);
-    setVideoFailed(false);
+  };
+  const handleVideoError = () => {
+    failedVideos.current += 1;
+    if (failedVideos.current >= AUTH_BACKGROUND_VIDEOS.length) {
+      setVideoFailed(true);
+      return;
+    }
+    setVideoIndex((index) => (index + 1) % AUTH_BACKGROUND_VIDEOS.length);
   };
 
   return (
@@ -49,7 +58,7 @@ function AuthVideoBackdrop({ scale }: { scale: Animated.Value }) {
           onPlaybackStatusUpdate={(status) => {
             if (status.isLoaded && status.didJustFinish) nextVideo();
           }}
-          onError={nextVideo}
+          onError={handleVideoError}
         />
       ) : null}
       <View style={styles.veil} />
