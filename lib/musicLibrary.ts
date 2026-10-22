@@ -21,13 +21,19 @@ export type LibraryTrack = {
 };
 
 function normalize(track: any): LibraryTrack {
-  // Spread metadata first, then enforce canonical fields. Putting ...track last could
-  // overwrite the string ID with a number and break saved/recent/playlist comparisons.
+  // Give metadata-only tracks a deterministic local ID so saved/recent/playlist
+  // storage can retain them without collapsing unrelated missing IDs together.
+  const title = String(track?.title ?? "Untitled").trim();
+  const artist = track?.artist ? String(track.artist).trim() : "";
+  const suppliedId = String(track?.id ?? "").trim();
+  const id = suppliedId || (title !== "Untitled" && artist
+    ? `metadata:${title.toLocaleLowerCase()}::${artist.toLocaleLowerCase()}`
+    : "");
   return {
     ...track,
-    id: String(track?.id ?? ""),
-    title: String(track?.title ?? "Untitled"),
-    artist: track?.artist ? String(track.artist) : undefined,
+    id,
+    title,
+    artist: artist || undefined,
     color: track?.color,
     audioUrl: track?.audioUrl || track?.audio_url || track?.streamUrl || track?.stream_url || track?.previewUrl || track?.preview_url,
     genre: track?.genre,
