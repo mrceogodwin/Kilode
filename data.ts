@@ -1,4 +1,4 @@
-/** Seed — offline until Nine opens JSON. factPct mirrors Nine Fact/Cap. */
+/** Seed — offline until dedicated backend is live. factPct mirrors editorial confidence. */
 export const DESKS = [
   { id: "jobs", label: "Jobs", icon: "💼", blurb: "Roles across Nigeria · Staff approve" },
   { id: "market", label: "Market", icon: "🛍️", blurb: "Buy & sell local" },
@@ -198,6 +198,10 @@ export const ROOMS = [
 ];
 
 export const TRACKS = [
+  { id: "t0a", title: "Hunter of Africa", artist: "Mudino", color: "#D4AF37" },
+  { id: "t0b", title: "We Want a Party", artist: "Mudino", color: "#E5C158" },
+  { id: "t0c", title: "Calm Down", artist: "Rema", color: "#22C55E" },
+  { id: "t0d", title: "Water & Light", artist: "Ayo Blue", color: "#2563EB" },
   { id: "t1", title: "Ojuelegba Nights", artist: "Simi Sola", color: "#22C55E" },
   { id: "t2", title: "Last Last", artist: "Burna Boy", color: "#15803D" },
   { id: "t3", title: "Essence", artist: "Wizkid", color: "#166534" },
