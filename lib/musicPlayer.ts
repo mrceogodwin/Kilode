@@ -1,14 +1,15 @@
 import { Audio, type AVPlaybackStatus } from "expo-av";
 import { addRecentTrack } from "./musicLibrary";
 
-type Listener = (state: MusicPlayerState) => void;
-
 export type MusicPlayerState = {
   track: any | null;
   playing: boolean;
   queue: any[];
   index: number;
 };
+
+/** Supports both (state) and legacy (track, playing) listeners. */
+type Listener = ((state: MusicPlayerState) => void) | ((track: any | null, playing: boolean) => void);
 
 let sound: Audio.Sound | null = null;
 let currentTrack: any | null = null;
@@ -23,12 +24,30 @@ function getState(): MusicPlayerState {
 
 function publish() {
   const state = getState();
-  listeners.forEach((listener) => listener(state));
+  listeners.forEach((listener) => {
+    try {
+      if (listener.length >= 2) {
+        (listener as (track: any | null, playing: boolean) => void)(state.track, state.playing);
+      } else {
+        (listener as (state: MusicPlayerState) => void)(state);
+      }
+    } catch {
+      // ignore listener errors
+    }
+  });
 }
 
 export function subscribeMusicPlayer(listener: Listener) {
   listeners.add(listener);
-  listener(getState());
+  try {
+    if (listener.length >= 2) {
+      (listener as (track: any | null, playing: boolean) => void)(currentTrack, playing);
+    } else {
+      (listener as (state: MusicPlayerState) => void)(getState());
+    }
+  } catch {
+    // ignore
+  }
   return () => listeners.delete(listener);
 }
 
