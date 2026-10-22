@@ -28,7 +28,7 @@ type Props = {
   show: (m: string) => void;
 };
 
-export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSession = false, onContinue }: Props) {
+export function AuthScreen({ onSignIn, onSignUp, show }: Props) {
   // Open directly on sign-in: no pre-auth video splash or incorrect wordmark.
   const [mode, setMode] = useState<"kind" | "in" | "up">("in");
   const [handle, setHandle] = useState("");
