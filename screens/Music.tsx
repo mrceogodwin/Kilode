@@ -631,6 +631,25 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </TouchableOpacity>
             ))}
           </ScrollView>
+          {recent.length > 0 ? (
+            <>
+              <View style={s.sectionHead}>
+                <Text style={s.sectionTitle}>Recently played</Text>
+                <TouchableOpacity onPress={() => setTab("library")} accessibilityRole="button"><Text style={s.link}>Your library</Text></TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
+                {recent.slice(0, 8).map((t: any, i: number) => (
+                  <TouchableOpacity key={"recent-" + t.id} style={{ width: 126 }} onPress={() => selectTrack(t)} onLongPress={() => playQueue(recent, i)} accessibilityRole="button" accessibilityLabel={"Open recently played " + t.title}>
+                    <View style={{ height: 88, borderRadius: 14, backgroundColor: t.color || ["#362449", "#45331B", "#243A42"][i % 3], alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: C.border || "#2A2A30" }}>
+                      <Ionicons name="musical-notes" size={27} color="#FFFFFF" />
+                    </View>
+                    <Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text>
+                    <Text style={s.trackArtist} numberOfLines={1}>{t.artist || "Kilode artist"}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          ) : null}
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>New drops</Text>
             <TouchableOpacity onPress={() => setTab("search")} accessibilityRole="button"><Text style={s.link}>Find music</Text></TouchableOpacity>
