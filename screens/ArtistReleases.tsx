@@ -25,14 +25,16 @@ type Props = {
   sessionName?: string;
   onBack: () => void;
   show: (m: string) => void;
+  /** When true, open directly in the new-draft form (e.g. from Create → Track). */
+  initialCompose?: boolean;
 };
 
 const GENRE_OPTIONS = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion", "Hip-Hop", "Gospel", "Other"];
 
-export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props) {
+export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialCompose }: Props) {
   const [drafts, setDrafts] = useState<ArtistReleaseDraft[]>([]);
   const [loading, setLoading] = useState(true);
-  const [composing, setComposing] = useState(false);
+  const [composing, setComposing] = useState(!!initialCompose);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [artistName, setArtistName] = useState(sessionName || "");
@@ -51,6 +53,19 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show }: Props)
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // If parent requests compose mode after mount (e.g. Create → Track), honour it once.
+  useEffect(() => {
+    if (initialCompose) {
+      setComposing(true);
+      setEditingId(null);
+      setTitle("");
+      setArtistName(sessionName || "");
+      setGenre("Afrobeats");
+      setNotes("");
+      setRights(false);
+    }
+  }, [initialCompose, sessionName]);
 
   const resetForm = () => {
     setEditingId(null);
