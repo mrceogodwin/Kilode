@@ -778,10 +778,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               : `Top ${activeChart} selected. Verified chart rankings must come from the connected chart-data service; these five entries remain illustrative until that feed is available.`}
           </Text>
           {CHARTS.map((c) => {
+            // Match both fields so a shared artist name never opens the wrong track.
             const match = tracks.find(
               (t: any) =>
-                String(t.title).toLowerCase() === c.title.toLowerCase() ||
-                String(t.artist).toLowerCase() === c.artist.toLowerCase()
+                String(t.title ?? "").trim().toLowerCase() === c.title.toLowerCase() &&
+                String(t.artist ?? "").trim().toLowerCase() === c.artist.toLowerCase()
             );
             return (
               <TouchableOpacity
