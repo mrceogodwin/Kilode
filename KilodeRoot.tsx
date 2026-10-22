@@ -790,7 +790,7 @@ function KilodeApp() {
       {...edgeSwipeResponder.panHandlers}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
-      <Header title={headerTitle} />
+      {!moreOpen ? <Header title={headerTitle} /> : null}
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
         <View style={[s.player, { gap: 10 }]}>
@@ -814,13 +814,15 @@ function KilodeApp() {
           <TouchableOpacity onPress={async () => { if (soundRef.current) { await soundRef.current.stopAsync().catch(() => undefined); await soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} accessibilityRole="button" accessibilityLabel="Close player"><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
         </View>
       ) : null}
-      <KilodeTabBar
-        active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
-        onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
-        onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
-        isDark={isDark}
-        accent={C.accent}
-      />
+      {!moreOpen ? (
+              <KilodeTabBar
+                active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
+                onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
+                onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
+                isDark={isDark}
+                accent={C.accent}
+              />
+      ) : null}
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
         <View style={s.modalRoot}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setComposeOpen(false)} />
@@ -865,22 +867,57 @@ function KilodeApp() {
           </View>
         </View>
       </Modal>
-      <Modal visible={moreOpen} transparent animationType="none" onRequestClose={closeMoreDrawer}>
+      <Modal visible={moreOpen} transparent animationType="none" statusBarTranslucent onRequestClose={closeMoreDrawer}>
         <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-end", padding: 0, backgroundColor: "transparent" }]}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={closeMoreDrawer} />
-          <Animated.View style={{ width: "84%", maxWidth: 360, height: "100%", paddingTop: Platform.OS === "ios" ? 52 : 28, paddingHorizontal: 16, paddingBottom: 28, backgroundColor: C.card, borderLeftWidth: 1, borderLeftColor: C.border, transform: [{ translateX: drawerTranslateX }] }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: C.border, marginBottom: 14 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><KilodeWordmark size="small" /><Text style={{ color: C.text, fontSize: 14, fontWeight: "800" }}>Explore</Text></View>
-              <TouchableOpacity onPress={() => setMoreOpen(false)} accessibilityRole="button" accessibilityLabel="Close navigation drawer" hitSlop={10} style={{ padding: 6 }}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity>
+          <TouchableOpacity style={[s.scrim, { backgroundColor: "rgba(0,0,0,0.62)" }]} activeOpacity={1} onPress={closeMoreDrawer} accessibilityLabel="Close navigation drawer" />
+          <Animated.View style={{ width: "88%", maxWidth: 390, height: "100%", paddingTop: Platform.OS === "ios" ? 58 : 32, paddingHorizontal: 20, paddingBottom: Platform.OS === "ios" ? 30 : 18, backgroundColor: C.bg, borderLeftWidth: 1, borderLeftColor: C.border, transform: [{ translateX: drawerTranslateX }] }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <KilodeWordmark size="small" />
+                <View>
+                  <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.5 }}>Explore</Text>
+                  <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }}>Everything in one place</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={closeMoreDrawer} accessibilityRole="button" accessibilityLabel="Close navigation drawer" hitSlop={10} style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", backgroundColor: C.card }}>
+                <Ionicons name="close" size={20} color={C.text2} />
+              </TouchableOpacity>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-              <View style={s.deskGrid}>
-                {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "💬" }, { id: "chat", label: "Chat", icon: "💬" }, { id: "myspace", label: "My Space", icon: "🏠" }].map((d) => (
-                  <TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}>
-                    <Ionicons name={systemIconName(d.icon)} size={22} color={C.accent} />
-                    <Text style={s.deskGridLabel}>{d.label}</Text>
-                  </TouchableOpacity>
-                ))}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 18, paddingBottom: 24 }}>
+              <TouchableOpacity onPress={() => { closeMoreDrawer(); go("myspace"); }} activeOpacity={0.75} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 12, marginBottom: 20, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center", marginRight: 11 }}>
+                  <Ionicons name="person-outline" size={19} color={C.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text numberOfLines={1} style={{ color: C.text, fontSize: 13, fontWeight: "800" }}>{displayName || session.handle || "Your Kilode space"}</Text>
+                  <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{session.kind ? String(session.kind).replace(/_/g, " ") : "Profile, tools and settings"}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={17} color={C.text3} />
+              </TouchableOpacity>
+              <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1.6, marginBottom: 8, marginLeft: 4 }}>DISCOVER</Text>
+              {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "👥" }].filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i).map((d) => (
+                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); go(d.id); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                  <View style={{ width: 34, alignItems: "flex-start" }}><Ionicons name={systemIconName(d.icon)} size={19} color={tab === d.id ? C.accent : C.text2} /></View>
+                  <Text style={{ flex: 1, color: tab === d.id ? C.accent : C.text, fontSize: 14, fontWeight: tab === d.id ? "800" : "600" }}>{d.label}</Text>
+                  {tab === d.id ? <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: C.accent, marginRight: 5 }} /> : <Ionicons name="chevron-forward" size={15} color={C.text3} />}
+                </TouchableOpacity>
+              ))}
+              <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1.6, marginTop: 24, marginBottom: 8, marginLeft: 4 }}>YOUR SPACE</Text>
+              {[
+                { id: "myspace", label: "My Space", icon: "person-circle-outline" },
+                { id: "chat", label: "Chat", icon: "chatbubble-ellipses-outline" },
+                { id: "activity", label: "Notifications", icon: "notifications-outline" },
+                { id: "settings", label: "Settings", icon: "settings-outline" },
+              ].map((d) => (
+                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); if (d.id === "settings") setSettingsOpen(true); else go(d.id); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                  <View style={{ width: 34, alignItems: "flex-start" }}><Ionicons name={d.icon as keyof typeof Ionicons.glyphMap} size={19} color={tab === d.id ? C.accent : C.text2} /></View>
+                  <Text style={{ flex: 1, color: tab === d.id ? C.accent : C.text, fontSize: 14, fontWeight: tab === d.id ? "800" : "600" }}>{d.label}</Text>
+                  <Ionicons name="chevron-forward" size={15} color={C.text3} />
+                </TouchableOpacity>
+              ))}
+              <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border, flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent }} />
+                <Text style={{ color: C.text3, fontSize: 11 }}>KILODE · Everything you need, one platform</Text>
               </View>
             </ScrollView>
           </Animated.View>
