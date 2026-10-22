@@ -63,6 +63,14 @@ const GENRES = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion"];
 
 type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres" | "queue";
 
+function trackRenderKey(track: any, index: number, prefix = "track") {
+  const id = track?.id;
+  if (id != null && String(id).trim()) return `${prefix}-${String(id)}`;
+  const title = String(track?.title ?? "").trim().toLocaleLowerCase();
+  const artist = String(track?.artist ?? "").trim().toLocaleLowerCase();
+  return `${prefix}-metadata-${title}-${artist}-${index}`;
+}
+
 function sameTrack(a: any, b: any) {
   if (!a || !b) return false;
   if (a.id != null && b.id != null) return String(a.id) === String(b.id);
@@ -397,7 +405,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
             {(pinnedTracks.length ? pinnedTracks : profileTracks.slice(0, 3)).map((t: any, i: number) => (
               <TouchableOpacity
-                key={t.id}
+                key={trackRenderKey(t, i, "pinned")}
                 style={[s.trackCard, { width: 136, height: 154, backgroundColor: t.color || [ "#7C3AED", "#B45309", "#BE185D" ][i % 3] }]}
                 onPress={() => selectTrack(t)}
                 onLongPress={() => playQueue(profileTracks, Math.max(0, profileTracks.findIndex((x: any) => sameTrack(x, t))))}
@@ -416,7 +424,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <Text style={s.sectionTitle}>Top songs</Text>
           </View>
           {profileTracks.slice(0, 5).map((t: any, i: number) => (
-            <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)} onLongPress={() => playQueue(profileTracks, i)} accessibilityRole="button">
+            <TouchableOpacity key={trackRenderKey(t, i, "artist-track")} style={s.roomRow} onPress={() => selectTrack(t)} onLongPress={() => playQueue(profileTracks, i)} accessibilityRole="button">
               <View style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: t.color || activeArtist.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
                 <Ionicons name="musical-note" size={20} color="#fff" />
               </View>
@@ -438,7 +446,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
             {profileTracks.slice(0, 4).map((t: any, i: number) => (
-              <TouchableOpacity key={"release-" + t.id} style={{ width: 142 }} onPress={() => selectTrack(t)} accessibilityRole="button">
+              <TouchableOpacity key={trackRenderKey(t, i, "release")} style={{ width: 142 }} onPress={() => selectTrack(t)} accessibilityRole="button">
                 <View style={{ height: 142, borderRadius: 16, backgroundColor: t.color || activeArtist.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 9 }}>
                   <Ionicons name={i % 2 ? "disc-outline" : "albums-outline"} size={42} color="#fff" />
                 </View>
@@ -473,7 +481,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           </View>
           {genreTracks.length ? (
             genreTracks.map((t: any, i: number) => (
-              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)} onLongPress={() => playQueue(genreTracks, i)}>
+              <TouchableOpacity key={trackRenderKey(t, i, "genre")} style={s.roomRow} onPress={() => selectTrack(t)} onLongPress={() => playQueue(genreTracks, i)}>
                 <View style={[s.roomAv, { backgroundColor: t.color || C.accent }]}>
                   <Ionicons name="musical-note" size={16} color="#fff" />
                 </View>
@@ -625,7 +633,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   </TouchableOpacity>
                 ))}
                 {results.map((t: any, i: number) => (
-              <TouchableOpacity key={String(t.id)} style={[s.roomRow, s.padH]} onPress={() => selectTrack(t)} onLongPress={() => playQueue(results, i)} accessibilityRole="button">
+              <TouchableOpacity key={trackRenderKey(t, i, "search")} style={[s.roomRow, s.padH]} onPress={() => selectTrack(t)} onLongPress={() => playQueue(results, i)} accessibilityRole="button">
                 <View style={{ width: 46, height: 46, borderRadius: 11, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
                   <Ionicons name="musical-note" size={20} color="#FFFFFF" />
                 </View>
@@ -685,7 +693,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
                 {recent.slice(0, 8).map((t: any, i: number) => (
-                  <TouchableOpacity key={"recent-" + t.id} style={{ width: 126 }} onPress={() => selectTrack(t)} onLongPress={() => playQueue(recent, i)} accessibilityRole="button" accessibilityLabel={"Open recently played " + t.title}>
+                  <TouchableOpacity key={trackRenderKey(t, i, "recent-card")} style={{ width: 126 }} onPress={() => selectTrack(t)} onLongPress={() => playQueue(recent, i)} accessibilityRole="button" accessibilityLabel={"Open recently played " + t.title}>
                     <View style={{ height: 88, borderRadius: 14, backgroundColor: t.color || ["#362449", "#45331B", "#243A42"][i % 3], alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: C.border || "#2A2A30" }}>
                       <Ionicons name="musical-notes" size={27} color="#FFFFFF" />
                     </View>
@@ -713,7 +721,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
               {tracks.map((t: any, i: number) => (
                 <TouchableOpacity
-                  key={t.id}
+                  key={trackRenderKey(t, i, "new-drop")}
                   style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
                   onPress={() => selectTrack(t)}
                   onLongPress={() => playQueue(tracks, i)}
@@ -880,8 +888,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               Heart any track to save it here. Saved tracks stay on this device.
             </Text>
           ) : (
-            saved.map((t) => (
-              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)}>
+            saved.map((t, i) => (
+              <TouchableOpacity key={trackRenderKey(t, i, "saved")} style={s.roomRow} onPress={() => selectTrack(t)}>
                 <Ionicons name="heart" size={18} color={C.danger} />
                 <View style={[s.flex, { marginLeft: 12 }]}>
                   <Text style={s.roomName}>{t.title}</Text>
@@ -898,8 +906,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           {recent.length === 0 ? (
             <Text style={[s.sub, s.padH]}>Play a track and it will show up here.</Text>
           ) : (
-            recent.map((t) => (
-              <TouchableOpacity key={`r-${t.id}`} style={s.roomRow} onPress={() => selectTrack(t)}>
+            recent.map((t, i) => (
+              <TouchableOpacity key={trackRenderKey(t, i, "recent-row")} style={s.roomRow} onPress={() => selectTrack(t)}>
                 <Ionicons name="time-outline" size={18} color={C.accent} />
                 <View style={[s.flex, { marginLeft: 12 }]}>
                   <Text style={s.roomName}>{t.title}</Text>
@@ -940,7 +948,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             </View>
           </View>
           {player.queue.length ? player.queue.map((t: any, i: number) => (
-            <View key={String(t.id) + "-queue-tab"} style={[s.roomRow, { alignItems: "center" }]}>
+            <View key={trackRenderKey(t, i, "queue-tab") style={[s.roomRow, { alignItems: "center" }]}>
               <TouchableOpacity onPress={() => { void playQueue(player.queue, i); }} style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
                 <Ionicons name={i === player.index && player.playing ? "volume-high" : "play"} size={18} color="#FFFFFF" />
               </TouchableOpacity>
