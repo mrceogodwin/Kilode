@@ -15,6 +15,13 @@ import {
   playPreviousInQueue,
   toggleMusicPlayback,
   subscribeMusicPlayer,
+  seekMusicTo,
+  toggleMusicShuffle,
+  cycleMusicRepeat,
+  addTracksToQueue,
+  playTrackNext,
+  removeQueuedTrack,
+  moveQueuedTrack,
   type MusicPlayerState,
 } from "../lib/musicPlayer";
 
@@ -46,7 +53,12 @@ const ARTISTS = [
 
 const GENRES = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion"];
 
-type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres";
+type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres" | "queue";
+
+function formatTime(ms: number) {
+  const seconds = Math.max(0, Math.floor((ms || 0) / 1000));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
 
 export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSource }: Props) {
   const [tab, setTab] = useState<Tab>("discover");
@@ -429,7 +441,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-        {(["discover", "search", "charts", "artists", "library", "genres"] as const).map((t) => (
+        {(["discover", "search", "charts", "artists", "library", "genres", "queue"] as const).map((t) => (
           <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
             <Text style={[s.chipText, tab === t && s.chipTextOn]}>
               {t === "discover"
@@ -688,6 +700,43 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </TouchableOpacity>
             ))
           )}
+        </>
+      )}
+
+      {tab === "queue" && (
+        <>
+          <View style={s.sectionHead}>
+            <Text style={s.sectionTitle}>Up next</Text>
+            <Text style={s.meta}>{player.queue.length} tracks</Text>
+          </View>
+          {player.queue.length ? player.queue.map((t: any, i: number) => (
+            <View key={String(t.id) + "-queue-tab"} style={[s.roomRow, { alignItems: "center" }]}>
+              <TouchableOpacity onPress={() => { void playQueue(player.queue, i); }} style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
+                <Ionicons name={i === player.index && player.playing ? "volume-high" : "play"} size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={[s.flex, { marginLeft: 12 }]}>
+                <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                <Text style={s.meta} numberOfLines={1}>{t.artist || "Kilode artist"}{i === player.index ? " · Now playing" : ""}</Text>
+              </View>
+              <TouchableOpacity onPress={() => playTrackNext(t)} accessibilityRole="button" accessibilityLabel={"Play " + t.title + " next"} style={{ padding: 5 }}>
+                <Ionicons name="arrow-up" size={17} color={C.text2} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => moveQueuedTrack(i, Math.max(0, i - 1))} disabled={i === 0} accessibilityRole="button" accessibilityLabel={"Move " + t.title + " up"} style={{ padding: 5, opacity: i === 0 ? 0.3 : 1 }}>
+                <Ionicons name="chevron-up" size={17} color={C.text2} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => removeQueuedTrack(i)} disabled={i === player.index} accessibilityRole="button" accessibilityLabel={"Remove " + t.title + " from queue"} style={{ padding: 5, opacity: i === player.index ? 0.3 : 1 }}>
+                <Ionicons name="close" size={18} color={C.text2} />
+              </TouchableOpacity>
+            </View>
+          )) : (
+            <EmptyState title="Your queue is empty" body="Choose a track and add it to your listening queue." textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="list-outline" />
+          )}
+          <View style={s.padH}>
+            <TouchableOpacity onPress={() => addTracksToQueue(tracks)} style={[s.primaryBtn, { marginTop: 14 }]} accessibilityRole="button">
+              <Ionicons name="list" size={17} color="#17130B" />
+              <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Add catalogue to queue</Text>
+            </TouchableOpacity>
+          </View>
         </>
       )}
 
