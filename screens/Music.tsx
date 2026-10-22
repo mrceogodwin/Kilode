@@ -1045,7 +1045,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               <View key={trackRenderKey(t, i, "saved")} style={s.roomRow}>
                 <TouchableOpacity
                   style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
-                  onPress={() => selectTrack(t)}
+                  onPress={() => { void playQueue(saved, i); }}
                   accessibilityRole="button"
                   accessibilityLabel={"Play " + t.title}
                 >
@@ -1101,7 +1101,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <Text style={[s.sub, s.padH]}>Play a track and it will show up here.</Text>
           ) : (
             recent.map((t, i) => (
-              <TouchableOpacity key={trackRenderKey(t, i, "recent-row")} style={s.roomRow} onPress={() => selectTrack(t)}>
+              <TouchableOpacity key={trackRenderKey(t, i, "recent-row")} style={s.roomRow} onPress={() => { void playQueue(recent, i); }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
                 <Ionicons name="time-outline" size={18} color={C.accent} />
                 <View style={[s.flex, { marginLeft: 12 }]}>
                   <Text style={s.roomName}>{t.title}</Text>
