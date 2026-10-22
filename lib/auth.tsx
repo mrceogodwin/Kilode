@@ -10,6 +10,8 @@ export type Session = {
   handle: string;
   name: string;
   kind: AccountKind;
+  /** Present only for an in-memory preview profile; never a server-authenticated account. */
+  localOnly?: boolean;
 };
 
 type AuthCtx = {
@@ -18,7 +20,7 @@ type AuthCtx = {
   loading: boolean;
   signInGuest: (name?: string) => void;
   signIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; message?: string }>;
   signOut: () => void;
 };
 
@@ -168,7 +170,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (password.length < 8) return { ok: false, error: "Password needs at least 8 characters." };
     if (!API_BASE) {
-      return { ok: false, error: "Kilode registration is not available yet because its dedicated backend is not connected. You can continue as a guest." };
+      // Keep the preview flow testable without pretending this is a real,
+      // server-registered account. The profile exists in memory for this run only.
+      const previewSession: Session = {
+        token: `preview:${h.toLowerCase()}`,
+        handle: h.toLowerCase(),
+        name: displayName?.trim() || h,
+        kind: asAccountKind(kind),
+        localOnly: true,
+      };
+      setSession(previewSession);
+      setGuest(false);
+      return {
+        ok: true,
+        message: "Preview profile opened on this run only. Online registration needs Kilode's dedicated backend.",
+      };
     }
 
     setLoading(true);
