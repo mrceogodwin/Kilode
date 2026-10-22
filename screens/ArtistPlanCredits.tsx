@@ -1,18 +1,57 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  fetchArtistEntitlements,
+  entitlementsStatusLabel,
+  PROPOSED_FREE_ALLOWANCE,
+  type ArtistEntitlements,
+  type MusicApiResult,
+} from "../lib/musicReleaseApi";
 
 type Props = {
   s: any;
   C: any;
   onBack: () => void;
+  token?: string | null;
 };
 
-/**
- * Read-only product explainer for artists.
- * Mirrors docs/ARTIST_MONETISATION_DECISIONS.md — no live balance, no checkout.
- */
-export function ArtistPlanCreditsScreen({ s, C, onBack }: Props) {
+export function ArtistPlanCreditsScreen({ s, C, onBack, token }: Props) {
+  const [result, setResult] = useState<MusicApiResult<ArtistEntitlements> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    const r = await fetchArtistEntitlements(token);
+    setResult(r);
+  }, [token]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      await load();
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [load]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  };
+
+  const ent = result?.data;
+  const connected = !!(result?.ok && ent?.connected);
+  const creditsLabel =
+    connected && typeof ent?.releaseCredits === "number"
+      ? String(ent.releaseCredits)
+      : "—";
+  const statusLabel = result ? entitlementsStatusLabel(result) : "…";
+
   const card = (title: string, body: string, icon: keyof typeof Ionicons.glyphMap) => (
     <View
       style={{
@@ -45,7 +84,11 @@ export function ArtistPlanCreditsScreen({ s, C, onBack }: Props) {
   );
 
   return (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+    <ScrollView
+      style={s.flex}
+      contentContainerStyle={s.scrollPad}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
+    >
       <View style={s.padH}>
         <TouchableOpacity onPress={onBack} style={{ marginBottom: 12 }} accessibilityRole="button">
           <Text style={s.link}>‹ Back to releases</Text>
@@ -65,7 +108,7 @@ export function ArtistPlanCreditsScreen({ s, C, onBack }: Props) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.h1}>Plan & credits</Text>
-            <Text style={s.sub}>How releasing will work · not live yet</Text>
+            <Text style={s.sub}>How releasing will work · {statusLabel}</Text>
           </View>
         </View>
       </View>
@@ -82,7 +125,9 @@ export function ArtistPlanCreditsScreen({ s, C, onBack }: Props) {
         }}
       >
         <Text style={[s.meta, { color: C.accent, lineHeight: 18 }]}>
-          Credit balance, checkout, and server upload are not connected. This screen explains the product rules only. Local drafts never charge a credit.
+          {connected
+            ? "Entitlements loaded from the server. Checkout still requires a separate billing path."
+            : "Credit balance and checkout are not connected. Local drafts never charge a credit. Pull to retry when the music API is live."}
         </Text>
       </View>
 
@@ -100,11 +145,34 @@ export function ArtistPlanCreditsScreen({ s, C, onBack }: Props) {
           alignItems: "center",
         }}
       >
-        <Text style={[s.meta, { marginBottom: 4 }]}>Server credits</Text>
-        <Text style={{ fontSize: 28, fontWeight: "800", color: C.text3 }}>—</Text>
-        <Text style={[s.meta, { marginTop: 8, textAlign: "center", lineHeight: 18 }]}>
-          Unavailable until the music API returns entitlements. Proposed free allowance for new artists: 3 release credits (product decision — not granted in this build).
-        </Text>
+        {loading ? (
+          <ActivityIndicator color={C.accent} />
+        ) : (
+          <>
+            <Text style={[s.meta, { marginBottom: 4 }]}>Server release credits</Text>
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: "800",
+                color: connected ? C.text : C.text3,
+              }}
+            >
+              {creditsLabel}
+            </Text>
+            <Text style={[s.meta, { marginTop: 8, textAlign: "center", lineHeight: 18 }]}>
+              {connected
+                ? ent?.planLabel
+                  ? `Plan: ${ent.planLabel}`
+                  : "Plan: free / none reported"
+                : `Unavailable (${statusLabel}). Proposed free allowance for new artists: ${PROPOSED_FREE_ALLOWANCE} credits — not granted in this build."}
+            </Text>
+            {result?.error && !connected ? (
+              <Text style={[s.meta, { marginTop: 6, textAlign: "center", color: C.text3 }]}>
+                {result.error}
+              </Text>
+            ) : null}
+          </>
+        )}
       </View>
 
       <View style={s.sectionHead}>
@@ -147,7 +215,6 @@ export function ArtistPlanCreditsScreen({ s, C, onBack }: Props) {
       </View>
       <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
         {[
-          "Live credit balance",
           "Buy credits / subscribe",
           "Server upload & review",
           "Publish to Kilode Music",
