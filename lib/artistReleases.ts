@@ -2,6 +2,12 @@
  * Local-only artist release drafts.
  * Backend is the source of truth for published releases, credits, and entitlements.
  * This module never claims a draft is uploaded, approved, or live.
+ *
+ * Product note (see docs/ARTIST_UPLOADS_MONETISATION.md):
+ * - A "release" is Kilode Music hosting, not a Socials audio post.
+ * - releaseType (single | ep | album) is metadata for the future multi-track pipeline.
+ * - Today each local draft is still one form: one title block. EP/Album tracklists
+ *   and multi-file upload are not implemented until the dedicated music API exists.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -12,12 +18,23 @@ export type ReleaseStatus =
   | "pending_backend" // reserved for when API exists; not used until then
   | "upload_failed";
 
+/** How the artist intends to package the release once the backend is live. */
+export type ReleaseType = "single" | "ep" | "album";
+
+export const RELEASE_TYPES: { id: ReleaseType; label: string; hint: string }[] = [
+  { id: "single", label: "Single", hint: "One primary track" },
+  { id: "ep", label: "EP", hint: "Short body of work · multi-track later" },
+  { id: "album", label: "Album", hint: "Full project · multi-track later" },
+];
+
 export type ArtistReleaseDraft = {
   id: string;
   title: string;
   artistName: string;
   genre: string;
   notes: string;
+  /** Intended package type; EP/Album tracklists are not built yet */
+  releaseType: ReleaseType;
   rightsAcknowledged: boolean;
   rightsVersion: string;
   status: ReleaseStatus;
@@ -33,12 +50,23 @@ function uid(): string {
   return `draft_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function asReleaseType(value: unknown): ReleaseType {
+  if (value === "ep" || value === "album" || value === "single") return value;
+  return "single";
+}
+
 export async function listReleaseDrafts(): Promise<ArtistReleaseDraft[]> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Migrate older drafts that predate releaseType
+    return parsed.map((d: any) => ({
+      ...d,
+      releaseType: asReleaseType(d?.releaseType),
+      localOnly: true as const,
+    }));
   } catch {
     return [];
   }
@@ -53,6 +81,7 @@ export type CreateDraftInput = {
   artistName: string;
   genre: string;
   notes?: string;
+  releaseType?: ReleaseType;
   rightsAcknowledged: boolean;
 };
 
@@ -62,6 +91,7 @@ export async function createReleaseDraft(
   const title = (input.title || "").trim();
   const artistName = (input.artistName || "").trim();
   const genre = (input.genre || "").trim();
+  const releaseType = asReleaseType(input.releaseType);
 
   if (!title) return { ok: false, message: "Title is required." };
   if (!artistName) return { ok: false, message: "Artist name is required." };
@@ -76,6 +106,7 @@ export async function createReleaseDraft(
     artistName,
     genre: genre || "Afrobeats",
     notes: (input.notes || "").trim(),
+    releaseType,
     rightsAcknowledged: true,
     rightsVersion: RIGHTS_VERSION,
     status: "local_draft",
@@ -92,7 +123,12 @@ export async function createReleaseDraft(
 
 export async function updateReleaseDraft(
   id: string,
-  patch: Partial<Pick<ArtistReleaseDraft, "title" | "artistName" | "genre" | "notes" | "rightsAcknowledged">>
+  patch: Partial<
+    Pick<
+      ArtistReleaseDraft,
+      "title" | "artistName" | "genre" | "notes" | "releaseType" | "rightsAcknowledged"
+    >
+  >
 ): Promise<{ ok: true; draft: ArtistReleaseDraft } | { ok: false; message: string }> {
   const list = await listReleaseDrafts();
   const idx = list.findIndex((d) => d.id === id);
@@ -105,6 +141,8 @@ export async function updateReleaseDraft(
     artistName: patch.artistName !== undefined ? String(patch.artistName).trim() : current.artistName,
     genre: patch.genre !== undefined ? String(patch.genre).trim() : current.genre,
     notes: patch.notes !== undefined ? String(patch.notes).trim() : current.notes,
+    releaseType:
+      patch.releaseType !== undefined ? asReleaseType(patch.releaseType) : current.releaseType,
     rightsAcknowledged:
       patch.rightsAcknowledged !== undefined ? !!patch.rightsAcknowledged : current.rightsAcknowledged,
     updatedAt: new Date().toISOString(),
