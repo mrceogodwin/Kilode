@@ -10,7 +10,7 @@ import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
-import { HomeScreen } from "./screens/Home";
+import { HomeScreen } from "./screens/HomeIOS";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
@@ -44,6 +44,8 @@ function KilodeApp() {
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [joined, setJoined] = useState<Record<string, boolean>>({});
+  const [homeChip, setHomeChip] = useState(0);
+  const [slide, setSlide] = useState(0);
   const [boot, setBoot] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock" | "error">("mock");
@@ -296,22 +298,12 @@ function KilodeApp() {
     if (tab === "home") {
       return (
         <HomeScreen
-          s={s} C={C} sessionName={session.name || "Guest"} news={news} tracks={tracks}
-          takes={takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))}
-          liked={liked}
-          onLikePost={(id) => setLiked((p) => ({ ...p, [String(id)]: !p[String(id)] }))}
-          onCommentPost={(post) => setCommentTake(post)}
-          onSharePost={async (post) => { try { await Share.share({ message: `${post.name || "Kilode"}: ${post.text || post.body || ""}` }); } catch { show("Share unavailable"); } }}
-          refreshing={refreshing} onRefresh={onRefresh}
-          onOpenMedia={(id) => { if (id) setSelectedArticleId(String(id)); go("media"); }}
-          onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")} onOpenJobs={() => go("jobs")}
-          events={LISTINGS.events || []} market={LISTINGS.market || []} jobs={LISTINGS.jobs || []}
-          onOpenSystem={(id) => go(id === "myspace" ? "myspace" : id)}
-          onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)}
-          onOpenItem={(systemName, item) => { const m: any = { Events: "events", Market: "market", Jobs: "jobs" }; setSelectedDeskItem(item); go(m[systemName] || systemName.toLowerCase()); }}
-          onOpenProfile={(u) => setSelectedProfile(u)} onCompose={() => setComposeOpen(true)}
-          onPlayTrack={async (t) => { const r = await playMusicTrack(t); if (!r.ok) show(r.message || "Playback unavailable."); }}
-          show={show} searchOpen={searchOpen} onCloseSearch={() => setSearchOpen(false)}
+          s={s} C={C} takes={takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))}
+          tracks={tracks} news={news} rooms={rooms} homeChip={homeChip} setHomeChip={setHomeChip}
+          slide={slide} setSlide={setSlide} joined={joined} setJoined={setJoined}
+          refreshing={refreshing} onRefresh={onRefresh} go={go} show={show}
+          setMoreOpen={setMoreOpen} setComposeOpen={setComposeOpen}
+          setSelectedProfile={setSelectedProfile} setSelectedArticleId={setSelectedArticleId}
         />
       );
     }
