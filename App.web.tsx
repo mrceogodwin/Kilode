@@ -1,12 +1,14 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import { KilodeRoot } from "./KilodeRoot";
+import React, { Suspense, lazy } from "react";
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
 
 /**
- * Web-only crash guard. Keeps native App.tsx untouched.
- * If a render-time exception causes a blank page, show a useful recovery screen
- * instead of an empty white canvas.
+ * Web-only startup guard. Load KilodeRoot lazily so import-time errors are caught
+ * by this boundary. Native App.tsx is intentionally untouched.
  */
+const KilodeRoot = lazy(() =>
+  import("./KilodeRoot").then((module) => ({ default: module.KilodeRoot }))
+);
+
 class WebPreviewBoundary extends React.Component<
   { children: React.ReactNode },
   { error: Error | null }
@@ -18,7 +20,7 @@ class WebPreviewBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("[Kilode web preview render error]", error, info.componentStack);
+    console.error("[Kilode web preview startup error]", error, info.componentStack);
   }
 
   render() {
@@ -27,11 +29,12 @@ class WebPreviewBoundary extends React.Component<
         <View style={styles.root}>
           <Text style={styles.brand}>KILODE<Text style={styles.accent}>!</Text></Text>
           <Text style={styles.heading}>The preview hit an error.</Text>
-          <Text style={styles.copy}>The page failed while rendering. Reload to try again.</Text>
+          <Text style={styles.copy}>This is the startup error stopping the preview from rendering:</Text>
           <ScrollView style={styles.details} contentContainerStyle={styles.detailsInner}>
             <Text selectable style={styles.errorText}>
-              {this.state.error.message || "Unknown rendering error"}
+              {this.state.error.message || "Unknown startup error"}
             </Text>
+            {this.state.error.stack ? <Text selectable style={styles.stack}>{this.state.error.stack}</Text> : null}
           </ScrollView>
           <TouchableOpacity
             accessibilityRole="button"
@@ -43,14 +46,27 @@ class WebPreviewBoundary extends React.Component<
         </View>
       );
     }
+
     return this.props.children;
   }
+}
+
+function StartupFallback() {
+  return (
+    <View style={styles.root}>
+      <Text style={styles.brand}>KILODE<Text style={styles.accent}>!</Text></Text>
+      <ActivityIndicator color="#D4AF37" size="large" style={{ marginTop: 24 }} />
+      <Text style={styles.copy}>Opening your Kilode preview…</Text>
+    </View>
+  );
 }
 
 export default function App() {
   return (
     <WebPreviewBoundary>
-      <KilodeRoot />
+      <Suspense fallback={<StartupFallback />}>
+        <KilodeRoot />
+      </Suspense>
     </WebPreviewBoundary>
   );
 }
@@ -68,9 +84,10 @@ const styles = StyleSheet.create({
   accent: { color: "#91C7A0" },
   heading: { color: "#F4F4F1", fontSize: 20, fontWeight: "700", marginTop: 24, textAlign: "center" },
   copy: { color: "#9A9A9E", fontSize: 14, marginTop: 10, textAlign: "center", maxWidth: 420 },
-  details: { width: "100%", maxWidth: 600, maxHeight: 180, marginTop: 18, backgroundColor: "#18181C", borderRadius: 12 },
+  details: { width: "100%", maxWidth: 600, maxHeight: 240, marginTop: 18, backgroundColor: "#18181C", borderRadius: 12 },
   detailsInner: { padding: 14 },
   errorText: { color: "#E5C158", fontSize: 13 },
+  stack: { color: "#9A9A9E", fontSize: 11, marginTop: 10 },
   button: { marginTop: 20, backgroundColor: "#D4AF37", borderRadius: 12, paddingHorizontal: 22, paddingVertical: 12 },
   buttonText: { color: "#0D0D10", fontWeight: "800" },
 });
