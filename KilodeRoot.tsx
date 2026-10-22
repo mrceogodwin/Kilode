@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Share,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Share, Animated, Dimensions,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, LISTINGS } from "./data";
@@ -42,6 +42,13 @@ function KilodeApp() {
   const [homeChip, setHomeChip] = useState(0);
   const [slide, setSlide] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
+  const drawerX = useRef(new Animated.Value(-Math.min(Dimensions.get("window").width * 0.88, 360))).current;
+  useEffect(() => {
+    if (moreOpen) {
+      drawerX.setValue(-Math.min(Dimensions.get("window").width * 0.88, 360));
+      Animated.timing(drawerX, { toValue: 0, duration: 240, useNativeDriver: true }).start();
+    }
+  }, [moreOpen, drawerX]);
   const [createOpen, setCreateOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [commentTake, setCommentTake] = useState<any | null>(null);
@@ -372,10 +379,11 @@ function KilodeApp() {
         </View>
       ) : null}
       <KilodeTabBar
-        active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"}
-        onTab={(id) => go(id)}
-        onCreate={() => setCreateOpen(true)}
+        active={moreOpen ? "more" : tab === "home" || tab === "socials" || tab === "music" ? tab : "home"}
+        onTab={(id) => { if (id === "more") { setMoreOpen(true); setCreateOpen(false); } else go(id); }}
+        onCreate={() => { setCreateOpen(true); setMoreOpen(false); }}
         isDark={isDark}
+        accent="#D4AF37"
       />
 
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
@@ -454,19 +462,44 @@ function KilodeApp() {
         </View>
       </Modal>
 
-      <Modal visible={moreOpen} transparent animationType="slide" onRequestClose={() => setMoreOpen(false)}>
-        <View style={s.modalRoot}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setMoreOpen(false)} />
-          <View style={s.sheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>All desks</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
-            {DESKS.map((d) => (
-              <TouchableOpacity key={d.id} style={s.roomRow} onPress={() => { setMoreOpen(false); go(d.id); }}>
-                <Text style={{ fontSize: 22, marginRight: 12 }}>{d.icon}</Text>
-                <View style={s.flex}><Text style={s.roomName}>{d.label}</Text><Text style={s.meta}>{d.blurb}</Text></View>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <Modal visible={moreOpen} transparent animationType="none" onRequestClose={() => setMoreOpen(false)} statusBarTranslucent>
+        <View style={{ flex: 1, flexDirection: "row", backgroundColor: "rgba(0,0,0,0.58)" }}>
+          <Animated.View style={{ width: Math.min(Dimensions.get("window").width * 0.88, 360), height: "100%", backgroundColor: C.card, borderTopRightRadius: 24, borderBottomRightRadius: 24, paddingTop: 56, paddingHorizontal: 16, paddingBottom: 24, transform: [{ translateX: drawerX }] }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <View><Text style={[s.sheetTitle, { color: C.text }]}>Explore Kilode</Text><Text style={[s.meta, { marginTop: 3 }]}>Everything, one platform.</Text></View>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close menu" onPress={() => setMoreOpen(false)} style={{ padding: 10 }}><Text style={[s.sheetClose, { color: C.text }]}>✕</Text></TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+              {[
+                { id: "media", label: "Media", icon: "◈", blurb: "News, stories and culture" },
+                { id: "music", label: "Music", icon: "♫", blurb: "Discover tracks and artists" },
+                { id: "socials", label: "Socials", icon: "◎", blurb: "Posts, creators and communities" },
+                { id: "communities", label: "Communities", icon: "◉", blurb: "Find your people" },
+                { id: "creators", label: "Creators", icon: "✳", blurb: "Discover people making things" },
+                { id: "events", label: "Events", icon: "◇", blurb: "What is happening near you" },
+                { id: "market", label: "Market", icon: "▧", blurb: "Discover products and sellers" },
+                { id: "jobs", label: "Jobs", icon: "▤", blurb: "Explore roles and opportunities" },
+                { id: "cinema", label: "Cinema", icon: "▣", blurb: "Films, screenings and votes" },
+                { id: "chat", label: "Chat", icon: "◌", blurb: "Rooms and conversations" },
+                { id: "ads", label: "Ads & Business", icon: "↗", blurb: "Campaigns and promotion" },
+                { id: "rent", label: "Rent", icon: "⌂", blurb: "Homes and spaces" },
+                { id: "library", label: "Library", icon: "▥", blurb: "Books and reading" },
+                { id: "sports", label: "Sports", icon: "◎", blurb: "Scores and fan talk" },
+                { id: "tech", label: "Tech & Business", icon: "⌘", blurb: "Builders, ideas and markets" },
+                { id: "videos", label: "Videos", icon: "▷", blurb: "Watch clips on Kilode" },
+                { id: "activity", label: "Activity", icon: "✧", blurb: "Your notifications" },
+                { id: "myspace", label: "My Space", icon: "◍", blurb: "Your account and tools" },
+                { id: "settings", label: "Settings", icon: "⚙", blurb: "Preferences and account" },
+              ].map((item) => (
+                <TouchableOpacity key={item.id} accessibilityRole="button" style={[s.roomRow, { marginBottom: 7, borderRadius: 15 }]} onPress={() => { setMoreOpen(false); if (item.id === "settings") { setSettingsOpen(true); } else if (item.id === "communities" || item.id === "creators") { setSocialSection(item.id); go("socials"); } else { go(item.id); } }}>
+                  <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "#302A1B" : "#F7F0D8", borderWidth: 1, borderColor: C.border, marginRight: 12 }}><Text style={{ color: C.accent, fontSize: 19, fontWeight: "700" }}>{item.icon}</Text></View>
+                  <View style={s.flex}><Text style={s.roomName}>{item.label}</Text><Text style={s.meta}>{item.blurb}</Text></View>
+                  <Text style={[s.meta, { fontSize: 18, marginLeft: 6 }]}>›</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </Animated.View>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close menu" activeOpacity={1} onPress={() => setMoreOpen(false)} style={{ flex: 1 }} />
         </View>
       </Modal>
 
