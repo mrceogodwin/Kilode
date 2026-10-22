@@ -158,7 +158,42 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               : "Track details · connected catalogue"}
           </Text>
 
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 20, marginTop: 28 }}>
+          {isCurrentPlayerTrack ? (
+            <View style={{ marginTop: 22 }}>
+              <View style={{ height: 4, borderRadius: 3, backgroundColor: C.border || "#2A2A30", overflow: "hidden" }}>
+                <View style={{ height: 4, width: `${Math.min(100, player.durationMillis ? (player.positionMillis / player.durationMillis) * 100 : 0)}%`, backgroundColor: C.accent, borderRadius: 3 }} />
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 7 }}>
+                <Text style={s.meta}>{formatTime(player.positionMillis)}</Text>
+                <Text style={s.meta}>{formatTime(player.durationMillis)}</Text>
+              </View>
+              <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 8 }}>
+                <TouchableOpacity onPress={() => { void seekMusicTo(Math.max(0, player.positionMillis - 15000)); }} accessibilityRole="button" accessibilityLabel="Rewind 15 seconds" style={s.chip}>
+                  <Text style={s.chipText}>↶ 15s</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { void seekMusicTo(Math.min(player.durationMillis || player.positionMillis + 15000, player.positionMillis + 15000)); }} accessibilityRole="button" accessibilityLabel="Forward 15 seconds" style={s.chip}>
+                  <Text style={s.chipText}>15s ↷</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
+
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
+            <TouchableOpacity onPress={() => toggleMusicShuffle()} accessibilityRole="button" accessibilityLabel="Toggle shuffle" style={[s.chip, player.shuffle && s.chipOn]}>
+              <Ionicons name="shuffle" size={16} color={player.shuffle ? C.accent : C.text2} />
+              <Text style={[s.chipText, player.shuffle && s.chipTextOn, { marginLeft: 5 }]}>Shuffle</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => cycleMusicRepeat()} accessibilityRole="button" accessibilityLabel="Change repeat mode" style={[s.chip, player.repeat !== "off" && s.chipOn]}>
+              <Ionicons name="repeat" size={16} color={player.repeat !== "off" ? C.accent : C.text2} />
+              <Text style={[s.chipText, player.repeat !== "off" && s.chipTextOn, { marginLeft: 5 }]}>{player.repeat === "one" ? "Repeat one" : player.repeat === "all" ? "Repeat all" : "Repeat off"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => addTracksToQueue([activeTrack])} accessibilityRole="button" accessibilityLabel="Add track to queue" style={s.chip}>
+              <Ionicons name="add" size={16} color={C.text2} />
+              <Text style={[s.chipText, { marginLeft: 4 }]}>Queue</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 20, marginTop: 20 }}>
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Previous track"
