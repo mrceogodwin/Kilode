@@ -7,6 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SAVED_KEY = "@kilode/music/saved";
 const RECENT_KEY = "@kilode/music/recent";
+const PLAYLISTS_KEY = "@kilode/music/playlists";
 const MAX_RECENT = 40;
 
 export type LibraryTrack = {
@@ -86,4 +87,80 @@ export async function addRecentTrack(track: any): Promise<LibraryTrack[]> {
 
 export async function clearRecentTracks(): Promise<void> {
   await writeList(RECENT_KEY, []);
+}
+
+
+export type MusicPlaylist = {
+  id: string;
+  name: string;
+  tracks: LibraryTrack[];
+  updatedAt: number;
+};
+
+export async function getMusicPlaylists(): Promise<MusicPlaylist[]> {
+  try {
+    const raw = await AsyncStorage.getItem(PLAYLISTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((p) => p && typeof p.id === "string" && typeof p.name === "string")
+          .map((p) => ({ ...p, tracks: Array.isArray(p.tracks) ? p.tracks.map(normalize).filter((t: LibraryTrack) => t.id) : [] }))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeMusicPlaylists(playlists: MusicPlaylist[]): Promise<void> {
+  await AsyncStorage.setItem(PLAYLISTS_KEY, JSON.stringify(playlists));
+}
+
+export async function createMusicPlaylist(name: string): Promise<MusicPlaylist[]> {
+  const clean = name.trim().slice(0, 48);
+  if (!clean) return getMusicPlaylists();
+  const playlists = await getMusicPlaylists();
+  if (playlists.some((p) => p.name.toLowerCase() === clean.toLowerCase())) {
+    throw new Error("A playlist with that name already exists.");
+  }
+  const next = [{ id: `playlist-${Date.now()}`, name: clean, tracks: [], updatedAt: Date.now() }, ...playlists];
+  await writeMusicPlaylists(next);
+  return next;
+}
+
+export async function renameMusicPlaylist(id: string, name: string): Promise<MusicPlaylist[]> {
+  const clean = name.trim().slice(0, 48);
+  if (!clean) throw new Error("Enter a playlist name.");
+  const playlists = await getMusicPlaylists();
+  if (playlists.some((p) => p.id !== id && p.name.toLowerCase() === clean.toLowerCase())) {
+    throw new Error("A playlist with that name already exists.");
+  }
+  const next = playlists.map((p) => p.id === id ? { ...p, name: clean, updatedAt: Date.now() } : p);
+  await writeMusicPlaylists(next);
+  return next;
+}
+
+export async function deleteMusicPlaylist(id: string): Promise<MusicPlaylist[]> {
+  const next = (await getMusicPlaylists()).filter((p) => p.id !== id);
+  await writeMusicPlaylists(next);
+  return next;
+}
+
+export async function addTrackToMusicPlaylist(id: string, track: any): Promise<MusicPlaylist[]> {
+  if (!track?.id) throw new Error("This track cannot be added yet.");
+  const playlists = await getMusicPlaylists();
+  const next = playlists.map((p) => p.id !== id ? p : {
+    ...p,
+    tracks: p.tracks.some((t) => t.id === String(track.id)) ? p.tracks : [...p.tracks, normalize(track)],
+    updatedAt: Date.now(),
+  });
+  await writeMusicPlaylists(next);
+  return next;
+}
+
+export async function removeTrackFromMusicPlaylist(id: string, trackId: string): Promise<MusicPlaylist[]> {
+  const next = (await getMusicPlaylists()).map((p) => p.id === id
+    ? { ...p, tracks: p.tracks.filter((t) => t.id !== String(trackId)), updatedAt: Date.now() }
+    : p);
+  await writeMusicPlaylists(next);
+  return next;
 }
