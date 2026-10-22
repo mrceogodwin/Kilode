@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-nativ
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { loadSavedTracks, loadRecentTracks, toggleSavedTrack, loadMusicPlaylists, createMusicPlaylist, renameMusicPlaylist, deleteMusicPlaylist, addTrackToMusicPlaylist, type LibraryTrack, type MusicPlaylist } from "../lib/musicLibrary";
-import { setMusicQueue } from "../lib/musicPlayer";
+import { getMusicQueue, setMusicQueue } from "../lib/musicPlayer";
 
 type Props = {
   s: any;
@@ -31,7 +31,7 @@ const PREVIEW_RANKS = [
 ];
 
 const GENRES = ["Afrobeats", "Amapiano", "R&B", "Hip Hop", "Gospel", "Street", "Highlife"];
-const TABS = ["Discover", "Charts", "Artists", "Library", "Genres"] as const;
+const TABS = ["Discover", "Charts", "Artists", "Library", "Genres", "Queue"] as const;
 
 export function MusicScreen({
   s, C, onBack, show, onPlay, tracks: remoteTracks, tracksSource, onOpenTrack, onOpenArtist,
@@ -48,6 +48,7 @@ export function MusicScreen({
   const [playlistName, setPlaylistName] = useState("");
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
+  const [queueRows, setQueueRows] = useState<any[]>([]);
 
   const hasLiveTracks = tracksSource === "live";
   const baseTracks = hasLiveTracks && remoteTracks?.length ? remoteTracks : TRACKS || [];
@@ -90,7 +91,7 @@ export function MusicScreen({
     setSavedIds(map);
   }, []);
 
-  useEffect(() => { void refreshLibrary(); }, [refreshLibrary]);
+  useEffect(() => { void refreshLibrary(); setQueueRows(getMusicQueue().queue); }, [refreshLibrary]);
 
   const filtered = useMemo(() => {
     let rows = catalogue;
@@ -130,6 +131,7 @@ export function MusicScreen({
   const playTrack = async (track: any) => {
     const payload = track.raw || track;
     setMusicQueue(filtered.map((t) => t.raw || t), Math.max(0, filtered.findIndex((t) => String(t.id) === String(track.id))));
+    setQueueRows(getMusicQueue().queue);
     await onPlay(payload);
     await refreshLibrary();
   };
@@ -306,6 +308,22 @@ export function MusicScreen({
           {recent.length === 0 ? (
             <Text style={{ color: C.text3, fontSize: 12, marginHorizontal: 16, marginTop: 8 }}>Play a track to build history on this device.</Text>
           ) : recent.map((t) => trackRow(t))}
+        </>
+      )}
+
+      {tab === "Queue" && (
+        <>
+          <View style={{ paddingHorizontal: 16, paddingTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View><Text style={{ color: C.text, fontSize: 18, fontWeight: "800" }}>Up next</Text><Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>{queueRows.length} tracks in this session</Text></View>
+            <TouchableOpacity accessibilityRole="button" onPress={() => { const rows = catalogue.map((t) => t.raw || t); setMusicQueue(rows, 0); setQueueRows(getMusicQueue().queue); show("Catalogue added to the queue."); }} style={{ backgroundColor: C.accent, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10 }}><Text style={{ color: "#111", fontSize: 12, fontWeight: "800" }}>Add catalogue</Text></TouchableOpacity>
+          </View>
+          {queueRows.length ? queueRows.map((t, i) => (
+            <View key={String(t.id || t.title) + "-queue-" + i} style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.border, gap: 10 }}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={"Play " + t.title} onPress={() => { setMusicQueue(queueRows, i); void onPlay(t); }} style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}><Ionicons name="play" size={17} color="#fff" /></TouchableOpacity>
+              <View style={{ flex: 1 }}><Text numberOfLines={1} style={{ color: C.text, fontWeight: "700" }}>{t.title || "Track"}</Text><Text numberOfLines={1} style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{t.artist || t.artist_name || "Artist"}</Text></View>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={"Remove " + t.title + " from queue"} onPress={() => { const next = queueRows.filter((_, index) => index !== i); setQueueRows(next); setMusicQueue(next, Math.max(0, i - 1)); }} style={{ padding: 7 }}><Ionicons name="close" size={18} color={C.text3} /></TouchableOpacity>
+            </View>
+          )) : <Text style={{ color: C.text3, fontSize: 13, margin: 16 }}>Your queue is empty. Add the catalogue or play a track to start a listening session.</Text>}
         </>
       )}
 
