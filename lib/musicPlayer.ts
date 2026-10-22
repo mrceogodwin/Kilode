@@ -65,9 +65,14 @@ export function setMusicQueue(tracks: any[], startIndex = 0) {
 
 export function addTracksToQueue(tracks: any[]) {
   const additions = (Array.isArray(tracks) ? tracks : [tracks]).filter(Boolean);
-  const existing = new Set(queue.map((t) => String(t?.id)));
-  additions.forEach((t) => {
-    if (!existing.has(String(t?.id))) queue.push(t);
+  const existing = new Set(queue.map((t) => t?.id != null ? String(t.id) : null).filter((id): id is string => id !== null));
+  additions.forEach((track) => {
+    // Tracks without IDs cannot be safely deduplicated; do not collapse them all into "undefined".
+    const id = track?.id != null ? String(track.id) : null;
+    if (id === null || !existing.has(id)) {
+      queue.push(track);
+      if (id !== null) existing.add(id);
+    }
   });
   if (index < 0 && queue.length) index = 0;
   publish();
