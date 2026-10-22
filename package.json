@@ -8,6 +8,8 @@
     "ios": "expo start --ios",
     "android": "expo start --android",
     "tunnel": "expo start --tunnel",
+    "web": "expo start --web",
+    "build:web": "expo export --platform web",
     "typecheck": "tsc --noEmit",
     "eas:build:ios": "eas build --platform ios --profile production",
     "eas:build:android": "eas build --platform android --profile production",
@@ -15,13 +17,19 @@
     "check:account-capabilities": "node scripts/check-account-capabilities.cjs"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~3.2.3",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@supabase/supabase-js": "2.45.4",
     "expo": "~51.0.28",
+    "expo-av": "~14.0.7",
+    "expo-document-picker": "~12.0.2",
+    "expo-font": "~12.0.10",
     "expo-linear-gradient": "~13.0.2",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-native": "0.74.5",
-    "expo-av": "~14.0.7"
+    "react-native-web": "~0.19.10"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
