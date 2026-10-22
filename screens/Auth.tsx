@@ -69,25 +69,28 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
     return (
       <SafeAreaView style={styles.root}>
         <StatusBar barStyle="light-content" />
+        <Image
+          source={require("../assets/kilode-welcome-portrait.jpg")}
+          style={styles.welcomeBackdrop}
+          resizeMode="cover"
+          accessibilityLabel="Kilode welcome portrait"
+        />
+        <View pointerEvents="none" style={styles.welcomeScrim} />
         <ScrollView contentContainerStyle={styles.welcomePad} keyboardShouldPersistTaps="handled">
-          <Image
-            source={require("../assets/kilode-welcome-portrait.jpg")}
-            style={styles.welcomePortrait}
-            resizeMode="cover"
-            accessibilityLabel="Kilode welcome portrait"
-          />
-          <Text style={styles.welcomeTitle}>Everything you need.</Text>
-          <Text style={styles.welcomeGold}>One platform.</Text>
-          <Text style={styles.welcomeSub}>Discover, create, connect and be part of something bigger.</Text>
-          <TouchableOpacity style={[styles.cta, { marginTop: 22 }]} onPress={() => setMode("kind")} accessibilityRole="button">
-            <Text style={styles.ctaText}>Get Started  →</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setMode("in")} style={{ marginTop: 18, alignItems: "center" }} accessibilityRole="button">
-            <Text style={styles.loginMuted}>Already have an account? <Text style={styles.loginLink}>Log In</Text></Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.guestBtn} onPress={onGuest} accessibilityRole="button" accessibilityLabel="Continue as Guest">
-            <Text style={styles.guestText}>Continue as Guest</Text>
-          </TouchableOpacity>
+          <View style={styles.welcomePanel}>
+            <Text style={styles.welcomeTitle}>Everything you need.</Text>
+            <Text style={styles.welcomeGold}>One platform.</Text>
+            <Text style={styles.welcomeSub}>Discover, create, connect and be part of something bigger.</Text>
+            <TouchableOpacity style={[styles.cta, { marginTop: 22 }]} onPress={() => setMode("kind")} accessibilityRole="button">
+              <Text style={styles.ctaText}>Get Started  →</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setMode("in")} style={{ marginTop: 18, alignItems: "center" }} accessibilityRole="button">
+              <Text style={styles.loginMuted}>Already have an account? <Text style={styles.loginLink}>Log In</Text></Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.guestBtn} onPress={onGuest} accessibilityRole="button" accessibilityLabel="Continue as Guest">
+              <Text style={styles.guestText}>Continue as Guest</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </SafeAreaView>
     );
@@ -275,8 +278,10 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#0D0D10" },
-  welcomePad: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
-  welcomePortrait: { width: "100%", height: 365, borderRadius: 26, borderWidth: 1, borderColor: "rgba(212,175,55,0.25)", backgroundColor: "#18181C" },
+  welcomePad: { flexGrow: 1, justifyContent: "flex-end", paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
+  welcomeBackdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" },
+  welcomeScrim: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(13,13,16,0.34)" },
+  welcomePanel: { width: "100%", maxWidth: 460, alignSelf: "center", padding: 20, borderRadius: 24, borderWidth: 1, borderColor: "rgba(212,175,55,0.22)", backgroundColor: "rgba(13,13,16,0.78)" },
   welcomeTitle: { color: "#FFFFFF", fontSize: 28, fontWeight: "800", letterSpacing: -0.7, marginTop: 22 },
   welcomeGold: { color: ACCENT, fontSize: 28, fontWeight: "800", letterSpacing: -0.7, marginTop: 1 },
   welcomeSub: { color: "rgba(255,255,255,0.58)", fontSize: 14, lineHeight: 21, marginTop: 10 },
