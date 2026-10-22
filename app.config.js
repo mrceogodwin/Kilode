@@ -5,7 +5,11 @@
  */
 module.exports = ({ config }) => ({
   ...config,
+  // Keep web explicitly enabled for the Vercel mirror while iOS remains the
+  // primary native app target.
+  platforms: ["ios", "android", "web"],
   owner: config.owner || "mudino",
+  plugins: [...(config.plugins || []), "expo-font"],
   extra: {
     ...(config.extra || {}),
     eas: {
@@ -14,7 +18,9 @@ module.exports = ({ config }) => ({
         process.env.EAS_PROJECT_ID ||
         "",
     },
-    apiUrl: process.env.EXPO_PUBLIC_API_URL || "https://kilode-nine.vercel.app",
+    // Native builds must use an explicitly configured dedicated API; never
+    // silently fall back to the legacy Kilode Nine web backend.
+    apiUrl: process.env.EXPO_PUBLIC_API_URL || "",
     appEnv: process.env.EXPO_PUBLIC_APP_ENV || "production",
   },
 });
