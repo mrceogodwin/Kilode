@@ -1181,7 +1181,13 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           ) : null}
           {player.queue.length ? player.queue.map((t: any, i: number) => (
             <View key={trackRenderKey(t, i, "queue-tab")} style={[s.roomRow, { alignItems: "center" }]}>
-              <TouchableOpacity onPress={() => { void playQueue(player.queue, i); }} style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
+              <TouchableOpacity
+                onPress={() => { void playQueue(player.queue, i); }}
+                style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}
+                accessibilityRole="button"
+                accessibilityLabel={(i === player.index ? (player.playing ? "Now playing " : "Current track, ") : "Play ") + t.title}
+                accessibilityState={{ selected: i === player.index }}
+              >
                 <Ionicons name={i === player.index && player.playing ? "volume-high" : "play"} size={18} color="#FFFFFF" />
               </TouchableOpacity>
               <View style={[s.flex, { marginLeft: 12 }]}>
