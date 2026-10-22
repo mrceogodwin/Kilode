@@ -740,7 +740,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
                 {recent.slice(0, 8).map((t: any, i: number) => (
-                  <TouchableOpacity key={trackRenderKey(t, i, "recent-card")} style={{ width: 126 }} onPress={() => selectTrack(t)} onLongPress={() => playQueue(recent, i)} accessibilityRole="button" accessibilityLabel={"Open recently played " + t.title}>
+                  <TouchableOpacity key={trackRenderKey(t, i, "recent-card")} style={{ width: 126 }} onPress={() => { void playQueue(recent, i); }} accessibilityRole="button" accessibilityLabel={"Play recently played " + t.title}>
                     <View style={{ height: 88, borderRadius: 14, backgroundColor: t.color || ["#362449", "#45331B", "#243A42"][i % 3], alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: C.border || "#2A2A30" }}>
                       <Ionicons name="musical-notes" size={27} color="#FFFFFF" />
                     </View>
