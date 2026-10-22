@@ -264,7 +264,7 @@ function KilodeApp() {
             <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What is happening in Naija?</Text></TouchableOpacity>
             <TouchableOpacity style={s.postBtn} onPress={() => setComposeOpen(true)}><Text style={s.postBtnText}>Post</Text></TouchableOpacity>
           </View>
-                {(socialSection === "creators" ? takes.filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || ""))) : takes).filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
+                {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
             <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
@@ -317,7 +317,7 @@ function KilodeApp() {
             <Text style={s.sectionTitle}>Discover creators</Text>
             <Text style={s.sub}>Artists, writers, publishers and people making things on Kilode.</Text>
           </View>
-          {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
+          {takes.filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || ""))).filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
         <View key={t.id} style={s.postCard}>
           <View style={s.postTop}>
             <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
