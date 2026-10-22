@@ -47,10 +47,12 @@ const WELCOME_FALLBACK = WELCOME_SCENES[0];
 
 function WelcomeScene({ source, index }: { source: string; index: number }) {
   const [failed, setFailed] = useState(false);
+  // If one remote clip fails, try a different clip rather than retrying the same URL.
+  const fallback = WELCOME_SCENES[(index + 1) % WELCOME_SCENES.length];
   return (
     <View style={styles.sceneTile}>
       <Video
-        source={{ uri: failed ? WELCOME_FALLBACK : source }}
+        source={{ uri: failed ? fallback : source }}
         style={styles.sceneVideo}
         resizeMode={ResizeMode.COVER}
         isMuted
@@ -85,6 +87,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind | null>(null);
   const [busy, setBusy] = useState(false);
+  const [heroVideoFailed, setHeroVideoFailed] = useState(false);
 
   const submit = async () => {
     if (mode === "up" && !kind) {
@@ -129,14 +132,14 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, onGoogle, show, hasSes
             </View>
             <View style={styles.sceneHero}>
               <Video
-                source={{ uri: WELCOME_SCENES[0] }}
+                source={{ uri: heroVideoFailed ? WELCOME_SCENES[1] : WELCOME_SCENES[0] }}
                 style={styles.sceneHeroVideo}
                 resizeMode={ResizeMode.COVER}
                 isMuted
                 shouldPlay
                 isLooping
                 useNativeControls={false}
-                onError={() => show("Welcome videos are loading slowly. Check your connection and try again.")}
+                onError={() => { if (!heroVideoFailed) setHeroVideoFailed(true); }}
                 accessibilityLabel="Kilode welcome culture video"
               />
               <View pointerEvents="none" style={styles.sceneHeroShade} />
