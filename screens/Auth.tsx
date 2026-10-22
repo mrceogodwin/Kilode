@@ -25,7 +25,7 @@ type Props = {
 };
 
 export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
   const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -53,6 +53,41 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
     loop.start();
     return () => loop.stop();
   }, [scale]);
+
+  if (mode === "welcome") {
+    return (
+      <SafeAreaView style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <View style={StyleSheet.absoluteFill}>
+          <Animated.View style={[styles.bgPlate, { transform: [{ scale }] }]}>
+            <View style={styles.warmBlob} />
+            <View style={styles.goldBlob} />
+            <View style={styles.amberBlob} />
+          </Animated.View>
+          <View style={styles.veil} />
+        </View>
+        <View style={styles.welcomeContent}>
+          <View style={styles.welcomeMark}>
+            <Text style={styles.welcomeWordmark}>KILODE<Text style={styles.welcomeAccent}>!</Text></Text>
+          </View>
+          <View style={styles.welcomePanel}>
+            <Text style={styles.welcomeTitle}>Everything you need.</Text>
+            <Text style={styles.welcomeGold}>One platform.</Text>
+            <Text style={styles.welcomeSubtitle}>Discover, create, connect and find your people.</Text>
+            <TouchableOpacity style={styles.welcomePrimary} onPress={() => setMode("up")} accessibilityRole="button">
+              <Text style={styles.welcomePrimaryText}>Get started</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.welcomeLogin} onPress={() => setMode("in")} accessibilityRole="button">
+              <Text style={styles.welcomeLoginText}>Already have an account? <Text style={styles.welcomeLoginAccent}>Log in</Text></Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.guest} onPress={onGuest} accessibilityRole="button" accessibilityLabel="Continue as guest">
+              <Text style={styles.guestText}>Continue as guest</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root}>
@@ -208,6 +243,19 @@ const styles = StyleSheet.create({
     opacity: 0.10,
   },
   veil: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,10,12,0.5)" },
+  welcomeContent: { flex: 1, justifyContent: "space-between", paddingHorizontal: 24, paddingTop: 52, paddingBottom: 28 },
+  welcomeMark: { alignItems: "center", paddingTop: 28 },
+  welcomeWordmark: { color: "#FFFFFF", fontSize: 25, fontWeight: "900", letterSpacing: 4 },
+  welcomeAccent: { color: "#D4AF37" },
+  welcomePanel: { width: "100%", maxWidth: 460, alignSelf: "center", padding: 20, borderRadius: 24, borderWidth: 1, borderColor: "rgba(212,175,55,0.24)", backgroundColor: "rgba(24,24,27,0.88)" },
+  welcomeTitle: { color: "#FFFFFF", fontSize: 27, fontWeight: "800", letterSpacing: -0.7 },
+  welcomeGold: { color: "#E5C158", fontSize: 27, fontWeight: "800", letterSpacing: -0.7, marginTop: 1 },
+  welcomeSubtitle: { color: "#A1A1AA", fontSize: 14, lineHeight: 21, marginTop: 10 },
+  welcomePrimary: { backgroundColor: "#D4AF37", borderRadius: 999, paddingVertical: 15, alignItems: "center", marginTop: 22 },
+  welcomePrimaryText: { color: "#0D0D10", fontWeight: "800", fontSize: 15 },
+  welcomeLogin: { marginTop: 17, alignItems: "center" },
+  welcomeLoginText: { color: "#A1A1AA", fontSize: 13 },
+  welcomeLoginAccent: { color: "#E5C158", fontWeight: "700" },
   content: {
     flexGrow: 1,
     justifyContent: "flex-end",
