@@ -6,7 +6,7 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet
  * by this boundary. Native App.tsx is intentionally untouched.
  */
 const KilodeRoot = lazy(() =>
-  import("./KilodeRoot").then((module) => ({ default: module.KilodeRoot }))
+  import("./KilodeRoot").then((module) => ({ default: module.default }))
 );
 
 class WebPreviewBoundary extends React.Component<
