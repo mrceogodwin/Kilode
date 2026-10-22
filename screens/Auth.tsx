@@ -21,7 +21,7 @@ type Props = {
   isDark: boolean;
   C: any;
   onSignIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
-  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => Promise<{ ok: boolean; error?: string }>;
+  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => Promise<{ ok: boolean; error?: string; message?: string }>;
   onGuest: () => void;
   onGoogle: () => void;
   hasSession?: boolean;
@@ -49,6 +49,10 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
       show(mode === "in" ? "Enter your email address and password." : "Enter your username and password.");
       return;
     }
+    if (mode === "up" && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) {
+      show("Enter a valid email address.");
+      return;
+    }
     setBusy(true);
     try {
       const result =
@@ -56,7 +60,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
           ? await onSignUp(handle.trim(), password, kind as AccountKind, name.trim() || undefined, email.trim())
           : await onSignIn(handle.trim(), password, kind || undefined);
       if (!result.ok) show(result.error || "Something went wrong. Try again.");
-      else show(mode === "up" ? `Welcome to Kilode · ${kind}` : "Welcome back");
+      else show(result.message || (mode === "up" ? `Welcome to Kilode · ${kind}` : "Welcome back"));
     } catch {
       show("Could not connect. Please try again.");
     } finally {
