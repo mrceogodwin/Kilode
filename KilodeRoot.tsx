@@ -60,6 +60,7 @@ function KilodeApp() {
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [artistReleasesOpen, setArtistReleasesOpen] = useState(false);
+  const [artistComposeInitial, setArtistComposeInitial] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
@@ -75,6 +76,7 @@ function KilodeApp() {
     setComposeOpen(false);
     setSettingsOpen(false);
     setArtistReleasesOpen(false);
+    setArtistComposeInitial(false);
     setSelectedDeskItem(null);
     setSelectedProfile(null);
     setSelectedPost(null);
@@ -185,7 +187,7 @@ function KilodeApp() {
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
       <View style={s.padH}>
         <Text style={s.h1}>My Space</Text>
-        <Text style={s.sub}>{session.name} · {(session as any).accountKind || "member"}</Text>
+        <Text style={s.sub}>{session.name} · {(session as any).accountKind || (session as any).kind || "member"}</Text>
       </View>
       <TouchableOpacity style={s.roomRow} onPress={() => setSettingsOpen(true)}>
         <Text style={s.roomName}>Settings</Text>
@@ -195,6 +197,7 @@ function KilodeApp() {
         <TouchableOpacity
           style={s.roomRow}
           onPress={() => {
+            setArtistComposeInitial(false);
             setArtistReleasesOpen(true);
             setSettingsOpen(false);
           }}
@@ -244,8 +247,12 @@ function KilodeApp() {
         s={s}
         C={C}
         sessionName={session.name}
-        onBack={() => setArtistReleasesOpen(false)}
+        onBack={() => {
+          setArtistReleasesOpen(false);
+          setArtistComposeInitial(false);
+        }}
         show={show}
+        initialCompose={artistComposeInitial}
       />
     );
   } else if (selectedProfile) {
@@ -393,9 +400,35 @@ function KilodeApp() {
             <View style={s.sheetHandle} />
             <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
             {CREATE.map((c) => (
-              <TouchableOpacity key={c.label} style={s.roomRow} onPress={() => { setCreateOpen(false); if (c.tab === "socials") setComposeOpen(true); else go(c.tab); }}>
+              <TouchableOpacity
+                key={c.label}
+                style={s.roomRow}
+                onPress={() => {
+                  setCreateOpen(false);
+                  if (c.tab === "socials") {
+                    setComposeOpen(true);
+                    return;
+                  }
+                  // Track → Artist Releases (compose) when account has musicReleaseManagement
+                  if (c.label === "Track" && caps.musicReleaseManagement) {
+                    setArtistComposeInitial(true);
+                    setArtistReleasesOpen(true);
+                    setSettingsOpen(false);
+                    show("Local release draft · not uploaded yet");
+                    return;
+                  }
+                  go(c.tab);
+                }}
+              >
                 <Text style={{ fontSize: 22, marginRight: 12 }}>{c.icon}</Text>
-                <View style={s.flex}><Text style={s.roomName}>{c.label}</Text><Text style={s.meta}>{c.sub}</Text></View>
+                <View style={s.flex}>
+                  <Text style={s.roomName}>{c.label}</Text>
+                  <Text style={s.meta}>
+                    {c.label === "Track" && caps.musicReleaseManagement
+                      ? "Local draft · upload when backend is live"
+                      : c.sub}
+                  </Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
