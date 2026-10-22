@@ -251,7 +251,16 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
     publish();
     return { ok: true };
   } catch {
+    // A failed load must not leave the UI claiming that the previous track is
+    // active after its sound has already been unloaded.
+    try {
+      if (sound) await sound.unloadAsync();
+    } catch {}
+    sound = null;
+    currentTrack = null;
     playing = false;
+    positionMillis = 0;
+    durationMillis = 0;
     publish();
     return { ok: false, message: "Playback failed. Check the track's audio URL and try again." };
   }
