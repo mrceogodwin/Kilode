@@ -273,7 +273,7 @@ function KilodeApp() {
           <TouchableOpacity onPress={() => { void stopMusicPlayback(); }}><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
         </View>
       ) : null}
-      <KilodeTabBar active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"} onTab={(id) => go(id)} onCreate={() => setCreateOpen(true)} isDark={isDark} />
+      <KilodeTabBar active={moreOpen ? "more" : tab === "home" || tab === "socials" || tab === "activity" ? tab : "home"} onTab={(id) => { if (id === "more") { setMoreOpen(true); setCreateOpen(false); } else go(id); }} onCreate={() => { setCreateOpen(true); setMoreOpen(false); }} isDark={isDark} accent="#D4AF37" />
 
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
         <View style={s.modalRoot}>
