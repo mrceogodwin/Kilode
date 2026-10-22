@@ -17,7 +17,7 @@ type AuthCtx = {
   guest: boolean;
   loading: boolean;
   signInGuest: (name?: string) => void;
-  signIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
+  signIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => void;
 };
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void persist(s);
   }, [persist]);
 
-  const signIn = useCallback(async (handle: string, password: string, kind?: AccountKind) => {
+  const signIn = useCallback(async (handle: string, password: string) => {
     const normalizedHandle = handle.trim();
     if (normalizedHandle.length < 2) return { ok: false, error: "Enter a handle (min 2 characters)." };
     if (!password) return { ok: false, error: "Enter your password." };
@@ -147,7 +147,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         handle: data.user?.username || data.user?.name || normalizedHandle.replace(/^@/, ""),
         name: data.user?.name || normalizedHandle.replace(/^@/, ""),
-        kind: asAccountKind(kind || data.user?.kind || "member"),
+        // The authenticated server profile is authoritative; never grant a local role choice at sign-in.
+        kind: asAccountKind(data.user?.kind || "member"),
       };
       setSession(s);
       setGuest(false);
