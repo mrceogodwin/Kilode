@@ -75,7 +75,7 @@ Before connecting capabilities to screens, verify:
 - [x] Typed native capability map inspected.
 - [x] Native validation (TypeScript, Expo Doctor, iOS JS bundle export) passed for commit 5bd8f9bc12f89a2c139ea0d97d23df1df508b057.
 - [ ] Verify registration persists the selected kind and that every kind reaches the correct native workspace.
-- [ ] Add automated invariants for all ten IDs and capability entries.
+- [x] Add automated invariants for all ten IDs and capability entries (`npm run check:account-capabilities`).
 - [ ] Implement and test server-side authorization, entitlements, quotas, and audit logging.
 - [ ] Verify each critical workflow against a dedicated backend and on a real iPhone.
 - [ ] Confirm an installable EAS/TestFlight build; bundle export is not an iOS device build.

@@ -32,6 +32,8 @@ jobs:
 
       - name: TypeScript validation
         run: npm run typecheck
+      - name: Account-kind and capability invariants
+        run: npm run check:account-capabilities
 
       - name: Expo Doctor
         run: npx expo-doctor

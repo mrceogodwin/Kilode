@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "eas:build:ios": "eas build --platform ios --profile production",
     "eas:build:android": "eas build --platform android --profile production",
-    "eas:build:preview": "eas build --platform all --profile preview"
+    "eas:build:preview": "eas build --platform all --profile preview",
+    "check:account-capabilities": "node scripts/check-account-capabilities.cjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
