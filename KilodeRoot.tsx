@@ -10,6 +10,7 @@ import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
+import { HomeScreen } from "./screens/Home";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
@@ -63,6 +64,7 @@ function KilodeApp() {
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
@@ -146,9 +148,17 @@ function KilodeApp() {
         )}
       </View>
       <View style={s.headerRight}>
-        <View style={[s.chip, { paddingVertical: 4, paddingHorizontal: 8 }]}>
-          <Text style={[s.chipText, { fontSize: 10 }]}>{source}</Text>
-        </View>
+        <TouchableOpacity
+          style={s.iconBtn}
+          onPress={() => {
+            if (tab !== "home") go("home");
+            setSearchOpen(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Search Kilode"
+        >
+          <Text style={s.iconBtnText}>⌕</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
           <Text style={s.iconBtnText}>{isDark ? "☀" : "☾"}</Text>
         </TouchableOpacity>
@@ -334,80 +344,36 @@ function KilodeApp() {
         </>
       ) : socialSection === "creators" ? (
         <>
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-            <Text style={s.sectionTitle}>Discover creators</Text>
-            <Text style={s.sub}>Artists, writers, publishers and people making things on Kilode.</Text>
+          <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
+            <Text style={s.sectionTitle}>Creators</Text>
+            <Text style={s.sub}>People and desks publishing on Kilode.</Text>
           </View>
-          {takes
-            .filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || "")))
-            .filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))
-            .filter((t: any, index: number, list: any[]) => list.findIndex((candidate: any) => String(candidate.handle || candidate.name) === String(t.handle || t.name)) === index)
-            .length === 0 ? (
-              <View style={[s.postCard, { marginHorizontal: 16, paddingVertical: 20, alignItems: "center" }]}>
-                <Text style={s.postName}>Creators are getting ready</Text>
-                <Text style={[s.sub, { textAlign: "center", marginTop: 6 }]}>New artist, writer and creator profiles will appear here as they become available.</Text>
-              </View>
-            ) : null}
-          {takes
-            .filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || "")))
-            .filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))
-            .filter((t: any, index: number, list: any[]) => list.findIndex((candidate: any) => String(candidate.handle || candidate.name) === String(t.handle || t.name)) === index)
-            .map((t: any) => (
-              <View key={String(t.handle || t.name)} style={[s.postCard, { paddingVertical: 13 }]}>
-                <View style={s.postTop}>
-                  <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button" accessibilityLabel={`View ${t.name}'s profile`}>
-                    <View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
-                    <View style={s.row}>
-                      <Text style={s.postName} numberOfLines={1}>{t.name}</Text>
-                      {t.verified ? <Text style={s.verified}>✓</Text> : null}
-                    </View>
-                    <Text style={s.meta} numberOfLines={1}>@{t.handle} · {t.role}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={s.followBtn}
-                    onPress={() => setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] }))}
-                    accessibilityRole="button"
-                    accessibilityLabel={following[String(t.handle || t.name)] ? `Unfollow ${t.name}` : `Follow ${t.name}`}
-                  >
-                    <Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text>
-                  </TouchableOpacity>
-                </View>
-                <Text style={s.postBody} numberOfLines={2}>{t.text}</Text>
-              </View>
-            ))}
-          <View style={{ height: 20 }} />
+          {takes.slice(0, 8).map((t: any) => (
+            <TouchableOpacity key={`creator-${t.id}`} style={s.roomRow} onPress={() => setSelectedProfile(t)}>
+              <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
+              <View style={s.flex}><Text style={s.roomName}>{t.name}</Text><Text style={s.meta}>@{t.handle} · {t.role}</Text></View>
+              <TouchableOpacity style={s.followBtn} onPress={() => setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] }))}><Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text></TouchableOpacity>
+            </TouchableOpacity>
+          ))}
         </>
       ) : (
         <>
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+          <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
             <Text style={s.sectionTitle}>Communities</Text>
-            <Text style={s.sub}>Join conversations around interests, culture and work.</Text>
+            <Text style={s.sub}>Rooms and topic spaces you can join.</Text>
           </View>
-          {rooms.length === 0 ? (
-            <View style={[s.postCard, { marginHorizontal: 16, paddingVertical: 20, alignItems: "center" }]}>
-              <Text style={s.postName}>No communities to show yet</Text>
-              <Text style={[s.sub, { textAlign: "center", marginTop: 6 }]}>Check back soon to discover conversations around your interests.</Text>
-            </View>
-          ) : null}
-          {rooms.map((room: any) => (
-            <View key={room.id} style={[s.roomRow, { marginHorizontal: 16, marginBottom: 10 }]}>
-              <View style={s.postAv}><Text style={s.avatarText}>{room.av || String(room.name || "K").slice(0, 2).toUpperCase()}</Text></View>
-              <View style={[s.flex, { paddingHorizontal: 10 }]}>
-                <Text style={s.roomName}>{room.name}</Text>
-                <Text style={s.meta}>{room.meta}{room.live ? " · Active" : ""}</Text>
-              </View>
-              <TouchableOpacity
-                style={s.joinBtn}
-                onPress={() => setJoined((prev) => ({ ...prev, [String(room.id)]: !prev[String(room.id)] }))}
-                accessibilityRole="button"
-              >
-                <Text style={s.joinBtnText}>{joined[String(room.id)] ? "Joined" : "Join"}</Text>
+          {rooms.map((r: any) => {
+            const isJoined = !!joined[r.id];
+            return (
+              <TouchableOpacity key={`community-${r.id}`} style={s.roomRow}>
+                <View style={s.roomAv}><Text style={s.roomAvText}>{r.av}</Text>{r.live ? <View style={s.roomLive} /> : null}</View>
+                <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.meta}</Text></View>
+                <TouchableOpacity style={[s.joinBtn, isJoined && s.joinLive]} onPress={() => { setJoined({ ...joined, [r.id]: !isJoined }); show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`); }}>
+                  <Text style={[s.joinBtnText, isJoined && s.joinLiveText]}>{isJoined ? "Joined" : "Join"}</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
-            </View>
-          ))}
-          <View style={{ height: 20 }} />
+            );
+          })}
         </>
       )}
     </ScrollView>
@@ -415,69 +381,49 @@ function KilodeApp() {
 
   const ActivityView = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
-      <View style={s.padH}><Text style={s.h1}>Notifications</Text><Text style={s.sub}>Today · chronological</Text></View>
+      <View style={s.padH}><Text style={s.h1}>Notifications</Text><Text style={s.sub}>Activity across Socials, Music, Cinema and more.</Text></View>
       {activity.map((a: any) => (
-        <TouchableOpacity key={a.id} style={[s.activityRow, a.unread && s.activityUnread]} onPress={() => go(a.lane || "home")}>
-          <Text style={s.activityIcon}>{a.icon}</Text>
-          <View style={s.flex}><Text style={s.activityText}>{a.text}</Text><Text style={s.meta}>{a.time}</Text></View>
-          {a.action === "follow_back" ? (
-            <TouchableOpacity style={s.followBtn} onPress={() => show("Followed back")}><Text style={s.followBtnText}>Follow</Text></TouchableOpacity>
-          ) : a.unread ? <View style={s.unreadDot} /> : null}
+        <TouchableOpacity key={a.id} style={s.roomRow} onPress={() => {
+          if (a.lane === "music") go("music");
+          else if (a.lane === "cinema") go("cinema");
+          else if (a.lane === "jobs") go("jobs");
+          else if (a.lane === "chat") go("chat");
+          else go("socials");
+        }}>
+          <View style={s.roomAv}><Text style={{ fontSize: 18 }}>{a.icon}</Text></View>
+          <View style={s.flex}><Text style={s.roomName}>{a.text}</Text><Text style={s.meta}>{a.time}</Text></View>
+          {a.unread ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent }} /> : null}
         </TouchableOpacity>
       ))}
     </ScrollView>
   );
 
   const MySpace = () => {
-    // Account capabilities here are workspace shortcuts only; the server must
-    // still enforce permissions, ownership, quotas, and paid entitlements.
-    const accountCapabilities = getAccountCapabilities(session.kind);
-    const workspaceItems = [
-      { key: "socials", label: "Socials", tab: "socials", visible: accountCapabilities.socials },
-      { key: "media", label: "Media", tab: "media", visible: accountCapabilities.mediaAuthoring },
-      { key: "music", label: "Music", tab: "music", visible: accountCapabilities.musicReleaseManagement },
-      { key: "cinema", label: "Cinema", tab: "cinema", visible: accountCapabilities.cinemaManagement },
-      { key: "ads", label: "Ads & campaigns", tab: "ads", visible: accountCapabilities.advertisingCampaigns },
+    const accountCapabilities = getAccountCapabilities(session.accountKind);
+    const tools = [
+      { key: "settings", label: "Settings", tab: "settings", visible: true },
       { key: "jobs", label: "Jobs", tab: "jobs", visible: accountCapabilities.jobDiscovery || accountCapabilities.jobManagement },
       { key: "market", label: "Market", tab: "market", visible: accountCapabilities.marketplaceSelling },
-      { key: "rent", label: "Rent & spaces", tab: "rent", visible: accountCapabilities.rentalListingManagement },
-    ].filter((item) => item.visible);
-
+      { key: "music", label: "Music", tab: "music", visible: true },
+      { key: "cinema", label: "Cinema", tab: "cinema", visible: true },
+      { key: "chat", label: "Chat", tab: "chat", visible: true },
+    ].filter((t) => t.visible);
     return (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
-      <View style={s.profileHead}>
-        <View style={s.profileAv}><Text style={s.profileAvText}>{(session.name || "K").slice(0, 2).toUpperCase()}</Text></View>
-        <Text style={s.h1}>{session.name}</Text>
-        <Text style={s.sub}>@{session.handle} · {session.kind}</Text>
-        <View style={s.statsRow}>
-          <View style={s.stat}><Text style={s.statN}>{takes.length}</Text><Text style={s.statL}>Takes</Text></View>
-          <View style={s.stat}><Text style={s.statN}>0</Text><Text style={s.statL}>Following</Text></View>
-          <View style={s.stat}><Text style={s.statN}>0</Text><Text style={s.statL}>Followers</Text></View>
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+        <View style={s.padH}>
+          <Text style={s.h1}>{session.name || "My Space"}</Text>
+          <Text style={s.sub}>{session.accountKind || "member"} · {session.localOnly ? "device session" : "signed in"}</Text>
         </View>
-        <View style={s.rowGap}>
-          <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => show("Edit profile")}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
-          <TouchableOpacity style={s.ghostBtn} onPress={() => setSettingsOpen(true)}><Text style={s.ghostBtnText}>Settings</Text></TouchableOpacity>
-        </View>
-        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 16, marginTop: 10, alignItems: "center" }]} onPress={() => { signOut(); show("Signed out"); }}>
-          <Text style={s.ghostBtnText}>Sign out</Text>
+        {tools.map((t) => (
+          <TouchableOpacity key={t.key} style={s.roomRow} onPress={() => (t.tab === "settings" ? setSettingsOpen(true) : go(t.tab))}>
+            <Text style={s.roomName}>{t.label}</Text>
+            <Text style={s.meta}>Open</Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={[s.primaryBtn, { marginHorizontal: 16, marginTop: 16 }]} onPress={() => { signOut(); show("Signed out"); }}>
+          <Text style={s.primaryBtnText}>Sign out</Text>
         </TouchableOpacity>
-      </View>
-      <View style={s.sectionHead}><Text style={s.sectionTitle}>Your workspace</Text></View>
-      <Text style={[s.meta, s.padH, { marginBottom: 8 }]}>
-        Shortcuts for your account type. Availability depends on connected services.
-      </Text>
-      {workspaceItems.map((item) => (
-        <TouchableOpacity key={item.key} style={s.roomRow} onPress={() => go(item.tab)} accessibilityRole="button">
-          <View style={s.flex}><Text style={s.roomName}>{item.label}</Text></View>
-          <Text style={[s.link, { fontSize: 18 }]}>›</Text>
-        </TouchableOpacity>
-      ))}
-      <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
-      <View style={s.roomRow}>
-        <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Paystack · backend when live</Text></View>
-        <TouchableOpacity style={s.joinBtn} onPress={() => show("Top up soon")}><Text style={s.joinBtnText}>Top up</Text></TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
     );
   };
 
@@ -485,54 +431,69 @@ function KilodeApp() {
     const d = DESKS.find((x) => x.id === name);
     const items = LISTINGS[name] || [];
     return (
-      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
-        <View style={s.deskHero}>
-          <Text style={s.deskHeroIcon}>{d?.icon || "📦"}</Text>
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+        <View style={s.padH}>
           {name !== "jobs" ? <Text style={s.h1}>{d?.label || name}</Text> : null}
-          <Text style={s.sub}>{d?.blurb}</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 18, paddingHorizontal: 28 }]} onPress={() => setCreateOpen(true)}>
-            <Text style={s.primaryBtnText}>Create in {d?.label || name}</Text>
-          </TouchableOpacity>
+          {name === "jobs" ? <Text style={s.h1}>Jobs</Text> : null}
+          <Text style={s.sub}>{d?.blurb || "Kilode system"}</Text>
         </View>
-        <View style={s.sectionHead}><Text style={s.sectionTitle}>{items.length ? `${items.length} listings` : "No listings yet"}</Text></View>
-        {items.map((item) => (
-          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setSelectedDeskItem(item)}>
-            <View style={s.flex}><Text style={s.roomName}>{item.title}</Text><Text style={s.meta}>{item.meta}</Text></View>
-            {item.price ? <Text style={[s.chipText, { fontWeight: "700", color: C.accent }]}>{item.price}</Text> : null}
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={() => go("home")}>
-          <Text style={s.ghostBtnText}>Back home</Text>
-        </TouchableOpacity>
+        {items.length === 0 ? (
+          <View style={s.padH}><Text style={s.meta}>No listings yet for this system.</Text></View>
+        ) : (
+          items.map((item: any) => (
+            <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setSelectedDeskItem(item)}>
+              <View style={s.flex}>
+                <Text style={s.roomName}>{item.title}</Text>
+                <Text style={s.meta}>{item.meta}{item.price ? ` · ${item.price}` : ""}</Text>
+              </View>
+              {item.tag ? <Text style={[s.meta, { color: C.accent, fontWeight: "700" }]}>{item.tag}</Text> : null}
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     );
   };
 
   const body = () => {
-    if (settingsOpen) return (
-      <SettingsScreen
-        s={s}
-        C={C}
-        isDark={isDark}
-        sessionHandle={session.handle}
-        show={show}
-        onBack={() => setSettingsOpen(false)}
-        onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
-      />
-    );
-    if (selectedPost) return <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]} onBack={() => setSelectedPost(null)} onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))} onComment={() => setCommentTake(selectedPost)} onFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedPost.handle || selectedPost.name)]: !prev[String(selectedPost.handle || selectedPost.name)] }))} onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved for review."); }} onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((prev) => prev.includes(h) ? prev : [...prev, h]); setSelectedPost(null); show("Blocked @" + h); }} show={show} />;
-    if (selectedProfile) return (
-      <UserProfileScreen
-        s={s}
-        C={C}
-        user={selectedProfile}
-        posts={takes.filter((post: any) => String(post.handle || post.name) === String(selectedProfile.handle || selectedProfile.name))}
-        isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
-        onBack={() => setSelectedProfile(null)}
-        onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))}
-        onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }}
-      />
-    );
+    if (settingsOpen) {
+      return (
+        <SettingsScreen
+          s={s}
+          C={C}
+          session={session}
+          onBack={() => setSettingsOpen(false)}
+          onSignOut={() => { signOut(); setSettingsOpen(false); show("Signed out"); }}
+          show={show}
+        />
+      );
+    }
+    if (selectedPost) {
+      return (
+        <PostDetailScreen
+          s={s}
+          C={C}
+          post={selectedPost}
+          liked={!!liked[String(selectedPost.id)]}
+          onBack={() => setSelectedPost(null)}
+          onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))}
+          onComment={() => setCommentTake(selectedPost)}
+          onShare={async () => { try { await Share.share({ message: `${selectedPost.name || "Kilode"}:\n\n${selectedPost.text || ""}` }); } catch { show("Could not open share options."); } }}
+        />
+      );
+    }
+    if (selectedProfile) {
+      return (
+        <UserProfileScreen
+          s={s}
+          C={C}
+          user={selectedProfile}
+          isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
+          onBack={() => setSelectedProfile(null)}
+          onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))}
+          onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }}
+        />
+      );
+    }
     if (selectedDeskItem) return (
       <DeskDetailScreen
         s={s}
@@ -543,7 +504,68 @@ function KilodeApp() {
         show={show}
       />
     );
-    if (tab === "home") return <Home />;
+    if (tab === "home") {
+      return (
+        <HomeScreen
+          s={s}
+          C={C}
+          sessionName={session.name || "Guest"}
+          news={news}
+          tracks={tracks}
+          takes={takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))}
+          liked={liked}
+          onLikePost={(id) => setLiked((prev) => ({ ...prev, [String(id)]: !prev[String(id)] }))}
+          onCommentPost={(post) => setCommentTake(post)}
+          onSharePost={async (post) => {
+            try {
+              await Share.share({
+                message: `${post.name || "Kilode"} (@${post.handle || "member"}) on Kilode:\n\n${post.text || post.body || ""}`,
+              });
+            } catch {
+              show("Could not open share options.");
+            }
+          }}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          onOpenMedia={(id) => {
+            if (id) setSelectedArticleId(String(id));
+            go("media");
+          }}
+          onOpenMusic={() => go("music")}
+          onOpenEvents={() => go("events")}
+          onOpenMarket={() => go("market")}
+          onOpenJobs={() => go("jobs")}
+          events={LISTINGS.events || []}
+          market={LISTINGS.market || []}
+          jobs={LISTINGS.jobs || []}
+          onOpenSystem={(id) => {
+            if (id === "myspace") go("myspace");
+            else go(id);
+          }}
+          onOpenSocials={() => go("socials")}
+          onOpenPost={(p) => setSelectedPost(p)}
+          onOpenItem={(system, item) => {
+            const tabMap: Record<string, string> = {
+              Events: "events",
+              Market: "market",
+              Jobs: "jobs",
+            };
+            const target = tabMap[system] || system.toLowerCase();
+            setSelectedDeskItem(item);
+            go(target);
+          }}
+          onOpenProfile={(u) => setSelectedProfile(u)}
+          onCompose={() => setComposeOpen(true)}
+          onPlayTrack={async (t) => {
+            const result = await playMusicTrack(t);
+            if (!result.ok) show(result.message || "Playback unavailable.");
+          }}
+          show={show}
+          searchOpen={searchOpen}
+          onCloseSearch={() => setSearchOpen(false)}
+        />
+      );
+    }
     if (tab === "socials") return <Socials />;
     if (tab === "activity") return <ActivityView />;
     if (tab === "myspace") return <MySpace />;
@@ -608,21 +630,57 @@ function KilodeApp() {
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setComposeOpen(false)} />
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>New take</Text><TouchableOpacity onPress={() => setComposeOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
-            <TextInput multiline autoFocus style={{ minHeight: 120, backgroundColor: C.input, borderRadius: 16, padding: 14, color: C.text, borderWidth: 1, borderColor: C.border, fontSize: 16, textAlignVertical: "top" }} placeholder="What is happening in Naija?" placeholderTextColor={C.text3} value={composeText} onChangeText={setComposeText} />
-            <TouchableOpacity style={[s.primaryBtn, { marginTop: 14, opacity: composeText.trim() && !posting ? 1 : 0.5 }]} disabled={!composeText.trim() || posting}
+            <Text style={s.sheetTitle}>New post</Text>
+            <TextInput
+              style={s.composeArea}
+              multiline
+              value={composeText}
+              onChangeText={setComposeText}
+              placeholder="What is happening in Naija?"
+              placeholderTextColor={C.text3}
+            />
+            <TouchableOpacity
+              style={[s.primaryBtn, { opacity: posting || !composeText.trim() ? 0.5 : 1 }]}
+              disabled={posting || !composeText.trim()}
               onPress={async () => {
                 setPosting(true);
-                const r = await postTake(composeText, session.token);
+                const res = await postTake(composeText.trim());
                 setPosting(false);
-                if (r.ok && (r as any).data) {
-                  setTakes((prev) => [(r as any).data, ...prev]);
-                  setComposeText(""); setComposeOpen(false); go("socials");
-                  show(r.source === "live" ? "Posted live" : r.source === "error" ? "Saved offline (API error)" : "Posted local");
-                } else show("Could not post");
-              }}>
-              <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post take"}</Text>
+                if (res.ok) {
+                  setComposeText("");
+                  setComposeOpen(false);
+                  await loadAll();
+                  show(res.source === "live" ? "Posted" : "Saved on device · backend offline");
+                } else {
+                  show(res.message || "Could not post");
+                }
+              }}
+            >
+              <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post"}</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={createOpen} transparent animationType="fade" onRequestClose={() => setCreateOpen(false)}>
+        <View style={s.modalRoot}>
+          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
+          <View style={[s.sheet, { paddingBottom: 28 }]}>
+            <View style={s.sheetHandle} />
+            <Text style={s.sheetTitle}>Create</Text>
+            {CREATE.map((c) => (
+              <TouchableOpacity key={c.label} style={s.roomRow} onPress={() => {
+                setCreateOpen(false);
+                if (c.tab === "socials") setComposeOpen(true);
+                else go(c.tab);
+              }}>
+                <Text style={{ fontSize: 20 }}>{c.icon}</Text>
+                <View style={[s.flex, { marginLeft: 12 }]}>
+                  <Text style={s.roomName}>{c.label}</Text>
+                  <Text style={s.meta}>{c.sub}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       </Modal>
@@ -632,44 +690,41 @@ function KilodeApp() {
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setMoreOpen(false)} />
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
-            <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><Text style={{ fontSize: 22 }}>{d.icon}</Text><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
-        <View style={s.modalRoot}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
-          <View style={s.sheet}>
-            <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
-            <View style={s.deskGrid}>{CREATE.map((o) => (
-              <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
-                <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
+            <Text style={s.sheetTitle}>More on Kilode</Text>
+            {DESKS.map((d) => (
+              <TouchableOpacity key={d.id} style={s.roomRow} onPress={() => go(d.id)}>
+                <Text style={{ fontSize: 20 }}>{d.icon}</Text>
+                <View style={[s.flex, { marginLeft: 12 }]}>
+                  <Text style={s.roomName}>{d.label}</Text>
+                  <Text style={s.meta}>{d.blurb}</Text>
+                </View>
               </TouchableOpacity>
-            ))}</View>
+            ))}
           </View>
         </View>
       </Modal>
 
-      <CommentsSheet
-        visible={!!commentTake}
-        onClose={() => setCommentTake(null)}
-        takeId={commentTake?.id || ""}
-        takeAuthor={commentTake?.name || ""}
-        takeText={commentTake?.text || ""}
-        token={session.token}
-        C={C}
-        isDark={isDark}
-        show={show}
-      />
+      {commentTake ? (
+        <CommentsSheet
+          take={commentTake}
+          C={C}
+          s={s}
+          onClose={() => setCommentTake(null)}
+          show={show}
+        />
+      ) : null}
 
-      {toast ? <View style={s.toast}><Text style={s.toastText}>{toast}</Text></View> : null}
+      {toast ? (
+        <View style={s.toast}><Text style={s.toastText}>{toast}</Text></View>
+      ) : null}
     </SafeAreaView>
   );
 }
 
-export function KilodeRoot() {
-  return <AuthProvider><KilodeApp /></AuthProvider>;
+export default function KilodeRoot() {
+  return (
+    <AuthProvider>
+      <KilodeApp />
+    </AuthProvider>
+  );
 }
