@@ -52,6 +52,7 @@ function KilodeApp() {
   const [rooms, setRooms] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
+  const [tracksSource, setTracksSource] = useState<"live" | "mock" | "error">("mock");
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [musicPlaying, setMusicPlaying] = useState(false);
@@ -79,6 +80,7 @@ function KilodeApp() {
     setRooms(Array.isArray(r.data) ? r.data : []);
     setNews(Array.isArray(n.data) ? n.data : []);
     setTracks(Array.isArray(tr.data) ? tr.data : []);
+    setTracksSource(tr.source);
     setActivity(Array.isArray(a.data) ? a.data : []);
     const sources = [t, r, n, tr].map((x) => x.source);
     if (sources.some((s) => s === "live")) setSource("live");
@@ -536,7 +538,7 @@ function KilodeApp() {
     if (tab === "myspace") return <MySpace />;
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} tracks={tracks} onBack={() => go("home")} show={show} onPlay={async (track) => { const result = await playMusicTrack(track); if (!result.ok) show(result.message || "Playback unavailable."); }} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} tracks={tracks} tracksSource={tracksSource} onBack={() => go("home")} show={show} onPlay={async (track) => { const result = await playMusicTrack(track); if (!result.ok) show(result.message || "Playback unavailable."); }} />;
     if (tab === "media") return (
       <MediaScreen
         s={s}
