@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
 import {
   listReleaseDrafts,
   createReleaseDraft,
@@ -49,8 +50,11 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
   const [genre, setGenre] = useState("Afrobeats");
   const [releaseType, setReleaseType] = useState<ReleaseType>("single");
   const [notes, setNotes] = useState("");
+  const [localAudioUri, setLocalAudioUri] = useState<string | null>(null);
+  const [localAudioName, setLocalAudioName] = useState<string | null>(null);
   const [rights, setRights] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [picking, setPicking] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -73,6 +77,8 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
       setGenre("Afrobeats");
       setReleaseType("single");
       setNotes("");
+      setLocalAudioUri(null);
+      setLocalAudioName(null);
       setRights(false);
     }
   }, [initialCompose, sessionName]);
@@ -84,6 +90,8 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
     setGenre("Afrobeats");
     setReleaseType("single");
     setNotes("");
+    setLocalAudioUri(null);
+    setLocalAudioName(null);
     setRights(false);
   };
 
@@ -99,8 +107,38 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
     setGenre(d.genre || "Afrobeats");
     setReleaseType(d.releaseType || "single");
     setNotes(d.notes || "");
+    setLocalAudioUri(d.localAudioUri || null);
+    setLocalAudioName(d.localAudioName || null);
     setRights(!!d.rightsAcknowledged);
     setComposing(true);
+  };
+
+  const onPickAudio = async () => {
+    setPicking(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["audio/*"],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled || !result.assets?.length) {
+        setPicking(false);
+        return;
+      }
+      const asset = result.assets[0];
+      setLocalAudioUri(asset.uri);
+      setLocalAudioName(asset.name || "audio");
+      show("Audio linked on this device only");
+    } catch {
+      show("Could not open file picker");
+    } finally {
+      setPicking(false);
+    }
+  };
+
+  const onClearAudio = () => {
+    setLocalAudioUri(null);
+    setLocalAudioName(null);
   };
 
   const onSaveDraft = async () => {
@@ -112,6 +150,8 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         genre,
         notes,
         releaseType,
+        localAudioUri,
+        localAudioName,
         rightsAcknowledged: rights,
       });
       setSaving(false);
@@ -127,6 +167,8 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         genre,
         notes,
         releaseType,
+        localAudioUri,
+        localAudioName,
         rightsAcknowledged: rights,
       });
       setSaving(false);
@@ -167,7 +209,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
           </TouchableOpacity>
           <Text style={s.h1}>{editingId ? "Edit draft" : "New release draft"}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>
-            Metadata only for now. Audio upload and server submit need the dedicated music API.
+            Local draft only. Server upload and publish need the dedicated music API.
           </Text>
 
           <Text style={[s.meta, { marginTop: 20, marginBottom: 8, fontWeight: "700" }]}>Release type</Text>
@@ -185,7 +227,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
             ))}
           </View>
           <Text style={[s.meta, { marginTop: 6, lineHeight: 18 }]}>
-            {RELEASE_TYPES.find((r) => r.id === releaseType)?.hint}. EP/Album multi-track upload is not built yet — this labels the draft for later.
+            {RELEASE_TYPES.find((r) => r.id === releaseType)?.hint}. EP/Album multi-track is not built yet.
           </Text>
 
           <Text style={[s.meta, { marginTop: 20, marginBottom: 6, fontWeight: "700" }]}>Title</Text>
@@ -230,6 +272,64 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
               </TouchableOpacity>
             ))}
           </ScrollView>
+
+          <Text style={[s.meta, { marginTop: 16, marginBottom: 8, fontWeight: "700" }]}>Audio (optional · this device only)</Text>
+          {localAudioUri ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 14,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: C.border,
+                backgroundColor: C.card,
+                gap: 10,
+              }}
+            >
+              <Ionicons name="musical-notes" size={20} color={C.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={s.roomName} numberOfLines={1}>
+                  {localAudioName || "Audio file"}
+                </Text>
+                <Text style={s.meta}>Linked on device · not uploaded</Text>
+              </View>
+              <TouchableOpacity onPress={onClearAudio} accessibilityRole="button" accessibilityLabel="Remove audio">
+                <Ionicons name="close-circle" size={22} color={C.danger} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 14,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: C.border,
+                borderStyle: "dashed",
+                backgroundColor: C.input,
+                gap: 8,
+                opacity: picking ? 0.6 : 1,
+              }}
+              onPress={onPickAudio}
+              disabled={picking}
+              accessibilityRole="button"
+            >
+              {picking ? (
+                <ActivityIndicator color={C.accent} size="small" />
+              ) : (
+                <Ionicons name="attach" size={18} color={C.accent} />
+              )}
+              <Text style={[s.roomName, { color: C.accent }]}>
+                {picking ? "Opening picker…" : "Attach audio from device"}
+              </Text>
+            </TouchableOpacity>
+          )}
+          <Text style={[s.meta, { marginTop: 6, lineHeight: 18 }]}>
+            Stores a local file reference only. Does not upload, stream, or publish. Server upload requires the music API.
+          </Text>
 
           <Text style={[s.meta, { marginTop: 16, marginBottom: 6, fontWeight: "700" }]}>Notes (optional)</Text>
           <TextInput
@@ -306,7 +406,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
           </TouchableOpacity>
 
           <Text style={[s.meta, { marginTop: 14, marginBottom: 24 }]}>
-            Audio file attach and server submit are not available in this build.
+            Server submit, review, credits, and publish are not available in this build.
           </Text>
         </View>
       </ScrollView>
@@ -358,7 +458,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         }}
       >
         <Text style={[s.meta, { lineHeight: 18 }]}>
-          Artist release workspace. Choose Single, EP, or Album when drafting. Multi-track upload, review, credits, and publish need the dedicated music API — see docs/ARTIST_UPLOADS_MONETISATION.md.
+          Artist release workspace. Single / EP / Album + optional local audio. Upload sessions, review, credits, and publish need the dedicated music API.
         </Text>
       </View>
 
@@ -371,7 +471,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
       ) : drafts.length === 0 ? (
         <EmptyState
           title="No drafts yet"
-          body="Create a release draft with type, title, artist, genre, and rights confirmation."
+          body="Create a release draft with type, title, artist, optional audio, and rights confirmation."
           textColor={C.text}
           mutedColor={C.text2}
           accentColor={C.accent}
@@ -381,12 +481,13 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         drafts.map((d) => (
           <TouchableOpacity key={d.id} style={[s.roomRow, { alignItems: "flex-start" }]} onPress={() => openEdit(d)}>
             <View style={[s.roomAv, { backgroundColor: C.accent }]}>
-              <Ionicons name="musical-note" size={16} color="#fff" />
+              <Ionicons name={d.localAudioUri ? "musical-notes" : "musical-note"} size={16} color="#fff" />
             </View>
             <View style={[s.flex, { marginLeft: 12 }]}>
               <Text style={s.roomName}>{d.title}</Text>
               <Text style={s.meta}>
                 {typeLabel(d.releaseType)} · {d.artistName} · {d.genre}
+                {d.localAudioName ? ` · ${d.localAudioName}` : ""}
               </Text>
               <Text style={[s.meta, { marginTop: 4 }]}>
                 Local draft · {new Date(d.updatedAt).toLocaleDateString()} · tap to edit
