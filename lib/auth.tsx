@@ -24,7 +24,7 @@ type AuthCtx = {
   loading: boolean;
   signInGuest: (name?: string) => void;
   signIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
-  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string, emailAddress?: string) => Promise<{ ok: boolean; error?: string; message?: string }>;
   signOut: () => void;
   setAccountKind: (kind: AccountKind) => Promise<void>;
 };
@@ -287,11 +287,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
-    // Never report a device-only account as a successful Kilode registration.
+    // The web preview can create a clearly labelled, device-local profile so
+    // the registration flow and account-specific UI can be exercised. This is
+    // not a real Kilode account and must never be presented as server-registered.
+    if (getBackendMode() === "offline") {
+      if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+        setLoading(false);
+        return { ok: false, error: "Enter a valid email address." };
+      }
+      const s: Session = {
+        token: localToken(h.toLowerCase()),
+        handle: h.toLowerCase(),
+        name: displayName?.trim() || h,
+        kind: asAccountKind(kind),
+        localOnly: true,
+      };
+      setSession(s);
+      setGuest(false);
+      await persist(s);
+      setLoading(false);
+      return {
+        ok: true,
+        message: "Preview profile created on this device only. Online account registration is not connected yet.",
+      };
+    }
+
     setLoading(false);
     return {
       ok: false,
-      error: "Kilode account creation is unavailable because the dedicated account backend is not connected yet. Your details have not been saved. Continue as a guest to preview the app.",
+      error: "Account creation for this configured backend is not connected. Your details have not been saved.",
     };
   }, []);
 
