@@ -869,11 +869,18 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 key={c.rank}
                 style={s.roomRow}
                 accessibilityRole="button"
-                accessibilityLabel={match ? `Open ${c.title}` : `${c.title}, illustrative chart entry only`}
+                accessibilityLabel={match ? `Play ${c.title}` : `${c.title}, illustrative chart entry only`}
+                accessibilityHint={match ? "Long press to open track details" : undefined}
                 onPress={() => {
-                  if (match) selectTrack(match);
-                  else show("Illustrative chart entry only. This track is not in the connected catalogue yet.");
+                  if (match) {
+                    const matchIndex = tracks.findIndex((t: any) => sameTrack(t, match));
+                    if (matchIndex >= 0) void playQueue(tracks, matchIndex);
+                    else void playQueue([match], 0);
+                  } else {
+                    show("Illustrative chart entry only. This track is not in the connected catalogue yet.");
+                  }
                 }}
+                onLongPress={() => { if (match) selectTrack(match); }}
               >
                 <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
                 <View style={s.flex}>
