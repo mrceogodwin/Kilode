@@ -27,6 +27,7 @@ type Props = {
   s: any;
   C: any;
   sessionName?: string;
+  token?: string | null;
   onBack: () => void;
   show: (m: string) => void;
   /** When true, open directly in the new-draft form (e.g. from Create → Track). */
@@ -41,7 +42,7 @@ function typeLabel(t: ReleaseType | undefined): string {
   return "Single";
 }
 
-export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialCompose }: Props) {
+export function ArtistReleasesScreen({ s, C, sessionName, token, onBack, show, initialCompose }: Props) {
   const [drafts, setDrafts] = useState<ArtistReleaseDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [composing, setComposing] = useState(!!initialCompose);
@@ -198,7 +199,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
   };
 
   if (showPlanCredits) {
-    return <ArtistPlanCreditsScreen s={s} C={C} onBack={() => setShowPlanCredits(false)} />;
+    return <ArtistPlanCreditsScreen s={s} C={C} token={token} onBack={() => setShowPlanCredits(false)} />;
   }
 
   if (composing) {
