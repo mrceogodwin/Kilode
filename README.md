@@ -1,26 +1,26 @@
 # Kilode Native (Expo)
 
 **Expo account:** [mudino](https://expo.dev/accounts/mudino)  
-**Repo:** `mrceogodwin/Kilode`  
+**Repository:** `mrceogodwin/Kilode`  
 **Stack:** Expo SDK 51 · React Native 0.74  
 **iOS / Android ID:** `ng.kilode.app`
 
-Build with **Expo EAS**. Website is **Kilode-v2** on Vercel — separate.
+This repository is the native Kilode app. The Vercel preview is a web rendering of the app source from the `preview/web` branch; it is not a separate product or backend.
 
-## Dev
+The dedicated Kilode API is not configured yet. Do not point the app at an unrelated legacy web app. Keep `EXPO_PUBLIC_API_URL` unset until the dedicated API is deployed and its authentication endpoints are verified.
+
+## Development
 
 ```bash
 npm install
 npx expo start --tunnel
 ```
 
-## EAS (you must be logged in as mudino)
+## EAS builds
 
-See [docs/EAS_SETUP_MUDINO.md](docs/EAS_SETUP_MUDINO.md).
+Use the [EAS setup guide](docs/EAS_SETUP_MUDINO.md). Authenticate as the `mudino` Expo account and confirm the existing Kilode EAS project is linked before building.
 
 ```bash
-eas login && eas whoami   # mudino
-eas init                 # once, if not linked
-eas build --platform ios --profile production
-eas build --platform android --profile production
+npx eas-cli project:info
+npx eas-cli build --platform ios --profile preview
 ```
