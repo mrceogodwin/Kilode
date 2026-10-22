@@ -1,118 +1,106 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { can } from "../lib/permissions";
-
-const { width: W } = Dimensions.get("window");
-const POSTER = (W - 32 - 20) / 3;
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { FILMS } from "../data";
 
 type Props = {
   s: any;
   C: any;
   onBack: () => void;
   show: (m: string) => void;
-  accountKind?: string;
 };
 
-const TABS = ["Movies", "TV Shows", "Trailers"] as const;
+export function CinemaScreen({ s, C, onBack, show }: Props) {
+  const [playing, setPlaying] = useState<(typeof FILMS)[0] | null>(null);
+  const [votes, setVotes] = useState<Record<string, number>>(() =>
+    Object.fromEntries(FILMS.map((f) => [f.id, f.votes]))
+  );
 
-const FEATURED = {
-  title: "The Black Book",
-  meta: "Drama · 2024 · 1h 52m",
-  imageUrl: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=900&q=80",
-};
-
-const TRENDING = [
-  { id: "c1", title: "The Black Book", rating: "4.8", imageUrl: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&q=80" },
-  { id: "c2", title: "Freedom Way", rating: "4.5", imageUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80" },
-  { id: "c3", title: "King of Boys", rating: "4.3", imageUrl: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&q=80" },
-  { id: "c4", title: "Living in Bondage", rating: "4.1", imageUrl: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400&q=80" },
-];
-
-export function CinemaScreen({ s, C, onBack, show, accountKind }: Props) {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Movies");
-  const canSubmit = can(accountKind, "cinema_submit");
+  const watching = FILMS[0];
 
   return (
-    <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 4, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={{ color: C.accent, fontWeight: "600", fontSize: 14 }}>‹ Home</Text>
-        </TouchableOpacity>
-                <TouchableOpacity
-          onPress={() =>
-            canSubmit
-              ? show("Submit film URL when Cinema API is live.")
-              : show("Cinema Poster accounts can submit films.")
-          }
-        >
-          <Ionicons name="add-circle-outline" size={22} color={canSubmit ? C.accent : C.text3} />
-        </TouchableOpacity>
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+      <View style={s.deskHero}>
+        <Text style={s.deskHeroIcon}>🎬</Text>
+        <Text style={s.h1}>Cinema</Text>
+        <Text style={s.sub}>Vote · discover · Friday screenings</Text>
       </View>
 
-      {canSubmit ? (
-        <TouchableOpacity
-          onPress={() => show("Submit movie when Cinema API is live.")}
-          style={{ marginHorizontal: 16, marginTop: 12, backgroundColor: C.accent, borderRadius: 999, paddingVertical: 12, alignItems: "center" }}
+      {/* Watching Now hero */}
+      <TouchableOpacity
+        style={[s.postCard, { backgroundColor: "#111" }]}
+        onPress={() => {
+          setPlaying(watching);
+          show(`Playing ${watching.title}`);
+        }}
+      >
+        <Text style={{ color: C.accent, fontSize: 11, fontWeight: "700", letterSpacing: 0.5 }}>WATCHING NOW</Text>
+        <View
+          style={{
+            height: 140,
+            borderRadius: 14,
+            backgroundColor: "#1a1a1a",
+            marginTop: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <Text style={{ color: "#111", fontWeight: "800", fontSize: 14 }}>Submit a film</Text>
-        </TouchableOpacity>
-      ) : null}
+          <Text style={{ color: "#fff", fontSize: 42 }}>▶</Text>
+        </View>
+        <Text style={[s.roomName, { color: "#fff", marginTop: 10 }]}>{watching.title}</Text>
+        <Text style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, marginTop: 4 }}>
+          {watching.runtime} · {watching.synopsis}
+        </Text>
+      </TouchableOpacity>
 
-      <View style={{ flexDirection: "row", marginHorizontal: 16, marginTop: 12, gap: 8 }}>
-        {TABS.map((t) => (
-          <TouchableOpacity
-            key={t}
-            onPress={() => setTab(t)}
-            style={{
-              flex: 1,
-              paddingVertical: 10,
-              borderRadius: 12,
-              alignItems: "center",
-              backgroundColor: tab === t ? C.accent : C.elevated,
-              borderWidth: 1,
-              borderColor: tab === t ? C.accent : C.border,
-            }}
-          >
-            <Text style={{ color: tab === t ? "#111" : C.text2, fontWeight: "800", fontSize: 12 }}>{t}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 18, overflow: "hidden", backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
-        <Image source={{ uri: FEATURED.imageUrl }} style={{ width: "100%", height: 200 }} resizeMode="cover" />
-        <View style={{ padding: 14 }}>
-          <Text style={{ color: C.text, fontWeight: "600", fontSize: 17, letterSpacing: -0.2 }}>{FEATURED.title}</Text>
-          <Text style={{ color: C.text3, marginTop: 4, fontSize: 13 }}>{FEATURED.meta}</Text>
-          <TouchableOpacity
-            onPress={() => show("Trailer plays when Cinema CDN is connected.")}
-            style={{ marginTop: 12, backgroundColor: C.accent, borderRadius: 999, paddingVertical: 12, alignItems: "center" }}
-          >
-            <Text style={{ color: "#111", fontWeight: "800", fontSize: 14 }}>Watch Trailer</Text>
+      {playing && playing.id !== watching.id ? (
+        <View style={[s.postCard, { backgroundColor: "#0a0a0a" }]}>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Now playing · {playing.title}</Text>
+          <TouchableOpacity style={{ marginTop: 8 }} onPress={() => setPlaying(null)}>
+            <Text style={s.link}>Close</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      ) : null}
 
-      <View style={{ paddingHorizontal: 16, marginTop: 20, flexDirection: "row", alignItems: "center" }}>
-        <Text style={{ color: C.text, fontSize: 15, fontWeight: "600", letterSpacing: -0.1, flex: 1 }}>Trending</Text>
-        <TouchableOpacity onPress={() => show("Full catalogue when Cinema API is live.")}>
-          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>See all</Text>
+      <View style={s.sectionHead}>
+        <Text style={s.sectionTitle}>This week</Text>
+        <TouchableOpacity onPress={() => show("Submit film · cinema poster")}> 
+          <Text style={s.link}>Submit</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: 16, marginTop: 10, gap: 10 }}>
-        {TRENDING.map((m) => (
-          <TouchableOpacity
-            key={m.id}
-            onPress={() => show(`${m.title} · full player when Cinema is connected.`)}
-            style={{ width: POSTER }}
-          >
-            <Image source={{ uri: m.imageUrl }} style={{ width: POSTER, height: POSTER * 1.4, borderRadius: 12, backgroundColor: C.elevated }} resizeMode="cover" />
-            <Text style={{ color: C.text, fontWeight: "700", fontSize: 12, marginTop: 6 }} numberOfLines={2}>{m.title}</Text>
-            <Text style={{ color: C.text3, fontSize: 11 }}>★ {m.rating}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {FILMS.map((f) => (
+        <View key={f.id} style={s.postCard}>
+          <Text style={s.roomName}>{f.title}</Text>
+          <Text style={s.meta}>
+            {f.runtime} · {votes[f.id]} votes
+          </Text>
+          <Text style={[s.postBody, { marginTop: 6 }]}>{f.synopsis}</Text>
+          <View style={[s.rowGap, { marginTop: 12, paddingHorizontal: 0 }]}>
+            <TouchableOpacity
+              style={[s.primaryBtn, { flex: 1 }]}
+              onPress={() => {
+                setPlaying(f);
+                show(`Playing ${f.title}`);
+              }}
+            >
+              <Text style={s.primaryBtnText}>Play</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.ghostBtn}
+              onPress={() => {
+                setVotes((v) => ({ ...v, [f.id]: (v[f.id] || 0) + 1 }));
+                show("Vote counted");
+              }}
+            >
+              <Text style={s.ghostBtnText}>Vote</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))}
+
+      <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={onBack}>
+        <Text style={s.ghostBtnText}>Back home</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }

@@ -1,6 +1,7 @@
 /**
- * Local report / block store (AsyncStorage).
- * Server moderation queues require a live backend — this covers in-app UGC controls.
+ * Client-side report / block store (AsyncStorage).
+ * Production moderation requires backend review queues — this meets
+ * the in-app reporting + blocking UX Apple expects for UGC apps.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 

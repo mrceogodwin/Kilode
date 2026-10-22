@@ -1,148 +1,27 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal, Share,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Platform, PanResponder, Dimensions, Animated, Easing,
+  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Image, Share,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
-import { Audio } from "expo-av";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DESKS, CREATE, LISTINGS, STORIES, TAKES, ROOMS, NEWS, TRACKS, ACTIVITY } from "./data";
-import { AuthProvider, useAuth, loadSocialsFeed, publishSocialPost } from "./lib/auth";
-import { getBackendMode } from "./lib/config";
-import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, fetchEvents, fetchMarketListings, fetchJobs, postTake } from "./lib/api";
-import { getSupabase, listRecentArticles, listRecentTracks, listRecentEvents, listRecentMarketListings, listRecentJobs, togglePostLike, updateOwnProfile, fetchOwnProfile } from "./lib/supabase";
+import { DESKS, CREATE, ROLE_GRID, CAROUSEL as CAROUSEL_FALLBACK, LISTINGS, STORIES } from "./data";
+import { AuthProvider, useAuth } from "./lib/auth";
+import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
-import { UpgradeScreen } from "./screens/Upgrade";
 import { AuthScreen } from "./screens/Auth";
-import { MediaScreen } from "./screens/Media";
-import { HomeScreen } from "./screens/Home";
+import { CommentsSheet } from "./screens/Comments";
+import { KilodeTabBar } from "./components/ui";
 import { SettingsScreen } from "./screens/Settings";
+import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
+import { MediaScreen } from "./screens/Media";
+import { PostActions } from "./components/ui/PostActions";
 import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
-import { SocialsScreen } from "./screens/Socials";
-import { EventsScreen } from "./screens/Events";
-import { MarketScreen, PRODUCTS } from "./screens/Market";
-import { JobsScreen, JOBS } from "./screens/Jobs";
-import { CommunitiesScreen } from "./screens/Communities";
-import { CreatorsScreen } from "./screens/Creators";
-import { TrackDetailScreen } from "./screens/TrackDetail";
-import { ArtistDetailScreen } from "./screens/ArtistDetail";
-import { CommentsSheet } from "./screens/Comments";
-import { KilodeTabBar } from "./components/ui";
-import { Ionicons } from "@expo/vector-icons";
-import { EmptyState } from "./components/ui/EmptyState";
-import { ConnectionBanner } from "./components/ui/ConnectionBanner";
-import { blockUser, submitReport, getBlockedUsers } from "./lib/moderation";
-import { primaryDesksFor, capabilitiesFor, can, toolsFor, accountKindLabel, workspaceFor } from "./lib/permissions";
-
-const SYSTEM_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
-  "💼": "briefcase-outline", "🛍️": "bag-handle-outline", "🏠": "home-outline",
-  "📅": "calendar-outline", "🎬": "film-outline", "🎵": "musical-notes-outline",
-  "💬": "chatbubble-ellipses-outline", "📢": "megaphone-outline", "📚": "book-outline",
-  "⚽": "football-outline", "💻": "laptop-outline", "▶️": "play-circle-outline", "✏️": "create-outline",
-};
-const systemIconName = (emoji: string): keyof typeof Ionicons.glyphMap => SYSTEM_ICON[emoji] || "apps-outline";
-
-function DetailMiniPlayer({ s, C, track, isPlaying, progress, onToggle, onClose }: {
-  s: any; C: any; track: any; isPlaying: boolean; progress: number;
-  onToggle: () => void; onClose: () => void;
-}) {
-  return (
-    <View style={[s.player, { gap: 10, marginHorizontal: 12, marginBottom: 8 }]}>
-      <View style={[s.playerArt, { backgroundColor: track.color || C.accent, alignItems: "center", justifyContent: "center" }]}>
-        <Ionicons name="musical-notes" size={16} color="#fff" />
-      </View>
-      <View style={s.flex}>
-        <Text style={s.playerTitle} numberOfLines={1}>{track.title}</Text>
-        <Text style={s.playerSub} numberOfLines={1}>{track.artist}{track.previewKind === "sample" ? " · sample audio" : ""}</Text>
-        <View style={{ height: 2, backgroundColor: C.border, borderRadius: 2, marginTop: 5, overflow: "hidden" }}>
-          <View style={{ height: 2, width: (String(Math.round(progress * 100)) + "%") as `${number}%`, backgroundColor: C.accent }} />
-        </View>
-      </View>
-      <TouchableOpacity onPress={onToggle} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}>
-        <Ionicons name={isPlaying ? "pause" : "play"} size={21} color={C.accent} />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close player">
-        <Ionicons name="close" size={18} color={C.text2} />
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-function PlaybackEqualizer({ isPlaying, color }: { isPlaying: boolean; color: string }) {
-  const bars = useRef([0.35, 0.65, 0.45, 0.8, 0.3].map(() => new Animated.Value(0.25))).current;
-  const loops = useRef<Animated.CompositeAnimation[]>([]);
-  const staggerTimers: ReturnType<typeof setTimeout>[] = [];
-
-  useEffect(() => {
-    loops.current.forEach((animation) => animation.stop());
-    if (!isPlaying) {
-      bars.forEach((bar) => bar.setValue(0.22));
-      return;
-    }
-    loops.current = bars.map((bar, index) => Animated.loop(
-      Animated.sequence([
-        Animated.timing(bar, { toValue: 0.35 + ((index * 17) % 55) / 100, duration: 170 + index * 55, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(bar, { toValue: 0.18 + ((index * 13) % 28) / 100, duration: 190 + index * 35, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ));
-    loops.current.forEach((animation, index) => {
-      const timer = setTimeout(() => animation.start(), index * 55);
-      // Keep stagger timers local to this effect so pause/unmount cannot leave them running.
-      staggerTimers.push(timer);
-    });
-    return () => {
-      loops.current.forEach((animation) => animation.stop());
-      staggerTimers.forEach(clearTimeout);
-    };
-    // The bars are stable refs; only playback state controls the animation lifecycle.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying]);
-
-  return (
-    <View accessibilityLabel={isPlaying ? "Animated audio equalizer" : "Audio paused"} style={{ height: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3, width: 27 }}>
-      {bars.map((bar, index) => (
-        <Animated.View key={index} style={{ width: 3, height: 15, borderRadius: 3, backgroundColor: color, transform: [{ scaleY: bar }] }} />
-      ))}
-    </View>
-  );
-}
-
-const PREVIEW_POSTS_KEY = "@kilode/preview-posts";
-
-async function readPreviewPosts(): Promise<any[]> {
-  try {
-    const raw = await AsyncStorage.getItem(PREVIEW_POSTS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function savePreviewPost(post: any): Promise<void> {
-  const current = await readPreviewPosts();
-  const next = [post, ...current.filter((item) => String(item.id) !== String(post.id))].slice(0, 100);
-  await AsyncStorage.setItem(PREVIEW_POSTS_KEY, JSON.stringify(next));
-}
-
-function mergePreviewPosts(seed: any[], saved: any[]): any[] {
-  const ids = new Set<string>();
-  return [...saved, ...seed].filter((item) => {
-    const id = String(item.id);
-    if (ids.has(id)) return false;
-    ids.add(id);
-    return true;
-  });
-}
-
-function isDeviceSession(session: { token?: string; localOnly?: boolean } | null | undefined) {
-  if (!session) return false;
-  return !!session.localOnly || session.token === "guest" || (session.token || "").startsWith("local:");
-}
+import { getAccountCapabilities } from "./lib/accountCapabilities";
+import { playMusicTrack, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -154,858 +33,638 @@ function KilodeApp() {
   const s = useMemo(() => makeStyles(C, isDark), [C, isDark]);
 
   const [tab, setTab] = useState("home");
-  const navigationHistoryRef = useRef<string[]>(["home"]);
-  const navigationForwardRef = useRef<string[]>([]);
-  const [homeSearchOpen, setHomeSearchOpen] = useState(false);
+  const [socialSection, setSocialSection] = useState<"feed" | "creators" | "communities">("feed");
+  const [homeChip, setHomeChip] = useState(0);
+  const [slide, setSlide] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
-  const drawerTranslateX = useRef(new Animated.Value(Dimensions.get("window").width)).current;
   const [createOpen, setCreateOpen] = useState(false);
-  const [createContext, setCreateContext] = useState("home");
   const [composeOpen, setComposeOpen] = useState(false);
   const [commentTake, setCommentTake] = useState<any | null>(null);
   const [composeText, setComposeText] = useState("");
   const [posting, setPosting] = useState(false);
   const [toast, setToast] = useState("");
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
-  // Re-show the native entry screen on each cold launch, including for saved sessions.
-  const [launchIntroDone, setLaunchIntroDone] = useState(false);
-
-  useEffect(() => {
-    if (!moreOpen) return;
-    drawerTranslateX.setValue(-Dimensions.get("window").width);
-    Animated.timing(drawerTranslateX, { toValue: 0, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [moreOpen, drawerTranslateX]);
-
-  const closeMoreDrawer = useCallback(() => {
-    Animated.timing(drawerTranslateX, { toValue: -Dimensions.get("window").width, duration: 180, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
-      if (finished) setMoreOpen(false);
-    });
-  }, [drawerTranslateX]);
   const [refreshing, setRefreshing] = useState(false);
   const [source, setSource] = useState<"live" | "mock" | "error">("mock");
   const [takes, setTakes] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
   const [tracks, setTracks] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>(LISTINGS.events || []);
-  const [eventsLive, setEventsLive] = useState(false);
-  const [marketItems, setMarketItems] = useState<any[]>(PRODUCTS);
-  const [jobItems, setJobItems] = useState<any[]>(JOBS);
+  const [tracksSource, setTracksSource] = useState<"live" | "mock" | "error">("mock");
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackProgress, setPlaybackProgress] = useState(0);
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const playbackRequestIdRef = useRef(0);
-  const playbackQueueRef = useRef<any[]>([]);
-  const playbackQueueIndexRef = useRef(-1);
-  const playTrackRef = useRef<((track: any, keepQueue?: boolean) => Promise<void>) | null>(null);
+  const [musicPlaying, setMusicPlaying] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
-  const [selectedTrack, setSelectedTrack] = useState<any | null>(null);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
-  const [selectedArtist, setSelectedArtist] = useState<any | null>(null);
-  const [artistReturnToTrack, setArtistReturnToTrack] = useState(false);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
-  const [displayName, setDisplayName] = useState("");
-  const [displayHandle, setDisplayHandle] = useState("");
-  const [profileBio, setProfileBio] = useState("");
-  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string[]>([]);
 
-  const navigateBack = useCallback(() => {
-    // Close transient UI before changing the underlying destination.
-    if (commentTake) { setCommentTake(null); return; }
-    if (composeOpen) { setComposeOpen(false); return; }
-    if (createOpen) { setCreateOpen(false); return; }
-    if (moreOpen) { setMoreOpen(false); return; }
-    if (settingsOpen) { setSettingsOpen(false); return; }
-    if (profileEditorOpen) { setProfileEditorOpen(false); return; }
-    if (homeSearchOpen) { setHomeSearchOpen(false); return; }
-    if (selectedPost) { setSelectedPost(null); return; }
-    if (selectedProfile) { setSelectedProfile(null); return; }
-    if (selectedTrack) { setSelectedTrack(null); return; }
-    if (selectedArtist) { setSelectedArtist(null); setArtistReturnToTrack(false); return; }
-    if (selectedDeskItem) { setSelectedDeskItem(null); return; }
-    if (selectedArticleId) { setSelectedArticleId(null); return; }
-    const history = navigationHistoryRef.current;
-    if (history.length > 1) {
-      navigationForwardRef.current.unshift(history.pop()!);
-      setTab(history[history.length - 1]);
-    }
-  }, [commentTake, composeOpen, createOpen, moreOpen, settingsOpen, profileEditorOpen, homeSearchOpen, selectedPost, selectedProfile, selectedTrack, selectedArtist, selectedDeskItem, selectedArticleId]);
-  const navigateForward = useCallback(() => {
-    const next = navigationForwardRef.current.shift();
-    if (next) {
-      navigationHistoryRef.current.push(next);
-      setTab(next);
-    }
-  }, []);
-  const navigateBackRef = useRef(navigateBack);
-  const navigateForwardRefCallback = useRef(navigateForward);
-  navigateBackRef.current = navigateBack;
-  navigateForwardRefCallback.current = navigateForward;
-  const edgeSwipeResponder = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_evt, gesture) => {
-      const width = Dimensions.get("window").width;
-      const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.3;
-      const startX = gesture.x0;
-      return horizontal && ((startX <= 24 && gesture.dx > 18) || (startX >= width - 24 && gesture.dx < -18));
-    },
-    onMoveShouldSetPanResponderCapture: (_evt, gesture) => {
-      const width = Dimensions.get("window").width;
-      const horizontal = Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.3;
-      const startX = gesture.x0;
-      return horizontal && ((startX <= 24 && gesture.dx > 18) || (startX >= width - 24 && gesture.dx < -18));
-    },
-    onPanResponderRelease: (_evt, gesture) => {
-      if (gesture.dx > 70) navigateBackRef.current();
-      else if (gesture.dx < -70) navigateForwardRefCallback.current();
-    },
-    onPanResponderTerminationRequest: () => true,
-  })).current;
+  const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
+  const go = (t: string) => {
+    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
+  };
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!session) {
-        if (active) { setDisplayName(""); setDisplayHandle(""); setProfileBio(""); }
-        return;
-      }
-      try {
-        if (session.userId && getBackendMode() === "supabase") {
-          const profile = await fetchOwnProfile(session.userId);
-          if (!active) return;
-          setDisplayName(profile?.display_name || session.name || "");
-          setDisplayHandle(profile?.handle || session.handle || "");
-          setProfileBio(profile?.bio || "");
-          return;
-        }
-        const raw = await AsyncStorage.getItem("@kilode/profile:" + (session.userId || session.handle));
-        if (!active) return;
-        if (raw) {
-          const profile = JSON.parse(raw);
-          setDisplayName(profile.displayName || session.name || "");
-          setDisplayHandle(profile.handle || session.handle || "");
-          setProfileBio(profile.bio || "");
-        } else {
-          setDisplayName(session.name || "");
-          setDisplayHandle(session.handle || "");
-          setProfileBio("");
-        }
-      } catch {
-        if (active) {
-          setDisplayName(session.name || "");
-          setDisplayHandle(session.handle || "");
-        }
-      }
-    })();
-    return () => { active = false; };
-  }, [session?.userId, session?.handle, session?.name]);
-
-  const show = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); }, []);
-
-  const playTrack = useCallback(async (track: any, keepQueue = false) => {
-    const requestId = ++playbackRequestIdRef.current;
-    if (!keepQueue) {
-      const index = tracks.findIndex((item: any) => String(item.id ?? item.title) === String(track?.id ?? track?.title));
-      playbackQueueRef.current = index >= 0 ? tracks : [track];
-      playbackQueueIndexRef.current = index >= 0 ? index : 0;
-    }
-    setNowPlaying(track);
-    try {
-      if (soundRef.current) {
-        await soundRef.current.stopAsync().catch(() => undefined);
-        await soundRef.current.unloadAsync().catch(() => undefined);
-        soundRef.current = null;
-      }
-      if (requestId !== playbackRequestIdRef.current) return;
-      if (!track?.previewUrl) {
-        setIsPlaying(false);
-        show("No playable audio preview is attached to this track yet.");
-        return;
-      }
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
-      if (requestId !== playbackRequestIdRef.current) return;
-      const created = await Audio.Sound.createAsync({ uri: track.previewUrl }, { shouldPlay: true, volume: 1, progressUpdateIntervalMillis: 250 }, status => {
-        if (requestId !== playbackRequestIdRef.current) return;
-        if (!status.isLoaded) {
-          // Expo AV can report a failed/unloaded status after the sound was created.
-          // Clear stale playing/progress UI instead of leaving the mini-player "playing".
-          setIsPlaying(false);
-          setPlaybackProgress(0);
-          if (status.error) show("Audio preview stopped unexpectedly. Try playing the track again.");
-          return;
-        }
-        setIsPlaying(status.isPlaying);
-        setPlaybackProgress(status.durationMillis ? status.positionMillis / status.durationMillis : 0);
-        if (status.didJustFinish) {
-          setIsPlaying(false);
-          setPlaybackProgress(0);
-          const queue = playbackQueueRef.current;
-          let nextIndex = playbackQueueIndexRef.current + 1;
-          // A catalogue item without a playable preview must not stall the queue.
-          while (nextIndex < queue.length && !queue[nextIndex]?.previewUrl) nextIndex += 1;
-          if (nextIndex < queue.length) {
-            playbackQueueIndexRef.current = nextIndex;
-            void playTrackRef.current?.(queue[nextIndex], true);
-          }
-        }
-      });
-      if (requestId !== playbackRequestIdRef.current) {
-        await created.sound.stopAsync().catch(() => undefined);
-        await created.sound.unloadAsync().catch(() => undefined);
-        return;
-      }
-      soundRef.current = created.sound;
-      setIsPlaying(created.status.isLoaded ? created.status.isPlaying : true);
-    } catch {
-      if (requestId === playbackRequestIdRef.current) {
-        setIsPlaying(false);
-        show("Audio preview could not load. Check your connection and try again.");
-      }
-    }
-  }, [tracks, show]);
-
-  playTrackRef.current = playTrack;
-
-  const stepPlaybackQueue = useCallback(async (direction: -1 | 1) => {
-    const queue = playbackQueueRef.current;
-    let nextIndex = playbackQueueIndexRef.current + direction;
-    while (nextIndex >= 0 && nextIndex < queue.length && !queue[nextIndex]?.previewUrl) {
-      nextIndex += direction;
-    }
-    if (nextIndex < 0 || nextIndex >= queue.length) {
-      show(direction < 0 ? "No earlier playable track is available." : "No later playable track is available.");
-      return;
-    }
-    playbackQueueIndexRef.current = nextIndex;
-    await playTrack(queue[nextIndex], true);
-  }, [playTrack, show]);
-
-  const togglePlayback = useCallback(async () => {
-    if (!soundRef.current) {
-      if (nowPlaying?.previewUrl) await playTrack(nowPlaying);
-      else show("This track has no audio preview attached yet.");
-      return;
-    }
-    try {
-      const status = await soundRef.current.getStatusAsync();
-      if (status.isLoaded && status.isPlaying) await soundRef.current.pauseAsync();
-      else if (status.isLoaded) await soundRef.current.playAsync();
-    } catch {
-      show("Could not change playback state.");
-    }
-  }, [nowPlaying, playTrack, show]);
-
-  useEffect(() => () => {
-    if (soundRef.current) {
-      void soundRef.current.stopAsync().catch(() => undefined);
-      void soundRef.current.unloadAsync().catch(() => undefined);
-      soundRef.current = null;
-    }
+    const unsubscribe = subscribeMusicPlayer((track, playing) => { setNowPlaying(track); setMusicPlaying(playing); });
+    return () => { unsubscribe(); };
   }, []);
 
-  const go = (t: string) => {
-    if (navigationHistoryRef.current[navigationHistoryRef.current.length - 1] !== t) {
-      navigationHistoryRef.current.push(t);
-      if (navigationHistoryRef.current.length > 30) navigationHistoryRef.current.shift();
-      navigationForwardRef.current = [];
-    }
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false);
-    setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null); setSelectedTrack(null); setSelectedArtist(null); setArtistReturnToTrack(false);
-  };
-
   const loadAll = useCallback(async () => {
-    // One data-loading path feeds both the native screens and the web visual preview.
-    // Supabase reads are used when configured; the custom API is used otherwise.
-    const supabaseMode = getBackendMode() === "supabase";
-    const [t, r, n, tr, a, ev, market, jobs, savedPreviewPosts] = await Promise.all([
-      supabaseMode ? loadSocialsFeed(session?.userId) : fetchTakes(),
-      fetchRooms(),
-      supabaseMode
-        ? listRecentArticles().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
-        : fetchNews(),
-      supabaseMode
-        ? listRecentTracks().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
-        : fetchTracks(),
-      fetchActivity(session?.token),
-      supabaseMode
-        ? listRecentEvents().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
-        : fetchEvents(),
-      supabaseMode
-        ? listRecentMarketListings().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
-        : fetchMarketListings(),
-      supabaseMode
-        ? listRecentJobs().then((x) => ({ ...x, source: x.ok ? "live" as const : "error" as const }))
-        : fetchJobs(),
-      readPreviewPosts(),
-    ]);
-    // Live empty lists remain empty; seed data is only a fallback when a source is not live.
-    setTakes(t.source === "live" && Array.isArray(t.data) ? t.data : mergePreviewPosts(TAKES, savedPreviewPosts));
-    if (t.source === "live" && Array.isArray(t.data)) {
-      setLiked(Object.fromEntries(t.data.filter((post: any) => post.likedByMe).map((post: any) => [String(post.id), true])));
-    }
-    setRooms(r.source === "live" && Array.isArray(r.data) ? r.data : ROOMS);
-    setNews(n.source === "live" && Array.isArray(n.data) ? n.data : NEWS);
-    setTracks(tr.source === "live" && Array.isArray(tr.data) ? tr.data : TRACKS);
-    setEvents(ev.source === "live" && Array.isArray(ev.data) ? ev.data : (LISTINGS.events || []));
-    setEventsLive(ev.source === "live");
-    setMarketItems(market.source === "live" && Array.isArray(market.data) ? market.data : PRODUCTS);
-    setJobItems(jobs.source === "live" && Array.isArray(jobs.data) ? jobs.data : JOBS);
-    setActivity(a.source === "live" && Array.isArray(a.data) ? a.data : ACTIVITY);
-    const sources = [t, n, tr, ev, market, jobs].map((x) => x.source);
-    const next = sources.every((v) => v === "live") ? "live" : sources.some((v) => v === "error") ? "error" : "mock";
-    setSource(next as any); return next as any;
-  }, [session?.token]);
-
-  const handleLikePost = async (postId: string) => {
-    const id = String(postId);
-    if (getBackendMode() === "supabase") {
-      if (!session?.userId || session.localOnly || session.token === "guest") {
-        show("Sign in to your live Kilode account to like posts.");
-        return;
-      }
-      try {
-        const result = await togglePostLike(id, session.userId);
-        if (!result.ok || typeof result.liked !== "boolean") {
-          show(result.error || "Could not update like.");
-          return;
-        }
-        setLiked((previous) => ({ ...previous, [id]: result.liked! }));
-        setTakes((previous) => previous.map((post) => {
-          if (String(post.id) !== id) return post;
-          const currentLikes = Number(post.likes_count ?? post.likes ?? 0);
-          return { ...post, likes: Math.max(0, currentLikes + (result.liked ? 1 : -1)), likes_count: Math.max(0, currentLikes + (result.liked ? 1 : -1)), likedByMe: result.liked };
-        }));
-      } catch {
-        show("Could not update like. Check your connection and try again.");
-      }
-      return;
-    }
-    const nextLiked = !liked[id];
-    setLiked((previous) => ({ ...previous, [id]: nextLiked }));
-    setTakes((previous) => previous.map((post) => {
-      if (String(post.id) !== id) return post;
-      const currentLikes = Number(post.likes_count ?? post.likes ?? 0);
-      return { ...post, likes: Math.max(0, currentLikes + (nextLiked ? 1 : -1)), likes_count: Math.max(0, currentLikes + (nextLiked ? 1 : -1)), likedByMe: nextLiked };
-    }));
-  };
+    const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity()]);
+    setTakes(Array.isArray(t.data) ? t.data : []);
+    setRooms(Array.isArray(r.data) ? r.data : []);
+    setNews(Array.isArray(n.data) ? n.data : []);
+    setTracks(Array.isArray(tr.data) ? tr.data : []);
+    setTracksSource(tr.source);
+    setActivity(Array.isArray(a.data) ? a.data : []);
+    const sources = [t, r, n, tr].map((x) => x.source);
+    if (sources.some((s) => s === "live")) setSource("live");
+    else if (sources.every((s) => s === "error")) setSource("error");
+    else setSource("mock");
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const b = await getBlockedUsers(); if (!cancelled) setBlocked(b);
-      await loadAll(); if (!cancelled) setBoot(false);
+      const b = await getBlockedUsers();
+      if (!cancelled) setBlocked(b);
+      await loadAll();
+      if (!cancelled) setBoot(false);
     })();
     return () => { cancelled = true; };
   }, [loadAll]);
 
-  // One debounced Realtime subscription refreshes all currently supported
-  // backend-backed Home sources. Pull-to-refresh remains the fallback if Realtime
-  // is not enabled in the Supabase project.
-  useEffect(() => {
-    const sb = getSupabase();
-    if (!sb) return;
-    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-    const scheduleRefresh = () => {
-      if (refreshTimer) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(() => { void loadAll(); }, 220);
-    };
-    const channel = sb.channel("kilode-shared-discovery")
-      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "post_replies" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "tracks" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "market_listings" }, scheduleRefresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, scheduleRefresh)
-      .subscribe();
-    return () => {
-      if (refreshTimer) clearTimeout(refreshTimer);
-      void sb.removeChannel(channel);
-    };
-  }, [loadAll]);
+  const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Backend offline · seed" : "Refreshed"); };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try { await loadAll(); show("Refreshed"); } catch { show("Could not refresh."); }
-    finally { setRefreshing(false); }
-  };
+  if (authLoading) {
+    return (
+      <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
+        <ActivityIndicator color={C.accent} size="large" />
+        <Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text>
+      </SafeAreaView>
+    );
+  }
 
-  if (session && !isDeviceSession(session as any) && (authLoading || boot)) {
-    return (<SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}><ActivityIndicator color={C.accent} size="large" /><Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text></SafeAreaView>);
-  }
-  if (session && !launchIntroDone) {
-    return (<AuthScreen isDark={isDark} C={C} hasSession onContinue={() => setLaunchIntroDone(true)} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); setLaunchIntroDone(true); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
-  }
+  // Keep the welcome/entry screen independent of feed API loading. A slow or
+  // unavailable content service must not hide the first screen at app launch.
   if (!session) {
-    return (<AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); setLaunchIntroDone(true); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
+    return (
+      <AuthScreen
+        isDark={isDark}
+        C={C}
+        onSignIn={signIn}
+        onSignUp={signUp}
+        onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
+        show={show}
+      />
+    );
   }
 
-  const deviceSession = isDeviceSession(session as any);
+  if (boot) {
+    return (
+      <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
+        <ActivityIndicator color={C.accent} size="large" />
+        <Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text>
+      </SafeAreaView>
+    );
+  }
 
   const Header = ({ title }: { title?: string }) => (
     <View style={s.header}>
-      <View style={[s.headerLeft, { flexShrink: 1, minWidth: 0 }]}>{title ? <Text style={[s.headerTitle, { fontSize: 12, marginLeft: 2, flexShrink: 1 }]} numberOfLines={1}>{title}</Text> : null}</View>
-      <View style={[s.headerRight, { gap: 6 }]}>
-        <TouchableOpacity style={s.iconBtn} onPress={() => { if (tab !== "home") { go("home"); setHomeSearchOpen(true); return; } setHomeSearchOpen((open) => !open); }} accessibilityRole="button" accessibilityLabel="Search"><Ionicons name="search-outline" size={18} color={C.text} /></TouchableOpacity>
-        <TouchableOpacity style={s.iconBtn} onPress={() => go("activity")} accessibilityLabel="Notifications"><Ionicons name="notifications-outline" size={18} color={C.text} /></TouchableOpacity>
-        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")} accessibilityLabel="Theme"><Ionicons name={isDark ? "sunny-outline" : "moon-outline"} size={18} color={C.text} /></TouchableOpacity>
-        <TouchableOpacity style={s.avatar} onPress={() => go("myspace")} accessibilityLabel="Profile"><Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text></TouchableOpacity>
+      <View style={s.headerLeft}>
+        {title ? (
+          <Text style={s.headerTitle}>{title}</Text>
+        ) : (
+          <Text style={s.brand}>
+            Kilode<Text style={s.brandAccent}>!</Text>
+          </Text>
+        )}
+      </View>
+      <View style={s.headerRight}>
+        <View style={[s.chip, { paddingVertical: 4, paddingHorizontal: 8 }]}>
+          <Text style={[s.chipText, { fontSize: 10 }]}>{source}</Text>
+        </View>
+        <TouchableOpacity style={s.iconBtn} onPress={() => setThemeMode(isDark ? "light" : "dark")}>
+          <Text style={s.iconBtnText}>{isDark ? "☀" : "☾"}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={s.avatar} onPress={() => go("myspace")}>
+          <Text style={s.avatarText}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 
   const rc = <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} colors={[C.accent]} />;
-  const eventList = (events || []).map((e: any) => ({ id: e.id, title: e.title, meta: e.meta, price: e.price, tag: e.tag, date: e.date, category: e.category }));
 
-  const body = () => {
-    if (settingsOpen) return <SettingsScreen s={s} C={C} isDark={isDark} sessionHandle={session.handle || ""} sessionKind={session.kind || "member"} localOnly={deviceSession} onBack={() => setSettingsOpen(false)} onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to the dedicated backend yet." })} show={show} />;
-    if (selectedPost) return (
-      <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]}
-        onBack={() => setSelectedPost(null)}
-        onLike={() => { void handleLikePost(String(selectedPost.id)); }}
-        onComment={() => setCommentTake(selectedPost)}
-        onFollow={() => setFollowing((p) => ({ ...p, [String(selectedPost.handle || selectedPost.name)]: !p[String(selectedPost.handle || selectedPost.name)] }))}
-        onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved."); }}
-        onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((p) => p.includes(h) ? p : [...p, h]); setSelectedPost(null); show("Blocked @" + h); }}
-        show={show} />
-    );
-    if (selectedProfile) return (
-      <UserProfileScreen s={s} C={C} user={selectedProfile} posts={takes.filter((p: any) => String(p.handle || p.name) === String(selectedProfile.handle || selectedProfile.name))}
-        isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
-        onBack={() => setSelectedProfile(null)}
-        onToggleFollow={() => setFollowing((p) => ({ ...p, [String(selectedProfile.handle || selectedProfile.name)]: !p[String(selectedProfile.handle || selectedProfile.name)] }))}
-        onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }} />
-    );
-    if (selectedArtist) return <View style={s.flex}><ArtistDetailScreen s={s} C={C} artist={selectedArtist} tracks={tracks} userId={deviceSession ? undefined : session.userId} backLabel={artistReturnToTrack ? "Track" : "Music"} onBack={() => { setSelectedArtist(null); setArtistReturnToTrack(false); }} onOpenTrack={(t) => { setArtistReturnToTrack(false); setSelectedArtist(null); setSelectedTrack(t); }} onPlay={playTrack} show={show} /></View>;
-    if (selectedTrack) return <View style={s.flex}><TrackDetailScreen s={s} C={C} track={selectedTrack} related={tracks} onBack={() => setSelectedTrack(null)} onPlay={playTrack} onOpenArtist={(n) => { setArtistReturnToTrack(true); setSelectedArtist({ display_name: n, handle: n }); }} onOpenTrack={setSelectedTrack} show={show} /></View>;
-    if (selectedDeskItem) return <DeskDetailScreen s={s} C={C} system={String(selectedDeskItem.system || selectedDeskItem.type || tab)} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
-    if (tab === "media") return <MediaScreen s={s} C={C} news={news} initialArticleId={selectedArticleId} onBack={() => go("home")} show={show} />;
-    if (tab === "events") return <EventsScreen s={s} C={C} events={eventList} liveData={eventsLive} onBack={() => go("home")} show={show} />;
-    if (tab === "market") return <MarketScreen s={s} C={C} products={marketItems} onBack={() => go("home")} show={show} accountKind={session.kind} />;
-    if (tab === "jobs") return <JobsScreen s={s} C={C} jobs={jobItems} onBack={() => go("home")} show={show} accountKind={session.kind} />;
-    if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "communities") return <CommunitiesScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "creators") return <CreatorsScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={playTrack} onOpenTrack={setSelectedTrack} onOpenArtist={(artist) => { setArtistReturnToTrack(false); setSelectedArtist(artist); }} accountKind={session.kind} userId={session.userId} tracks={tracks} />;
-    if (tab === "upgrade") return <UpgradeScreen s={s} C={C} accountKind={session.kind} onBack={() => go("myspace")} show={show} />;
-    if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} accountKind={session.kind} />;
-    if (tab === "activity") {
-      const chips = ["All", "Likes", "Comments", "Follows"];
-      return (
-        <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 28 }} refreshControl={rc} showsVerticalScrollIndicator={false}>
-          <View style={{ paddingHorizontal: 16, paddingTop: 4, marginBottom: 8 }}><Text style={{ color: C.text, fontSize: 19, fontWeight: "600", letterSpacing: -0.3 }}>Notifications</Text></View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, marginBottom: 12 }}>
-            {chips.map((f, i) => (
-              <View key={f} style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: i === 0 ? C.accent : "transparent", borderWidth: 1, borderColor: i === 0 ? C.accent : C.border }}>
-                <Text style={{ color: i === 0 ? "#111" : C.text2, fontWeight: "700", fontSize: 13 }}>{f}</Text>
-              </View>
-            ))}
-          </ScrollView>
-          {(activity.length ? activity : [
-            { id: "n1", icon: "❤️", text: "Rema liked your post", time: "2m", unread: true, lane: "socials" },
-            { id: "n2", icon: "💬", text: "Ayra commented on your take", time: "18m", unread: true, lane: "socials" },
-            { id: "n3", icon: "👤", text: "Burna Boy started following you", time: "1h", unread: false, lane: "socials" },
-            { id: "n4", icon: "🎵", text: "New drop in Afrobeats charts", time: "3h", unread: false, lane: "music" },
-            { id: "n5", icon: "📅", text: "Lagos Music Festival is this weekend", time: "5h", unread: false, lane: "events" },
-          ]).map((a: any) => (
-            <TouchableOpacity key={a.id} onPress={() => go(a.lane || "home")} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 12, marginBottom: 8, padding: 12, borderRadius: 14, backgroundColor: a.unread ? C.elevated : C.card, borderWidth: 1, borderColor: a.unread ? C.accent + "44" : C.border }}>
-              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: C.card, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 18 }}>{a.icon}</Text></View>
-              <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: a.unread ? "700" : "600", fontSize: 14 }}>{a.text}</Text><Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{a.time}</Text></View>
-              {a.unread ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: C.accent }} /> : null}
+  const Home = () => (
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
+      <View style={s.padH}>
+        <Text style={s.h1}>For you</Text>
+
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
+        {CAROUSEL_FALLBACK.map((c) => (
+          <TouchableOpacity key={c.id} style={[s.slide, { backgroundColor: c.color }]} onPress={() => { if (c.id === "c1") setMoreOpen(true); else if (c.id === "c2") go("music"); else if (c.id === "c3") go("jobs"); else go("cinema"); }}>
+            <Text style={s.slideTitle}>{c.title}</Text>
+            <Text style={s.slideSub}>{c.sub}</Text>
+            <View style={s.slideCta}><Text style={s.slideCtaText}>{c.cta}</Text></View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      <View style={s.dotsRow}>{CAROUSEL_FALLBACK.map((_, i) => <View key={i} style={[s.dot, i === slide && s.dotOn]} />)}</View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.storyRow}>
+        {STORIES.map((st) => (
+          <TouchableOpacity key={st.id} style={s.story} onPress={() => st.id === "s0" ? setComposeOpen(true) : setSelectedProfile({ name: st.label, handle: st.label.toLowerCase(), role: "Kilode member" })}>
+            <View style={s.storyRing}><View style={s.storyInner}><Text style={{ color: C.text, fontWeight: "700" }}>{st.av}</Text></View></View>
+            <Text style={s.storyLabel} numberOfLines={1}>{st.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
+        {["For you", "Trending", "Rooms", "News"].map((c, i) => (
+          <TouchableOpacity key={c} style={[s.chip, homeChip === i && s.chipOn]} onPress={() => setHomeChip(i)}>
+            <Text style={[s.chipText, homeChip === i && s.chipTextOn]}>{c}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      {(homeChip === 0 || homeChip === 1) && (
+        <>
+          <View style={s.sectionHead}><Text style={s.sectionTitle}>Explore</Text><TouchableOpacity onPress={() => setMoreOpen(true)}><Text style={s.link}>More</Text></TouchableOpacity></View>
+          <View style={s.grid4}>{ROLE_GRID.map((r) => (<TouchableOpacity key={r.id} style={s.gridCell} onPress={() => go(r.id)}><Text style={s.gridIcon}>{r.icon}</Text><Text style={s.gridLabel}>{r.label}</Text></TouchableOpacity>))}</View>
+        </>
+      )}
+      {(homeChip === 0 || homeChip === 1) && (
+        <>
+          <View style={s.sectionHead}><Text style={s.sectionTitle}>{homeChip === 1 ? "Trending takes" : "Music · New drops"}</Text><TouchableOpacity onPress={() => go(homeChip === 1 ? "socials" : "music")}><Text style={s.link}>{homeChip === 1 ? "Socials" : "Browse"}</Text></TouchableOpacity></View>
+          {homeChip === 1 ? (
+            takes.slice().sort((a: any, b: any) => (b.likes || 0) - (a.likes || 0)).slice(0, 5).map((t: any) => (
+              <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => { go("socials"); setSelectedProfile(t); }}>
+                <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
+                <View style={s.flex}><Text style={s.roomName} numberOfLines={1}>{t.name}</Text><Text style={s.meta} numberOfLines={2}>{t.text}</Text></View>
+                <Text style={[s.meta, { fontWeight: "700", color: C.accent }]}>♥ {t.likes || 0}</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
+              {tracks.map((t: any) => (
+                <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => { setNowPlaying(t); show(`Selected ${t.title} · audio streaming is not connected yet`); }}>
+                  <Text style={s.trackPlay}>▶</Text><Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text><Text style={s.trackArtist} numberOfLines={1}>{t.artist}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </>
+      )}
+      {(homeChip === 0 || homeChip === 3) && (
+        <>
+          <View style={s.sectionHead}><Text style={s.sectionTitle}>News for you</Text></View>
+          {news.map((n: any) => (
+            <TouchableOpacity key={n.id} style={s.newsCard} onPress={() => { setSelectedArticleId(String(n.id)); go("media"); }}>
+              <View style={[s.newsThumb, { backgroundColor: n.tone || C.elevated }]} />
+              <View style={s.flex}><Text style={s.newsKicker}>{n.kicker} · {n.time}</Text><Text style={s.newsTitle} numberOfLines={2}>{n.title}</Text></View>
             </TouchableOpacity>
           ))}
-        </ScrollView>
-      );
-    }
-    if (tab === "socials") {
-      return (
-        <SocialsScreen s={s} C={C} takes={takes} blocked={blocked} liked={liked} following={following} sessionName={session.name || "K"}
-          refreshing={refreshing} onRefresh={onRefresh} onCompose={() => setComposeOpen(true)}
-          onOpenPost={setSelectedPost} onOpenProfile={setSelectedProfile}
-          onLike={(id) => { void handleLikePost(id); }} onComment={setCommentTake}
-          onFollow={(key, name) => { setFollowing((p) => ({ ...p, [key]: !p[key] })); show(following[key] ? `Unfollowed ${name}` : `Following ${name}`); }}
-          onReport={async (id) => { await submitReport("post", id, "other"); show("Reported locally"); }}
-          onBlock={async (handle) => { await blockUser(handle); setBlocked((p) => p.includes(handle) ? p : [...p, handle]); show(`Blocked @${handle}`); }}
-          show={show} />
-      );
-    }
-    if (tab === "myspace") {
-      const desks = primaryDesksFor(session.kind);
-      const workspace = workspaceFor(session.kind);
-      return (
-        <ScrollView style={s.flex} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          <Text style={{ color: C.text, fontSize: 19, fontWeight: "600", letterSpacing: -0.35 }}>{workspace.title}</Text>
-          <Text style={{ color: C.text2, fontSize: 12, lineHeight: 17, marginTop: 4, marginBottom: 16 }}>{workspace.subtitle}</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ color: C.text, fontSize: 28, fontWeight: "800" }}>{(session.name || "K").slice(0, 1).toUpperCase()}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontSize: 16, fontWeight: "600", letterSpacing: -0.15 }}>{displayName || session.name}</Text>
-              <Text style={{ color: C.text2, marginTop: 2 }}>@{displayHandle || session.handle}</Text>
-              {profileBio ? <Text style={{ color: C.text2, fontSize: 12, lineHeight: 17, marginTop: 5 }} numberOfLines={3}>{profileBio}</Text> : null}
-              <Text style={{ color: C.accent, fontSize: 12, fontWeight: "700", marginTop: 4 }}>{accountKindLabel(session.kind)}</Text>
-              <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
-                <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: deviceSession ? "rgba(229,193,88,0.15)" : "rgba(34,197,94,0.15)" }}>
-                  <Text style={{ color: deviceSession ? C.accent : "#22C55E", fontSize: 10, fontWeight: "800" }}>
-                    {deviceSession ? "Device session" : "Live account"}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity style={{ borderWidth: 1, borderColor: C.border, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 }} onPress={() => { setDisplayName(displayName || session.name || ""); setDisplayHandle(displayHandle || session.handle || ""); setProfileEditorOpen(true); }}>
-              <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>Edit</Text>
+        </>
+      )}
+      {(homeChip === 0 || homeChip === 2) && (
+        <>
+          <View style={s.sectionHead}><Text style={s.sectionTitle}>Rooms · {rooms.filter((r: any) => r.live).length} live</Text></View>
+          {rooms.map((r: any) => {
+            const isJoined = !!joined[r.id];
+            return (
+              <TouchableOpacity key={r.id} style={s.roomRow}>
+                <View style={s.roomAv}><Text style={s.roomAvText}>{r.av}</Text>{r.live ? <View style={s.roomLive} /> : null}</View>
+                <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.live ? `${r.speaking || 0} speaking · ` : ""}{r.meta}</Text></View>
+                <TouchableOpacity style={[s.joinBtn, isJoined && s.joinLive]} onPress={() => { setJoined({ ...joined, [r.id]: !isJoined }); show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`); }}>
+                  <Text style={[s.joinBtnText, isJoined && s.joinLiveText]}>{isJoined ? "Joined" : "Join"}</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            );
+          })}
+        </>
+      )}
+      <View style={{ height: 20 }} />
+    </ScrollView>
+  );
+
+  const Socials = () => (
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
+      <View style={s.padH}>
+        <Text style={s.h1}>Socials</Text>
+        <Text style={s.sub}>Your people, creators and communities in one place.</Text>
+      </View>
+      <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, marginBottom: 14 }}>
+        {([
+          { id: "feed", label: "Feed" },
+          { id: "creators", label: "Creators" },
+          { id: "communities", label: "Communities" },
+        ] as const).map((item) => {
+          const active = socialSection === item.id;
+          return (
+            <TouchableOpacity
+              key={item.id}
+              onPress={() => setSocialSection(item.id)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={{ flex: 1, alignItems: "center", justifyContent: "center", minHeight: 38, paddingHorizontal: 8, borderRadius: 13, borderWidth: 1, borderColor: active ? C.accent : C.border, backgroundColor: active ? C.accent + "20" : C.card }}
+            >
+              <Text style={{ color: active ? C.accent : C.text2, fontSize: 12, fontWeight: active ? "800" : "600" }}>{item.label}</Text>
             </TouchableOpacity>
+          );
+        })}
+      </View>
+      {socialSection === "feed" ? (
+        <>
+          <View style={s.composer}>
+            <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
+            <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What is happening in Naija?</Text></TouchableOpacity>
+            <TouchableOpacity style={s.postBtn} onPress={() => setComposeOpen(true)}><Text style={s.postBtnText}>Post</Text></TouchableOpacity>
           </View>
-          <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 22 }}>
-            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "600", fontSize: 16 }}>{takes.length || 0}</Text><Text style={s.meta}>Posts</Text></View>
-            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "600", fontSize: 16 }}>—</Text><Text style={s.meta}>Followers</Text></View>
-            <View style={{ alignItems: "center" }}><Text style={{ color: C.text, fontWeight: "800", fontSize: 18 }}>—</Text><Text style={s.meta}>Following</Text></View>
+                {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
+        <View key={t.id} style={s.postCard}>
+          <View style={s.postTop}>
+            <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button"><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
+            <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
+              <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
+              <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.followBtn} onPress={() => setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] }))}><Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text></TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => go("upgrade")} accessibilityRole="button" style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 18, marginBottom: 2, padding: 13, borderRadius: 14, borderWidth: 1, borderColor: C.accent + "66", backgroundColor: C.accent + "10" }}>
-            <View style={{ width: 38, height: 38, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: C.accent + "20" }}><Ionicons name="sparkles-outline" size={20} color={C.accent} /></View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: C.text, fontSize: 13, fontWeight: "800" }}>Upgrade</Text>
-              <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>Account-specific plans and paid tools</Text>
+          <Text style={s.postBody}>{t.text}</Text>
+          {t.mediaUrl ? (
+            <Image source={{ uri: t.mediaUrl }} style={s.postMedia} resizeMode="cover" />
+          ) : t.media ? (
+            <View style={[s.postMedia, { backgroundColor: t.mediaTone || C.elevated }]} />
+          ) : null}
+          <View style={s.factCapRow}>
+            <Text style={[s.meta, { fontWeight: "700", color: C.success }]}>FACT {t.factPct ?? 50}%</Text>
+            <View style={s.factCapBar}>
+              <View style={[s.factFill, { flex: t.factPct ?? 50 }]} />
+              <View style={[s.capFill, { flex: 100 - (t.factPct ?? 50) }]} />
             </View>
-            <Ionicons name="chevron-forward" size={17} color={C.accent} />
-          </TouchableOpacity>
-          <Text style={{ color: C.text3, fontSize: 12, fontWeight: "700", letterSpacing: 0.5, marginTop: 22, marginBottom: 10 }}>
-            {workspace.primaryLabel.toUpperCase()}
-          </Text>
-          <View style={{ gap: 8 }}>
-            {toolsFor(session.kind).map((tool) => (
+            <Text style={[s.meta, { fontWeight: "700", color: C.danger }]}>CAP {100 - (t.factPct ?? 50)}%</Text>
+          </View>
+          <PostActions
+            liked={!!liked[t.id]}
+            likes={(t.likes || 0) + (liked[t.id] ? 1 : 0)}
+            comments={t.comments || 0}
+            accent={C.accent}
+            danger={C.danger}
+            muted={C.text2}
+            onLike={() => setLiked((prev) => ({ ...prev, [String(t.id)]: !prev[String(t.id)] }))}
+            onComment={() => setCommentTake(t)}
+            onShare={async () => { try { await Share.share({ message: `${t.name} (@${t.handle}) on Kilode:\n\n${t.text}` }); } catch { show("Could not open share options."); } }}
+            onReport={async () => { await submitReport("post", String(t.id), "other"); show("Reported · under review"); }}
+            onBlock={async () => {
+              const h = String(t.handle || t.name);
+              await blockUser(h);
+              setBlocked((prev) => (prev.includes(h) ? prev : [...prev, h]));
+              show(`Blocked @${h}`);
+            }}
+          />
+        </View>
+      ))}
+
+          <View style={{ height: 20 }} />
+        </>
+      ) : socialSection === "creators" ? (
+        <>
+          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+            <Text style={s.sectionTitle}>Discover creators</Text>
+            <Text style={s.sub}>Artists, writers, publishers and people making things on Kilode.</Text>
+          </View>
+          {takes
+            .filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || "")))
+            .filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))
+            .filter((t: any, index: number, list: any[]) => list.findIndex((candidate: any) => String(candidate.handle || candidate.name) === String(t.handle || t.name)) === index)
+            .length === 0 ? (
+              <View style={[s.postCard, { marginHorizontal: 16, paddingVertical: 20, alignItems: "center" }]}>
+                <Text style={s.postName}>Creators are getting ready</Text>
+                <Text style={[s.sub, { textAlign: "center", marginTop: 6 }]}>New artist, writer and creator profiles will appear here as they become available.</Text>
+              </View>
+            ) : null}
+          {takes
+            .filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || "")))
+            .filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))
+            .filter((t: any, index: number, list: any[]) => list.findIndex((candidate: any) => String(candidate.handle || candidate.name) === String(t.handle || t.name)) === index)
+            .map((t: any) => (
+              <View key={String(t.handle || t.name)} style={[s.postCard, { paddingVertical: 13 }]}>
+                <View style={s.postTop}>
+                  <TouchableOpacity onPress={() => setSelectedProfile(t)} accessibilityRole="button" accessibilityLabel={`View ${t.name}'s profile`}>
+                    <View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)} accessibilityRole="button">
+                    <View style={s.row}>
+                      <Text style={s.postName} numberOfLines={1}>{t.name}</Text>
+                      {t.verified ? <Text style={s.verified}>✓</Text> : null}
+                    </View>
+                    <Text style={s.meta} numberOfLines={1}>@{t.handle} · {t.role}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={s.followBtn}
+                    onPress={() => setFollowing((prev) => ({ ...prev, [String(t.handle || t.name)]: !prev[String(t.handle || t.name)] }))}
+                    accessibilityRole="button"
+                    accessibilityLabel={following[String(t.handle || t.name)] ? `Unfollow ${t.name}` : `Follow ${t.name}`}
+                  >
+                    <Text style={s.followBtnText}>{following[String(t.handle || t.name)] ? "Following" : "Follow"}</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={s.postBody} numberOfLines={2}>{t.text}</Text>
+              </View>
+            ))}
+          <View style={{ height: 20 }} />
+        </>
+      ) : (
+        <>
+          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+            <Text style={s.sectionTitle}>Communities</Text>
+            <Text style={s.sub}>Join conversations around interests, culture and work.</Text>
+          </View>
+          {rooms.length === 0 ? (
+            <View style={[s.postCard, { marginHorizontal: 16, paddingVertical: 20, alignItems: "center" }]}>
+              <Text style={s.postName}>No communities to show yet</Text>
+              <Text style={[s.sub, { textAlign: "center", marginTop: 6 }]}>Check back soon to discover conversations around your interests.</Text>
+            </View>
+          ) : null}
+          {rooms.map((room: any) => (
+            <View key={room.id} style={[s.roomRow, { marginHorizontal: 16, marginBottom: 10 }]}>
+              <View style={s.postAv}><Text style={s.avatarText}>{room.av || String(room.name || "K").slice(0, 2).toUpperCase()}</Text></View>
+              <View style={[s.flex, { paddingHorizontal: 10 }]}>
+                <Text style={s.roomName}>{room.name}</Text>
+                <Text style={s.meta}>{room.meta}{room.live ? " · Active" : ""}</Text>
+              </View>
               <TouchableOpacity
-                key={tool.id}
-                onPress={() => {
-                  if (tool.tab === "compose") { setComposeOpen(true); return; }
-                  go(tool.tab);
-                }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                  borderRadius: 14,
-                  backgroundColor: C.elevated,
-                  borderWidth: 1,
-                  borderColor: C.border,
-                  gap: 12,
-                }}
+                style={s.joinBtn}
+                onPress={() => setJoined((prev) => ({ ...prev, [String(room.id)]: !prev[String(room.id)] }))}
+                accessibilityRole="button"
               >
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }}>{tool.label}</Text>
-                  <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>{tool.hint}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color={C.text3} />
+                <Text style={s.joinBtnText}>{joined[String(room.id)] ? "Joined" : "Join"}</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-          <Text style={{ color: C.text3, fontSize: 11, marginTop: 10 }}>
-            Open systems: {desks.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(" · ") || "—"}
-          </Text>
-          <View style={{ flexDirection: "row", marginTop: 20, gap: 10 }}>
-            {["Saved", "Activity", "Settings"].map((label) => (
-              <TouchableOpacity key={label} onPress={() => label === "Settings" ? setSettingsOpen(true) : label === "Activity" ? go("activity") : show("Saved when sync is live.")}
-                style={{ flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: C.border, alignItems: "center" }}>
-                <Text style={{ color: C.text, fontWeight: "700", fontSize: 13 }}>{label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity style={{ marginTop: 20 }} onPress={() => { signOut(); show("Signed out"); }}>
-            <Text style={{ color: C.danger || "#ff6b6b", fontWeight: "700" }}>Sign out</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      );
-    }
-    if (DESKS.some((d) => d.id === tab) && !["events", "market", "jobs", "chat", "creators", "communities"].includes(tab)) {
-      const d = DESKS.find((x) => x.id === tab);
-      const items = LISTINGS[tab] || [];
-      return (
-        <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
-          <View style={s.deskHero}><Text style={s.h1}>{d?.label || tab}</Text><Text style={s.sub}>{d?.blurb}</Text></View>
-          {items.map((item: any) => (
-            <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setSelectedDeskItem(item)}>
-              <View style={s.flex}><Text style={s.roomName}>{item.title}</Text><Text style={s.meta}>{item.meta}</Text></View>
-              {item.price ? <Text style={{ color: C.accent, fontWeight: "700" }}>{item.price}</Text> : null}
-            </TouchableOpacity>
+            </View>
           ))}
-        </ScrollView>
-      );
-    }
+          <View style={{ height: 20 }} />
+        </>
+      )}
+    </ScrollView>
+  );
+
+  const ActivityView = () => (
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
+      <View style={s.padH}><Text style={s.h1}>Notifications</Text><Text style={s.sub}>Today · chronological</Text></View>
+      {activity.map((a: any) => (
+        <TouchableOpacity key={a.id} style={[s.activityRow, a.unread && s.activityUnread]} onPress={() => go(a.lane || "home")}>
+          <Text style={s.activityIcon}>{a.icon}</Text>
+          <View style={s.flex}><Text style={s.activityText}>{a.text}</Text><Text style={s.meta}>{a.time}</Text></View>
+          {a.action === "follow_back" ? (
+            <TouchableOpacity style={s.followBtn} onPress={() => show("Followed back")}><Text style={s.followBtnText}>Follow</Text></TouchableOpacity>
+          ) : a.unread ? <View style={s.unreadDot} /> : null}
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  const MySpace = () => {
+    // Account capabilities here are workspace shortcuts only; the server must
+    // still enforce permissions, ownership, quotas, and paid entitlements.
+    const accountCapabilities = getAccountCapabilities(session.kind);
+    const workspaceItems = [
+      { key: "socials", label: "Socials", tab: "socials", visible: accountCapabilities.socials },
+      { key: "media", label: "Media", tab: "media", visible: accountCapabilities.mediaAuthoring },
+      { key: "music", label: "Music", tab: "music", visible: accountCapabilities.musicReleaseManagement },
+      { key: "cinema", label: "Cinema", tab: "cinema", visible: accountCapabilities.cinemaManagement },
+      { key: "ads", label: "Ads & campaigns", tab: "ads", visible: accountCapabilities.advertisingCampaigns },
+      { key: "jobs", label: "Jobs", tab: "jobs", visible: accountCapabilities.jobDiscovery || accountCapabilities.jobManagement },
+      { key: "market", label: "Market", tab: "market", visible: accountCapabilities.marketplaceSelling },
+      { key: "rent", label: "Rent & spaces", tab: "rent", visible: accountCapabilities.rentalListingManagement },
+    ].filter((item) => item.visible);
 
     return (
-      <HomeScreen
-        s={s} C={C} sessionName={session.name || "there"} news={news} tracks={tracks} takes={takes} liked={liked} onLikePost={handleLikePost} onCommentPost={(post) => setCommentTake(post)} onSharePost={(post) => { void Share.share({ message: [post.text || post.body || "", post.handle ? `@${post.handle}` : ""].filter(Boolean).join("\n") || "Check out this post on Kilode." }).catch(() => show("Could not share this post.")); }}
-        events={events} market={marketItems} jobs={jobItems}
-        refreshing={refreshing} onRefresh={onRefresh}
-        onOpenMedia={(id) => { if (id) setSelectedArticleId(id); go("media"); }}
-        onOpenMusic={() => go("music")} onOpenEvents={() => go("events")} onOpenMarket={() => go("market")}
-        onOpenJobs={() => go("jobs")}
-        onOpenSystem={(id) => go(id)}
-        onOpenItem={(system, item) => setSelectedDeskItem({ ...item, system })}
-        onOpenSocials={() => go("socials")} onOpenPost={(p) => setSelectedPost(p)} onOpenProfile={(u) => setSelectedProfile(u)}
-        onCompose={() => setComposeOpen(true)} onPlayTrack={playTrack} show={show}
-        searchOpen={homeSearchOpen} onCloseSearch={() => setHomeSearchOpen(false)}
-      />
+    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
+      <View style={s.profileHead}>
+        <View style={s.profileAv}><Text style={s.profileAvText}>{(session.name || "K").slice(0, 2).toUpperCase()}</Text></View>
+        <Text style={s.h1}>{session.name}</Text>
+        <Text style={s.sub}>@{session.handle} · {session.kind}</Text>
+        <View style={s.statsRow}>
+          <View style={s.stat}><Text style={s.statN}>{takes.length}</Text><Text style={s.statL}>Takes</Text></View>
+          <View style={s.stat}><Text style={s.statN}>0</Text><Text style={s.statL}>Following</Text></View>
+          <View style={s.stat}><Text style={s.statN}>0</Text><Text style={s.statL}>Followers</Text></View>
+        </View>
+        <View style={s.rowGap}>
+          <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={() => show("Edit profile")}><Text style={s.primaryBtnText}>Edit profile</Text></TouchableOpacity>
+          <TouchableOpacity style={s.ghostBtn} onPress={() => setSettingsOpen(true)}><Text style={s.ghostBtnText}>Settings</Text></TouchableOpacity>
+        </View>
+        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 16, marginTop: 10, alignItems: "center" }]} onPress={() => { signOut(); show("Signed out"); }}>
+          <Text style={s.ghostBtnText}>Sign out</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={s.sectionHead}><Text style={s.sectionTitle}>Your workspace</Text></View>
+      <Text style={[s.meta, s.padH, { marginBottom: 8 }]}>
+        Shortcuts for your account type. Availability depends on connected services.
+      </Text>
+      {workspaceItems.map((item) => (
+        <TouchableOpacity key={item.key} style={s.roomRow} onPress={() => go(item.tab)} accessibilityRole="button">
+          <View style={s.flex}><Text style={s.roomName}>{item.label}</Text></View>
+          <Text style={[s.link, { fontSize: 18 }]}>›</Text>
+        </TouchableOpacity>
+      ))}
+      <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
+      <View style={s.roomRow}>
+        <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Paystack · backend when live</Text></View>
+        <TouchableOpacity style={s.joinBtn} onPress={() => show("Top up soon")}><Text style={s.joinBtnText}>Top up</Text></TouchableOpacity>
+      </View>
+    </ScrollView>
     );
   };
 
-  const contextCreateLabel: Record<string, string> = {
-    music: "Track", events: "Event", market: "Market", jobs: "Job", cinema: "Film", ads: "Ad", media: "Article", communities: "Community", creators: "Creator",
+  const Desk = ({ name }: { name: string }) => {
+    const d = DESKS.find((x) => x.id === name);
+    const items = LISTINGS[name] || [];
+    return (
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
+        <View style={s.deskHero}>
+          <Text style={s.deskHeroIcon}>{d?.icon || "📦"}</Text>
+          {name !== "jobs" ? <Text style={s.h1}>{d?.label || name}</Text> : null}
+          <Text style={s.sub}>{d?.blurb}</Text>
+          <TouchableOpacity style={[s.primaryBtn, { marginTop: 18, paddingHorizontal: 28 }]} onPress={() => setCreateOpen(true)}>
+            <Text style={s.primaryBtnText}>Create in {d?.label || name}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={s.sectionHead}><Text style={s.sectionTitle}>{items.length ? `${items.length} listings` : "No listings yet"}</Text></View>
+        {items.map((item) => (
+          <TouchableOpacity key={item.id} style={s.roomRow} onPress={() => setSelectedDeskItem(item)}>
+            <View style={s.flex}><Text style={s.roomName}>{item.title}</Text><Text style={s.meta}>{item.meta}</Text></View>
+            {item.price ? <Text style={[s.chipText, { fontWeight: "700", color: C.accent }]}>{item.price}</Text> : null}
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={[s.ghostBtn, { marginHorizontal: 14, alignItems: "center", marginTop: 12 }]} onPress={() => go("home")}>
+          <Text style={s.ghostBtnText}>Back home</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
   };
-  const contextCreateAction = contextCreateLabel[createContext];
-  const createOptions = contextCreateAction ? CREATE.filter((option) => option.label === contextCreateAction) : CREATE;
 
-  const headerTitle =
-    settingsOpen ? "Settings"
-    : tab === "activity" ? "Notifications"
-    : tab === "myspace" ? "My Space"
-    : tab === "media" ? "Media"
-    : tab === "events" ? "Events"
-    : tab === "market" ? "Market"
-    : tab === "jobs" ? "Jobs"
-    : tab === "chat" ? "Chat"
-    : tab === "communities" ? "Communities"
-    : tab === "creators" ? "Creators"
-    : tab === "cinema" ? "Cinema"
-    : tab === "music" ? "Music"
-    : tab === "upgrade" ? "Upgrade"
-    : DESKS.find((d) => d.id === tab)?.label;
+  const body = () => {
+    if (settingsOpen) return (
+      <SettingsScreen
+        s={s}
+        C={C}
+        isDark={isDark}
+        sessionHandle={session.handle}
+        show={show}
+        onBack={() => setSettingsOpen(false)}
+        onDeleteAccount={async () => ({ ok: false, error: "Account deletion is not connected to a server endpoint yet. No account was deleted." })}
+      />
+    );
+    if (selectedPost) return <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost.id)]} following={!!following[String(selectedPost.handle || selectedPost.name)]} onBack={() => setSelectedPost(null)} onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost.id)]: !prev[String(selectedPost.id)] }))} onComment={() => setCommentTake(selectedPost)} onFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedPost.handle || selectedPost.name)]: !prev[String(selectedPost.handle || selectedPost.name)] }))} onReport={async () => { await submitReport("post", String(selectedPost.id), "other"); show("Report saved for review."); }} onBlock={async () => { const h = String(selectedPost.handle || selectedPost.name); await blockUser(h); setBlocked((prev) => prev.includes(h) ? prev : [...prev, h]); setSelectedPost(null); show("Blocked @" + h); }} show={show} />;
+    if (selectedProfile) return (
+      <UserProfileScreen
+        s={s}
+        C={C}
+        user={selectedProfile}
+        posts={takes.filter((post: any) => String(post.handle || post.name) === String(selectedProfile.handle || selectedProfile.name))}
+        isFollowing={!!following[String(selectedProfile.handle || selectedProfile.name)]}
+        onBack={() => setSelectedProfile(null)}
+        onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile.handle || selectedProfile.name)]: !prev[String(selectedProfile.handle || selectedProfile.name)] }))}
+        onOpenPost={(post) => { setSelectedProfile(null); setSelectedPost(post); }}
+      />
+    );
+    if (selectedDeskItem) return (
+      <DeskDetailScreen
+        s={s}
+        C={C}
+        system={DESKS.find((d) => d.id === tab)?.label || tab}
+        item={selectedDeskItem}
+        onBack={() => setSelectedDeskItem(null)}
+        show={show}
+      />
+    );
+    if (tab === "home") return <Home />;
+    if (tab === "socials") return <Socials />;
+    if (tab === "activity") return <ActivityView />;
+    if (tab === "myspace") return <MySpace />;
+    if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} tracks={tracks} tracksSource={tracksSource} onBack={() => go("home")} show={show} onPlay={async (track) => { const result = await playMusicTrack(track); if (!result.ok) show(result.message || "Playback unavailable."); }} />;
+    if (tab === "media") return (
+      <MediaScreen
+        s={s}
+        C={C}
+        articles={news.map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          kicker: n.kicker,
+          time: n.time,
+          tone: n.tone,
+          body: n.summary || n.description,
+          author: n.author || "Kilode Editorial",
+          imageUrl: n.imageUrl,
+        }))}
+        initialArticleId={selectedArticleId}
+        onBack={() => { setSelectedArticleId(null); go("home"); }}
+        show={show}
+      />
+    );
+    if (DESKS.some((d) => d.id === tab)) return <Desk name={tab} />;
+    return <Home />;
+  };
+
+  const headerTitle = settingsOpen
+    ? "Settings"
+    : tab === "activity"
+      ? "Notifications"
+      : tab === "myspace"
+        ? "My Space"
+        : tab === "media"
+          ? "Media"
+          : DESKS.find((d) => d.id === tab)?.label;
 
   return (
-    <SafeAreaView
-      style={[s.root, { backgroundColor: C.bg }]}
-      {...edgeSwipeResponder.panHandlers}
-    >
+    <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
       <Header title={headerTitle} />
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
-        <View style={[s.player, { gap: 10 }]}>
-          <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent, alignItems: "center", justifyContent: "center" }]}>
-            <Ionicons name="musical-notes" size={16} color="#fff" />
-          </View>
-          <View style={s.flex}>
-            <Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text>
-            <Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}{nowPlaying.previewKind === "sample" ? " · sample audio" : ""}</Text>
-            <View style={{ height: 2, backgroundColor: C.border, borderRadius: 2, marginTop: 5, overflow: "hidden" }}>
-              <View style={{ height: 2, width: (String(Math.round(playbackProgress * 100)) + "%") as `${number}%`, backgroundColor: C.accent }} />
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
-              <PlaybackEqualizer isPlaying={isPlaying} color={C.accent} />
-              <Text style={{ color: C.text3, fontSize: 10, letterSpacing: 0.5 }}>{isPlaying ? "NOW PLAYING" : "PAUSED"}</Text>
-            </View>
-          </View>
-          <TouchableOpacity onPress={() => { void stepPlaybackQueue(-1); }} accessibilityRole="button" accessibilityLabel="Previous track"><Ionicons name="play-skip-back" size={17} color={playbackQueueIndexRef.current > 0 ? C.text : C.text3} /></TouchableOpacity>
-          <TouchableOpacity onPress={togglePlayback} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}><Ionicons name={isPlaying ? "pause" : "play"} size={21} color={C.accent} /></TouchableOpacity>
-          <TouchableOpacity onPress={() => { void stepPlaybackQueue(1); }} accessibilityRole="button" accessibilityLabel="Next track"><Ionicons name="play-skip-forward" size={17} color={playbackQueueIndexRef.current >= 0 && playbackQueueIndexRef.current < playbackQueueRef.current.length - 1 ? C.text : C.text3} /></TouchableOpacity>
-          <TouchableOpacity onPress={async () => { if (soundRef.current) { await soundRef.current.stopAsync().catch(() => undefined); await soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} accessibilityRole="button" accessibilityLabel="Close player"><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
+        <View style={s.player}>
+          <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
+          <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist || "Kilode artist"}</Text></View>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={musicPlaying ? "Pause music" : "Resume music"} onPress={() => { void toggleMusicPlayback(); }}><Text style={s.playerBtn}>{musicPlaying ? "Ⅱ" : "▶"}</Text></TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Stop music" onPress={() => { void stopMusicPlayback(); }}><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
         </View>
       ) : null}
       <KilodeTabBar
-        active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
-        onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
-        onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
+        active={tab === "home" || tab === "socials" || tab === "activity" || tab === "myspace" ? tab : "home"}
+        onTab={(id) => go(id)}
+        onCreate={() => setCreateOpen(true)}
         isDark={isDark}
-        accent={C.accent}
       />
+
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
         <View style={s.modalRoot}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setComposeOpen(false)} />
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
-            <View style={s.sheetHead}><Text style={s.sheetTitle}>Create Post</Text><TouchableOpacity onPress={() => setComposeOpen(false)}><Ionicons name="close" size={22} color={C.text2} /></TouchableOpacity></View>
-            <TextInput multiline autoFocus style={{ minHeight: 120, backgroundColor: C.input, borderRadius: 16, padding: 14, color: C.text, borderWidth: 1, borderColor: C.border, fontSize: 16, textAlignVertical: "top" }} placeholder="What's on your mind?" placeholderTextColor={C.text3} value={composeText} onChangeText={setComposeText} />
+            <View style={s.sheetHead}><Text style={s.sheetTitle}>New take</Text><TouchableOpacity onPress={() => setComposeOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
+            <TextInput multiline autoFocus style={{ minHeight: 120, backgroundColor: C.input, borderRadius: 16, padding: 14, color: C.text, borderWidth: 1, borderColor: C.border, fontSize: 16, textAlignVertical: "top" }} placeholder="What is happening in Naija?" placeholderTextColor={C.text3} value={composeText} onChangeText={setComposeText} />
             <TouchableOpacity style={[s.primaryBtn, { marginTop: 14, opacity: composeText.trim() && !posting ? 1 : 0.5 }]} disabled={!composeText.trim() || posting}
               onPress={async () => {
-                if (!session.token || session.token === "guest") { show("Sign in to publish."); return; }
-                if (getBackendMode() === "supabase" && !session.userId) {
-                  show("Sign in to your live Kilode account to publish to the shared feed.");
-                  return;
-                }
                 setPosting(true);
-                try {
-                  if (session.userId && getBackendMode() === "supabase") {
-                    const r = await publishSocialPost(composeText, session.userId);
-                    if (r.source === "live" && r.data) {
-                      setTakes((p) => [r.data, ...p]);
-                      setComposeText(""); setComposeOpen(false); go("socials"); show("Posted live");
-                    } else {
-                      show(r.error || "Could not publish to the live feed.");
-                    }
-                  } else {
-                    const r = await postTake(composeText, session.token);
-                    if (r.ok && (r as any).data) {
-                      const created = (r as any).data;
-                      if (r.source !== "live") {
-                        await savePreviewPost({ ...created, previewOnly: true });
-                      }
-                      setTakes((p) => [created, ...p.filter((item) => String(item.id) !== String(created.id))]);
-                      setComposeText(""); setComposeOpen(false); go("socials");
-                      show(r.source === "live" ? "Posted live" : "Saved on this device · preview only");
-                    } else show((r as any).error || "Could not post.");
-                  }
-                } catch (e) { show(e instanceof Error ? e.message : "Could not post."); }
-                finally { setPosting(false); }
+                const r = await postTake(composeText, session.token);
+                setPosting(false);
+                if (r.ok && (r as any).data) {
+                  setTakes((prev) => [(r as any).data, ...prev]);
+                  setComposeText(""); setComposeOpen(false); go("socials");
+                  show(r.source === "live" ? "Posted live" : r.source === "error" ? "Saved offline (API error)" : "Posted local");
+                } else show("Could not post");
               }}>
-              <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post"}</Text>
+              <Text style={s.primaryBtnText}>{posting ? "Posting…" : "Post take"}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-      <Modal visible={moreOpen} transparent animationType="none" statusBarTranslucent onRequestClose={closeMoreDrawer}>
-        <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-start", paddingTop: Platform.OS === "ios" ? 92 : 68, paddingBottom: Platform.OS === "ios" ? 94 : 72, paddingHorizontal: 0, backgroundColor: "transparent" }]}>
-          <Animated.View style={{ width: "78%", maxWidth: 320, height: "100%", paddingTop: 16, paddingHorizontal: 18, paddingBottom: 14, backgroundColor: C.bg, borderRightWidth: 1, borderRightColor: C.border, transform: [{ translateX: drawerTranslateX }] }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border }}>
-              <View>
-                <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.5 }}>Explore</Text>
-                <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }}>Everything in one place</Text>
-              </View>
-              <TouchableOpacity onPress={closeMoreDrawer} accessibilityRole="button" accessibilityLabel="Close navigation drawer" hitSlop={10} style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", backgroundColor: C.card }}>
-                <Ionicons name="close" size={20} color={C.text2} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 18, paddingBottom: 24 }}>
-              <TouchableOpacity onPress={() => { closeMoreDrawer(); setTimeout(() => go("myspace"), 185); }} activeOpacity={0.75} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 12, marginBottom: 20, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
-                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center", marginRight: 11 }}>
-                  <Ionicons name="person-outline" size={19} color={C.accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text numberOfLines={1} style={{ color: C.text, fontSize: 13, fontWeight: "800" }}>{displayName || session.handle || "Your Kilode space"}</Text>
-                  <Text style={{ color: C.text3, fontSize: 11, marginTop: 3 }}>{session.kind ? String(session.kind).replace(/_/g, " ") : "Profile, tools and settings"}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={17} color={C.text3} />
-              </TouchableOpacity>
-              <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1.6, marginBottom: 8, marginLeft: 4 }}>DISCOVER</Text>
-              {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "👥" }].filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i).map((d) => (
-                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); setTimeout(() => go(d.id), 185); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
-                  <View style={{ width: 34, alignItems: "flex-start" }}><Ionicons name={systemIconName(d.icon)} size={19} color={tab === d.id ? C.accent : C.text2} /></View>
-                  <Text style={{ flex: 1, color: tab === d.id ? C.accent : C.text, fontSize: 14, fontWeight: tab === d.id ? "800" : "600" }}>{d.label}</Text>
-                  {tab === d.id ? <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: C.accent, marginRight: 5 }} /> : <Ionicons name="chevron-forward" size={15} color={C.text3} />}
-                </TouchableOpacity>
-              ))}
-              <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1.6, marginTop: 24, marginBottom: 8, marginLeft: 4 }}>YOUR SPACE</Text>
-              {[
-                { id: "myspace", label: "My Space", icon: "person-circle-outline" },
-                { id: "chat", label: "Chat", icon: "chatbubble-ellipses-outline" },
-                { id: "activity", label: "Notifications", icon: "notifications-outline" },
-                { id: "settings", label: "Settings", icon: "settings-outline" },
-              ].map((d) => (
-                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); setTimeout(() => { if (d.id === "settings") setSettingsOpen(true); else go(d.id); }, 185); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
-                  <View style={{ width: 34, alignItems: "flex-start" }}><Ionicons name={d.icon as keyof typeof Ionicons.glyphMap} size={19} color={tab === d.id ? C.accent : C.text2} /></View>
-                  <Text style={{ flex: 1, color: tab === d.id ? C.accent : C.text, fontSize: 14, fontWeight: tab === d.id ? "800" : "600" }}>{d.label}</Text>
-                  <Ionicons name="chevron-forward" size={15} color={C.text3} />
-                </TouchableOpacity>
-              ))}
-              <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: C.border, flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent }} />
-                <Text style={{ color: C.text3, fontSize: 11 }}>KILODE · Everything you need, one platform</Text>
-              </View>
-            </ScrollView>
-          </Animated.View>
-          <TouchableOpacity style={[s.scrim, { flex: 1, backgroundColor: "rgba(0,0,0,0.48)" }]} activeOpacity={1} onPress={closeMoreDrawer} accessibilityLabel="Close navigation drawer" />
-        </View>
-      </Modal>
-      <Modal visible={profileEditorOpen} transparent animationType="slide" onRequestClose={() => setProfileEditorOpen(false)}>
+
+      <Modal visible={moreOpen} transparent animationType="slide" onRequestClose={() => setMoreOpen(false)}>
         <View style={s.modalRoot}>
-          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setProfileEditorOpen(false)} />
+          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setMoreOpen(false)} />
           <View style={s.sheet}>
             <View style={s.sheetHandle} />
-            <View style={s.sheetHead}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.sheetTitle}>Edit profile</Text>
-                <Text style={{ color: C.text2, fontSize: 12, marginTop: 4 }}>Update how people see you on Kilode.</Text>
-              </View>
-              <TouchableOpacity onPress={() => setProfileEditorOpen(false)} accessibilityRole="button" accessibilityLabel="Close profile editor" style={s.iconBtn}>
-                <Ionicons name="close" size={20} color={C.text2} />
+            <View style={s.sheetHead}><Text style={s.sheetTitle}>More on Kilode</Text><TouchableOpacity onPress={() => setMoreOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
+            <View style={s.deskGrid}>{DESKS.map((d) => (<TouchableOpacity key={d.id} style={s.deskGridItem} onPress={() => go(d.id)}><Text style={{ fontSize: 22 }}>{d.icon}</Text><Text style={s.deskGridLabel}>{d.label}</Text></TouchableOpacity>))}</View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={createOpen} transparent animationType="slide" onRequestClose={() => setCreateOpen(false)}>
+        <View style={s.modalRoot}>
+          <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setCreateOpen(false)} />
+          <View style={s.sheet}>
+            <View style={s.sheetHandle} />
+            <View style={s.sheetHead}><Text style={s.sheetTitle}>Create</Text><TouchableOpacity onPress={() => setCreateOpen(false)}><Text style={s.sheetClose}>✕</Text></TouchableOpacity></View>
+            <View style={s.deskGrid}>{CREATE.map((o) => (
+              <TouchableOpacity key={o.label} style={s.deskGridItem} onPress={() => { if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; } go(o.tab); show(o.label); }}>
+                <Text style={{ fontSize: 22 }}>{o.icon}</Text><Text style={s.deskGridLabel}>{o.label}</Text>
               </TouchableOpacity>
-            </View>
-            <Text style={{ color: C.text2, fontSize: 12, marginBottom: 6 }}>Display name</Text>
-            <TextInput value={displayName} onChangeText={setDisplayName} maxLength={60} placeholder="Your name" placeholderTextColor={C.text3}
-              returnKeyType="next" style={{ color: C.text, backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, marginBottom: 12 }} />
-            <Text style={{ color: C.text2, fontSize: 12, marginBottom: 6 }}>Username</Text>
-            <TextInput value={displayHandle} onChangeText={setDisplayHandle} autoCapitalize="none" autoCorrect={false} maxLength={30} placeholder="username" placeholderTextColor={C.text3}
-              returnKeyType="next" style={{ color: C.text, backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, marginBottom: 12 }} />
-            <Text style={{ color: C.text2, fontSize: 12, marginBottom: 6 }}>Bio · up to 160 characters</Text>
-            <TextInput value={profileBio} onChangeText={setProfileBio} maxLength={160} multiline placeholder="A little about you" placeholderTextColor={C.text3}
-              style={{ color: C.text, backgroundColor: C.input, borderColor: C.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, minHeight: 78, textAlignVertical: "top", marginBottom: 14 }} />
-            <TouchableOpacity disabled={profileSaving} accessibilityRole="button" onPress={async () => {
-              const nextName = displayName.trim();
-              const nextHandle = displayHandle.trim().replace(/^@/, "").toLowerCase();
-              const nextBio = profileBio.trim();
-              if (nextName.length < 2 || nextName.length > 60) { show("Display name must be 2–60 characters."); return; }
-              if (!/^[a-z0-9_]{3,30}$/.test(nextHandle)) { show("Username must be 3–30 letters, numbers, or underscores."); return; }
-              if (nextBio.length > 160) { show("Bio must be 160 characters or fewer."); return; }
-              setProfileSaving(true);
-              try {
-                if (!deviceSession && session.userId && getBackendMode() === "supabase") {
-                  const result = await updateOwnProfile(session.userId, { handle: nextHandle, display_name: nextName, bio: nextBio || null });
-                  if (!result.ok) { show(result.error || "Could not save your profile."); return; }
-                } else {
-                  await AsyncStorage.setItem("@kilode/profile:" + (session.userId || session.handle), JSON.stringify({ displayName: nextName, handle: nextHandle, bio: nextBio }));
-                }
-                setDisplayName(nextName);
-                setDisplayHandle(nextHandle);
-                setProfileBio(nextBio);
-                setProfileEditorOpen(false);
-                show(getBackendMode() === "supabase" && !deviceSession ? "Profile updated." : "Profile saved on this device.");
-              } catch {
-                show("Could not save your profile. Please try again.");
-              } finally {
-                setProfileSaving(false);
-              }
-            }} style={{ alignItems: "center", justifyContent: "center", backgroundColor: C.accent, borderRadius: 13, paddingVertical: 13, opacity: profileSaving ? 0.65 : 1 }}>
-              <Text style={{ color: isDark ? "#101512" : "#FFFFFF", fontSize: 14, fontWeight: "800" }}>{profileSaving ? "Saving…" : "Save profile"}</Text>
-            </TouchableOpacity>
+            ))}</View>
           </View>
         </View>
       </Modal>
-      <Modal visible={createOpen} transparent animationType="fade" onRequestClose={() => setCreateOpen(false)}>
-        <View style={[s.modalRoot, { justifyContent: "flex-end", paddingBottom: 82, backgroundColor: "transparent" }]}>
-          <TouchableOpacity style={[s.scrim, { backgroundColor: "rgba(0,0,0,0.12)" }]} activeOpacity={1} onPress={() => setCreateOpen(false)} />
-          <View style={{ alignSelf: "center", width: "90%", maxWidth: 328, maxHeight: 244, backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderRadius: 18, padding: 9, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 18, elevation: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 3, paddingBottom: 6 }}>
-              <Text style={{ color: C.text, fontSize: 13, fontWeight: "800" }}>{createContext === "home" ? "Create on Kilode" : "Create in " + (headerTitle || createContext)}</Text>
-              <TouchableOpacity onPress={() => setCreateOpen(false)} accessibilityRole="button" accessibilityLabel="Close create menu" hitSlop={10} style={{ padding: 4 }}><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", gap: 6, paddingBottom: 1 }}>
-              {createOptions.map((o) => {
-                const allowed = !(o as any).capability || can(session.kind, (o as any).capability);
-                const iconName: keyof typeof Ionicons.glyphMap = ({
-                  Post: "create-outline", Track: "musical-notes-outline", Film: "film-outline",
-                  Job: "briefcase-outline", Market: "bag-handle-outline", Event: "calendar-outline", Ad: "megaphone-outline",
-                  Article: "newspaper-outline", Community: "people-outline", Creator: "videocam-outline",
-                } as Record<string, keyof typeof Ionicons.glyphMap>)[o.label] || "add-circle-outline";
-                return (
-                  <TouchableOpacity key={o.label} accessibilityRole="button" accessibilityLabel={o.label}
-                    activeOpacity={0.78}
-                    style={{ width: "31.5%", minHeight: 56, paddingVertical: 6, paddingHorizontal: 4, borderRadius: 11, borderWidth: 1, borderColor: C.border, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center", gap: 5, opacity: allowed ? 1 : 0.45 }}
-                    onPress={() => {
-                      if (!allowed) { show(`Your account type cannot ${o.label.toLowerCase()} yet.`); return; }
-                      if (o.label === "Post") { setCreateOpen(false); setComposeOpen(true); return; }
-                      setCreateOpen(false); go(o.tab);
-                    }}>
-                    <Ionicons name={iconName} size={18} color={C.accent} />
-                    <Text numberOfLines={1} style={{ color: C.text, fontSize: 10, fontWeight: "700" }}>{o.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-      <CommentsSheet visible={!!commentTake} onClose={() => setCommentTake(null)} takeId={commentTake?.id || ""} takeAuthor={commentTake?.name || ""} takeText={commentTake?.text || ""} token={session.token} userId={session.userId} C={C} isDark={isDark} show={show} />
+
+      <CommentsSheet
+        visible={!!commentTake}
+        onClose={() => setCommentTake(null)}
+        takeId={commentTake?.id || ""}
+        takeAuthor={commentTake?.name || ""}
+        takeText={commentTake?.text || ""}
+        token={session.token}
+        C={C}
+        isDark={isDark}
+        show={show}
+      />
+
       {toast ? <View style={s.toast}><Text style={s.toastText}>{toast}</Text></View> : null}
     </SafeAreaView>
   );

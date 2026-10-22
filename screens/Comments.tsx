@@ -12,8 +12,6 @@ import {
   StyleSheet,
 } from "react-native";
 import { postComment } from "../lib/api";
-import { getBackendMode } from "../lib/config";
-import { createPostReply, listPostReplies } from "../lib/supabase";
 
 export type Comment = {
   id: string;
@@ -30,7 +28,6 @@ type Props = {
   takeAuthor: string;
   takeText: string;
   token?: string | null;
-  userId?: string;
   C: any;
   isDark: boolean;
   show: (m: string) => void;
@@ -53,32 +50,18 @@ export function CommentsSheet({
   takeAuthor,
   takeText,
   token,
-  userId,
   C,
   isDark,
   show,
 }: Props) {
   const [list, setList] = useState<Comment[]>(() => SEED[takeId] || []);
   const [draft, setDraft] = useState("");
-  const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (!visible) return;
-    let cancelled = false;
+    setList(SEED[takeId] || []);
     setDraft("");
-    if (getBackendMode() === "supabase") {
-      setList([]);
-      if (!takeId) return () => { cancelled = true; };
-      void listPostReplies(takeId).then((result) => {
-        if (cancelled) return;
-        if (result.ok) setList(result.data as Comment[]);
-        else show("Could not load comments: " + (result.error || "service unavailable"));
-      });
-    } else {
-      setList(SEED[takeId] || []);
-    }
-    return () => { cancelled = true; };
-  }, [takeId, visible, show]);
+  }, [takeId, visible]);
+  const [sending, setSending] = useState(false);
 
   const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: C.bg },
@@ -189,42 +172,24 @@ export function CommentsSheet({
               disabled={!draft.trim() || sending}
               onPress={async () => {
                 setSending(true);
-                try {
-                  if (getBackendMode() === "supabase") {
-                    if (!userId || token === "guest") {
-                      show("Sign in to your live Kilode account to comment.");
-                      return;
-                    }
-                    const result = await createPostReply(takeId, draft, userId);
-                    if (!result.ok || !result.data) {
-                      show("Comment failed: " + (result.error || "service unavailable"));
-                      return;
-                    }
-                    setList((prev) => [...prev, result.data as Comment]);
-                    setDraft("");
-                    show("Comment posted");
-                  } else {
-                    const r = await postComment(takeId, draft, token ?? undefined);
-                    if (r.ok) {
-                      const saved = (r as any).data?.comment || (r as any).data?.reply || (r as any).data;
-                      if (!saved) {
-                        show("Comment response was empty");
-                        return;
-                      }
-                      setList((prev) => [...prev, {
-                        id: String(saved.id || `local-${Date.now()}`), takeId,
-                        text: saved.text || saved.body || draft.trim(), name: saved.name || "You", time: saved.time || "now",
-                      }]);
-                      setDraft("");
-                      show(r.source === "live" ? "Comment posted" : "Comment added in this preview");
-                    } else {
-                      show(`Comment failed: ${r.error || "service unavailable"}`);
-                    }
-                  }
-                } catch {
-                  show("Comment failed. Check your connection and try again.");
-                } finally {
-                  setSending(false);
+                const r = await postComment(takeId, draft, token ?? undefined);
+                setSending(false);
+                if (r.ok && r.data) {
+                  const saved = r.data.comment || r.data.reply || r.data;
+                  setList((prev) => [
+                    ...prev,
+                    {
+                      id: String(saved.id || ("local-" + Date.now())),
+                      takeId,
+                      text: saved.text || saved.body || draft.trim(),
+                      name: saved.name || saved.author?.name || "You",
+                      time: saved.time || "now",
+                    },
+                  ]);
+                  setDraft("");
+                  show(r.source === "live" ? "Comment sent to Kilode" : "Comment added to this preview");
+                } else {
+                  show(r.error ? ("Comment not sent: " + r.error) : "Comment could not be sent");
                 }
               }}
             >

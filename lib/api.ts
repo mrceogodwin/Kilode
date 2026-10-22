@@ -1,11 +1,14 @@
 /**
- * Kilode native data client.
+ * Kilode native API client → dedicated Kilode API (configured explicitly)
  *
- * Dedicated backend policy: do not use Kilode-v2 or kilode-nine as the app backend.
- * When EXPO_PUBLIC_API_URL is unset, all calls stay offline/seed (source mock|error).
- * Supabase client wiring is separate (see docs/BACKEND_DEDICATED.md).
+ * Live paths (when a dedicated Kilode API is configured):
+ *   GET  /api/mobile/health
+ *   GET  /api/mobile/takes
+ *   POST /api/mobile/takes
+ *   GET  /api/mobile/tracks
  *
- * Seed data is for layout only — never reported as "live".
+ * Production truth: if the network call fails, source is "error".
+ * Seed data may fill the UI for layout only — never reported as "live".
  */
 
 import { API_BASE, FORCE_MOCK } from "./config";
@@ -33,33 +36,29 @@ const UA = "KilodeNative/1.0 (iOS; Expo)";
 async function tryLiveJson<T>(
   path: string,
   fallback: T,
-  fnName: string,
-  token?: string
+  fnName: string
 ): Promise<ApiResult<T>> {
-  if (FORCE_MOCK || !API_BASE) {
-    return {
-      ok: true,
-      data: fallback,
-      source: "mock",
-      fn: fnName,
-      error: !API_BASE ? "dedicated backend not configured" : undefined,
-    };
+  if (FORCE_MOCK) {
+    return { ok: true, data: fallback, source: "mock", fn: fnName };
   }
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 7000);
+  if (!API_BASE) {
+    return { ok: false, data: fallback, source: "error", error: "Dedicated Kilode API is not configured", fn: fnName };
+  }
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
+    const ctrl = new AbortController();
+    timer = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(`${API_BASE}${path}`, {
       signal: ctrl.signal,
       headers: {
         Accept: "application/json",
         "User-Agent": UA,
-        ...(token && token !== "guest" ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
     if (!res.ok) {
       return {
         ok: false,
-        data: [] as unknown as T,
+        data: fallback,
         source: "error",
         error: `HTTP ${res.status}`,
         fn: fnName,
@@ -69,7 +68,7 @@ async function tryLiveJson<T>(
     if (!ct.includes("json")) {
       return {
         ok: false,
-        data: [] as unknown as T,
+        data: fallback,
         source: "error",
         error: "non-json response",
         fn: fnName,
@@ -78,12 +77,10 @@ async function tryLiveJson<T>(
     const data = (await res.json()) as T;
     return { ok: true, data, source: "live", fn: fnName };
   } catch (e) {
-    const msg = e instanceof Error
-      ? (e.name === "AbortError" ? "Request timed out after 7 seconds" : e.message)
-      : "network";
-    return { ok: false, data: [] as unknown as T, source: "error", error: msg, fn: fnName };
+    const msg = e instanceof Error ? e.message : "network";
+    return { ok: false, data: fallback, source: "error", error: msg, fn: fnName };
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -96,14 +93,22 @@ function normalizeTakes(payload: any): any[] {
 
 export async function fetchTakes(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/takes", { takes: TAKES }, "listTakes");
-  if (r.source === "mock") {
-    return { ok: true, data: TAKES, source: "mock", fn: "listTakes", error: r.error };
-  }
   if (r.ok) {
     const list = normalizeTakes(r.data);
-    return { ok: true, data: list, source: "live", fn: "listTakes" };
+    return {
+      ok: true,
+      data: list,
+      source: "live",
+      fn: "listTakes",
+    };
   }
-  return { ok: false, data: [], source: "error", error: r.error, fn: "listTakes" };
+  return {
+    ok: false,
+    data: TAKES as any[],
+    source: "error",
+    error: r.error,
+    fn: "listTakes",
+  };
 }
 
 export function fetchRooms() {
@@ -116,9 +121,6 @@ export function fetchNews() {
 
 export async function fetchTracks(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/tracks", { tracks: TRACKS }, "listTracks");
-  if (r.source === "mock") {
-    return { ok: true, data: TRACKS, source: "mock", fn: "listTracks", error: r.error };
-  }
   if (r.ok) {
     const list = Array.isArray(r.data)
       ? r.data
@@ -127,39 +129,17 @@ export async function fetchTracks(): Promise<ApiResult<any[]>> {
         : [];
     return { ok: true, data: list, source: "live", fn: "listTracks" };
   }
-  return { ok: false, data: [], source: "error", error: r.error, fn: "listTracks" };
+  return {
+    ok: false,
+    data: TRACKS as any[],
+    source: "error",
+    error: r.error,
+    fn: "listTracks",
+  };
 }
 
-export function fetchActivity(token?: string) {
-  return tryLiveJson("/api/mobile/activity", ACTIVITY as any[], "listNotes", token);
-}
-
-function normalizeList(payload: any, key: string): any[] {
-  if (Array.isArray(payload)) return payload;
-  if (payload && Array.isArray(payload[key])) return payload[key];
-  if (payload && Array.isArray(payload.data)) return payload.data;
-  return [];
-}
-
-export async function fetchEvents(): Promise<ApiResult<any[]>> {
-  const r = await tryLiveJson<any>("/api/mobile/events", [], "listEvents");
-  if (r.source === "mock") return { ...r, data: [] };
-  if (!r.ok) return { ok: false, data: [], source: "error", error: r.error, fn: "listEvents" };
-  return { ok: true, data: normalizeList(r.data, "events"), source: "live", fn: "listEvents" };
-}
-
-export async function fetchMarketListings(): Promise<ApiResult<any[]>> {
-  const r = await tryLiveJson<any>("/api/mobile/market", [], "listMarket");
-  if (r.source === "mock") return { ok: true, data: [], source: "mock", fn: "listMarket", error: r.error };
-  if (!r.ok) return { ok: false, data: [], source: "error", error: r.error, fn: "listMarket" };
-  return { ok: true, data: normalizeList(r.data, "listings"), source: "live", fn: "listMarket" };
-}
-
-export async function fetchJobs(): Promise<ApiResult<any[]>> {
-  const r = await tryLiveJson<any>("/api/mobile/jobs", [], "listJobs");
-  if (r.source === "mock") return { ok: true, data: [], source: "mock", fn: "listJobs", error: r.error };
-  if (!r.ok) return { ok: false, data: [], source: "error", error: r.error, fn: "listJobs" };
-  return { ok: true, data: normalizeList(r.data, "jobs"), source: "live", fn: "listJobs" };
+export function fetchActivity() {
+  return tryLiveJson("/api/mobile/activity", ACTIVITY as any[], "listNotes");
 }
 
 export function fetchCarousel() {
@@ -167,9 +147,6 @@ export function fetchCarousel() {
 }
 
 export async function fetchHealth(): Promise<ApiResult<{ ok: boolean }>> {
-  if (!API_BASE) {
-    return { ok: false, data: { ok: false }, source: "mock", error: "dedicated backend not configured", fn: "health" };
-  }
   return tryLiveJson("/api/mobile/health", { ok: false }, "health");
 }
 
@@ -191,8 +168,11 @@ export async function postTake(
     tags: ["take"],
     factPct: 50,
   };
-  if (FORCE_MOCK || !API_BASE) {
-    return { ok: true, data: local, source: "mock", fn: "saveTake", error: !API_BASE ? "dedicated backend not configured" : undefined };
+  if (FORCE_MOCK) {
+    return { ok: true, data: local, source: "mock", fn: "saveTake" };
+  }
+  if (!API_BASE) {
+    return { ok: false, data: local, source: "error", error: "Dedicated Kilode API is not configured", fn: "saveTake" };
   }
   try {
     const res = await fetch(`${API_BASE}/api/mobile/takes`, {
@@ -237,8 +217,11 @@ export async function postComment(
   token?: string
 ): Promise<ApiResult<any>> {
   const local = { id: `c-${Date.now()}`, text, takeId };
-  if (FORCE_MOCK || !API_BASE) {
-    return { ok: true, data: local, source: "mock", fn: "replyTake", error: !API_BASE ? "dedicated backend not configured" : undefined };
+  if (FORCE_MOCK) {
+    return { ok: true, data: local, source: "mock", fn: "replyTake" };
+  }
+  if (!API_BASE) {
+    return { ok: false, data: local, source: "error", error: "Dedicated Kilode API is not configured", fn: "replyTake" };
   }
   try {
     const res = await fetch(

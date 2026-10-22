@@ -1,52 +1,61 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 type Props = {
   title: string;
-  body?: string;
-  actionLabel?: string;
-  onAction?: () => void;
+  body: string;
+  textColor?: string;
+  mutedColor?: string;
+  accentColor?: string;
   icon?: keyof typeof Ionicons.glyphMap;
-  textColor: string;
-  mutedColor: string;
-  accentColor: string;
 };
 
 export function EmptyState({
   title,
   body,
-  actionLabel,
-  onAction,
-  icon = "file-tray-outline",
-  textColor,
-  mutedColor,
-  accentColor,
+  textColor = "#F5F5F5",
+  mutedColor = "#9A9A9E",
+  accentColor = "#D4AF37",
+  icon = "albums-outline",
 }: Props) {
   return (
-    <View style={styles.wrap} accessibilityRole="text">
-      <Ionicons name={icon} size={36} color={mutedColor} />
+    <View style={styles.wrap} accessibilityRole="summary">
+      <View style={[styles.iconWrap, { borderColor: accentColor + "66", backgroundColor: accentColor + "14" }]}>
+        <Ionicons name={icon} size={24} color={accentColor} />
+      </View>
       <Text style={[styles.title, { color: textColor }]}>{title}</Text>
-      {body ? <Text style={[styles.body, { color: mutedColor }]}>{body}</Text> : null}
-      {actionLabel && onAction ? (
-        <TouchableOpacity style={[styles.btn, { borderColor: accentColor }]} onPress={onAction}>
-          <Text style={[styles.btnText, { color: accentColor }]}>{actionLabel}</Text>
-        </TouchableOpacity>
-      ) : null}
+      <Text style={[styles.body, { color: mutedColor }]}>{body}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: "center", paddingHorizontal: 32, paddingVertical: 40, gap: 8 },
-  title: { fontSize: 16, fontWeight: "700", textAlign: "center", marginTop: 8 },
-  body: { fontSize: 14, lineHeight: 20, textAlign: "center" },
-  btn: {
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 999,
-    borderWidth: 1,
+  wrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+    paddingVertical: 30,
   },
-  btnText: { fontSize: 14, fontWeight: "700" },
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  body: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
+    marginTop: 5,
+    maxWidth: 280,
+  },
 });
