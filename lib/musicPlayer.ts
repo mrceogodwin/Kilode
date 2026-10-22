@@ -145,6 +145,14 @@ export async function seekMusicTo(position: number): Promise<boolean> {
 }
 
 export async function playMusicTrack(track: any, options?: { queue?: any[]; index?: number }): Promise<{ ok: boolean; message?: string }> {
+  // Reject non-playable entries before changing queue/index state. Otherwise a failed
+  // chart/sample tap can silently move the queue away from the track that is playing.
+  const uri = getAudioUrl(track);
+  if (!uri) {
+    publish();
+    return { ok: false, message: "This track has no playable audio source yet." };
+  }
+
   if (options?.queue) {
     queue = options.queue.filter(Boolean);
     index = Math.max(0, Math.min(options.index ?? 0, Math.max(queue.length - 1, 0)));
@@ -158,12 +166,6 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
       queue = [...queue.slice(0, index + 1), track, ...queue.slice(index + 1)];
       index = Math.max(0, index + 1);
     }
-  }
-
-  const uri = getAudioUrl(track);
-  if (!uri) {
-    publish();
-    return { ok: false, message: "This track has no playable audio source yet." };
   }
 
   try {
