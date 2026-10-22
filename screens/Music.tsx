@@ -63,6 +63,12 @@ const GENRES = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion"];
 
 type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres" | "queue";
 
+function sameTrack(a: any, b: any) {
+  if (!a || !b) return false;
+  if (a.id != null && b.id != null) return String(a.id) === String(b.id);
+  return a === b;
+}
+
 function formatTime(ms: number) {
   const seconds = Math.max(0, Math.floor((ms || 0) / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
@@ -110,7 +116,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
 
   useEffect(() => {
     // Keep the open track detail in step with next/previous and auto-advance from the shared player.
-    if (activeTrack && player.track && String(activeTrack.id) !== String(player.track.id)) {
+    if (activeTrack && player.track && !sameTrack(activeTrack, player.track)) {
       setActiveTrack(player.track);
     }
   }, [activeTrack, player.track]);
@@ -143,8 +149,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   // ——— Track detail ———
   if (activeTrack) {
     const queue = player.queue.length ? player.queue : tracks;
-    const isCurrentPlayerTrack = String(player.track?.id) === String(activeTrack.id);
-    const activeQueueIndex = player.queue.findIndex((t: any) => String(t?.id) === String(activeTrack.id));
+    const isCurrentPlayerTrack = sameTrack(player.track, activeTrack);
+    const activeQueueIndex = player.queue.findIndex((t: any) => sameTrack(t, activeTrack));
     const queueIndex = isCurrentPlayerTrack ? player.index : activeQueueIndex;
     const canPrev = isCurrentPlayerTrack && player.index >= 0 && player.queue.length > 0;
     const canNext = isCurrentPlayerTrack && player.index >= 0 && player.index < player.queue.length - 1;
@@ -249,22 +255,22 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <TouchableOpacity
               style={[s.primaryBtn, { paddingHorizontal: 28, minWidth: 120, justifyContent: "center" }]}
               onPress={async () => {
-                if (String(player.track?.id) === String(activeTrack.id)) {
+                if (sameTrack(player.track, activeTrack)) {
                   await toggleMusicPlayback();
                   return;
                 }
-                const idx = tracks.findIndex((x: any) => String(x.id) === String(activeTrack.id));
+                const idx = tracks.findIndex((x: any) => sameTrack(x, activeTrack));
                 if (idx >= 0) await playQueue(tracks, idx);
                 else await playQueue([activeTrack], 0);
               }}
             >
               <Ionicons
-                name={player.playing && String(player.track?.id) === String(activeTrack.id) ? "pause" : "play"}
+                name={player.playing && sameTrack(player.track, activeTrack) ? "pause" : "play"}
                 size={20}
                 color="#fff"
               />
               <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>
-                {player.playing && String(player.track?.id) === String(activeTrack.id) ? "Pause" : "Play"}
+                {player.playing && sameTrack(player.track, activeTrack) ? "Pause" : "Play"}
               </Text>
             </TouchableOpacity>
 
@@ -386,7 +392,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 key={t.id}
                 style={[s.trackCard, { width: 136, height: 154, backgroundColor: t.color || [ "#7C3AED", "#B45309", "#BE185D" ][i % 3] }]}
                 onPress={() => selectTrack(t)}
-                onLongPress={() => playQueue(profileTracks, Math.max(0, profileTracks.findIndex((x: any) => String(x.id) === String(t.id))))}
+                onLongPress={() => playQueue(profileTracks, Math.max(0, profileTracks.findIndex((x: any) => sameTrack(x, t))))}
                 accessibilityRole="button"
               >
                 <View style={{ width: 54, height: 54, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.18)", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
@@ -777,7 +783,6 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 String(t.title).toLowerCase() === c.title.toLowerCase() ||
                 String(t.artist).toLowerCase() === c.artist.toLowerCase()
             );
-            const card = match || { id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent };
             return (
               <TouchableOpacity
                 key={c.rank}
