@@ -779,13 +779,22 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             );
             const card = match || { id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent };
             return (
-              <TouchableOpacity key={c.rank} style={s.roomRow} onPress={() => selectTrack(card)}>
+              <TouchableOpacity
+                key={c.rank}
+                style={s.roomRow}
+                accessibilityRole="button"
+                accessibilityLabel={match ? `Open ${c.title}` : `${c.title}, illustrative chart entry only`}
+                onPress={() => {
+                  if (match) selectTrack(match);
+                  else show("Illustrative chart entry only. This track is not in the connected catalogue yet.");
+                }}
+              >
                 <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
                 <View style={s.flex}>
                   <Text style={s.roomName}>{c.title}</Text>
                   <Text style={s.meta}>{c.artist} · Sample entry</Text>
                 </View>
-                <Ionicons name="play-circle-outline" size={28} color={C.accent} />
+                <Ionicons name={match ? "play-circle-outline" : "information-circle-outline"} size={28} color={C.accent} />
               </TouchableOpacity>
             );
           })}
