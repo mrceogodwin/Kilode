@@ -20,7 +20,7 @@ import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
 import { getAccountCapabilities } from "./lib/accountCapabilities";
-import { playMusicTrack, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
+import { playMusicTrack, playNextInQueue, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
 import { HomeScreen } from "./screens/HomeScreen";
 import { SocialsScreen } from "./screens/SocialsScreen";
 import { ArtistReleasesScreen } from "./screens/ArtistReleases";
@@ -365,11 +365,16 @@ function KilodeApp() {
       {body}
       {nowPlaying ? (
         <View style={s.player}>
-          <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
-          <View style={s.flex}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open Music" onPress={() => go("music")}>
+            <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
+          </TouchableOpacity>
+          <TouchableOpacity style={s.flex} accessibilityRole="button" accessibilityLabel="Open Music" onPress={() => go("music")}>
             <Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text>
             <Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist || "Kilode artist"}</Text>
-          </View>
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Next track" onPress={async () => { const result = await playNextInQueue(); if (!result.ok && result.message && result.message !== "End of queue.") show(result.message); }}>
+            <Text style={s.playerBtn}>⏭</Text>
+          </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" accessibilityLabel={musicPlaying ? "Pause music" : "Resume music"} onPress={() => { void toggleMusicPlayback(); }}>
             <Text style={s.playerBtn}>{musicPlaying ? "Ⅱ" : "▶"}</Text>
           </TouchableOpacity>
