@@ -12,6 +12,7 @@ import {
   renameMusicPlaylist,
   deleteMusicPlaylist,
   addTrackToMusicPlaylist,
+  removeTrackFromMusicPlaylist,
   type MusicPlaylist,
   type LibraryTrack,
 } from "../lib/musicLibrary";
@@ -102,6 +103,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const [playlists, setPlaylists] = useState<MusicPlaylist[]>([]);
   const [playlistName, setPlaylistName] = useState("");
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
+  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
   const [player, setPlayer] = useState<MusicPlayerState>({ track: null, playing: false, queue: [], index: -1, positionMillis: 0, durationMillis: 0, shuffle: false, repeat: "off" });
 
   const hasLiveTracks = tracksSource === "live";
@@ -894,10 +896,15 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               <View style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
                 <Ionicons name="musical-notes" size={19} color={C.accent} />
               </View>
-              <View style={[s.flex, { marginLeft: 12 }]}>
+              <TouchableOpacity
+                style={[s.flex, { marginLeft: 12 }]}
+                onPress={() => setActivePlaylistId(activePlaylistId === p.id ? null : p.id)}
+                accessibilityRole="button"
+                accessibilityLabel={"Open " + p.name}
+              >
                 <Text style={s.roomName}>{p.name}</Text>
-                <Text style={s.meta}>{p.tracks.length} tracks · stored on this device</Text>
-              </View>
+                <Text style={s.meta}>{p.tracks.length} tracks · {activePlaylistId === p.id ? "tap to close" : "tap to open"}</Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={() => { setEditingPlaylistId(p.id); setPlaylistName(p.name); }} accessibilityRole="button" accessibilityLabel={"Rename " + p.name} style={{ padding: 6 }}>
                 <Ionicons name="pencil-outline" size={17} color={C.text2} />
               </TouchableOpacity>
@@ -906,6 +913,66 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </TouchableOpacity>
             </View>
           ))}
+          {activePlaylistId && playlists.some((p) => p.id === activePlaylistId) ? (
+            <>
+              {(() => {
+                const activePlaylist = playlists.find((p) => p.id === activePlaylistId)!;
+                return (
+                  <>
+                    <View style={s.sectionHead}>
+                      <View style={s.flex}>
+                        <Text style={s.sectionTitle}>{activePlaylist.name}</Text>
+                        <Text style={s.meta}>{activePlaylist.tracks.length} tracks in this playlist</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => { void playQueue(activePlaylist.tracks, 0); }}
+                        disabled={activePlaylist.tracks.length === 0}
+                        accessibilityRole="button"
+                        accessibilityLabel={"Play " + activePlaylist.name}
+                        style={[s.chip, activePlaylist.tracks.length === 0 && { opacity: 0.4 }]}
+                      >
+                        <Ionicons name="play" size={15} color={C.accent} />
+                        <Text style={[s.chipText, { marginLeft: 5 }]}>Play</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {activePlaylist.tracks.length === 0 ? (
+                      <Text style={[s.sub, s.padH, { marginBottom: 12 }]}>Open a track and use “Add to playlist” to add music here.</Text>
+                    ) : activePlaylist.tracks.map((t, i) => (
+                      <View key={trackRenderKey(t, i, "playlist-" + activePlaylist.id)} style={s.roomRow}>
+                        <TouchableOpacity
+                          style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+                          onPress={() => { void playQueue(activePlaylist.tracks, i); }}
+                          accessibilityRole="button"
+                          accessibilityLabel={"Play " + t.title}
+                        >
+                          <Ionicons name="musical-note" size={18} color={C.accent} />
+                          <View style={[s.flex, { marginLeft: 12 }]}>
+                            <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                            <Text style={s.meta} numberOfLines={1}>{t.artist || "Kilode artist"}</Text>
+                          </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={async () => {
+                            try {
+                              setPlaylists(await removeTrackFromMusicPlaylist(activePlaylist.id, t.id));
+                              show("Removed from " + activePlaylist.name);
+                            } catch (e: any) {
+                              show(e?.message || "Could not remove track.");
+                            }
+                          }}
+                          accessibilityRole="button"
+                          accessibilityLabel={"Remove " + t.title + " from " + activePlaylist.name}
+                          style={{ padding: 8 }}
+                        >
+                          <Ionicons name="close-circle-outline" size={20} color={C.text2} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </>
+                );
+              })()}
+            </>
+          ) : null}
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Saved</Text>
           </View>
