@@ -49,7 +49,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
       show(mode === "in" ? "Enter your email address and password." : "Enter your username and password.");
       return;
     }
-    if (mode === "up" && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) {
+    if (mode === "up" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       show("Enter a valid email address.");
       return;
     }
