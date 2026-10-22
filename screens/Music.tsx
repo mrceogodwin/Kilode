@@ -146,6 +146,22 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     }
   }, [activeTrack, player.track]);
 
+  useEffect(() => {
+    // Playback writes recent history in the shared player; refresh the visible list on track changes.
+    if (!player.track) return;
+    let active = true;
+    void getRecentTracks()
+      .then((items) => {
+        if (active) setRecent(items);
+      })
+      .catch(() => {
+        // Keep playback usable if local history storage is temporarily unavailable.
+      });
+    return () => {
+      active = false;
+    };
+  }, [player.track]);
+
   const isSaved = (track: any) => saved.some((t) => sameTrack(t, track));
 
   const playQueue = async (list: any[], startIndex: number) => {
