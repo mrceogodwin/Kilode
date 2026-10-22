@@ -488,7 +488,7 @@ function KilodeApp() {
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} refreshControl={rc}>
         <View style={s.deskHero}>
           <Text style={s.deskHeroIcon}>{d?.icon || "📦"}</Text>
-          <Text style={s.h1}>{d?.label || name}</Text>
+          {name !== "jobs" ? <Text style={s.h1}>{d?.label || name}</Text> : null}
           <Text style={s.sub}>{d?.blurb}</Text>
           <TouchableOpacity style={[s.primaryBtn, { marginTop: 18, paddingHorizontal: 28 }]} onPress={() => setCreateOpen(true)}>
             <Text style={s.primaryBtnText}>Create in {d?.label || name}</Text>
