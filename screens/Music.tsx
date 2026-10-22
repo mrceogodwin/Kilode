@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
-import { loadSavedTracks, loadRecentTracks, toggleSavedTrack, type LibraryTrack } from "../lib/musicLibrary";
+import { loadSavedTracks, loadRecentTracks, toggleSavedTrack, loadMusicPlaylists, createMusicPlaylist, deleteMusicPlaylist, addTrackToMusicPlaylist, type LibraryTrack, type MusicPlaylist } from "../lib/musicLibrary";
 import { setMusicQueue } from "../lib/musicPlayer";
 
 type Props = {
@@ -44,6 +44,9 @@ export function MusicScreen({
   const [saved, setSaved] = useState<LibraryTrack[]>([]);
   const [recent, setRecent] = useState<LibraryTrack[]>([]);
   const [savedIds, setSavedIds] = useState<Record<string, boolean>>({});
+  const [playlists, setPlaylists] = useState<MusicPlaylist[]>([]);
+  const [playlistName, setPlaylistName] = useState("");
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
 
   const hasLiveTracks = tracksSource === "live";
   const baseTracks = hasLiveTracks && remoteTracks?.length ? remoteTracks : TRACKS || [];
@@ -76,9 +79,11 @@ export function MusicScreen({
   }, [baseTracks, C.elevated]);
 
   const refreshLibrary = useCallback(async () => {
-    const [sList, rList] = await Promise.all([loadSavedTracks(), loadRecentTracks()]);
+    const [sList, rList, pList] = await Promise.all([loadSavedTracks(), loadRecentTracks(), loadMusicPlaylists()]);
     setSaved(sList);
     setRecent(rList);
+    setPlaylists(pList);
+    setSelectedPlaylistId((current) => current && pList.some((p) => p.id === current) ? current : pList[0]?.id || null);
     const map: Record<string, boolean> = {};
     sList.forEach((t) => { map[String(t.id)] = true; });
     setSavedIds(map);
@@ -126,6 +131,18 @@ export function MusicScreen({
     setMusicQueue(filtered.map((t) => t.raw || t), Math.max(0, filtered.findIndex((t) => String(t.id) === String(track.id))));
     await onPlay(payload);
     await refreshLibrary();
+  };
+
+  const createPlaylist = async () => {
+    const name = playlistName.trim(); if (!name) { show("Enter a playlist name first."); return; }
+    const next = await createMusicPlaylist(name); const created = next.find((p) => p.name.toLowerCase() === name.toLowerCase());
+    setPlaylists(next); if (created) setSelectedPlaylistId(created.id); setPlaylistName("");
+    show(created ? "Playlist created on this device." : "A playlist with that name already exists.");
+  };
+  const addToSelectedPlaylist = async (track: any) => {
+    if (!selectedPlaylistId) { show("Create or select a playlist first."); return; }
+    const next = await addTrackToMusicPlaylist(selectedPlaylistId, { id: String(track.id), title: track.title, artist: track.artist, color: track.color, audioUrl: track.audioUrl, genre: track.genre });
+    setPlaylists(next); show("Added to playlist.");
   };
 
   const toggleSave = async (track: any) => {
@@ -251,6 +268,23 @@ export function MusicScreen({
       {tab === "Library" && (
         <>
           <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>Your playlists</Text>
+            <Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>Playlists are stored on this device for now.</Text>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
+              <TextInput value={playlistName} onChangeText={setPlaylistName} placeholder="New playlist name" placeholderTextColor={C.text3} returnKeyType="done" onSubmitEditing={() => void createPlaylist()} style={{ flex: 1, color: C.text, backgroundColor: C.elevated, borderColor: C.border, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13 }} />
+              <TouchableOpacity onPress={() => void createPlaylist()} style={{ paddingHorizontal: 14, borderRadius: 10, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" }}><Ionicons name="add" size={20} color="#111" /></TouchableOpacity>
+            </View>
+          </View>
+          {playlists.length === 0 ? <Text style={{ color: C.text3, fontSize: 12, marginHorizontal: 16, marginTop: 10 }}>Create a playlist, then add tracks from the list below.</Text> : playlists.map((p) => (
+            <View key={p.id} style={{ marginHorizontal: 16, marginTop: 10, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: selectedPlaylistId === p.id ? C.accent : C.border, backgroundColor: selectedPlaylistId === p.id ? C.accent + "12" : C.card, flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <TouchableOpacity onPress={() => setSelectedPlaylistId(p.id)} style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}><Ionicons name="musical-notes" size={18} color={C.accent} /><View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: "700" }}>{p.name}</Text><Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }}>{p.tracks.length} tracks · {selectedPlaylistId === p.id ? "Selected" : "Tap to select"}</Text></View></TouchableOpacity>
+              <TouchableOpacity onPress={() => { void deleteMusicPlaylist(p.id).then((next) => { setPlaylists(next); setSelectedPlaylistId(next[0]?.id || null); }); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}><Ionicons name="trash-outline" size={17} color={C.text3} /></TouchableOpacity>
+            </View>
+          ))}
+          {selectedPlaylistId ? <View style={{ paddingHorizontal: 16, marginTop: 12 }}><Text style={{ color: C.text2, fontSize: 12 }}>Selected playlist: {playlists.find((p) => p.id === selectedPlaylistId)?.name || "None"}. Tap the plus beside a track to add it.</Text></View> : null}
+          <View style={{ paddingHorizontal: 16, marginTop: 12 }}><Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>Browse tracks to add</Text></View>
+          {catalogue.map((t) => <View key={"playlist-track-" + t.id} style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}>{trackRow(t)}</View><TouchableOpacity onPress={() => void addToSelectedPlaylist(t)} style={{ marginRight: 12, width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" }}><Ionicons name="add" size={18} color={C.accent} /></TouchableOpacity></View>)}
+          <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
             <Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>Saved on this device</Text>
             <Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>Local library only — not cloud purchases or entitlements.</Text>
           </View>
