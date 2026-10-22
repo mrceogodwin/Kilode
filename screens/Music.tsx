@@ -12,7 +12,6 @@ import {
   renameMusicPlaylist,
   deleteMusicPlaylist,
   addTrackToMusicPlaylist,
-  removeTrackFromMusicPlaylist,
   type MusicPlaylist,
   type LibraryTrack,
 } from "../lib/musicLibrary";
