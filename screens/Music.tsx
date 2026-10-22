@@ -1020,7 +1020,20 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             </>
           ) : null}
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Saved</Text>
+            <View style={s.flex}>
+              <Text style={s.sectionTitle}>Saved</Text>
+              <Text style={s.meta}>{saved.length} tracks</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => { void playQueue(saved, 0); }}
+              disabled={saved.length === 0}
+              accessibilityRole="button"
+              accessibilityLabel="Play saved tracks"
+              style={[s.chip, saved.length === 0 && { opacity: 0.4 }]}
+            >
+              <Ionicons name="play" size={15} color={C.accent} />
+              <Text style={[s.chipText, { marginLeft: 5 }]}>Play all</Text>
+            </TouchableOpacity>
           </View>
           {saved.length === 0 ? (
             <Text style={[s.sub, s.padH, { marginBottom: 16 }]}>
