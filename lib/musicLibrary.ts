@@ -6,6 +6,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SAVED_KEY = "@kilode/music_saved_v1";
 const RECENT_KEY = "@kilode/music_recent_v1";
+const PLAYLISTS_KEY = "@kilode/music_playlists_v1";
+
+export type MusicPlaylist = { id: string; name: string; tracks: LibraryTrack[]; createdAt: string };
 
 export type LibraryTrack = {
   id: string;
@@ -64,4 +67,20 @@ export async function pushRecentTrack(track: LibraryTrack): Promise<void> {
   const filtered = list.filter((t) => String(t.id) !== String(track.id));
   const next = [{ ...track, playedAt: new Date().toISOString() }, ...filtered];
   await writeList(RECENT_KEY, next);
+}
+
+
+export async function loadMusicPlaylists(): Promise<MusicPlaylist[]> {
+  try { const raw = await AsyncStorage.getItem(PLAYLISTS_KEY); if (!raw) return []; const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed.filter((p) => p && p.id && p.name && Array.isArray(p.tracks)) : []; } catch { return []; }
+}
+async function writeMusicPlaylists(list: MusicPlaylist[]): Promise<void> { await AsyncStorage.setItem(PLAYLISTS_KEY, JSON.stringify(list.slice(0, 100))); }
+export async function createMusicPlaylist(name: string): Promise<MusicPlaylist[]> {
+  const clean = name.trim().slice(0, 60); if (!clean) return loadMusicPlaylists(); const list = await loadMusicPlaylists();
+  if (list.some((p) => p.name.toLowerCase() === clean.toLowerCase())) return list;
+  list.unshift({ id: `playlist-${Date.now()}`, name: clean, tracks: [], createdAt: new Date().toISOString() }); await writeMusicPlaylists(list); return list;
+}
+export async function deleteMusicPlaylist(id: string): Promise<MusicPlaylist[]> { const list = (await loadMusicPlaylists()).filter((p) => p.id !== id); await writeMusicPlaylists(list); return list; }
+export async function addTrackToMusicPlaylist(playlistId: string, track: LibraryTrack): Promise<MusicPlaylist[]> {
+  const list = await loadMusicPlaylists(); const playlist = list.find((p) => p.id === playlistId); if (!playlist) return list;
+  if (!playlist.tracks.some((t) => String(t.id) === String(track.id))) playlist.tracks.push(track); await writeMusicPlaylists(list); return list;
 }
