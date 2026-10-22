@@ -80,16 +80,26 @@ export function addTracksToQueue(tracks: any[]) {
 
 export function playTrackNext(track: any) {
   if (!track) return;
-  const targetId = String(track?.id);
+  const targetId = track?.id == null ? null : String(track.id);
   const currentTrackInQueue = index >= 0 && index < queue.length ? queue[index] : null;
-  if (currentTrackInQueue && String(currentTrackInQueue?.id) === targetId) {
+  const currentId = currentTrackInQueue?.id == null ? null : String(currentTrackInQueue.id);
+  if (
+    currentTrackInQueue &&
+    (targetId !== null ? currentId === targetId : currentTrackInQueue === track)
+  ) {
     publish();
     return;
   }
-  // Re-find the current item after removing duplicate target entries so its index cannot drift.
-  queue = queue.filter((item) => String(item?.id) !== targetId);
+  // Only deduplicate tracks with real IDs. String(undefined) would otherwise
+  // collapse unrelated metadata-only entries into one queue item.
+  if (targetId !== null) {
+    queue = queue.filter((item) => item?.id == null || String(item.id) !== targetId);
+  }
   index = currentTrackInQueue
-    ? queue.findIndex((item) => item === currentTrackInQueue || String(item?.id) === String(currentTrackInQueue?.id))
+    ? queue.findIndex((item) =>
+        item === currentTrackInQueue ||
+        (currentId !== null && item?.id != null && String(item.id) === currentId)
+      )
     : -1;
   const insertAt = index >= 0 ? index + 1 : 0;
   queue.splice(insertAt, 0, track);
