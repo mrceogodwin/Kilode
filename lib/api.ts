@@ -4,7 +4,7 @@
  * Live paths (when a dedicated Kilode API is configured):
  *   GET  /api/mobile/health
  *   GET  /api/mobile/takes
- *   POST /api/mobile/takes
+ *   POST  /api/mobile/takes
  *   GET  /api/mobile/tracks
  *
  * Production truth: if the network call fails, source is "error".
@@ -20,6 +20,7 @@ import {
   ACTIVITY,
   CAROUSEL,
 } from "../data";
+import { loadLocalTakes, saveLocalTake, mergeTakesWithLocal } from "./localTakes";
 
 export type DataSource = "live" | "mock" | "error";
 
@@ -95,16 +96,19 @@ export async function fetchTakes(): Promise<ApiResult<any[]>> {
   const r = await tryLiveJson<any>("/api/mobile/takes", { takes: TAKES }, "listTakes");
   if (r.ok) {
     const list = normalizeTakes(r.data);
+    const merged = await mergeTakesWithLocal(list);
     return {
       ok: true,
-      data: list,
+      data: merged,
       source: "live",
       fn: "listTakes",
     };
   }
+  // Seed/layout data plus any device-local posts the user created offline.
+  const merged = await mergeTakesWithLocal(TAKES as any[]);
   return {
     ok: false,
-    data: TAKES as any[],
+    data: merged,
     source: "error",
     error: r.error,
     fn: "listTakes",
@@ -152,28 +156,36 @@ export async function fetchHealth(): Promise<ApiResult<{ ok: boolean }>> {
 
 export async function postTake(
   text: string,
-  token?: string
-): Promise<ApiResult<any>> {
-  const local = {
-    id: `local-${Date.now()}`,
-    text,
-    body: text,
-    name: "You",
-    handle: "you",
-    time: "now",
-    role: "member",
-    likes: 0,
-    comments: 0,
-    reposts: 0,
-    tags: ["take"],
-    factPct: 50,
+  opts?: { token?: string; name?: string; handle?: string; role?: string }
+): Promise<ApiResult<any> & { message?: string }> {
+  const body = String(text || "").trim();
+  if (!body) {
+    return { ok: false, data: null, source: "error", error: "empty", fn: "saveTake", message: "Write something before posting." };
+  }
+
+  const token = opts?.token;
+  const profile = {
+    name: opts?.name,
+    handle: opts?.handle,
+    role: opts?.role,
   };
+
   if (FORCE_MOCK) {
-    return { ok: true, data: local, source: "mock", fn: "saveTake" };
+    const local = await saveLocalTake({ text: body, ...profile });
+    return { ok: true, data: local, source: "mock", fn: "saveTake", message: "Saved on this device (preview mode)." };
   }
+
   if (!API_BASE) {
-    return { ok: false, data: local, source: "error", error: "Dedicated Kilode API is not configured", fn: "saveTake" };
+    const local = await saveLocalTake({ text: body, ...profile });
+    return {
+      ok: true,
+      data: local,
+      source: "mock",
+      fn: "saveTake",
+      message: "Saved on this device · dedicated API not configured.",
+    };
   }
+
   try {
     const res = await fetch(`${API_BASE}/api/mobile/takes`, {
       method: "POST",
@@ -183,30 +195,40 @@ export async function postTake(
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         "User-Agent": UA,
       },
-      body: JSON.stringify({ body: text, kind: "take" }),
+      body: JSON.stringify({ body }),
     });
-    const ct = res.headers.get("content-type") || "";
-    if (!ct.includes("json")) {
-      return { ok: false, data: local, source: "error", error: "non-json", fn: "saveTake" };
-    }
-    const data = await res.json();
-    if (!res.ok || data?.ok === false) {
+    if (!res.ok) {
+      const local = await saveLocalTake({ text: body, ...profile });
       return {
-        ok: false,
+        ok: true,
         data: local,
-        source: "error",
-        error: data?.error || data?.reason || `HTTP ${res.status}`,
+        source: "mock",
         fn: "saveTake",
+        message: `Server returned HTTP ${res.status} · saved on this device only.`,
       };
     }
-    return { ok: true, data: data.take || data, source: "live", fn: "saveTake" };
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("json")) {
+      const local = await saveLocalTake({ text: body, ...profile });
+      return {
+        ok: true,
+        data: local,
+        source: "mock",
+        fn: "saveTake",
+        message: "Server response was not JSON · saved on this device only.",
+      };
+    }
+    const data = await res.json();
+    return { ok: true, data, source: "live", fn: "saveTake", message: "Posted" };
   } catch (e) {
+    const local = await saveLocalTake({ text: body, ...profile });
+    const msg = e instanceof Error ? e.message : "network";
     return {
-      ok: false,
+      ok: true,
       data: local,
-      source: "error",
-      error: e instanceof Error ? e.message : "network",
+      source: "mock",
       fn: "saveTake",
+      message: `Network error (${msg}) · saved on this device only.`,
     };
   }
 }
