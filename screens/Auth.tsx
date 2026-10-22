@@ -70,7 +70,7 @@ function AuthVideoBackdrop({ scale }: { scale: Animated.Value }) {
 type Props = {
   isDark: boolean;
   C: any;
-  onSignIn: (handle: string, password: string, kind?: AccountKind) => Promise<{ ok: boolean; error?: string }>;
+  onSignIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
   onGuest: () => void;
   show: (m: string) => void;
