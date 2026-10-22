@@ -16,7 +16,9 @@ type AuthCtx = {
   session: Session | null;
   guest: boolean;
   loading: boolean;
-  signInGuest: (name?: string) => void;
+  signInGuest: (name?: string, kind?: AccountKind) => void;
+  /** Device-only kind switch for guest sessions — not server authorization */
+  setLocalKind: (kind: AccountKind) => Promise<void>;
   signIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => void;
@@ -100,16 +102,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const signInGuest = useCallback((name?: string) => {
+  const signInGuest = useCallback((name?: string, kind?: AccountKind) => {
     const s: Session = {
       token: "guest",
       handle: "guest",
       name: name?.trim() || "Guest",
-      kind: "member",
+      kind: asAccountKind(kind || "member"),
     };
     setSession(s);
     setGuest(true);
     void persist(s);
+  }, [persist]);
+
+  const setLocalKind = useCallback(async (kind: AccountKind) => {
+    setSession((prev) => {
+      if (!prev || prev.token !== "guest") return prev;
+      const next: Session = { ...prev, kind: asAccountKind(kind) };
+      void persist(next);
+      return next;
+    });
   }, [persist]);
 
   const signIn = useCallback(async (handle: string, password: string) => {
@@ -168,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (password.length < 8) return { ok: false, error: "Password needs at least 8 characters." };
     if (!API_BASE) {
-      return { ok: false, error: "Kilode registration is not available yet because its dedicated backend is not connected. You can continue as a guest." };
+      return { ok: false, error: "Kilode registration is not available yet because its dedicated backend is not connected. You can continue as a guest and preview workspaces locally." };
     }
 
     setLoading(true);
@@ -219,8 +230,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [persist]);
 
   const value = useMemo(
-    () => ({ session, guest, loading, signInGuest, signIn, signUp, signOut }),
-    [session, guest, loading, signInGuest, signIn, signUp, signOut]
+    () => ({ session, guest, loading, signInGuest, setLocalKind, signIn, signUp, signOut }),
+    [session, guest, loading, signInGuest, setLocalKind, signIn, signUp, signOut]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
