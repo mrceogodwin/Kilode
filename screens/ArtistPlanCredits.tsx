@@ -164,7 +164,7 @@ export function ArtistPlanCreditsScreen({ s, C, onBack, token }: Props) {
                 ? ent?.planLabel
                   ? `Plan: ${ent.planLabel}`
                   : "Plan: free / none reported"
-                : `Unavailable (${statusLabel}). Proposed free allowance for new artists: ${PROPOSED_FREE_ALLOWANCE} credits — not granted in this build."}
+                : `Unavailable (${statusLabel}). Proposed free allowance for new artists: ${PROPOSED_FREE_ALLOWANCE} credits — not granted in this build.`}
             </Text>
             {result?.error && !connected ? (
               <Text style={[s.meta, { marginTop: 6, textAlign: "center", color: C.text3 }]}>
