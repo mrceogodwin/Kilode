@@ -1190,7 +1190,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </TouchableOpacity>
             </View>
           </View>
-          {player.queue.length > 1 ? (
+          {(player.index < 0 ? player.queue.length > 0 : player.index < player.queue.length - 1) ? (
             <View style={[s.padH, { alignItems: "flex-end", marginBottom: 8 }]}>
               <TouchableOpacity
                 onPress={() => { clearUpcomingTracks(); show("Upcoming tracks cleared."); }}
