@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -45,10 +45,11 @@ const ARTISTS = [
 
 const GENRES = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion"];
 
-type Tab = "discover" | "charts" | "artists" | "library" | "genres";
+type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres";
 
 export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSource }: Props) {
   const [tab, setTab] = useState<Tab>("discover");
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
@@ -387,12 +388,14 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-        {(["discover", "charts", "artists", "library", "genres"] as const).map((t) => (
+        {(["discover", "search", "charts", "artists", "library", "genres"] as const).map((t) => (
           <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
             <Text style={[s.chipText, tab === t && s.chipTextOn]}>
               {t === "discover"
                 ? "Discover"
-                : t === "charts"
+                : t === "search"
+                  ? "Search"
+                  : t === "charts"
                   ? "Charts"
                   : t === "artists"
                     ? "Artists"
@@ -403,6 +406,73 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {tab === "search" && (
+        <>
+          <View style={[s.padH, { marginTop: 8, marginBottom: 8 }]}>
+            <View style={{ minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: C.border || "#2A2A30", backgroundColor: C.elevated || "#18181C", flexDirection: "row", alignItems: "center", paddingHorizontal: 14 }}>
+              <Ionicons name="search" size={19} color={C.text3 || "#9A9A9E"} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Songs, artists, genres"
+                placeholderTextColor={C.text3 || "#9A9A9E"}
+                autoCapitalize="none"
+                returnKeyType="search"
+                accessibilityLabel="Search Kilode Music"
+                style={{ flex: 1, color: C.text || "#FFFFFF", paddingVertical: 12, paddingHorizontal: 10, fontSize: 15 }}
+              />
+              {searchQuery.length > 0 ? (
+                <TouchableOpacity onPress={() => setSearchQuery("")} accessibilityRole="button" accessibilityLabel="Clear search">
+                  <Ionicons name="close-circle" size={20} color={C.text3 || "#9A9A9E"} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            <Text style={[s.meta, { marginTop: 10 }]}>
+              {hasLiveTracks ? "Searching the connected catalogue" : "Preview catalogue · results are sample data"}
+            </Text>
+          </View>
+          {(() => {
+            const q = searchQuery.trim().toLowerCase();
+            const results = q ? tracks.filter((t: any) => [t.title, t.artist, t.genre, t.album].some((v) => String(v || "").toLowerCase().includes(q))) : [];
+            if (!q) return (
+              <View style={s.padH}>
+                <View style={s.sectionHead}><Text style={s.sectionTitle}>Explore Kilode Music</Text></View>
+                <Text style={s.sub}>Search songs, artists and genres to find your next sound.</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
+                  {GENRES.map((g) => (
+                    <TouchableOpacity key={g} onPress={() => { setSearchQuery(g); }} style={[s.chip, { marginBottom: 4 }]} accessibilityRole="button">
+                      <Text style={s.chipText}>{g}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            );
+            if (!results.length) return (
+              <View style={s.padH}>
+                <EmptyState title="No matches yet" body="Try another song, artist or genre." textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="search-outline" />
+              </View>
+            );
+            return results.map((t: any, i: number) => (
+              <TouchableOpacity key={String(t.id)} style={[s.roomRow, s.padH]} onPress={() => selectTrack(t)} onLongPress={() => playQueue(results, i)} accessibilityRole="button">
+                <View style={{ width: 46, height: 46, borderRadius: 11, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="musical-note" size={20} color="#FFFFFF" />
+                </View>
+                <View style={[s.flex, { marginLeft: 12 }]}>
+                  <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                  <Text style={s.meta} numberOfLines={1}>{t.artist}{t.genre ? " · " + t.genre : ""}</Text>
+                </View>
+                <TouchableOpacity onPress={() => onToggleSave(t)} accessibilityRole="button" accessibilityLabel={isSaved(t.id) ? "Remove saved track" : "Save track"}>
+                  <Ionicons name={isSaved(t.id) ? "heart" : "heart-outline"} size={20} color={isSaved(t.id) ? C.danger : C.text3} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => playQueue(results, i)} style={{ marginLeft: 14 }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
+                  <Ionicons name="play-circle" size={26} color={C.accent} />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ));
+          })()}
+        </>
+      )}
 
       {tab === "discover" && (
         <>
