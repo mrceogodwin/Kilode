@@ -24,6 +24,7 @@ import { playMusicTrack, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPla
 import { HomeScreen } from "./screens/HomeScreen";
 import { SocialsScreen } from "./screens/SocialsScreen";
 import { ArtistReleasesScreen } from "./screens/ArtistReleases";
+import { EventDraftsScreen } from "./screens/EventDrafts";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -61,6 +62,8 @@ function KilodeApp() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [artistReleasesOpen, setArtistReleasesOpen] = useState(false);
   const [artistComposeInitial, setArtistComposeInitial] = useState(false);
+  const [eventDraftsOpen, setEventDraftsOpen] = useState(false);
+  const [eventComposeInitial, setEventComposeInitial] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
@@ -77,6 +80,8 @@ function KilodeApp() {
     setSettingsOpen(false);
     setArtistReleasesOpen(false);
     setArtistComposeInitial(false);
+    setEventDraftsOpen(false);
+    setEventComposeInitial(false);
     setSelectedDeskItem(null);
     setSelectedProfile(null);
     setSelectedPost(null);
@@ -212,6 +217,17 @@ function KilodeApp() {
           <Text style={s.meta}>Charts, library, sample playback</Text>
         </TouchableOpacity>
       ) : null}
+      <TouchableOpacity
+        style={s.roomRow}
+        onPress={() => {
+          setEventComposeInitial(false);
+          setEventDraftsOpen(true);
+          setSettingsOpen(false);
+        }}
+      >
+        <Text style={s.roomName}>Event drafts</Text>
+        <Text style={s.meta}>Local only · not published</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={s.roomRow} onPress={() => { signOut(); show("Signed out"); }}>
         <Text style={[s.roomName, { color: C.danger }]}>Sign out</Text>
       </TouchableOpacity>
@@ -226,6 +242,18 @@ function KilodeApp() {
           <TouchableOpacity onPress={() => go("home")}><Text style={s.link}>‹ Home</Text></TouchableOpacity>
           <Text style={s.h1}>{DESKS.find((d) => d.id === name)?.label || name}</Text>
         </View>
+        {name === "events" ? (
+          <TouchableOpacity
+            style={[s.roomRow, { borderColor: C.accent + "50" }]}
+            onPress={() => {
+              setEventComposeInitial(false);
+              setEventDraftsOpen(true);
+            }}
+          >
+            <Text style={s.roomName}>Your event drafts</Text>
+            <Text style={s.meta}>Local only · create & edit on device</Text>
+          </TouchableOpacity>
+        ) : null}
         {items.length === 0 ? (
           <Text style={[s.sub, s.padH]}>Nothing listed yet · seed empty</Text>
         ) : items.map((it) => (
@@ -253,6 +281,19 @@ function KilodeApp() {
         }}
         show={show}
         initialCompose={artistComposeInitial}
+      />
+    );
+  } else if (eventDraftsOpen) {
+    body = (
+      <EventDraftsScreen
+        s={s}
+        C={C}
+        onBack={() => {
+          setEventDraftsOpen(false);
+          setEventComposeInitial(false);
+        }}
+        show={show}
+        initialCompose={eventComposeInitial}
       />
     );
   } else if (selectedProfile) {
@@ -336,11 +377,13 @@ function KilodeApp() {
             ? "Settings"
             : artistReleasesOpen
               ? "Releases"
-              : tab === "activity"
-                ? "Notifications"
-                : tab === "myspace"
-                  ? "My Space"
-                  : undefined
+              : eventDraftsOpen
+                ? "Events"
+                : tab === "activity"
+                  ? "Notifications"
+                  : tab === "myspace"
+                    ? "My Space"
+                    : undefined
         }
       />
       {body}
@@ -409,12 +452,18 @@ function KilodeApp() {
                     setComposeOpen(true);
                     return;
                   }
-                  // Track → Artist Releases (compose) when account has musicReleaseManagement
                   if (c.label === "Track" && caps.musicReleaseManagement) {
                     setArtistComposeInitial(true);
                     setArtistReleasesOpen(true);
                     setSettingsOpen(false);
                     show("Local release draft · not uploaded yet");
+                    return;
+                  }
+                  if (c.label === "Event") {
+                    setEventComposeInitial(true);
+                    setEventDraftsOpen(true);
+                    setSettingsOpen(false);
+                    show("Local event draft · not published");
                     return;
                   }
                   go(c.tab);
@@ -426,7 +475,9 @@ function KilodeApp() {
                   <Text style={s.meta}>
                     {c.label === "Track" && caps.musicReleaseManagement
                       ? "Local draft · upload when backend is live"
-                      : c.sub}
+                      : c.label === "Event"
+                        ? "Local draft · not published"
+                        : c.sub}
                   </Text>
                 </View>
               </TouchableOpacity>
