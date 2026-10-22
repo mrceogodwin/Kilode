@@ -260,11 +260,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           ) : null}
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
-            <TouchableOpacity onPress={() => toggleMusicShuffle()} accessibilityRole="button" accessibilityLabel="Toggle shuffle" style={[s.chip, player.shuffle && s.chipOn]}>
+            <TouchableOpacity onPress={() => toggleMusicShuffle()} accessibilityRole="button" accessibilityLabel="Toggle shuffle" accessibilityState={{ selected: player.shuffle }} style={[s.chip, player.shuffle && s.chipOn]}>
               <Ionicons name="shuffle" size={16} color={player.shuffle ? C.accent : C.text2} />
               <Text style={[s.chipText, player.shuffle && s.chipTextOn, { marginLeft: 5 }]}>Shuffle</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => cycleMusicRepeat()} accessibilityRole="button" accessibilityLabel="Change repeat mode" style={[s.chip, player.repeat !== "off" && s.chipOn]}>
+            <TouchableOpacity onPress={() => cycleMusicRepeat()} accessibilityRole="button" accessibilityLabel="Change repeat mode" accessibilityState={{ selected: player.repeat !== "off" }} style={[s.chip, player.repeat !== "off" && s.chipOn]}>
               <Ionicons name="repeat" size={16} color={player.repeat !== "off" ? C.accent : C.text2} />
               <Text style={[s.chipText, player.repeat !== "off" && s.chipTextOn, { marginLeft: 5 }]}>{player.repeat === "one" ? "Repeat one" : player.repeat === "all" ? "Repeat all" : "Repeat off"}</Text>
             </TouchableOpacity>
@@ -289,6 +289,9 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={player.playing && sameTrack(player.track, activeTrack) ? "Pause " + activeTrack.title : "Play " + activeTrack.title}
+              accessibilityState={{ disabled: false }}
               style={[s.primaryBtn, { paddingHorizontal: 28, minWidth: 120, justifyContent: "center" }]}
               onPress={async () => {
                 if (sameTrack(player.track, activeTrack)) {
@@ -328,6 +331,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             style={[s.roomRow, { marginTop: 24 }]}
             onPress={() => onToggleSave(activeTrack)}
             accessibilityRole="button"
+            accessibilityLabel={isSaved(activeTrack) ? "Remove " + activeTrack.title + " from saved tracks" : "Save " + activeTrack.title + " to library"}
+            accessibilityState={{ selected: isSaved(activeTrack) }}
           >
             <Ionicons
               name={isSaved(activeTrack) ? "heart" : "heart-outline"}
