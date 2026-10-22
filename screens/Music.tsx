@@ -7,6 +7,11 @@ import {
   getSavedTracks,
   getRecentTracks,
   toggleSavedTrack,
+  getMusicPlaylists,
+  createMusicPlaylist,
+  renameMusicPlaylist,
+  deleteMusicPlaylist,
+  type MusicPlaylist,
   type LibraryTrack,
 } from "../lib/musicLibrary";
 import {
@@ -70,6 +75,9 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
   const [saved, setSaved] = useState<LibraryTrack[]>([]);
   const [recent, setRecent] = useState<LibraryTrack[]>([]);
+  const [playlists, setPlaylists] = useState<MusicPlaylist[]>([]);
+  const [playlistName, setPlaylistName] = useState("");
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
   const [player, setPlayer] = useState<MusicPlayerState>({ track: null, playing: false, queue: [], index: -1 });
 
   const hasLiveTracks = tracksSource === "live";
@@ -77,9 +85,10 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const usingPreviewCatalogue = !hasLiveTracks;
 
   const refreshLibrary = useCallback(async () => {
-    const [sList, rList] = await Promise.all([getSavedTracks(), getRecentTracks()]);
+    const [sList, rList, pList] = await Promise.all([getSavedTracks(), getRecentTracks(), getMusicPlaylists()]);
     setSaved(sList);
     setRecent(rList);
+    setPlaylists(pList);
   }, []);
 
   useEffect(() => {
@@ -756,6 +765,41 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
 
       {tab === "library" && (
         <>
+          <View style={s.sectionHead}>
+            <Text style={s.sectionTitle}>Playlists</Text>
+            <Text style={s.meta}>{playlists.length}</Text>
+          </View>
+          <View style={[s.padH, { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }]}>
+            <TextInput value={playlistName} onChangeText={setPlaylistName} placeholder={editingPlaylistId ? "Rename playlist…" : "New playlist name"} placeholderTextColor={C.text3} maxLength={48} accessibilityLabel="Playlist name" style={{ flex: 1, minHeight: 42, borderRadius: 12, paddingHorizontal: 12, color: C.text, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }} returnKeyType="done" />
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel={editingPlaylistId ? "Save playlist name" : "Create playlist"} onPress={async () => {
+              try {
+                if (editingPlaylistId) { setPlaylists(await renameMusicPlaylist(editingPlaylistId, playlistName)); show("Playlist renamed."); }
+                else { setPlaylists(await createMusicPlaylist(playlistName)); show("Playlist created."); }
+                setPlaylistName(""); setEditingPlaylistId(null);
+              } catch (e: any) { show(e?.message || "Could not save playlist."); }
+            }} style={{ width: 42, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: C.accent }}>
+              <Ionicons name={editingPlaylistId ? "checkmark" : "add"} size={21} color="#17130B" />
+            </TouchableOpacity>
+          </View>
+          {playlists.length === 0 ? (
+            <Text style={[s.sub, s.padH, { marginBottom: 16 }]}>Create a playlist to organise tracks on this device.</Text>
+          ) : playlists.map((p) => (
+            <View key={p.id} style={[s.roomRow, { alignItems: "center" }]}>
+              <View style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="musical-notes" size={19} color={C.accent} />
+              </View>
+              <View style={[s.flex, { marginLeft: 12 }]}>
+                <Text style={s.roomName}>{p.name}</Text>
+                <Text style={s.meta}>{p.tracks.length} tracks · stored on this device</Text>
+              </View>
+              <TouchableOpacity onPress={() => { setEditingPlaylistId(p.id); setPlaylistName(p.name); }} accessibilityRole="button" accessibilityLabel={"Rename " + p.name} style={{ padding: 6 }}>
+                <Ionicons name="pencil-outline" size={17} color={C.text2} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={async () => { setPlaylists(await deleteMusicPlaylist(p.id)); show("Playlist deleted."); }} accessibilityRole="button" accessibilityLabel={"Delete " + p.name} style={{ padding: 6 }}>
+                <Ionicons name="trash-outline" size={17} color={C.danger} />
+              </TouchableOpacity>
+            </View>
+          ))}
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Saved</Text>
           </View>
