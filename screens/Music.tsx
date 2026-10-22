@@ -104,8 +104,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   // ——— Track detail ———
   if (activeTrack) {
     const queue = player.queue.length ? player.queue : tracks;
-    const canPrev = player.index > 0 || !!player.track;
-    const canNext = player.index >= 0 && player.index < queue.length - 1;
+    const activeQueueIndex = queue.findIndex((t: any) => String(t?.id) === String(activeTrack.id));
+    const queueIndex = activeQueueIndex >= 0 ? activeQueueIndex : -1;
+    const canPrev = queueIndex > 0 || (queueIndex === 0 && !!player.track);
+    const canNext = queueIndex >= 0 && queueIndex < queue.length - 1;
+    const upNextStart = queueIndex >= 0 ? queueIndex + 1 : 0;
     return (
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
         <View style={s.padH}>
@@ -156,9 +159,9 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   await toggleMusicPlayback();
                   return;
                 }
-                const list = tracks;
-                const idx = list.findIndex((x: any) => String(x.id) === String(activeTrack.id));
-                await playQueue(list, idx >= 0 ? idx : 0);
+                const idx = tracks.findIndex((x: any) => String(x.id) === String(activeTrack.id));
+                if (idx >= 0) await playQueue(tracks, idx);
+                else await playQueue([activeTrack], 0);
               }}
             >
               <Ionicons
@@ -203,11 +206,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <Text style={s.sectionTitle}>Up next</Text>
             <Text style={s.meta}>{queue.length} tracks</Text>
           </View>
-          {queue.length ? queue.slice(Math.max(0, player.index + 1), Math.max(0, player.index + 1) + 6).map((t: any, i: number) => (
+          {queue.length ? queue.slice(upNextStart, upNextStart + 6).map((t: any, i: number) => (
             <TouchableOpacity
               key={String(t.id) + "-queue"}
               style={s.roomRow}
-              onPress={() => playQueue(queue, Math.max(0, player.index + 1) + i)}
+              onPress={() => playQueue(queue, upNextStart + i)}
               accessibilityRole="button"
               accessibilityLabel={"Play next " + t.title}
             >
