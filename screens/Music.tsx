@@ -562,6 +562,9 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Top charts</Text>
           </View>
+          <Text style={[s.meta, s.padH, { marginBottom: 8 }]}>
+            {usingPreviewCatalogue ? "Sample chart preview · these are not verified live rankings or play counts." : "Chart figures require verified stream and play-count data."}
+          </Text>
           {CHARTS.map((c) => {
             const match = tracks.find(
               (t: any) =>
