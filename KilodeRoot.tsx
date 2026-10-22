@@ -866,7 +866,7 @@ function KilodeApp() {
       </Modal>
       <Modal visible={moreOpen} transparent animationType="none" statusBarTranslucent onRequestClose={closeMoreDrawer}>
         <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-start", paddingTop: Platform.OS === "ios" ? 92 : 68, paddingBottom: Platform.OS === "ios" ? 94 : 72, paddingHorizontal: 0, backgroundColor: "transparent" }]}>
-          <Animated.View style={{ width: "78%", maxWidth: 320, height: "100%", paddingTop: 16, paddingHorizontal: 18, paddingBottom: 14, backgroundColor: C.bg, borderRightWidth: 1, borderRightColor: C.border, transform: [{ translateX: drawerTranslateX }] }>
+          <Animated.View style={{ width: "78%", maxWidth: 320, height: "100%", paddingTop: 16, paddingHorizontal: 18, paddingBottom: 14, backgroundColor: C.bg, borderRightWidth: 1, borderRightColor: C.border, transform: [{ translateX: drawerTranslateX }] }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border }}>
               <View>
                 <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.5 }}>Explore</Text>
