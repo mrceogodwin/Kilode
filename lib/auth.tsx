@@ -206,12 +206,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setLoading(false);
     if (h.length < 2) {
-      return { ok: false, error: "Enter a username or email (at least 2 characters)." };
+      return { ok: false, error: "Enter the email address associated with your Kilode account." };
     }
     return {
       ok: false,
-      error:
-        "Sign-in service is unavailable. Create a local account, continue as guest, or configure Supabase.",
+      error: "Kilode sign-in is unavailable because the dedicated account backend is not connected yet. You can continue as a guest to preview the app.",
     };
   }, []);
 
@@ -288,19 +287,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
-    // Offline / no dedicated backend — explicit local-only account
-    const s: Session = {
-      token: localToken(h),
-      handle: h,
-      name: displayName || h,
-      kind: asAccountKind(kind),
-      localOnly: true,
-    };
-    setSession(s);
-    setGuest(false);
-    await persist(s);
+    // Never report a device-only account as a successful Kilode registration.
     setLoading(false);
-    return { ok: true };
+    return {
+      ok: false,
+      error: "Kilode account creation is unavailable because the dedicated account backend is not connected yet. Your details have not been saved. Continue as a guest to preview the app.",
+    };
   }, []);
 
   const signOut = useCallback(() => {
