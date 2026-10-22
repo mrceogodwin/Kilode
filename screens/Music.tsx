@@ -11,6 +11,8 @@ import {
   createMusicPlaylist,
   renameMusicPlaylist,
   deleteMusicPlaylist,
+  addTrackToMusicPlaylist,
+  removeTrackFromMusicPlaylist,
   type MusicPlaylist,
   type LibraryTrack,
 } from "../lib/musicLibrary";
@@ -193,6 +195,25 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   <Text style={s.chipText}>15s ↷</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          ) : null}
+
+          {playlists.length > 0 ? (
+            <View style={{ marginTop: 20 }}>
+              <Text style={s.sectionTitle}>Add to playlist</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
+                {playlists.map((playlist) => (
+                  <TouchableOpacity key={playlist.id} style={s.chip} onPress={async () => {
+                    try {
+                      setPlaylists(await addTrackToMusicPlaylist(playlist.id, activeTrack));
+                      show("Added to " + playlist.name);
+                    } catch (e: any) { show(e?.message || "Could not add track."); }
+                  }} accessibilityRole="button" accessibilityLabel={"Add to " + playlist.name}>
+                    <Ionicons name="add" size={15} color={C.accent} />
+                    <Text style={[s.chipText, { marginLeft: 5 }]}>{playlist.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           ) : null}
 
