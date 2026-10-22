@@ -260,11 +260,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           ) : null}
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
-            <TouchableOpacity onPress={() => toggleMusicShuffle()} accessibilityRole="button" accessibilityLabel="Toggle shuffle" accessibilityState={{ selected: player.shuffle }} style={[s.chip, player.shuffle && s.chipOn]}>
+            <TouchableOpacity onPress={() => toggleMusicShuffle()} accessibilityRole="button" accessibilityLabel={player.shuffle ? "Turn shuffle off" : "Turn shuffle on"} accessibilityState={{ selected: player.shuffle }} style={[s.chip, player.shuffle && s.chipOn]}>
               <Ionicons name="shuffle" size={16} color={player.shuffle ? C.accent : C.text2} />
               <Text style={[s.chipText, player.shuffle && s.chipTextOn, { marginLeft: 5 }]}>Shuffle</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => cycleMusicRepeat()} accessibilityRole="button" accessibilityLabel="Change repeat mode" accessibilityState={{ selected: player.repeat !== "off" }} style={[s.chip, player.repeat !== "off" && s.chipOn]}>
+            <TouchableOpacity onPress={() => cycleMusicRepeat()} accessibilityRole="button" accessibilityLabel={"Repeat mode: " + (player.repeat === "one" ? "one track" : player.repeat === "all" ? "all tracks" : "off") + ". Change repeat mode"} accessibilityState={{ selected: player.repeat !== "off" }} style={[s.chip, player.repeat !== "off" && s.chipOn]}>
               <Ionicons name="repeat" size={16} color={player.repeat !== "off" ? C.accent : C.text2} />
               <Text style={[s.chipText, player.repeat !== "off" && s.chipTextOn, { marginLeft: 5 }]}>{player.repeat === "one" ? "Repeat one" : player.repeat === "all" ? "Repeat all" : "Repeat off"}</Text>
             </TouchableOpacity>
