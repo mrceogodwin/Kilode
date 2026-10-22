@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useMemo, useState } from "react";
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
-import { EmptyState } from "../components/ui/EmptyState";
 
 type Props = {
   s: any;
@@ -12,218 +11,389 @@ type Props = {
   tracks?: any[];
   tracksSource?: "live" | "mock" | "error";
   onPlay: (track: any) => Promise<void> | void;
+  onOpenTrack?: (track: any) => void;
+  onOpenArtist?: (name: string) => void;
 };
 
-const CHARTS = [
-  { rank: 1, title: "Ojuelegba Nights", artist: "Simi Sola", plays: "12.4k" },
-  { rank: 2, title: "Danfo Dreams", artist: "Kemi Wave", plays: "9.1k" },
-  { rank: 3, title: "Eko Energy", artist: "Femi + Liza", plays: "7.8k" },
-  { rank: 4, title: "Water & Light", artist: "Ayo Blue", plays: "6.2k" },
-  { rank: 5, title: "Island Rain", artist: "Bola Keys", plays: "5.1k" },
+/** Preview catalogue ranks — not claimed as live listening charts. */
+const PREVIEW_RANKS = [
+  { title: "Hunter of Africa", artist: "Mudino" },
+  { title: "We Want a Party", artist: "Mudino" },
+  { title: "Calm Down", artist: "Rema" },
+  { title: "Water & Light", artist: "Ayo Blue" },
+  { title: "Ojuelegba Nights", artist: "Simi Sola" },
+  { title: "Last Last", artist: "Burna Boy" },
+  { title: "Essence", artist: "Wizkid" },
+  { title: "Danfo Dreams", artist: "Kemi Wave" },
+  { title: "Joro", artist: "Wizkid" },
+  { title: "Balogun Bounce", artist: "Market Band" },
 ];
 
-const ARTISTS = [
-  { id: "a1", name: "Simi Sola", meta: "Afrobeats · Lagos", color: "#F97316" },
-  { id: "a2", name: "Kemi Wave", meta: "Amapiano · PH", color: "#7C3AED" },
-  { id: "a3", name: "Ayo Blue", meta: "R&B · Abuja", color: "#2563EB" },
-];
+const SEGMENTS = ["For You", "Explore", "New", "Artists"] as const;
 
-export function MusicScreen({ s, C, onBack, show, onPlay, tracks: remoteTracks, tracksSource }: Props) {
-  const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
-  const [activeTrack, setActiveTrack] = useState<any | null>(null);
-  const [activeArtist, setActiveArtist] = useState<any | null>(null);
-  // Only trust the API catalogue when the request actually succeeded. The API client may return bundled data on failure.
+export function MusicScreen({
+  s,
+  C,
+  onBack,
+  show,
+  onPlay,
+  tracks: remoteTracks,
+  tracksSource,
+  onOpenTrack,
+  onOpenArtist,
+}: Props) {
+  const [segment, setSegment] = useState<(typeof SEGMENTS)[number]>("For You");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [chartMode, setChartMode] = useState<"none" | "100" | "50" | "releases">("none");
+
   const hasLiveTracks = tracksSource === "live";
-  const tracks = hasLiveTracks ? (remoteTracks || []) : TRACKS || [];
-  const usingPreviewCatalogue = !hasLiveTracks;
+  const baseTracks = hasLiveTracks && remoteTracks?.length ? remoteTracks : TRACKS || [];
 
-  const selectTrack = (t: any) => {
-    setActiveArtist(null);
-    setActiveTrack(t);
+  const catalogue = useMemo(() => {
+    const fromApi = baseTracks.map((t: any, i: number) => ({
+      id: String(t.id ?? `t-${i}`),
+      title: t.title || "Track",
+      artist: t.artist || t.artist_name || "Artist",
+      color: t.color || C.elevated,
+      audioUrl: t.audioUrl || t.audio_url,
+      raw: t,
+    }));
+    // Fill ranks from named preview list so UI matches product reference without inventing live chart data.
+    const ranked = PREVIEW_RANKS.map((r, i) => {
+      const hit = fromApi.find(
+        (t) =>
+          String(t.title).toLowerCase() === r.title.toLowerCase() ||
+          String(t.artist).toLowerCase() === r.artist.toLowerCase()
+      );
+      return {
+        rank: i + 1,
+        id: hit?.id || `rank-${i + 1}`,
+        title: hit?.title || r.title,
+        artist: hit?.artist || r.artist,
+        color: hit?.color || C.elevated,
+        audioUrl: hit?.audioUrl,
+        raw: hit?.raw || { id: `rank-${i + 1}`, title: r.title, artist: r.artist, color: C.elevated },
+      };
+    });
+    return ranked;
+  }, [baseTracks, C.elevated]);
+
+  const filtered = useMemo(() => {
+    let rows = catalogue;
+    if (chartMode === "50") rows = catalogue.slice(0, 50);
+    if (chartMode === "100") rows = catalogue.slice(0, 100);
+    if (chartMode === "releases") rows = catalogue.slice(0, 8);
+    if (q.trim()) {
+      const needle = q.trim().toLowerCase();
+      rows = rows.filter(
+        (t) => t.title.toLowerCase().includes(needle) || t.artist.toLowerCase().includes(needle)
+      );
+    }
+    if (segment === "New") rows = [...rows].reverse();
+    if (segment === "Artists") {
+      // Unique artists as rows
+      const seen = new Set<string>();
+      rows = rows.filter((t) => {
+        const k = t.artist.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+    }
+    return rows;
+  }, [catalogue, chartMode, q, segment]);
+
+  const play = async (track: any) => {
+    if (onOpenTrack) onOpenTrack(track.raw || track);
+    await onPlay(track.raw || track);
+    if (!track.audioUrl && tracksSource !== "live") {
+      show("Preview catalogue · stream starts when audio is on the dedicated backend.");
+    }
   };
 
-  if (activeTrack) {
-    return (
-      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
-        <View style={s.padH}>
-          <TouchableOpacity onPress={() => setActiveTrack(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
-            <Text style={s.link}>‹ Back to Music</Text>
-          </TouchableOpacity>
-          <View style={{ height: 220, borderRadius: 20, backgroundColor: activeTrack.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-            <Ionicons name="musical-notes" size={56} color="#fff" />
-          </View>
-          <Text style={s.h1}>{activeTrack.title}</Text>
-          <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
-          <Text style={[s.meta, { marginTop: 14 }]}>{usingPreviewCatalogue ? "Preview catalogue · live tracks unavailable" : "Track details · connected catalogue"}</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={async () => { await onPlay(activeTrack); }}>
-            <Ionicons name="play" size={17} color="#fff" />
-            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Play track</Text>
-          </TouchableOpacity>
-          <Text style={[s.meta, { marginTop: 12 }]}>Playback starts only when this track has a valid audio URL. Preview tracks without audio cannot be played.</Text>
-        </View>
-      </ScrollView>
-    );
-  }
-
-  if (activeArtist) {
-    const artistTracks = tracks.filter((t: any) => String(t.artist || "").toLowerCase() === String(activeArtist.name).toLowerCase());
-    return (
-      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
-        <View style={s.padH}>
-          <TouchableOpacity onPress={() => setActiveArtist(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
-            <Text style={s.link}>‹ Back to Music</Text>
-          </TouchableOpacity>
-          <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: activeArtist.color || C.accent, alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-            <Ionicons name="person" size={34} color="#fff" />
-          </View>
-          <Text style={s.h1}>{activeArtist.name}</Text>
-          <Text style={s.sub}>{activeArtist.meta}</Text>
-          <View style={s.sectionHead}><Text style={s.sectionTitle}>Tracks</Text></View>
-          {artistTracks.length ? artistTracks.map((t: any) => (
-            <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)}>
-              <Ionicons name="musical-note" size={20} color={C.accent} />
-              <View style={[s.flex, { marginLeft: 12 }]}><Text style={s.roomName}>{t.title}</Text><Text style={s.meta}>{t.artist}</Text></View>
-              <Ionicons name="chevron-forward" size={18} color={C.text3} />
-            </TouchableOpacity>
-          )) : <Text style={[s.sub, s.padH]}>No tracks from this artist are in the current preview catalogue yet.</Text>}
-        </View>
-      </ScrollView>
-    );
-  }
+  const chip = (label: string, icon: keyof typeof Ionicons.glyphMap, active: boolean, onPress: () => void) => (
+    <TouchableOpacity
+      key={label}
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 999,
+        backgroundColor: active ? C.accent + "22" : C.card,
+        borderWidth: 1,
+        borderColor: active ? C.accent : C.border,
+      }}
+    >
+      <Ionicons name={icon} size={14} color={active ? C.accent : C.text2} />
+      <Text style={{ color: active ? C.accent : C.text, fontSize: 12, fontWeight: "700" }}>{label}</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
-      <View style={s.padH}>
-        <TouchableOpacity onPress={onBack} style={{ marginBottom: 8 }} accessibilityRole="button">
-          <Text style={s.link}>‹ Home</Text>
+    <ScrollView style={s.flex} contentContainerStyle={{ paddingBottom: 28 }} showsVerticalScrollIndicator={false}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 4, flexDirection: "row", alignItems: "center" }}>
+        <TouchableOpacity onPress={onBack} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Ionicons name="chevron-back" size={18} color={C.accent} />
+          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 15 }}>Home</Text>
         </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <View
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              backgroundColor: C.accent,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="musical-notes" size={22} color="#fff" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.h1}>Music</Text>
-            <Text style={s.sub}>Drops · charts · artists · seed catalogue</Text>
-          </View>
-        </View>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity
+          onPress={() => show("Artist upload opens when dedicated storage is connected.")}
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            borderWidth: 1,
+            borderColor: C.border,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="add" size={20} color={C.text} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-        {(["new", "charts", "artists"] as const).map((t) => (
-          <TouchableOpacity key={t} style={[s.chip, tab === t && s.chipOn]} onPress={() => setTab(t)}>
-            <Text style={[s.chipText, tab === t && s.chipTextOn]}>
-              {t === "new" ? "New drops" : t === "charts" ? "Top charts" : "Artists"}
-            </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 14, gap: 8 }}
+      >
+        {chip("Search", "search", searchOpen, () => setSearchOpen((v) => !v))}
+        {chip("Top 100", "bar-chart-outline", chartMode === "100", () =>
+          setChartMode((m) => (m === "100" ? "none" : "100"))
+        )}
+        {chip("Top 50", "trending-up", chartMode === "50", () =>
+          setChartMode((m) => (m === "50" ? "none" : "50"))
+        )}
+        {chip("Releases", "albums-outline", chartMode === "releases", () =>
+          setChartMode((m) => (m === "releases" ? "none" : "releases"))
+        )}
+      </ScrollView>
+
+      {searchOpen ? (
+        <View
+          style={{
+            marginHorizontal: 16,
+            marginTop: 12,
+            height: 42,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: C.border,
+            backgroundColor: C.elevated,
+            paddingHorizontal: 12,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <Ionicons name="search" size={16} color={C.text3} />
+          <TextInput
+            value={q}
+            onChangeText={setQ}
+            placeholder="Search tracks or artists"
+            placeholderTextColor={C.text3}
+            style={{ flex: 1, color: C.text, fontSize: 14 }}
+            autoFocus
+          />
+        </View>
+      ) : null}
+
+      <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
+        <Text style={{ color: C.text, fontSize: 17, fontWeight: "800", flex: 1 }}>More to Explore</Text>
+        <TouchableOpacity onPress={() => show("Full collections when catalogue API is live.")}>
+          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 13 }}>All collections</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, gap: 10 }}
+      >
+        {[
+          { title: "Explore Tracks", sub: "Find your next repeat", icon: "musical-note-outline" as const },
+          { title: "Fresh Releases", sub: "Singles, EPs & albums", icon: "disc-outline" as const },
+          { title: "Meet the Artists", sub: "Discover artists on Kilode", icon: "people-outline" as const },
+        ].map((card) => (
+          <TouchableOpacity
+            key={card.title}
+            onPress={() => {
+              if (card.title.includes("Artist")) setSegment("Artists");
+              else if (card.title.includes("Release")) setChartMode("releases");
+              else setSegment("Explore");
+            }}
+            style={{
+              width: 148,
+              minHeight: 110,
+              padding: 14,
+              borderRadius: 16,
+              backgroundColor: C.card,
+              borderWidth: 1,
+              borderColor: C.border,
+            }}
+          >
+            <Ionicons name={card.icon} size={22} color={C.accent} />
+            <Text style={{ color: C.text, fontWeight: "800", fontSize: 14, marginTop: 12 }}>{card.title}</Text>
+            <Text style={{ color: C.text3, fontSize: 11, marginTop: 4, lineHeight: 15 }}>{card.sub}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {tab === "new" && (
-        <>
-          <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>New drops</Text>
-          </View>
-          {tracks.length === 0 ? (
-            <EmptyState
-              title="No tracks yet"
-              body="Catalogue will appear when the music API is live."
-              textColor={C.text}
-              mutedColor={C.text2}
-              accentColor={C.accent}
-              icon="musical-notes-outline"
-            />
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
-              {tracks.map((t: any) => (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[s.trackCard, { backgroundColor: t.color || C.accent }]}
-                  onPress={() => selectTrack(t)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Select ${t.title}`}
-                >
-                  <Ionicons name="play" size={18} color="#fff" style={{ marginBottom: 6 }} />
-                  <Text style={s.trackTitle} numberOfLines={1}>
-                    {t.title}
-                  </Text>
-                  <Text style={s.trackArtist} numberOfLines={1}>
-                    {t.artist}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-          <Text style={[s.meta, s.padH, { marginTop: 12 }]}>
-            Playback controls select a track only — no stream is started until audio is wired.
-          </Text>
-        </>
-      )}
-
-      {tab === "charts" && (
-        <>
-          <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Top charts</Text>
-          </View>
-          {CHARTS.map((c) => (
+      <View
+        style={{
+          marginHorizontal: 16,
+          marginTop: 16,
+          padding: 4,
+          borderRadius: 14,
+          backgroundColor: C.elevated,
+          borderWidth: 1,
+          borderColor: C.border,
+          flexDirection: "row",
+        }}
+      >
+        {SEGMENTS.map((seg) => {
+          const on = segment === seg;
+          return (
             <TouchableOpacity
-              key={c.rank}
-              style={s.roomRow}
-              onPress={() =>
-                selectTrack({ id: `c${c.rank}`, title: c.title, artist: c.artist, color: C.accent })
-              }
+              key={seg}
+              onPress={() => setSegment(seg)}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                borderRadius: 11,
+                backgroundColor: on ? C.card : "transparent",
+                alignItems: "center",
+              }}
             >
-              <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
-              <View style={s.flex}>
-                <Text style={s.roomName}>{c.title}</Text>
-                <Text style={s.meta}>
-                  {c.artist} · {c.plays} plays
+              <Text style={{ color: on ? C.text : C.text3, fontWeight: on ? "800" : "600", fontSize: 12 }}>{seg}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <View style={{ paddingHorizontal: 16, marginTop: 18, flexDirection: "row", alignItems: "center" }}>
+        <Text style={{ color: C.text, fontSize: 16, fontWeight: "800", flex: 1 }}>
+          {chartMode === "100"
+            ? "Kilode Top 100"
+            : chartMode === "50"
+              ? "Kilode Top 50"
+              : chartMode === "releases"
+                ? "Fresh releases"
+                : segment === "Artists"
+                  ? "Artists in catalogue"
+                  : "Popular in the catalogue"}
+        </Text>
+        <TouchableOpacity onPress={() => setChartMode("100")}>
+          <Text style={{ color: C.accent, fontWeight: "700", fontSize: 12 }}>Explore Top 100</Text>
+        </TouchableOpacity>
+      </View>
+
+      {!hasLiveTracks ? (
+        <Text style={{ color: C.text3, fontSize: 11, marginHorizontal: 16, marginTop: 6 }}>
+          Preview ranks · not live listening charts until dedicated backend + play events are connected.
+        </Text>
+      ) : null}
+
+      <View style={{ marginTop: 8 }}>
+        {filtered.length === 0 ? (
+          <View style={{ margin: 16, padding: 16, borderRadius: 14, backgroundColor: C.elevated, borderWidth: 1, borderColor: C.border }}>
+            <Text style={{ color: C.text2, fontSize: 13 }}>No tracks match this filter.</Text>
+          </View>
+        ) : (
+          filtered.map((t) => (
+            <TouchableOpacity
+              key={t.id + String(t.rank)}
+              onPress={() => play(t)}
+              activeOpacity={0.88}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: C.border,
+                gap: 12,
+              }}
+            >
+              <Text style={{ width: 22, color: C.text3, fontWeight: "700", fontSize: 13 }}>{t.rank}</Text>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 10,
+                  backgroundColor: C.elevated,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="musical-note" size={18} color={C.text2} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.text, fontWeight: "700", fontSize: 14 }} numberOfLines={1}>
+                  {segment === "Artists" ? t.artist : t.title}
+                </Text>
+                <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }} numberOfLines={1}>
+                  {segment === "Artists" ? "Artist · catalogue" : t.artist}
                 </Text>
               </View>
-              <Ionicons name="play-circle-outline" size={28} color={C.accent} />
-            </TouchableOpacity>
-          ))}
-        </>
-      )}
-
-      {tab === "artists" && (
-        <>
-          <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Featured artists</Text>
-          </View>
-          {ARTISTS.map((a) => (
-            <TouchableOpacity
-              key={a.id}
-              style={s.roomRow}
-              onPress={() => setActiveArtist(a)}
-            >
-              <View
-                style={[
-                  s.roomAv,
-                  { backgroundColor: a.color, width: 48, height: 48, borderRadius: 24 },
-                ]}
+              <TouchableOpacity
+                onPress={() => (segment === "Artists" ? onOpenArtist?.(t.artist) || show(t.artist) : play(t))}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  backgroundColor: C.accent,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <Text style={[s.roomAvText, { color: "#fff" }]}>{a.name.slice(0, 1)}</Text>
-              </View>
-              <View style={s.flex}>
-                <Text style={s.roomName}>{a.name}</Text>
-                <Text style={s.meta}>{a.meta}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={C.text3} />
+                <Ionicons name={segment === "Artists" ? "chevron-forward" : "play"} size={14} color="#111" />
+              </TouchableOpacity>
             </TouchableOpacity>
-          ))}
-        </>
-      )}
+          ))
+        )}
+      </View>
 
-      <View style={{ height: 24 }} />
+      <TouchableOpacity
+        onPress={() => show("Personalised shelves need listening history on the dedicated backend.")}
+        style={{
+          marginHorizontal: 16,
+          marginTop: 16,
+          padding: 14,
+          borderRadius: 16,
+          backgroundColor: C.card,
+          borderWidth: 1,
+          borderColor: C.border,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            backgroundColor: C.elevated,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="sparkles" size={18} color={C.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: C.text, fontWeight: "800", fontSize: 14 }}>Tailored to You</Text>
+          <Text style={{ color: C.text3, fontSize: 12, marginTop: 2 }}>
+            Adapts to what you save and play on this device
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={C.text3} />
+      </TouchableOpacity>
     </ScrollView>
   );
 }
