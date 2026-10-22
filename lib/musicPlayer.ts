@@ -94,9 +94,11 @@ export function playTrackNext(track: any) {
 
 export function removeQueuedTrack(trackIndex: number) {
   if (trackIndex < 0 || trackIndex >= queue.length) return;
+  // The active sound is not replaced by this operation. Protect its queue entry
+  // so the visible current index cannot silently point at a different track.
+  if (trackIndex === index) return;
   queue.splice(trackIndex, 1);
   if (trackIndex < index) index -= 1;
-  else if (trackIndex === index) index = Math.min(index, queue.length - 1);
   publish();
 }
 
