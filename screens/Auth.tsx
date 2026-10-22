@@ -71,7 +71,7 @@ type Props = {
   isDark: boolean;
   C: any;
   onSignIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
+  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; message?: string }>;
   onGuest: () => void;
   show: (m: string) => void;
 };
@@ -270,7 +270,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                     ? await onSignUp(handle, password, kind, name || undefined)
                     : await onSignIn(handle, password);
                   if (!r.ok) show(r.error || "Authentication failed");
-                  else show(mode === "up" ? `Welcome · ${kind}` : "Welcome");
+                  else show(r.message || (mode === "up" ? `Welcome · ${kind}` : "Welcome"));
                 } catch {
                   show("Kilode could not complete authentication. Please try again.");
                 } finally {
