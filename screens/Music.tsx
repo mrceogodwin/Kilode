@@ -594,7 +594,9 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   <Ionicons name="play-circle" size={26} color={C.accent} />
                 </TouchableOpacity>
               </TouchableOpacity>
-            ));
+                ))}
+              </>
+            );
           })()}
         </>
       )}
