@@ -20,6 +20,7 @@ import { PostActions } from "./components/ui/PostActions";
 import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
+import { getAccountCapabilities } from "./lib/accountCapabilities";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -407,7 +408,22 @@ function KilodeApp() {
     </ScrollView>
   );
 
-  const MySpace = () => (
+  const MySpace = () => {
+    // Account capabilities here are workspace shortcuts only; the server must
+    // still enforce permissions, ownership, quotas, and paid entitlements.
+    const accountCapabilities = getAccountCapabilities(session.kind);
+    const workspaceItems = [
+      { key: "socials", label: "Socials", tab: "socials", visible: accountCapabilities.socials },
+      { key: "media", label: "Media", tab: "media", visible: accountCapabilities.mediaAuthoring },
+      { key: "music", label: "Music", tab: "music", visible: accountCapabilities.musicReleaseManagement },
+      { key: "cinema", label: "Cinema", tab: "cinema", visible: accountCapabilities.cinemaManagement },
+      { key: "ads", label: "Ads & campaigns", tab: "ads", visible: accountCapabilities.advertisingCampaigns },
+      { key: "jobs", label: "Jobs", tab: "jobs", visible: accountCapabilities.jobDiscovery || accountCapabilities.jobManagement },
+      { key: "market", label: "Market", tab: "market", visible: accountCapabilities.marketplaceSelling },
+      { key: "rent", label: "Rent & spaces", tab: "rent", visible: accountCapabilities.rentalListingManagement },
+    ].filter((item) => item.visible);
+
+    return (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
       <View style={s.profileHead}>
         <View style={s.profileAv}><Text style={s.profileAvText}>{(session.name || "K").slice(0, 2).toUpperCase()}</Text></View>
@@ -426,13 +442,24 @@ function KilodeApp() {
           <Text style={s.ghostBtnText}>Sign out</Text>
         </TouchableOpacity>
       </View>
+      <View style={s.sectionHead}><Text style={s.sectionTitle}>Your workspace</Text></View>
+      <Text style={[s.meta, s.padH, { marginBottom: 8 }]}>
+        Shortcuts for your account type. Availability depends on connected services.
+      </Text>
+      {workspaceItems.map((item) => (
+        <TouchableOpacity key={item.key} style={s.roomRow} onPress={() => go(item.tab)} accessibilityRole="button">
+          <View style={s.flex}><Text style={s.roomName}>{item.label}</Text></View>
+          <Text style={[s.link, { fontSize: 18 }]}>›</Text>
+        </TouchableOpacity>
+      ))}
       <View style={s.sectionHead}><Text style={s.sectionTitle}>Wallet</Text></View>
       <View style={s.roomRow}>
         <View style={s.flex}><Text style={s.roomName}>₦0.00</Text><Text style={s.meta}>Paystack · backend when live</Text></View>
         <TouchableOpacity style={s.joinBtn} onPress={() => show("Top up soon")}><Text style={s.joinBtnText}>Top up</Text></TouchableOpacity>
       </View>
     </ScrollView>
-  );
+    );
+  };
 
   const Desk = ({ name }: { name: string }) => {
     const d = DESKS.find((x) => x.id === name);
