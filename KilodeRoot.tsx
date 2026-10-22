@@ -23,6 +23,7 @@ import { getAccountCapabilities } from "./lib/accountCapabilities";
 import { playMusicTrack, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
 import { HomeScreen } from "./screens/HomeScreen";
 import { SocialsScreen } from "./screens/SocialsScreen";
+import { ArtistReleasesScreen } from "./screens/ArtistReleases";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -58,6 +59,7 @@ function KilodeApp() {
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [artistReleasesOpen, setArtistReleasesOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
@@ -67,7 +69,15 @@ function KilodeApp() {
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
   const go = (t: string) => {
-    setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
+    setTab(t);
+    setMoreOpen(false);
+    setCreateOpen(false);
+    setComposeOpen(false);
+    setSettingsOpen(false);
+    setArtistReleasesOpen(false);
+    setSelectedDeskItem(null);
+    setSelectedProfile(null);
+    setSelectedPost(null);
   };
 
   useEffect(() => {
@@ -182,9 +192,21 @@ function KilodeApp() {
         <Text style={s.meta}>Theme, account, moderation</Text>
       </TouchableOpacity>
       {caps.musicReleaseManagement ? (
+        <TouchableOpacity
+          style={s.roomRow}
+          onPress={() => {
+            setArtistReleasesOpen(true);
+            setSettingsOpen(false);
+          }}
+        >
+          <Text style={s.roomName}>Artist releases</Text>
+          <Text style={s.meta}>Local drafts · upload when backend is live</Text>
+        </TouchableOpacity>
+      ) : null}
+      {caps.musicReleaseManagement ? (
         <TouchableOpacity style={s.roomRow} onPress={() => go("music")}>
-          <Text style={s.roomName}>Music workspace</Text>
-          <Text style={s.meta}>Artist tools · releases when backend is live</Text>
+          <Text style={s.roomName}>Music discovery</Text>
+          <Text style={s.meta}>Charts, library, sample playback</Text>
         </TouchableOpacity>
       ) : null}
       <TouchableOpacity style={s.roomRow} onPress={() => { signOut(); show("Signed out"); }}>
@@ -216,6 +238,16 @@ function KilodeApp() {
   let body: React.ReactNode = null;
   if (settingsOpen) {
     body = <SettingsScreen s={s} C={C} isDark={isDark} themeMode={themeMode} setThemeMode={setThemeMode} onBack={() => setSettingsOpen(false)} onSignOut={() => { signOut(); setSettingsOpen(false); }} show={show} />;
+  } else if (artistReleasesOpen && caps.musicReleaseManagement) {
+    body = (
+      <ArtistReleasesScreen
+        s={s}
+        C={C}
+        sessionName={session.name}
+        onBack={() => setArtistReleasesOpen(false)}
+        show={show}
+      />
+    );
   } else if (selectedProfile) {
     body = <UserProfileScreen s={s} C={C} profile={selectedProfile} onBack={() => setSelectedProfile(null)} show={show} />;
   } else if (selectedPost) {
@@ -291,7 +323,19 @@ function KilodeApp() {
   return (
     <SafeAreaView style={[s.root, { backgroundColor: C.bg }]}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
-      <Header title={settingsOpen ? "Settings" : tab === "activity" ? "Notifications" : tab === "myspace" ? "My Space" : undefined} />
+      <Header
+        title={
+          settingsOpen
+            ? "Settings"
+            : artistReleasesOpen
+              ? "Releases"
+              : tab === "activity"
+                ? "Notifications"
+                : tab === "myspace"
+                  ? "My Space"
+                  : undefined
+        }
+      />
       {body}
       {nowPlaying ? (
         <View style={s.player}>
