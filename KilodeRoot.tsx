@@ -884,7 +884,7 @@ function KilodeApp() {
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 18, paddingBottom: 24 }}>
-              <TouchableOpacity onPress={() => { closeMoreDrawer(); go("myspace"); }} activeOpacity={0.75} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 12, marginBottom: 20, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
+              <TouchableOpacity onPress={() => { closeMoreDrawer(); setTimeout(() => go("myspace"), 185); }} activeOpacity={0.75} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 12, marginBottom: 20, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.border }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: C.elevated, alignItems: "center", justifyContent: "center", marginRight: 11 }}>
                   <Ionicons name="person-outline" size={19} color={C.accent} />
                 </View>
@@ -896,7 +896,7 @@ function KilodeApp() {
               </TouchableOpacity>
               <Text style={{ color: C.text3, fontSize: 10, fontWeight: "800", letterSpacing: 1.6, marginBottom: 8, marginLeft: 4 }}>DISCOVER</Text>
               {[...DESKS, { id: "creators", label: "Creators", icon: "✏️" }, { id: "communities", label: "Communities", icon: "👥" }].filter((d, i, a) => a.findIndex((x) => x.id === d.id) === i).map((d) => (
-                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); go(d.id); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); setTimeout(() => go(d.id), 185); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
                   <View style={{ width: 34, alignItems: "flex-start" }}><Ionicons name={systemIconName(d.icon)} size={19} color={tab === d.id ? C.accent : C.text2} /></View>
                   <Text style={{ flex: 1, color: tab === d.id ? C.accent : C.text, fontSize: 14, fontWeight: tab === d.id ? "800" : "600" }}>{d.label}</Text>
                   {tab === d.id ? <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: C.accent, marginRight: 5 }} /> : <Ionicons name="chevron-forward" size={15} color={C.text3} />}
@@ -909,7 +909,7 @@ function KilodeApp() {
                 { id: "activity", label: "Notifications", icon: "notifications-outline" },
                 { id: "settings", label: "Settings", icon: "settings-outline" },
               ].map((d) => (
-                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); if (d.id === "settings") setSettingsOpen(true); else go(d.id); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                <TouchableOpacity key={d.id} onPress={() => { closeMoreDrawer(); setTimeout(() => { if (d.id === "settings") setSettingsOpen(true); else go(d.id); }, 185); }} activeOpacity={0.72} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: C.border }}>
                   <View style={{ width: 34, alignItems: "flex-start" }}><Ionicons name={d.icon as keyof typeof Ionicons.glyphMap} size={19} color={tab === d.id ? C.accent : C.text2} /></View>
                   <Text style={{ flex: 1, color: tab === d.id ? C.accent : C.text, fontSize: 14, fontWeight: tab === d.id ? "800" : "600" }}>{d.label}</Text>
                   <Ionicons name="chevron-forward" size={15} color={C.text3} />
