@@ -522,12 +522,14 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 : t === "search"
                   ? "Search"
                   : t === "charts"
-                  ? "Charts"
-                  : t === "artists"
-                    ? "Artists"
-                    : t === "library"
-                      ? "Library"
-                      : "Genres"}
+                    ? "Charts"
+                    : t === "artists"
+                      ? "Artists"
+                      : t === "library"
+                        ? "Library"
+                        : t === "genres"
+                          ? "Genres"
+                          : "Queue"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -863,8 +865,29 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
       {tab === "queue" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Up next</Text>
-            <Text style={s.meta}>{player.queue.length} tracks</Text>
+            <View>
+              <Text style={s.sectionTitle}>Up next</Text>
+              <Text style={s.meta}>{player.queue.length} tracks · {player.track?.title ? "Playing " + player.track.title : "Nothing playing"}</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <TouchableOpacity
+                onPress={() => toggleMusicShuffle()}
+                accessibilityRole="button"
+                accessibilityLabel="Toggle queue shuffle"
+                style={[s.chip, player.shuffle && s.chipOn, { paddingHorizontal: 10 }]}
+              >
+                <Ionicons name="shuffle" size={16} color={player.shuffle ? C.accent : C.text2} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => cycleMusicRepeat()}
+                accessibilityRole="button"
+                accessibilityLabel="Change queue repeat mode"
+                style={[s.chip, player.repeat !== "off" && s.chipOn, { paddingHorizontal: 10 }]}
+              >
+                <Ionicons name={player.repeat === "one" ? "repeat" : "repeat"} size={16} color={player.repeat !== "off" ? C.accent : C.text2} />
+                {player.repeat === "one" ? <Text style={[s.chipText, { marginLeft: 3 }]}>1</Text> : null}
+              </TouchableOpacity>
+            </View>
           </View>
           {player.queue.length ? player.queue.map((t: any, i: number) => (
             <View key={String(t.id) + "-queue-tab"} style={[s.roomRow, { alignItems: "center" }]}>
