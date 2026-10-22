@@ -144,7 +144,7 @@ function KilodeApp() {
   const Home = () => (
     <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
       <View style={s.padH}>
-        <Text style={s.h1}>Good morning</Text>
+        <Text style={s.h1}>For you</Text>
         <Text style={s.sub}>{session.handle} · {session.kind}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.carouselRow} decelerationRate="fast" snapToInterval={316} onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / 316))}>
@@ -192,7 +192,7 @@ function KilodeApp() {
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
               {tracks.map((t: any) => (
-                <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => { setNowPlaying(t); show(`Playing ${t.title}`); }}>
+                <TouchableOpacity key={t.id} style={[s.trackCard, { backgroundColor: t.color || C.accent }]} onPress={() => { setNowPlaying(t); show(`Selected ${t.title} · audio streaming is not connected yet`); }}>
                   <Text style={s.trackPlay}>▶</Text><Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text><Text style={s.trackArtist} numberOfLines={1}>{t.artist}</Text>
                 </TouchableOpacity>
               ))}
@@ -571,7 +571,7 @@ function KilodeApp() {
       {nowPlaying ? (
         <View style={s.player}>
           <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
-          <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist}</Text></View>
+          <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist ? `${nowPlaying.artist} · audio unavailable` : "Audio unavailable · preview catalogue"}</Text></View>
           <TouchableOpacity onPress={() => setNowPlaying(null)}><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
         </View>
       ) : null}
