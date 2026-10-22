@@ -26,6 +26,7 @@ import { SocialsScreen } from "./screens/SocialsScreen";
 import { ArtistReleasesScreen } from "./screens/ArtistReleases";
 import { EventDraftsScreen } from "./screens/EventDrafts";
 import { JobDraftsScreen } from "./screens/JobDrafts";
+import { MarketDraftsScreen } from "./screens/MarketDrafts";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -67,6 +68,8 @@ function KilodeApp() {
   const [eventComposeInitial, setEventComposeInitial] = useState(false);
   const [jobDraftsOpen, setJobDraftsOpen] = useState(false);
   const [jobComposeInitial, setJobComposeInitial] = useState(false);
+  const [marketDraftsOpen, setMarketDraftsOpen] = useState(false);
+  const [marketComposeInitial, setMarketComposeInitial] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
@@ -87,6 +90,8 @@ function KilodeApp() {
     setEventComposeInitial(false);
     setJobDraftsOpen(false);
     setJobComposeInitial(false);
+    setMarketDraftsOpen(false);
+    setMarketComposeInitial(false);
     setSelectedDeskItem(null);
     setSelectedProfile(null);
     setSelectedPost(null);
@@ -222,26 +227,16 @@ function KilodeApp() {
           <Text style={s.meta}>Charts, library, sample playback</Text>
         </TouchableOpacity>
       ) : null}
-      <TouchableOpacity
-        style={s.roomRow}
-        onPress={() => {
-          setEventComposeInitial(false);
-          setEventDraftsOpen(true);
-          setSettingsOpen(false);
-        }}
-      >
+      <TouchableOpacity style={s.roomRow} onPress={() => { setEventComposeInitial(false); setEventDraftsOpen(true); setSettingsOpen(false); }}>
         <Text style={s.roomName}>Event drafts</Text>
         <Text style={s.meta}>Local only · not published</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={s.roomRow}
-        onPress={() => {
-          setJobComposeInitial(false);
-          setJobDraftsOpen(true);
-          setSettingsOpen(false);
-        }}
-      >
+      <TouchableOpacity style={s.roomRow} onPress={() => { setJobComposeInitial(false); setJobDraftsOpen(true); setSettingsOpen(false); }}>
         <Text style={s.roomName}>Job drafts</Text>
+        <Text style={s.meta}>Local only · not published</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={s.roomRow} onPress={() => { setMarketComposeInitial(false); setMarketDraftsOpen(true); setSettingsOpen(false); }}>
+        <Text style={s.roomName}>Market drafts</Text>
         <Text style={s.meta}>Local only · not published</Text>
       </TouchableOpacity>
       <TouchableOpacity style={s.roomRow} onPress={() => { signOut(); show("Signed out"); }}>
@@ -259,26 +254,20 @@ function KilodeApp() {
           <Text style={s.h1}>{DESKS.find((d) => d.id === name)?.label || name}</Text>
         </View>
         {name === "events" ? (
-          <TouchableOpacity
-            style={[s.roomRow, { borderColor: C.accent + "50" }]}
-            onPress={() => {
-              setEventComposeInitial(false);
-              setEventDraftsOpen(true);
-            }}
-          >
+          <TouchableOpacity style={[s.roomRow, { borderColor: C.accent + "50" }]} onPress={() => { setEventComposeInitial(false); setEventDraftsOpen(true); }}>
             <Text style={s.roomName}>Your event drafts</Text>
             <Text style={s.meta}>Local only · create & edit on device</Text>
           </TouchableOpacity>
         ) : null}
         {name === "jobs" ? (
-          <TouchableOpacity
-            style={[s.roomRow, { borderColor: C.accent + "50" }]}
-            onPress={() => {
-              setJobComposeInitial(false);
-              setJobDraftsOpen(true);
-            }}
-          >
+          <TouchableOpacity style={[s.roomRow, { borderColor: C.accent + "50" }]} onPress={() => { setJobComposeInitial(false); setJobDraftsOpen(true); }}>
             <Text style={s.roomName}>Your job drafts</Text>
+            <Text style={s.meta}>Local only · create & edit on device</Text>
+          </TouchableOpacity>
+        ) : null}
+        {name === "market" ? (
+          <TouchableOpacity style={[s.roomRow, { borderColor: C.accent + "50" }]} onPress={() => { setMarketComposeInitial(false); setMarketDraftsOpen(true); }}>
+            <Text style={s.roomName}>Your listing drafts</Text>
             <Text style={s.meta}>Local only · create & edit on device</Text>
           </TouchableOpacity>
         ) : null}
@@ -299,43 +288,19 @@ function KilodeApp() {
     body = <SettingsScreen s={s} C={C} isDark={isDark} themeMode={themeMode} setThemeMode={setThemeMode} onBack={() => setSettingsOpen(false)} onSignOut={() => { signOut(); setSettingsOpen(false); }} show={show} />;
   } else if (artistReleasesOpen && caps.musicReleaseManagement) {
     body = (
-      <ArtistReleasesScreen
-        s={s}
-        C={C}
-        sessionName={session.name}
-        onBack={() => {
-          setArtistReleasesOpen(false);
-          setArtistComposeInitial(false);
-        }}
-        show={show}
-        initialCompose={artistComposeInitial}
-      />
+      <ArtistReleasesScreen s={s} C={C} sessionName={session.name} onBack={() => { setArtistReleasesOpen(false); setArtistComposeInitial(false); }} show={show} initialCompose={artistComposeInitial} />
     );
   } else if (eventDraftsOpen) {
     body = (
-      <EventDraftsScreen
-        s={s}
-        C={C}
-        onBack={() => {
-          setEventDraftsOpen(false);
-          setEventComposeInitial(false);
-        }}
-        show={show}
-        initialCompose={eventComposeInitial}
-      />
+      <EventDraftsScreen s={s} C={C} onBack={() => { setEventDraftsOpen(false); setEventComposeInitial(false); }} show={show} initialCompose={eventComposeInitial} />
     );
   } else if (jobDraftsOpen) {
     body = (
-      <JobDraftsScreen
-        s={s}
-        C={C}
-        onBack={() => {
-          setJobDraftsOpen(false);
-          setJobComposeInitial(false);
-        }}
-        show={show}
-        initialCompose={jobComposeInitial}
-      />
+      <JobDraftsScreen s={s} C={C} onBack={() => { setJobDraftsOpen(false); setJobComposeInitial(false); }} show={show} initialCompose={jobComposeInitial} />
+    );
+  } else if (marketDraftsOpen) {
+    body = (
+      <MarketDraftsScreen s={s} C={C} onBack={() => { setMarketDraftsOpen(false); setMarketComposeInitial(false); }} show={show} initialCompose={marketComposeInitial} />
     );
   } else if (selectedProfile) {
     body = <UserProfileScreen s={s} C={C} profile={selectedProfile} onBack={() => setSelectedProfile(null)} show={show} />;
@@ -345,23 +310,11 @@ function KilodeApp() {
     body = <DeskDetailScreen s={s} C={C} system={selectedDeskItem.system} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
   } else if (tab === "home") {
     body = (
-      <HomeScreen
-        s={s} C={C} takes={takes} tracks={tracks} news={news} rooms={rooms}
-        homeChip={homeChip} setHomeChip={setHomeChip} slide={slide} setSlide={setSlide}
-        joined={joined} setJoined={setJoined} refreshing={refreshing} onRefresh={onRefresh}
-        go={go} show={show} setMoreOpen={setMoreOpen} setComposeOpen={setComposeOpen}
-        setSelectedProfile={setSelectedProfile} setSelectedArticleId={setSelectedArticleId}
-      />
+      <HomeScreen s={s} C={C} takes={takes} tracks={tracks} news={news} rooms={rooms} homeChip={homeChip} setHomeChip={setHomeChip} slide={slide} setSlide={setSlide} joined={joined} setJoined={setJoined} refreshing={refreshing} onRefresh={onRefresh} go={go} show={show} setMoreOpen={setMoreOpen} setComposeOpen={setComposeOpen} setSelectedProfile={setSelectedProfile} setSelectedArticleId={setSelectedArticleId} />
     );
   } else if (tab === "socials") {
     body = (
-      <SocialsScreen
-        s={s} C={C} session={session} takes={takes} blocked={blocked} setBlocked={setBlocked}
-        socialSection={socialSection} setSocialSection={setSocialSection}
-        liked={liked} setLiked={setLiked} following={following} setFollowing={setFollowing}
-        refreshing={refreshing} onRefresh={onRefresh} setComposeOpen={setComposeOpen}
-        setCommentTake={setCommentTake} setSelectedProfile={setSelectedProfile} show={show}
-      />
+      <SocialsScreen s={s} C={C} session={session} takes={takes} blocked={blocked} setBlocked={setBlocked} socialSection={socialSection} setSocialSection={setSocialSection} liked={liked} setLiked={setLiked} following={following} setFollowing={setFollowing} refreshing={refreshing} onRefresh={onRefresh} setComposeOpen={setComposeOpen} setCommentTake={setCommentTake} setSelectedProfile={setSelectedProfile} show={show} />
     );
   } else if (tab === "activity") {
     body = <ActivityView />;
@@ -373,39 +326,17 @@ function KilodeApp() {
     body = <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
   } else if (tab === "music") {
     body = (
-      <MusicScreen
-        s={s} C={C} tracks={tracks} tracksSource={tracksSource}
-        onBack={() => go("home")} show={show}
-        onPlay={async (track) => {
-          const result = await playMusicTrack(track, { queue: tracks });
-          if (!result.ok) show(result.message || "Playback unavailable.");
-        }}
-      />
+      <MusicScreen s={s} C={C} tracks={tracks} tracksSource={tracksSource} onBack={() => go("home")} show={show} onPlay={async (track) => { const result = await playMusicTrack(track, { queue: tracks }); if (!result.ok) show(result.message || "Playback unavailable."); }} />
     );
   } else if (tab === "media") {
     body = (
-      <MediaScreen
-        s={s} C={C}
-        articles={news.map((n: any) => ({
-          id: n.id, title: n.title, kicker: n.kicker, time: n.time, tone: n.tone,
-          body: n.summary || n.description, author: n.author || "Kilode Editorial", imageUrl: n.imageUrl,
-        }))}
-        initialArticleId={selectedArticleId}
-        onBack={() => { setSelectedArticleId(null); go("home"); }}
-        show={show}
-      />
+      <MediaScreen s={s} C={C} articles={news.map((n: any) => ({ id: n.id, title: n.title, kicker: n.kicker, time: n.time, tone: n.tone, body: n.summary || n.description, author: n.author || "Kilode Editorial", imageUrl: n.imageUrl }))} initialArticleId={selectedArticleId} onBack={() => { setSelectedArticleId(null); go("home"); }} show={show} />
     );
   } else if (DESKS.some((d) => d.id === tab)) {
     body = <Desk name={tab} />;
   } else {
     body = (
-      <HomeScreen
-        s={s} C={C} takes={takes} tracks={tracks} news={news} rooms={rooms}
-        homeChip={homeChip} setHomeChip={setHomeChip} slide={slide} setSlide={setSlide}
-        joined={joined} setJoined={setJoined} refreshing={refreshing} onRefresh={onRefresh}
-        go={go} show={show} setMoreOpen={setMoreOpen} setComposeOpen={setComposeOpen}
-        setSelectedProfile={setSelectedProfile} setSelectedArticleId={setSelectedArticleId}
-      />
+      <HomeScreen s={s} C={C} takes={takes} tracks={tracks} news={news} rooms={rooms} homeChip={homeChip} setHomeChip={setHomeChip} slide={slide} setSlide={setSlide} joined={joined} setJoined={setJoined} refreshing={refreshing} onRefresh={onRefresh} go={go} show={show} setMoreOpen={setMoreOpen} setComposeOpen={setComposeOpen} setSelectedProfile={setSelectedProfile} setSelectedArticleId={setSelectedArticleId} />
     );
   }
 
@@ -414,19 +345,14 @@ function KilodeApp() {
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <Header
         title={
-          settingsOpen
-            ? "Settings"
-            : artistReleasesOpen
-              ? "Releases"
-              : eventDraftsOpen
-                ? "Events"
-                : jobDraftsOpen
-                  ? "Jobs"
-                  : tab === "activity"
-                    ? "Notifications"
-                    : tab === "myspace"
-                      ? "My Space"
-                      : undefined
+          settingsOpen ? "Settings"
+            : artistReleasesOpen ? "Releases"
+              : eventDraftsOpen ? "Events"
+                : jobDraftsOpen ? "Jobs"
+                  : marketDraftsOpen ? "Market"
+                    : tab === "activity" ? "Notifications"
+                      : tab === "myspace" ? "My Space"
+                        : undefined
         }
       />
       {body}
@@ -491,30 +417,22 @@ function KilodeApp() {
                 style={s.roomRow}
                 onPress={() => {
                   setCreateOpen(false);
-                  if (c.tab === "socials") {
-                    setComposeOpen(true);
-                    return;
-                  }
+                  if (c.tab === "socials") { setComposeOpen(true); return; }
                   if (c.label === "Track" && caps.musicReleaseManagement) {
-                    setArtistComposeInitial(true);
-                    setArtistReleasesOpen(true);
-                    setSettingsOpen(false);
-                    show("Local release draft · not uploaded yet");
-                    return;
+                    setArtistComposeInitial(true); setArtistReleasesOpen(true); setSettingsOpen(false);
+                    show("Local release draft · not uploaded yet"); return;
                   }
                   if (c.label === "Event") {
-                    setEventComposeInitial(true);
-                    setEventDraftsOpen(true);
-                    setSettingsOpen(false);
-                    show("Local event draft · not published");
-                    return;
+                    setEventComposeInitial(true); setEventDraftsOpen(true); setSettingsOpen(false);
+                    show("Local event draft · not published"); return;
                   }
                   if (c.label === "Job") {
-                    setJobComposeInitial(true);
-                    setJobDraftsOpen(true);
-                    setSettingsOpen(false);
-                    show("Local job draft · not published");
-                    return;
+                    setJobComposeInitial(true); setJobDraftsOpen(true); setSettingsOpen(false);
+                    show("Local job draft · not published"); return;
+                  }
+                  if (c.label === "Market") {
+                    setMarketComposeInitial(true); setMarketDraftsOpen(true); setSettingsOpen(false);
+                    show("Local listing draft · not published"); return;
                   }
                   go(c.tab);
                 }}
@@ -525,7 +443,7 @@ function KilodeApp() {
                   <Text style={s.meta}>
                     {c.label === "Track" && caps.musicReleaseManagement
                       ? "Local draft · upload when backend is live"
-                      : c.label === "Event" || c.label === "Job"
+                      : c.label === "Event" || c.label === "Job" || c.label === "Market"
                         ? "Local draft · not published"
                         : c.sub}
                   </Text>
