@@ -9,7 +9,7 @@ import { AuthProvider, useAuth } from "./lib/auth";
 import { fetchTakes, fetchRooms, fetchNews, fetchTracks, fetchActivity, postTake } from "./lib/api";
 import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
-import { MusicScreen } from "./screens/Music";
+import { MusicScreen as MusicIOSScreen } from "./screens/MusicIOS";
 import { HomeScreen } from "./screens/HomeIOS";
 import { SocialsScreen as SocialsIOSScreen } from "./screens/SocialsIOS";
 import { AuthScreen } from "./screens/Auth";
@@ -252,7 +252,7 @@ function KilodeApp() {
     if (tab === "myspace") return <MySpace />;
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} tracks={tracks} tracksSource={tracksSource} onBack={() => go("home")} show={show} onPlay={async (track) => { const r = await playMusicTrack(track); if (!r.ok) show(r.message || "Playback unavailable."); }} />;
+    if (tab === "music") return <MusicIOSScreen s={s} C={C} tracks={tracks} tracksSource={tracksSource} onBack={() => go("home")} show={show} onPlay={async (track) => { const r = await playMusicTrack(track); if (!r.ok) show(r.message || "Playback unavailable."); }} />;
     if (tab === "media") return <MediaScreen s={s} C={C} articles={news.map((n: any) => ({ id: n.id, title: n.title, kicker: n.kicker, time: n.time, tone: n.tone, body: n.summary || n.description, author: n.author || "Kilode Editorial", imageUrl: n.imageUrl }))} initialArticleId={selectedArticleId} onBack={() => { setSelectedArticleId(null); go("home"); }} show={show} />;
     if (DESKS.some((d) => d.id === tab)) return <Desk name={tab} />;
     return <Text style={s.sub}>Unknown tab</Text>;
