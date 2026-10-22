@@ -29,6 +29,7 @@ import {
   playTrackNext,
   removeQueuedTrack,
   moveQueuedTrack,
+  clearUpcomingTracks,
   type MusicPlayerState,
 } from "../lib/musicPlayer";
 
@@ -1040,6 +1041,19 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </TouchableOpacity>
             </View>
           </View>
+          {player.queue.length > 1 ? (
+            <View style={[s.padH, { alignItems: "flex-end", marginBottom: 8 }]}>
+              <TouchableOpacity
+                onPress={() => { clearUpcomingTracks(); show("Upcoming tracks cleared."); }}
+                accessibilityRole="button"
+                accessibilityLabel="Clear upcoming tracks"
+                style={[s.chip, { paddingHorizontal: 12 }]}
+              >
+                <Ionicons name="trash-outline" size={15} color={C.text2} />
+                <Text style={[s.chipText, { marginLeft: 6 }]}>Clear upcoming</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
           {player.queue.length ? player.queue.map((t: any, i: number) => (
             <View key={trackRenderKey(t, i, "queue-tab")} style={[s.roomRow, { alignItems: "center" }]}>
               <TouchableOpacity onPress={() => { void playQueue(player.queue, i); }} style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
