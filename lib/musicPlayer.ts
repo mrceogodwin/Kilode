@@ -301,17 +301,28 @@ export async function stopMusicPlayback(): Promise<void> {
 
 export async function playNextInQueue(): Promise<{ ok: boolean; message?: string }> {
   if (queue.length === 0 || index < 0) return { ok: false, message: "No queue." };
-  let nextIndex = index + 1;
+
+  let candidates: number[] = [];
   if (shuffle && queue.length > 1) {
-    const choices = queue.map((_, i) => i).filter((i) => i !== index);
-    nextIndex = choices[Math.floor(Math.random() * choices.length)];
-  } else if (nextIndex >= queue.length && repeat === "all") {
-    nextIndex = 0;
-  } else if (nextIndex >= queue.length) {
-    playing = false;
-    publish();
-    return { ok: false, message: "End of queue." };
+    candidates = queue.map((_, i) => i).filter((i) => i !== index);
+  } else {
+    candidates = queue.map((_, i) => i).filter((i) => i > index);
+    if (repeat === "all") candidates.push(...queue.map((_, i) => i).filter((i) => i <= index));
   }
+
+  // Do not advance the visible queue index onto an entry that cannot play.
+  // Search forward for the next playable track, preserving the current index
+  // if the remaining queue contains only metadata/sample entries.
+  const nextIndex = candidates.find((i) => !!getAudioUrl(queue[i]));
+  if (nextIndex === undefined) {
+    if (!candidates.length) {
+      playing = false;
+      publish();
+      return { ok: false, message: "End of queue." };
+    }
+    return { ok: false, message: "No playable audio source is available in the remaining queue." };
+  }
+
   index = nextIndex;
   return playMusicTrack(queue[index], { queue, index });
 }
@@ -319,14 +330,14 @@ export async function playNextInQueue(): Promise<{ ok: boolean; message?: string
 export async function playPreviousInQueue(): Promise<{ ok: boolean; message?: string }> {
   if (queue.length === 0 || index < 0) return { ok: false, message: "No queue." };
   if (positionMillis > 3000) return (await seekMusicTo(0)) ? { ok: true } : { ok: false, message: "Could not restart track." };
-  const prevIndex = index - 1;
-  if (prevIndex < 0) {
-    if (repeat === "all" && queue.length) {
-      index = queue.length - 1;
-      return playMusicTrack(queue[index], { queue, index });
-    }
-    return { ok: false, message: "Start of queue." };
+
+  const candidates = queue.map((_, i) => i).filter((i) => i < index).reverse();
+  if (repeat === "all") candidates.push(...queue.map((_, i) => i).filter((i) => i >= index).reverse());
+  const prevIndex = candidates.find((i) => !!getAudioUrl(queue[i]));
+  if (prevIndex === undefined) {
+    return { ok: false, message: candidates.length ? "No playable audio source is available earlier in the queue." : "Start of queue." };
   }
+
   index = prevIndex;
   return playMusicTrack(queue[index], { queue, index });
 }
