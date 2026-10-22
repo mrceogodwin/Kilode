@@ -491,7 +491,7 @@ function KilodeApp() {
                 { id: "myspace", label: "My Space", icon: "◍", blurb: "Your account and tools" },
                 { id: "settings", label: "Settings", icon: "⚙", blurb: "Preferences and account" },
               ].map((item) => (
-                <TouchableOpacity key={item.id} accessibilityRole="button" style={[s.roomRow, { marginBottom: 7, borderRadius: 15 }]} onPress={() => { setMoreOpen(false); if (item.id === "settings") { setSettingsOpen(true); } else if (item.id === "communities" || item.id === "creators") { setSocialSection(item.id); go("socials"); } else { go(item.id); } }}>
+                <TouchableOpacity key={item.id} accessibilityRole="button" style={[s.roomRow, { marginBottom: 7, borderRadius: 15 }]} onPress={() => { setMoreOpen(false); if (item.id === "settings") { setSettingsOpen(true); } else if (item.id === "communities" || item.id === "creators") { setSocialSection(item.id as "communities" | "creators"); go("socials"); } else { go(item.id); } }}>
                   <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "#302A1B" : "#F7F0D8", borderWidth: 1, borderColor: C.border, marginRight: 12 }}><Text style={{ color: C.accent, fontSize: 19, fontWeight: "700" }}>{item.icon}</Text></View>
                   <View style={s.flex}><Text style={s.roomName}>{item.label}</Text><Text style={s.meta}>{item.blurb}</Text></View>
                   <Text style={[s.meta, { fontSize: 18, marginLeft: 6 }]}>›</Text>
