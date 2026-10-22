@@ -1,36 +1,51 @@
-# Kilode feature status (code inspection)
+# Kilode feature status (native repository inspection)
 
-Latest audit of `main`. Status legend:
+This is a code-inspection audit, not a claim of complete production readiness. Automated bundle checks are not the same as testing on a physical iPhone or verifying live backend/payment workflows.
 
-- **VERIFIED WORKING** — implemented and logically consistent in code (not device E2E here)
-- **PARTIALLY IMPLEMENTED** — real UI + partial logic
-- **UI ONLY** — screen/list exists, seed or no backend
-- **NOT IMPLEMENTED**
-- **BLOCKED** — needs external access
+Status legend:
+- **VERIFIED IN CODE** — source behavior or invariant checked; not physical-device E2E
+- **PARTIALLY IMPLEMENTED** — UI plus partial/local logic
+- **UI ONLY / SEED** — interface exists, but uses seed data or lacks a connected backend
+- **NOT IMPLEMENTED** — no complete feature found in the native source
+- **BLOCKED / UNVERIFIED** — requires backend credentials, external setup, or device/build verification
 
-| System | Status | Evidence |
-|--------|--------|----------|
-| Home hybrid feed | PARTIALLY | `KilodeRoot` Home: carousel, chips, grid, news, rooms, takes |
-| Media / news | UI ONLY | News cards + desk; no article reader backend |
-| Socials | PARTIALLY | Composer, likes local, comments sheet, postTake API path |
-| Music | UI ONLY | `screens/Music.tsx` + tracks seed |
-| Push Link | NOT IMPLEMENTED | |
-| Events | UI ONLY | Desk + `LISTINGS` seed |
-| Market | UI ONLY | Desk seed |
-| Jobs | UI ONLY | Desk seed |
-| Communities | UI ONLY | Desk seed |
-| Ads / business | NOT IMPLEMENTED | |
-| Cinema | UI ONLY | `screens/Cinema.tsx` |
-| Creators | UI ONLY | Desk seed |
-| My Space | PARTIALLY | Profile, wallet placeholder, settings entry |
-| Auth | PARTIALLY | Guest + local sign-in/up; Google stub; no password reset |
-| Report / block | PARTIALLY | `lib/moderation.ts` local |
-| Account deletion | PARTIALLY | Settings UI + local session clear |
-| Notifications | UI ONLY | Activity list seed |
-| Chat / messaging | UI ONLY | `screens/Chat.tsx` |
-| Search | NOT IMPLEMENTED | |
-| Payments | NOT IMPLEMENTED | Assess before integrate |
-| Live API | BLOCKED | `/api/mobile/*` 406 on production host |
-| EAS / TestFlight | BLOCKED | Needs `eas login` as mudino |
+| System / capability | Current assessment | Notes |
+|---|---|---|
+| Home hybrid discovery | PARTIALLY IMPLEMENTED | Native feed combines carousel, chips, discovery cards, news, rooms and posts; seed fallback remains |
+| Media / news | UI ONLY / SEED | News cards exist; a complete live article-reader/publishing backend is not verified |
+| Socials | PARTIALLY IMPLEMENTED | Composer, post actions and comments UI exist; likes/follows/join states include local behavior; live persistence is not verified |
+| Creators | SOCIALS SECTION | Creator discovery belongs inside Socials; not a separate top-level system or account kind |
+| Communities | SOCIALS SECTION | Community discovery belongs inside Socials; joining/persistence is not verified live |
+| Music | UI ONLY / SEED | Track catalogue is seeded; real audio streaming and release upload/payment workflows are not verified |
+| Artist upload monetisation | DOCUMENTED, NOT IMPLEMENTED | Release-credit/subscription architecture documented in `docs/ARTIST_UPLOADS_MONETISATION.md` |
+| Push Link | NOT IMPLEMENTED | Paid promotion lifecycle, checkout, review, activation and reporting are not connected |
+| Events | UI ONLY / SEED | Desk exists; live event creation/RSVP persistence is not verified |
+| Market | UI ONLY / SEED | Desk exists; live listings, orders, payments and dispute workflows are not verified |
+| Jobs | UI ONLY / SEED | Desk exists; live posting, applications and recruitment workflows are not verified |
+| Ads / business | NOT IMPLEMENTED / INCOMPLETE | Desk entry exists in seed navigation; actual campaign backend, billing, review and reporting are not verified |
+| Cinema | UI ONLY / SEED | Screen exists; live content hosting, rights and payment workflows are not verified |
+| My Space | PARTIALLY IMPLEMENTED | Profile, settings, wallet placeholder and account-aware workspace shortcuts exist; wallet is not a live balance |
+| Ten public account kinds | VERIFIED IN CODE | Stable IDs and typed capability map exist; shortcut relevance is not authorization |
+| Account-specific server permissions | NOT VERIFIED | Must be enforced by the dedicated backend, not just native UI |
+| Upgrade / paid entitlements | NOT IMPLEMENTED | Exact plans, prices, quotas, checkout and entitlement enforcement are not connected |
+| Authentication | PARTIALLY IMPLEMENTED | Guest mode works locally; real sign-in/sign-up requires a dedicated API and valid server-issued session |
+| Password reset / Google sign-in | NOT IMPLEMENTED / STUB | No complete verified production flow |
+| Report / block | PARTIALLY IMPLEMENTED | Local moderation helpers; backend enforcement is not verified |
+| Account deletion | PARTIALLY IMPLEMENTED | Local session clear exists; server-side deletion and retention workflow are not verified |
+| Notifications | UI ONLY / SEED | Activity list exists; push delivery and durable notification service are not verified |
+| Chat / messaging | UI ONLY / SEED | Screen exists; durable real-time messaging is not verified |
+| Search | NOT IMPLEMENTED | Complete native search flow/API not verified |
+| Payments | NOT IMPLEMENTED | Do not show purchase success or grant entitlements until verified |
+| Dedicated mobile API | BLOCKED | Previous production `/api/mobile/*` probes returned 406; no working dedicated native backend is verified |
+| EAS / TestFlight | BLOCKED / UNVERIFIED | Workflow needs valid EAS setup and secrets; no installable TestFlight build is verified here |
+| Welcome video background | NOT VERIFIED | Desired launch/auth flow must be checked on a real iPhone; do not claim the video experience is finished based on web preview |
 
-Web preview branch: `preview/web` (Expo web export). Staging URL may require Vercel auth.
+## Architecture guardrails
+
+- Native Expo React Native iOS is the product source of truth; web preview is only a mirror.
+- Do not point the native app at `kilode-v2` or `kilode-nine.vercel.app` as if either were a dedicated mobile JSON backend.
+- Preserve the ten account-kind IDs. Do not add Creators or Communities as public account types; they are Socials sections.
+- Super Admin is a protected staff permission, not a public registration choice.
+- Do not treat seeded content, local toggles, or UI placeholders as live backend functionality.
+- Account workspace shortcuts are convenience navigation only. The backend must independently enforce permissions, ownership, quotas and paid entitlements.
+- Run typecheck, account-capability invariants, Expo Doctor and iOS bundle export against the exact commit. Separately verify physical-device behavior, EAS/TestFlight, backend and payments before marking those items complete.
