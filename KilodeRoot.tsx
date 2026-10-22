@@ -540,7 +540,7 @@ function KilodeApp() {
     finally { setRefreshing(false); }
   };
 
-  if (session && (authLoading || boot)) {
+  if (session && !isDeviceSession(session as any) && (authLoading || boot)) {
     return (<SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}><ActivityIndicator color={C.accent} size="large" /><Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text></SafeAreaView>);
   }
   if (session && !launchIntroDone) {
