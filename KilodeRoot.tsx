@@ -21,6 +21,7 @@ import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
 import { getAccountCapabilities } from "./lib/accountCapabilities";
+import { playMusicTrack, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
 
 function KilodeApp() {
   const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
@@ -53,6 +54,7 @@ function KilodeApp() {
   const [tracks, setTracks] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
+  const [musicPlaying, setMusicPlaying] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDeskItem, setSelectedDeskItem] = useState<any | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
@@ -65,6 +67,11 @@ function KilodeApp() {
   const go = (t: string) => {
     setTab(t); setMoreOpen(false); setCreateOpen(false); setComposeOpen(false); setSettingsOpen(false); setSelectedDeskItem(null); setSelectedProfile(null); setSelectedPost(null);
   };
+
+  useEffect(() => {
+    const unsubscribe = subscribeMusicPlayer((track, playing) => { setNowPlaying(track); setMusicPlaying(playing); });
+    return () => { unsubscribe(); };
+  }, []);
 
   const loadAll = useCallback(async () => {
     const [t, r, n, tr, a] = await Promise.all([fetchTakes(), fetchRooms(), fetchNews(), fetchTracks(), fetchActivity()]);
@@ -529,7 +536,7 @@ function KilodeApp() {
     if (tab === "myspace") return <MySpace />;
     if (tab === "chat") return <ChatScreen s={s} C={C} onBack={() => go("home")} show={show} />;
     if (tab === "cinema") return <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
-    if (tab === "music") return <MusicScreen s={s} C={C} onBack={() => go("home")} show={show} onPlay={setNowPlaying} />;
+    if (tab === "music") return <MusicScreen s={s} C={C} tracks={tracks} onBack={() => go("home")} show={show} onPlay={async (track) => { const result = await playMusicTrack(track); if (!result.ok) show(result.message || "Playback unavailable."); }} />;
     if (tab === "media") return (
       <MediaScreen
         s={s}
@@ -571,8 +578,9 @@ function KilodeApp() {
       {nowPlaying ? (
         <View style={s.player}>
           <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
-          <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist ? `${nowPlaying.artist} · audio unavailable` : "Audio unavailable · preview catalogue"}</Text></View>
-          <TouchableOpacity onPress={() => setNowPlaying(null)}><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
+          <View style={s.flex}><Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text><Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist || "Kilode artist"}</Text></View>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={musicPlaying ? "Pause music" : "Resume music"} onPress={() => { void toggleMusicPlayback(); }}><Text style={s.playerBtn}>{musicPlaying ? "Ⅱ" : "▶"}</Text></TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Stop music" onPress={() => { void stopMusicPlayback(); }}><Text style={s.playerBtn}>✕</Text></TouchableOpacity>
         </View>
       ) : null}
       <KilodeTabBar
