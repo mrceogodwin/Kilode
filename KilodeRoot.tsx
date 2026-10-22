@@ -101,7 +101,7 @@ function KilodeApp() {
 
   const onRefresh = async () => { setRefreshing(true); await loadAll(); setRefreshing(false); show(source === "error" ? "Backend offline · seed" : "Refreshed"); };
 
-  if (boot || authLoading) {
+  if (authLoading) {
     return (
       <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator color={C.accent} size="large" />
@@ -110,6 +110,8 @@ function KilodeApp() {
     );
   }
 
+  // Keep the welcome/entry screen independent of feed API loading. A slow or
+  // unavailable content service must not hide the first screen at app launch.
   if (!session) {
     return (
       <AuthScreen
@@ -120,6 +122,15 @@ function KilodeApp() {
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
         show={show}
       />
+    );
+  }
+
+  if (boot) {
+    return (
+      <SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}>
+        <ActivityIndicator color={C.accent} size="large" />
+        <Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text>
+      </SafeAreaView>
     );
   }
 
