@@ -6,8 +6,8 @@
  * Product note (see docs/ARTIST_UPLOADS_MONETISATION.md):
  * - A "release" is Kilode Music hosting, not a Socials audio post.
  * - releaseType (single | ep | album) is metadata for the future multi-track pipeline.
- * - Today each local draft is still one form: one title block. EP/Album tracklists
- *   and multi-file upload are not implemented until the dedicated music API exists.
+ * - localAudioUri is a device file reference only — not uploaded to any server.
+ * - EP/Album tracklists and multi-file upload are not implemented until the music API exists.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -35,6 +35,10 @@ export type ArtistReleaseDraft = {
   notes: string;
   /** Intended package type; EP/Album tracklists are not built yet */
   releaseType: ReleaseType;
+  /** Device-local file URI from document picker — never implies server storage */
+  localAudioUri: string | null;
+  /** Display name of the picked file (filename only) */
+  localAudioName: string | null;
   rightsAcknowledged: boolean;
   rightsVersion: string;
   status: ReleaseStatus;
@@ -55,16 +59,23 @@ function asReleaseType(value: unknown): ReleaseType {
   return "single";
 }
 
+function asNullableString(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return null;
+}
+
 export async function listReleaseDrafts(): Promise<ArtistReleaseDraft[]> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Migrate older drafts that predate releaseType
+    // Migrate older drafts that predate releaseType / local audio fields
     return parsed.map((d: any) => ({
       ...d,
       releaseType: asReleaseType(d?.releaseType),
+      localAudioUri: asNullableString(d?.localAudioUri),
+      localAudioName: asNullableString(d?.localAudioName),
       localOnly: true as const,
     }));
   } catch {
@@ -82,6 +93,8 @@ export type CreateDraftInput = {
   genre: string;
   notes?: string;
   releaseType?: ReleaseType;
+  localAudioUri?: string | null;
+  localAudioName?: string | null;
   rightsAcknowledged: boolean;
 };
 
@@ -107,6 +120,8 @@ export async function createReleaseDraft(
     genre: genre || "Afrobeats",
     notes: (input.notes || "").trim(),
     releaseType,
+    localAudioUri: asNullableString(input.localAudioUri),
+    localAudioName: asNullableString(input.localAudioName),
     rightsAcknowledged: true,
     rightsVersion: RIGHTS_VERSION,
     status: "local_draft",
@@ -126,7 +141,14 @@ export async function updateReleaseDraft(
   patch: Partial<
     Pick<
       ArtistReleaseDraft,
-      "title" | "artistName" | "genre" | "notes" | "releaseType" | "rightsAcknowledged"
+      | "title"
+      | "artistName"
+      | "genre"
+      | "notes"
+      | "releaseType"
+      | "localAudioUri"
+      | "localAudioName"
+      | "rightsAcknowledged"
     >
   >
 ): Promise<{ ok: true; draft: ArtistReleaseDraft } | { ok: false; message: string }> {
@@ -143,6 +165,14 @@ export async function updateReleaseDraft(
     notes: patch.notes !== undefined ? String(patch.notes).trim() : current.notes,
     releaseType:
       patch.releaseType !== undefined ? asReleaseType(patch.releaseType) : current.releaseType,
+    localAudioUri:
+      patch.localAudioUri !== undefined
+        ? asNullableString(patch.localAudioUri)
+        : current.localAudioUri,
+    localAudioName:
+      patch.localAudioName !== undefined
+        ? asNullableString(patch.localAudioName)
+        : current.localAudioName,
     rightsAcknowledged:
       patch.rightsAcknowledged !== undefined ? !!patch.rightsAcknowledged : current.rightsAcknowledged,
     updatedAt: new Date().toISOString(),
