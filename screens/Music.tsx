@@ -206,56 +206,108 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     const artistTracks = tracks.filter(
       (t: any) => String(t.artist || "").toLowerCase() === String(activeArtist.name).toLowerCase()
     );
+    const pinnedTracks = artistTracks.slice(0, 3);
+    const profileTracks = artistTracks.length ? artistTracks : tracks.slice(0, 5);
     return (
-      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad}>
+      <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
         <View style={s.padH}>
-          <TouchableOpacity onPress={() => setActiveArtist(null)} style={{ marginBottom: 12 }} accessibilityRole="button">
+          <TouchableOpacity onPress={() => setActiveArtist(null)} style={{ marginBottom: 14 }} accessibilityRole="button">
             <Text style={s.link}>‹ Back to Music</Text>
           </TouchableOpacity>
-          <View
-            style={{
-              width: 76,
-              height: 76,
-              borderRadius: 38,
-              backgroundColor: activeArtist.color || C.accent,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 14,
-            }}
-          >
-            <Ionicons name="person" size={34} color="#fff" />
+
+          <View style={{
+            minHeight: 220, borderRadius: 24, padding: 20, overflow: "hidden",
+            backgroundColor: activeArtist.color || "#5B21B6", justifyContent: "flex-end",
+            borderWidth: 1, borderColor: "rgba(255,255,255,0.14)",
+          }}>
+            <View style={{ position: "absolute", right: -24, top: -35, width: 180, height: 180, borderRadius: 90, backgroundColor: "rgba(255,255,255,0.12)" }} />
+            <View style={{ position: "absolute", right: 26, top: 24, width: 92, height: 92, borderRadius: 46, backgroundColor: "rgba(0,0,0,0.18)", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="musical-notes" size={38} color="#fff" />
+            </View>
+            <Text style={{ color: "#F5D778", fontSize: 11, fontWeight: "700", letterSpacing: 1.5, marginBottom: 8 }}>KILODE ARTIST</Text>
+            <Text style={{ color: "#fff", fontSize: 30, lineHeight: 36, fontWeight: "800" }}>{activeArtist.name}</Text>
+            <Text style={{ color: "rgba(255,255,255,0.82)", fontSize: 13, marginTop: 5 }}>{activeArtist.meta}</Text>
+            <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 10 }}>{artistTracks.length} tracks in catalogue</Text>
           </View>
-          <Text style={s.h1}>{activeArtist.name}</Text>
-          <Text style={s.sub}>{activeArtist.meta}</Text>
+
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 16, marginBottom: 24 }}>
+            <TouchableOpacity
+              onPress={() => profileTracks.length ? playQueue(profileTracks, 0) : show("No playable tracks are available yet.")}
+              style={{ flex: 1, minHeight: 46, borderRadius: 24, backgroundColor: C.accent, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14 }}
+              accessibilityRole="button"
+            >
+              <Ionicons name="play" size={18} color="#171717" />
+              <Text style={{ color: "#171717", fontWeight: "800", marginLeft: 8 }}>Play artist</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => show("Artist following will be available when artist accounts are connected.")}
+              style={{ flex: 1, minHeight: 46, borderRadius: 24, borderWidth: 1, borderColor: C.border || "#2A2A30", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14 }}
+              accessibilityRole="button"
+            >
+              <Ionicons name="person-add-outline" size={17} color={C.text} />
+              <Text style={{ color: C.text, fontWeight: "700", marginLeft: 7 }}>Follow</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Tracks</Text>
+            <Text style={s.sectionTitle}>Pinned tracks</Text>
           </View>
-          {artistTracks.length ? (
-            artistTracks.map((t: any, i: number) => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
+            {(pinnedTracks.length ? pinnedTracks : profileTracks.slice(0, 3)).map((t: any, i: number) => (
               <TouchableOpacity
                 key={t.id}
-                style={s.roomRow}
+                style={[s.trackCard, { width: 136, height: 154, backgroundColor: t.color || [ "#7C3AED", "#B45309", "#BE185D" ][i % 3] }]}
                 onPress={() => selectTrack(t)}
-                onLongPress={() => playQueue(artistTracks, i)}
+                onLongPress={() => playQueue(profileTracks, Math.max(0, profileTracks.findIndex((x: any) => String(x.id) === String(t.id))))}
+                accessibilityRole="button"
               >
-                <Ionicons name="musical-note" size={20} color={C.accent} />
-                <View style={[s.flex, { marginLeft: 12 }]}>
-                  <Text style={s.roomName}>{t.title}</Text>
-                  <Text style={s.meta}>{t.artist}</Text>
+                <View style={{ width: 54, height: 54, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.18)", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                  <Ionicons name="musical-notes" size={24} color="#fff" />
                 </View>
-                <TouchableOpacity onPress={() => onToggleSave(t)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Ionicons
-                    name={isSaved(t.id) ? "heart" : "heart-outline"}
-                    size={20}
-                    color={isSaved(t.id) ? C.danger : C.text3}
-                  />
-                </TouchableOpacity>
-                <Ionicons name="chevron-forward" size={18} color={C.text3} style={{ marginLeft: 8 }} />
+                <Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text>
+                <Text style={s.trackArtist} numberOfLines={1}>{activeArtist.name}</Text>
               </TouchableOpacity>
-            ))
-          ) : (
-            <Text style={[s.sub, s.padH]}>No tracks from this artist are in the current catalogue yet.</Text>
-          )}
+            ))}
+          </ScrollView>
+
+          <View style={s.sectionHead}>
+            <Text style={s.sectionTitle}>Top songs</Text>
+          </View>
+          {profileTracks.slice(0, 5).map((t: any, i: number) => (
+            <TouchableOpacity key={t.id} style={s.roomRow} onPress={() => selectTrack(t)} onLongPress={() => playQueue(profileTracks, i)} accessibilityRole="button">
+              <View style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: t.color || activeArtist.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="musical-note" size={20} color="#fff" />
+              </View>
+              <View style={[s.flex, { marginLeft: 12 }]}>
+                <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                <Text style={s.meta} numberOfLines={1}>{activeArtist.name}{t.genre ? " · " + t.genre : ""}</Text>
+              </View>
+              <TouchableOpacity onPress={() => onToggleSave(t)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel={isSaved(t.id) ? "Remove saved track" : "Save track"}>
+                <Ionicons name={isSaved(t.id) ? "heart" : "heart-outline"} size={20} color={isSaved(t.id) ? C.danger : C.text3} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => selectTrack(t)} style={{ marginLeft: 14 }} accessibilityRole="button" accessibilityLabel={"Open " + t.title}>
+                <Ionicons name="ellipsis-horizontal" size={20} color={C.text3} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+
+          <View style={s.sectionHead}>
+            <Text style={s.sectionTitle}>Albums & releases</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tracksRow}>
+            {profileTracks.slice(0, 4).map((t: any, i: number) => (
+              <TouchableOpacity key={"release-" + t.id} style={{ width: 142 }} onPress={() => selectTrack(t)} accessibilityRole="button">
+                <View style={{ height: 142, borderRadius: 16, backgroundColor: t.color || activeArtist.color || C.elevated, alignItems: "center", justifyContent: "center", marginBottom: 9 }}>
+                  <Ionicons name={i % 2 ? "disc-outline" : "albums-outline"} size={42} color="#fff" />
+                </View>
+                <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                <Text style={s.meta} numberOfLines={1}>Single · {activeArtist.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <Text style={[s.meta, { marginTop: 18, marginBottom: 20 }]}>
+            Artist profiles, follows and release artwork will connect to verified artist data as the Kilode Music API is completed.
+          </Text>
         </View>
       </ScrollView>
     );
