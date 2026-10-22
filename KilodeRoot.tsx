@@ -174,12 +174,12 @@ function KilodeApp() {
 
   useEffect(() => {
     if (!moreOpen) return;
-    drawerTranslateX.setValue(Dimensions.get("window").width);
+    drawerTranslateX.setValue(-Dimensions.get("window").width);
     Animated.timing(drawerTranslateX, { toValue: 0, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
   }, [moreOpen, drawerTranslateX]);
 
   const closeMoreDrawer = useCallback(() => {
-    Animated.timing(drawerTranslateX, { toValue: Dimensions.get("window").width, duration: 180, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
+    Animated.timing(drawerTranslateX, { toValue: -Dimensions.get("window").width, duration: 180, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
       if (finished) setMoreOpen(false);
     });
   }, [drawerTranslateX]);
@@ -790,7 +790,7 @@ function KilodeApp() {
       {...edgeSwipeResponder.panHandlers}
     >
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={C.bg} />
-      {!moreOpen ? <Header title={headerTitle} /> : null}
+      <Header title={headerTitle} />
       <View style={s.flex}>{body()}</View>
       {nowPlaying ? (
         <View style={[s.player, { gap: 10 }]}>
@@ -814,15 +814,13 @@ function KilodeApp() {
           <TouchableOpacity onPress={async () => { if (soundRef.current) { await soundRef.current.stopAsync().catch(() => undefined); await soundRef.current.unloadAsync().catch(() => undefined); soundRef.current = null; } setNowPlaying(null); setIsPlaying(false); setPlaybackProgress(0); }} accessibilityRole="button" accessibilityLabel="Close player"><Ionicons name="close" size={18} color={C.text2} /></TouchableOpacity>
         </View>
       ) : null}
-      {!moreOpen ? (
-              <KilodeTabBar
-                active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
-                onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
-                onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
-                isDark={isDark}
-                accent={C.accent}
-              />
-      ) : null}
+      <KilodeTabBar
+        active={tab === "home" ? "home" : tab === "media" ? "media" : tab === "socials" ? "socials" : tab === "myspace" ? "myspace" : "more"}
+        onTab={(id) => { if (id === "more") { setMoreOpen(true); return; } go(id); }}
+        onCreate={() => { setCreateContext(tab); setCreateOpen(true); }}
+        isDark={isDark}
+        accent={C.accent}
+      />
       <Modal visible={composeOpen} transparent animationType="slide" onRequestClose={() => setComposeOpen(false)}>
         <View style={s.modalRoot}>
           <TouchableOpacity style={s.scrim} activeOpacity={1} onPress={() => setComposeOpen(false)} />
@@ -868,9 +866,8 @@ function KilodeApp() {
         </View>
       </Modal>
       <Modal visible={moreOpen} transparent animationType="none" statusBarTranslucent onRequestClose={closeMoreDrawer}>
-        <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-end", padding: 0, backgroundColor: "transparent" }]}>
-          <TouchableOpacity style={[s.scrim, { backgroundColor: "rgba(0,0,0,0.62)" }]} activeOpacity={1} onPress={closeMoreDrawer} accessibilityLabel="Close navigation drawer" />
-          <Animated.View style={{ width: "88%", maxWidth: 390, height: "100%", paddingTop: Platform.OS === "ios" ? 58 : 32, paddingHorizontal: 20, paddingBottom: Platform.OS === "ios" ? 30 : 18, backgroundColor: C.bg, borderLeftWidth: 1, borderLeftColor: C.border, transform: [{ translateX: drawerTranslateX }] }}>
+        <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-start", paddingTop: Platform.OS === "ios" ? 92 : 68, paddingBottom: Platform.OS === "ios" ? 94 : 72, paddingHorizontal: 0, backgroundColor: "transparent" }]}>
+          <Animated.View style={{ width: "78%", maxWidth: 320, height: "100%", paddingTop: 16, paddingHorizontal: 18, paddingBottom: 14, backgroundColor: C.bg, borderRightWidth: 1, borderRightColor: C.border, transform: [{ translateX: drawerTranslateX }] }>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <KilodeWordmark size="small" />
@@ -921,6 +918,7 @@ function KilodeApp() {
               </View>
             </ScrollView>
           </Animated.View>
+          <TouchableOpacity style={[s.scrim, { flex: 1, backgroundColor: "rgba(0,0,0,0.48)" }]} activeOpacity={1} onPress={closeMoreDrawer} accessibilityLabel="Close navigation drawer" />
         </View>
       </Modal>
       <Modal visible={profileEditorOpen} transparent animationType="slide" onRequestClose={() => setProfileEditorOpen(false)}>
