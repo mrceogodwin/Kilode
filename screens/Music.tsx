@@ -436,8 +436,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
                 <Text style={s.meta} numberOfLines={1}>{activeArtist.name}{t.genre ? " · " + t.genre : ""}</Text>
               </View>
-              <TouchableOpacity onPress={() => onToggleSave(t)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel={isSaved(t.id) ? "Remove saved track" : "Save track"}>
-                <Ionicons name={isSaved(t.id) ? "heart" : "heart-outline"} size={20} color={isSaved(t.id) ? C.danger : C.text3} />
+              <TouchableOpacity onPress={() => onToggleSave(t)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel={isSaved(t) ? "Remove saved track" : "Save track"}>
+                <Ionicons name={isSaved(t) ? "heart" : "heart-outline"} size={20} color={isSaved(t) ? C.danger : C.text3} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => selectTrack(t)} style={{ marginLeft: 14 }} accessibilityRole="button" accessibilityLabel={"Open " + t.title}>
                 <Ionicons name="ellipsis-horizontal" size={20} color={C.text3} />
@@ -645,8 +645,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
                   <Text style={s.meta} numberOfLines={1}>{t.artist}{t.genre ? " · " + t.genre : ""}</Text>
                 </View>
-                <TouchableOpacity onPress={() => onToggleSave(t)} accessibilityRole="button" accessibilityLabel={isSaved(t.id) ? "Remove saved track" : "Save track"}>
-                  <Ionicons name={isSaved(t.id) ? "heart" : "heart-outline"} size={20} color={isSaved(t.id) ? C.danger : C.text3} />
+                <TouchableOpacity onPress={() => onToggleSave(t)} accessibilityRole="button" accessibilityLabel={isSaved(t) ? "Remove saved track" : "Save track"}>
+                  <Ionicons name={isSaved(t) ? "heart" : "heart-outline"} size={20} color={isSaved(t) ? C.danger : C.text3} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => playQueue(results, i)} style={{ marginLeft: 14 }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
                   <Ionicons name="play-circle" size={26} color={C.accent} />
