@@ -68,17 +68,27 @@ export async function isTrackSaved(id: string): Promise<boolean> {
   return list.some((t) => t.id === String(id));
 }
 
+function trackIdentity(track: any): string {
+  const normalized = normalize(track);
+  if (normalized.id) return normalized.id;
+  const title = String(normalized.title ?? "").trim().toLocaleLowerCase();
+  const artist = String(normalized.artist ?? "").trim().toLocaleLowerCase();
+  return title && artist ? `metadata:${title}::${artist}` : "";
+}
+
 export async function toggleSavedTrack(track: any): Promise<{ saved: boolean; list: LibraryTrack[] }> {
   const list = await getSavedTracks();
-  const id = String(track?.id ?? "");
-  const idx = list.findIndex((t) => t.id === id);
+  const normalized = normalize(track);
+  const id = trackIdentity(track);
+  if (!id) throw new Error("This track needs a title and artist before it can be saved.");
+  const idx = list.findIndex((t) => trackIdentity(t) === id);
   let next: LibraryTrack[];
   let saved: boolean;
   if (idx >= 0) {
     next = list.filter((_, i) => i !== idx);
     saved = false;
   } else {
-    next = [normalize(track), ...list.filter((t) => t.id !== id)];
+    next = [normalized, ...list.filter((t) => trackIdentity(t) !== id)];
     saved = true;
   }
   await writeList(SAVED_KEY, next);
@@ -87,8 +97,10 @@ export async function toggleSavedTrack(track: any): Promise<{ saved: boolean; li
 
 export async function addRecentTrack(track: any): Promise<LibraryTrack[]> {
   const list = await getRecentTracks();
-  const id = String(track?.id ?? "");
-  const next = [normalize(track), ...list.filter((t) => t.id !== id)].slice(0, MAX_RECENT);
+  const normalized = normalize(track);
+  const id = trackIdentity(track);
+  if (!id) return list;
+  const next = [normalized, ...list.filter((t) => trackIdentity(t) !== id)].slice(0, MAX_RECENT);
   await writeList(RECENT_KEY, next);
   return next;
 }
@@ -154,11 +166,13 @@ export async function deleteMusicPlaylist(id: string): Promise<MusicPlaylist[]> 
 }
 
 export async function addTrackToMusicPlaylist(id: string, track: any): Promise<MusicPlaylist[]> {
-  if (!track?.id) throw new Error("This track cannot be added yet.");
+  const normalized = normalize(track);
+  const identity = trackIdentity(track);
+  if (!identity) throw new Error("This track needs a title and artist before it can be added.");
   const playlists = await getMusicPlaylists();
   const next = playlists.map((p) => p.id !== id ? p : {
     ...p,
-    tracks: p.tracks.some((t) => t.id === String(track.id)) ? p.tracks : [...p.tracks, normalize(track)],
+    tracks: p.tracks.some((t) => trackIdentity(t) === identity) ? p.tracks : [...p.tracks, normalized],
     updatedAt: Date.now(),
   });
   await writeMusicPlaylists(next);
