@@ -896,6 +896,10 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               </TouchableOpacity>
             ) : null}
             <TouchableOpacity accessibilityRole="button" accessibilityLabel={editingPlaylistId ? "Save playlist name" : "Create playlist"} onPress={async () => {
+              if (!playlistName.trim()) {
+                show(editingPlaylistId ? "Enter a playlist name." : "Enter a name for your new playlist.");
+                return;
+              }
               try {
                 if (editingPlaylistId) { setPlaylists(await renameMusicPlaylist(editingPlaylistId, playlistName)); show("Playlist renamed."); }
                 else { setPlaylists(await createMusicPlaylist(playlistName)); show("Playlist created."); }
