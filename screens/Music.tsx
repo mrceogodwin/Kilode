@@ -112,11 +112,16 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const usingPreviewCatalogue = !hasLiveTracks;
 
   const refreshLibrary = useCallback(async () => {
-    const [sList, rList, pList] = await Promise.all([getSavedTracks(), getRecentTracks(), getMusicPlaylists()]);
-    setSaved(sList);
-    setRecent(rList);
-    setPlaylists(pList);
-  }, []);
+    try {
+      const [sList, rList, pList] = await Promise.all([getSavedTracks(), getRecentTracks(), getMusicPlaylists()]);
+      setSaved(sList);
+      setRecent(rList);
+      setPlaylists(pList);
+    } catch {
+      // Storage errors should not become unhandled rejections during screen mount or refresh.
+      show("Your music library couldn't be loaded. Please try again.");
+    }
+  }, [show]);
 
   useEffect(() => {
     void refreshLibrary();
