@@ -20,7 +20,7 @@ import { DeskDetailScreen } from "./screens/DeskDetail";
 import { UserProfileScreen } from "./screens/UserProfile";
 import { PostDetailScreen } from "./screens/PostDetail";
 import { getAccountCapabilities } from "./lib/accountCapabilities";
-import { playMusicTrack, playNextInQueue, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback } from "./lib/musicPlayer";
+import { playMusicTrack, playNextInQueue, subscribeMusicPlayer, toggleMusicPlayback, stopMusicPlayback, type MusicPlayerState } from "./lib/musicPlayer";
 import { HomeScreen } from "./screens/HomeScreen";
 import { SocialsScreen } from "./screens/SocialsScreen";
 import { ArtistReleasesScreen } from "./screens/ArtistReleases";
@@ -68,6 +68,7 @@ function KilodeApp() {
   const [activity, setActivity] = useState<any[]>([]);
   const [nowPlaying, setNowPlaying] = useState<any | null>(null);
   const [musicPlaying, setMusicPlaying] = useState(false);
+  const [openMusicNowPlaying, setOpenMusicNowPlaying] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [artistReleasesOpen, setArtistReleasesOpen] = useState(false);
   const [artistComposeInitial, setArtistComposeInitial] = useState(false);
@@ -105,7 +106,10 @@ function KilodeApp() {
   };
 
   useEffect(() => {
-    const unsubscribe = subscribeMusicPlayer((track: any, playing: boolean) => { setNowPlaying(track); setMusicPlaying(playing); });
+    const unsubscribe = subscribeMusicPlayer((state: MusicPlayerState) => {
+      setNowPlaying(state.track);
+      setMusicPlaying(state.playing);
+    });
     return () => { unsubscribe(); };
   }, []);
 
@@ -333,7 +337,7 @@ function KilodeApp() {
     body = <CinemaScreen s={s} C={C} onBack={() => go("home")} show={show} />;
   } else if (tab === "music") {
     body = (
-      <MusicScreen s={s} C={C} tracks={tracks} tracksSource={tracksSource} onBack={() => go("home")} show={show} onPlay={async (track) => { const result = await playMusicTrack(track, { queue: tracks }); if (!result.ok) show(result.message || "Playback unavailable."); }} />
+      <MusicScreen s={s} C={C} tracks={tracks} tracksSource={tracksSource} onBack={() => go("home")} show={show} openNowPlaying={openMusicNowPlaying} onNowPlayingOpened={() => setOpenMusicNowPlaying(false)} onPlay={async (track) => { const result = await playMusicTrack(track, { queue: tracks }); if (!result.ok) show(result.message || "Playback unavailable."); }} />
     );
   } else if (tab === "media") {
     body = (
@@ -365,10 +369,10 @@ function KilodeApp() {
       {body}
       {nowPlaying ? (
         <View style={s.player}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open Music" onPress={() => go("music")}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open now playing" onPress={() => { setOpenMusicNowPlaying(true); go("music"); }}>
             <View style={[s.playerArt, { backgroundColor: nowPlaying.color || C.accent }]} />
           </TouchableOpacity>
-          <TouchableOpacity style={s.flex} accessibilityRole="button" accessibilityLabel="Open Music" onPress={() => go("music")}>
+          <TouchableOpacity style={s.flex} accessibilityRole="button" accessibilityLabel="Open now playing" onPress={() => { setOpenMusicNowPlaying(true); go("music"); }}>
             <Text style={s.playerTitle} numberOfLines={1}>{nowPlaying.title}</Text>
             <Text style={s.playerSub} numberOfLines={1}>{nowPlaying.artist || "Kilode artist"}</Text>
           </TouchableOpacity>
