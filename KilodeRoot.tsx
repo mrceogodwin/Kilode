@@ -16,7 +16,6 @@ import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
 import { UpgradeScreen } from "./screens/Upgrade";
 import { AuthScreen } from "./screens/Auth";
-import { KilodeWordmark } from "./components/KilodeWordmark";
 import { MediaScreen } from "./screens/Media";
 import { HomeScreen } from "./screens/Home";
 import { SettingsScreen } from "./screens/Settings";
@@ -555,7 +554,7 @@ function KilodeApp() {
 
   const Header = ({ title }: { title?: string }) => (
     <View style={s.header}>
-      <View style={[s.headerLeft, { flexShrink: 1, minWidth: 0 }]}><KilodeWordmark size="small" />{title ? <Text style={[s.headerTitle, { fontSize: 12, marginLeft: 2, flexShrink: 1 }]} numberOfLines={1}>{title}</Text> : null}</View>
+      <View style={[s.headerLeft, { flexShrink: 1, minWidth: 0 }]}>{title ? <Text style={[s.headerTitle, { fontSize: 12, marginLeft: 2, flexShrink: 1 }]} numberOfLines={1}>{title}</Text> : null}</View>
       <View style={[s.headerRight, { gap: 6 }]}>
         <TouchableOpacity style={s.iconBtn} onPress={() => { if (tab !== "home") { go("home"); setHomeSearchOpen(true); return; } setHomeSearchOpen((open) => !open); }} accessibilityRole="button" accessibilityLabel="Search"><Ionicons name="search-outline" size={18} color={C.text} /></TouchableOpacity>
         <TouchableOpacity style={s.iconBtn} onPress={() => go("activity")} accessibilityLabel="Notifications"><Ionicons name="notifications-outline" size={18} color={C.text} /></TouchableOpacity>
@@ -869,12 +868,9 @@ function KilodeApp() {
         <View style={[s.modalRoot, { flexDirection: "row", justifyContent: "flex-start", paddingTop: Platform.OS === "ios" ? 92 : 68, paddingBottom: Platform.OS === "ios" ? 94 : 72, paddingHorizontal: 0, backgroundColor: "transparent" }]}>
           <Animated.View style={{ width: "78%", maxWidth: 320, height: "100%", paddingTop: 16, paddingHorizontal: 18, paddingBottom: 14, backgroundColor: C.bg, borderRightWidth: 1, borderRightColor: C.border, transform: [{ translateX: drawerTranslateX }] }>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.border }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                <KilodeWordmark size="small" />
-                <View>
-                  <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.5 }}>Explore</Text>
-                  <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }}>Everything in one place</Text>
-                </View>
+              <View>
+                <Text style={{ color: C.text, fontSize: 18, fontWeight: "800", letterSpacing: -0.5 }}>Explore</Text>
+                <Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }}>Everything in one place</Text>
               </View>
               <TouchableOpacity onPress={closeMoreDrawer} accessibilityRole="button" accessibilityLabel="Close navigation drawer" hitSlop={10} style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", backgroundColor: C.card }}>
                 <Ionicons name="close" size={20} color={C.text2} />
