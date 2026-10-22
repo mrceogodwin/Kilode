@@ -476,8 +476,37 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
 
       {tab === "discover" && (
         <>
+          <View style={[s.padH, { marginTop: 14 }]}>
+            <View style={{ minHeight: 174, borderRadius: 22, overflow: "hidden", padding: 18, justifyContent: "space-between", backgroundColor: "#211B16", borderWidth: 1, borderColor: "#51402A" }}>
+              <View style={{ position: "absolute", right: -20, top: -35, width: 170, height: 170, borderRadius: 85, backgroundColor: "rgba(212,175,55,0.16)" }} />
+              <View style={{ position: "absolute", right: 20, top: 24, width: 96, height: 96, borderRadius: 48, borderWidth: 1, borderColor: "rgba(229,193,88,0.35)", alignItems: "center", justifyContent: "center", transform: [{ rotate: "-14deg" }] }}>
+                <Ionicons name="musical-notes" size={42} color="#E5C158" />
+              </View>
+              <View>
+                <Text style={{ color: "#E5C158", fontSize: 10, fontWeight: "800", letterSpacing: 1.8 }}>KILODE MUSIC</Text>
+                <Text style={{ color: "#FFFFFF", fontSize: 25, lineHeight: 30, fontWeight: "800", maxWidth: "68%", marginTop: 8 }}>Your next sound starts here.</Text>
+                <Text style={{ color: "#BDB5A8", fontSize: 12, marginTop: 7, maxWidth: "65%" }}>Discover African music, new voices and fresh releases.</Text>
+              </View>
+              <TouchableOpacity onPress={() => { setTab("charts"); }} accessibilityRole="button" style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: "#E5C158", marginTop: 14 }}>
+                <Text style={{ color: "#17130B", fontSize: 12, fontWeight: "800" }}>Explore charts</Text>
+                <Ionicons name="arrow-forward" size={14} color="#17130B" style={{ marginLeft: 7 }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={s.sectionHead}>
+            <Text style={s.sectionTitle}>Find your sound</Text>
+            <TouchableOpacity onPress={() => setTab("genres")} accessibilityRole="button"><Text style={s.link}>All genres</Text></TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
+            {GENRES.map((g, i) => (
+              <TouchableOpacity key={g} onPress={() => setActiveGenre(g)} accessibilityRole="button" style={{ paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, backgroundColor: ["#292018", "#211D30", "#18272A", "#30221A", "#2B1D27"][i % 5], borderWidth: 1, borderColor: C.border || "#2A2A30" }}>
+                <Text style={{ color: C.text || "#FFFFFF", fontSize: 12, fontWeight: "700" }}>{g}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>New drops</Text>
+            <TouchableOpacity onPress={() => setTab("search")} accessibilityRole="button"><Text style={s.link}>Find music</Text></TouchableOpacity>
           </View>
           {tracks.length === 0 ? (
             <EmptyState
@@ -500,19 +529,31 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   accessibilityLabel={`Select ${t.title}`}
                 >
                   <Ionicons name="play" size={18} color="#fff" style={{ marginBottom: 6 }} />
-                  <Text style={s.trackTitle} numberOfLines={1}>
-                    {t.title}
-                  </Text>
-                  <Text style={s.trackArtist} numberOfLines={1}>
-                    {t.artist}
-                  </Text>
+                  <Text style={s.trackTitle} numberOfLines={1}>{t.title}</Text>
+                  <Text style={s.trackArtist} numberOfLines={1}>{t.artist}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           )}
           <Text style={[s.meta, s.padH, { marginTop: 12 }]}>
-            Tap for details · long-press to play in queue. Sample audio works offline.
+            {usingPreviewCatalogue ? "Preview catalogue · sample tracks, not live chart rankings." : "Connected catalogue · chart rankings depend on verified play data."}
           </Text>
+          <View style={s.sectionHead}>
+            <Text style={s.sectionTitle}>Kilode Top 50</Text>
+            <TouchableOpacity onPress={() => setTab("charts")} accessibilityRole="button"><Text style={s.link}>View chart</Text></TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={() => setTab("charts")} accessibilityRole="button" style={[s.padH, { marginTop: 2 }]}>
+            <View style={{ flexDirection: "row", alignItems: "center", borderRadius: 16, padding: 14, backgroundColor: C.elevated || "#18181C", borderWidth: 1, borderColor: C.border || "#2A2A30" }}>
+              <View style={{ width: 54, height: 54, borderRadius: 12, backgroundColor: "#3A2D13", alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="trending-up" size={25} color="#E5C158" />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={{ color: C.text || "#FFFFFF", fontWeight: "800", fontSize: 14 }}>The sounds moving now</Text>
+                <Text style={{ color: C.text3 || "#9A9A9E", fontSize: 11, marginTop: 4 }}>Rankings will be labelled sample until real play data is connected.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={C.text3 || "#9A9A9E"} />
+            </View>
+          </TouchableOpacity>
         </>
       )}
 
