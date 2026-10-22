@@ -17,7 +17,7 @@ Status legend:
 | Creators | SOCIALS SECTION | Creator discovery belongs inside Socials; not a separate top-level system or account kind |
 | Communities | SOCIALS SECTION | Community discovery belongs inside Socials; joining/persistence is not verified live |
 | Music | PARTIALLY IMPLEMENTED | Discover / Charts / Artists / Library / Genres; queue player (next/prev); saved + recent via AsyncStorage; seed tracks include sample audio for offline playback. Live catalogue/streaming API not connected |
-| Artist release drafts | PARTIALLY IMPLEMENTED | Local-only drafts with releaseType (single / ep / album), title, artist, genre, notes, rights ack; My Space + Create → Track for musicReleaseManagement. No multi-track files, no server upload, no credits, no publish |
+| Artist release drafts | PARTIALLY IMPLEMENTED | Local drafts: releaseType (single/ep/album), title, artist, genre, notes, optional localAudioUri (device file only via expo-document-picker), rights ack. My Space + Create → Track. No server upload, no credits, no publish |
 | Artist upload monetisation | DOCUMENTED, NOT IMPLEMENTED | Hybrid credit/subscription design in `docs/ARTIST_UPLOADS_MONETISATION.md` — no live prices, checkout, or earnings |
 | Push Link | NOT IMPLEMENTED | Paid promotion lifecycle, checkout, review, activation and reporting are not connected |
 | Events | UI ONLY / SEED | Desk exists; live event creation/RSVP persistence is not verified |
@@ -57,7 +57,8 @@ Status legend:
 - `lib/musicPlayer.ts` — expo-av, queue, next/prev, dual-signature subscribe
 - `screens/Music.tsx` — Discover / Charts / Artists / Library / Genres + track/artist/genre detail
 - Seed `TRACKS` include public sample audio URLs so playback works offline
-- `lib/artistReleases.ts` — local draft store; `releaseType`: single | ep | album
-- `screens/ArtistReleases.tsx` — type picker + form + list; rights declaration; `initialCompose` from Create → Track
+- `lib/artistReleases.ts` — local draft store; releaseType; optional localAudioUri / localAudioName
+- `screens/ArtistReleases.tsx` — type picker, document-picker attach, form, list; rights declaration
 - Create modal **Track** → Artist Releases compose when `musicReleaseManagement` is true
-- Live music API, multi-track EP/Album files, credits, checkout, royalties, and publish remain out of scope until dedicated backend is ready
+- `expo-document-picker` added for device file pick only — never claims server upload
+- Live music API, multi-track EP/Album, credits, checkout, royalties, and publish remain out of scope until dedicated backend is ready
