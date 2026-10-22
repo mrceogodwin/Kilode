@@ -137,7 +137,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     }
   }, [activeTrack, player.track]);
 
-  const isSaved = (id: string) => saved.some((t) => t.id === String(id));
+  const isSaved = (track: any) => saved.some((t) => sameTrack(t, track));
 
   const playQueue = async (list: any[], startIndex: number) => {
     const track = list[startIndex];
@@ -310,12 +310,12 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             accessibilityRole="button"
           >
             <Ionicons
-              name={isSaved(activeTrack.id) ? "heart" : "heart-outline"}
+              name={isSaved(activeTrack) ? "heart" : "heart-outline"}
               size={22}
-              color={isSaved(activeTrack.id) ? C.danger : C.accent}
+              color={isSaved(activeTrack) ? C.danger : C.accent}
             />
             <Text style={[s.roomName, { marginLeft: 12 }]}>
-              {isSaved(activeTrack.id) ? "Saved to Library" : "Save to Library"}
+              {isSaved(activeTrack) ? "Saved to Library" : "Save to Library"}
             </Text>
           </TouchableOpacity>
 
@@ -325,7 +325,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           </View>
           {queue.length ? queue.slice(upNextStart, upNextStart + 6).map((t: any, i: number) => (
             <TouchableOpacity
-              key={String(t.id) + "-queue"}
+              key={trackRenderKey(t, upNextStart + i, "up-next")}
               style={s.roomRow}
               onPress={() => playQueue(queue, upNextStart + i)}
               accessibilityRole="button"
