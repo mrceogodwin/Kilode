@@ -79,6 +79,18 @@ export async function createMusicPlaylist(name: string): Promise<MusicPlaylist[]
   if (list.some((p) => p.name.toLowerCase() === clean.toLowerCase())) return list;
   list.unshift({ id: `playlist-${Date.now()}`, name: clean, tracks: [], createdAt: new Date().toISOString() }); await writeMusicPlaylists(list); return list;
 }
+export async function renameMusicPlaylist(id: string, name: string): Promise<MusicPlaylist[]> {
+  const clean = name.trim().slice(0, 60);
+  if (!clean) return loadMusicPlaylists();
+  const list = await loadMusicPlaylists();
+  if (list.some((p) => p.id !== id && p.name.toLowerCase() === clean.toLowerCase())) {
+    throw new Error("A playlist with that name already exists.");
+  }
+  const playlist = list.find((p) => p.id === id);
+  if (playlist) playlist.name = clean;
+  await writeMusicPlaylists(list);
+  return list;
+}
 export async function deleteMusicPlaylist(id: string): Promise<MusicPlaylist[]> { const list = (await loadMusicPlaylists()).filter((p) => p.id !== id); await writeMusicPlaylists(list); return list; }
 export async function addTrackToMusicPlaylist(playlistId: string, track: LibraryTrack): Promise<MusicPlaylist[]> {
   const list = await loadMusicPlaylists(); const playlist = list.find((p) => p.id === playlistId); if (!playlist) return list;
