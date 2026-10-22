@@ -21,14 +21,16 @@ export type LibraryTrack = {
 };
 
 function normalize(track: any): LibraryTrack {
+  // Spread metadata first, then enforce canonical fields. Putting ...track last could
+  // overwrite the string ID with a number and break saved/recent/playlist comparisons.
   return {
+    ...track,
     id: String(track?.id ?? ""),
     title: String(track?.title ?? "Untitled"),
     artist: track?.artist ? String(track.artist) : undefined,
     color: track?.color,
-    audioUrl: track?.audioUrl || track?.audio_url || track?.streamUrl || track?.previewUrl,
+    audioUrl: track?.audioUrl || track?.audio_url || track?.streamUrl || track?.stream_url || track?.previewUrl || track?.preview_url,
     genre: track?.genre,
-    ...track,
   };
 }
 
