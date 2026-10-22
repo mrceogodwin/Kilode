@@ -11,6 +11,7 @@ import { ChatScreen } from "./screens/Chat";
 import { CinemaScreen } from "./screens/Cinema";
 import { MusicScreen } from "./screens/Music";
 import { HomeScreen } from "./screens/HomeIOS";
+import { SocialsScreen as SocialsIOSScreen } from "./screens/SocialsIOS";
 import { AuthScreen } from "./screens/Auth";
 import { CommentsSheet } from "./screens/Comments";
 import { KilodeTabBar } from "./components/ui";
@@ -162,76 +163,15 @@ function KilodeApp() {
   const rc = <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} colors={[C.accent]} />;
 
   const Socials = () => (
-    <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false} refreshControl={rc}>
-      <View style={s.padH}>
-        <Text style={s.h1}>Socials</Text>
-        <Text style={s.sub}>Feed, creators and communities.</Text>
-      </View>
-      <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, marginBottom: 14 }}>
-        {(["feed", "creators", "communities"] as const).map((id) => {
-          const active = socialSection === id;
-          const label = id === "feed" ? "Feed" : id === "creators" ? "Creators" : "Communities";
-          return (
-            <TouchableOpacity key={id} onPress={() => setSocialSection(id)} style={{ flex: 1, alignItems: "center", minHeight: 38, justifyContent: "center", borderRadius: 13, borderWidth: 1, borderColor: active ? C.accent : C.border, backgroundColor: active ? C.accent + "20" : C.card }}>
-              <Text style={{ color: active ? C.accent : C.text2, fontSize: 12, fontWeight: active ? "800" : "600" }}>{label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-      {socialSection === "feed" ? (
-        <>
-          <View style={s.composer}>
-            <View style={s.composerAv}><Text style={s.avatarText}>{(session.name || "K").slice(0, 1)}</Text></View>
-            <TouchableOpacity style={s.composerInput} onPress={() => setComposeOpen(true)}><Text style={s.composerPlaceholder}>What is happening in Naija?</Text></TouchableOpacity>
-            <TouchableOpacity style={s.postBtn} onPress={() => setComposeOpen(true)}><Text style={s.postBtnText}>Post</Text></TouchableOpacity>
-          </View>
-          {takes.filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || ""))).map((t: any) => (
-            <View key={t.id} style={s.postCard}>
-              <View style={s.postTop}>
-                <TouchableOpacity onPress={() => setSelectedProfile(t)}><View style={s.postAv}><Text style={s.avatarText}>{(t.name || "?").slice(0, 1)}</Text></View></TouchableOpacity>
-                <TouchableOpacity style={s.flex} onPress={() => setSelectedProfile(t)}>
-                  <View style={s.row}><Text style={s.postName}>{t.name}</Text>{t.verified ? <Text style={s.verified}>✓</Text> : null}</View>
-                  <Text style={s.meta}>@{t.handle} · {t.time} · {t.role}{t.localOnly ? " · on this device" : ""}</Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={s.postBody}>{t.text}</Text>
-              {t.mediaUrl ? <Image source={{ uri: t.mediaUrl }} style={s.postMedia} resizeMode="cover" /> : null}
-              <PostActions
-                liked={!!liked[t.id]}
-                likes={(t.likes || 0) + (liked[t.id] ? 1 : 0)}
-                comments={t.comments || 0}
-                accent={C.accent} danger={C.danger} muted={C.text2}
-                onLike={() => setLiked((prev) => ({ ...prev, [String(t.id)]: !prev[String(t.id)] }))}
-                onComment={() => setCommentTake(t)}
-                onShare={async () => { try { await Share.share({ message: `${t.name}: ${t.text}` }); } catch { show("Share unavailable"); } }}
-                onReport={async () => { await submitReport("post", String(t.id), "other"); show("Reported"); }}
-                onBlock={async () => { const h = String(t.handle || t.name); await blockUser(h); setBlocked((p) => (p.includes(h) ? p : [...p, h])); show(`Blocked @${h}`); }}
-              />
-            </View>
-          ))}
-        </>
-      ) : socialSection === "creators" ? (
-        takes.slice(0, 8).map((t: any) => (
-          <TouchableOpacity key={`c-${t.id}`} style={s.roomRow} onPress={() => setSelectedProfile(t)}>
-            <View style={s.roomAv}><Text style={s.roomAvText}>{(t.name || "?").slice(0, 1)}</Text></View>
-            <View style={s.flex}><Text style={s.roomName}>{t.name}</Text><Text style={s.meta}>@{t.handle}</Text></View>
-          </TouchableOpacity>
-        ))
-      ) : (
-        rooms.map((r: any) => {
-          const isJoined = !!joined[r.id];
-          return (
-            <TouchableOpacity key={r.id} style={s.roomRow}>
-              <View style={s.roomAv}><Text style={s.roomAvText}>{r.av}</Text></View>
-              <View style={s.flex}><Text style={s.roomName}>{r.name}</Text><Text style={s.meta}>{r.meta}</Text></View>
-              <TouchableOpacity style={[s.joinBtn, isJoined && s.joinLive]} onPress={() => { setJoined({ ...joined, [r.id]: !isJoined }); show(isJoined ? `Left ${r.name}` : `Joined ${r.name}`); }}>
-                <Text style={[s.joinBtnText, isJoined && s.joinLiveText]}>{isJoined ? "Joined" : "Join"}</Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          );
-        })
-      )}
-    </ScrollView>
+    <SocialsIOSScreen
+      s={s} C={C} session={session}
+      takes={takes} blocked={blocked} setBlocked={setBlocked}
+      socialSection={socialSection} setSocialSection={setSocialSection}
+      liked={liked} setLiked={setLiked} following={following} setFollowing={setFollowing}
+      refreshing={refreshing} onRefresh={onRefresh}
+      setComposeOpen={setComposeOpen} setCommentTake={setCommentTake}
+      setSelectedProfile={setSelectedProfile} show={show}
+    />
   );
 
   const ActivityView = () => (
