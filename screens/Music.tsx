@@ -239,6 +239,10 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 {playlists.map((playlist) => (
                   <TouchableOpacity key={playlist.id} style={s.chip} onPress={async () => {
                     try {
+                      if (playlist.tracks.some((t) => sameTrack(t, activeTrack))) {
+                        show("Already in " + playlist.name);
+                        return;
+                      }
                       setPlaylists(await addTrackToMusicPlaylist(playlist.id, activeTrack));
                       show("Added to " + playlist.name);
                     } catch (e: any) { show(e?.message || "Could not add track."); }
