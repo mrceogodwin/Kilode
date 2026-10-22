@@ -1055,6 +1055,9 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               <TouchableOpacity onPress={() => moveQueuedTrack(i, Math.max(0, i - 1))} disabled={i === 0} accessibilityRole="button" accessibilityLabel={"Move " + t.title + " up"} style={{ padding: 5, opacity: i === 0 ? 0.3 : 1 }}>
                 <Ionicons name="chevron-up" size={17} color={C.text2} />
               </TouchableOpacity>
+              <TouchableOpacity onPress={() => moveQueuedTrack(i, Math.min(player.queue.length - 1, i + 1))} disabled={i === player.queue.length - 1} accessibilityRole="button" accessibilityLabel={"Move " + t.title + " down"} style={{ padding: 5, opacity: i === player.queue.length - 1 ? 0.3 : 1 }}>
+                <Ionicons name="chevron-down" size={17} color={C.text2} />
+              </TouchableOpacity>
               <TouchableOpacity onPress={() => removeQueuedTrack(i)} disabled={i === player.index} accessibilityRole="button" accessibilityLabel={"Remove " + t.title + " from queue"} style={{ padding: 5, opacity: i === player.index ? 0.3 : 1 }}>
                 <Ionicons name="close" size={18} color={C.text2} />
               </TouchableOpacity>
