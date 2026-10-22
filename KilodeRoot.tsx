@@ -296,7 +296,7 @@ function KilodeApp() {
 
   let body: React.ReactNode = null;
   if (settingsOpen) {
-    body = <SettingsScreen s={s} C={C} isDark={isDark} themeMode={themeMode} setThemeMode={setThemeMode} onBack={() => setSettingsOpen(false)} onSignOut={() => { signOut(); setSettingsOpen(false); }} show={show} />;
+    body = <SettingsScreen s={s} C={C} isDark={isDark} onBack={() => setSettingsOpen(false)} onDeleteAccount={async () => ({ ok: false, error: "Account deletion requires a connected account backend." })} sessionHandle={session?.handle || "guest"} show={show} />;
   } else if (artistReleasesOpen && caps.musicReleaseManagement) {
     body = (
       <ArtistReleasesScreen s={s} C={C} sessionName={session.name} onBack={() => { setArtistReleasesOpen(false); setArtistComposeInitial(false); }} show={show} initialCompose={artistComposeInitial} />
@@ -314,9 +314,9 @@ function KilodeApp() {
       <MarketDraftsScreen s={s} C={C} onBack={() => { setMarketDraftsOpen(false); setMarketComposeInitial(false); }} show={show} initialCompose={marketComposeInitial} />
     );
   } else if (selectedProfile) {
-    body = <UserProfileScreen s={s} C={C} profile={selectedProfile} onBack={() => setSelectedProfile(null)} show={show} />;
+    body = <UserProfileScreen s={s} C={C} user={selectedProfile} posts={takes.filter((p: any) => String(p.userId || p.user_id || p.handle || "") === String(selectedProfile?.id || selectedProfile?.handle || ""))} isFollowing={!!following[String(selectedProfile?.id || selectedProfile?.handle || "")]} onToggleFollow={() => setFollowing((prev) => ({ ...prev, [String(selectedProfile?.id || selectedProfile?.handle || "")]: !prev[String(selectedProfile?.id || selectedProfile?.handle || "")] }))} onBack={() => setSelectedProfile(null)} onOpenPost={(post) => setSelectedPost(post)} />;
   } else if (selectedPost) {
-    body = <PostDetailScreen s={s} C={C} post={selectedPost} onBack={() => setSelectedPost(null)} show={show} />;
+    body = <PostDetailScreen s={s} C={C} post={selectedPost} liked={!!liked[String(selectedPost?.id)]} following={!!following[String(selectedPost?.userId || selectedPost?.user_id || selectedPost?.handle || "")]} onBack={() => setSelectedPost(null)} onLike={() => setLiked((prev) => ({ ...prev, [String(selectedPost?.id)]: !prev[String(selectedPost?.id)] }))} onComment={() => { setCommentTake(selectedPost); setSelectedPost(null); }} onFollow={() => { const id = String(selectedPost?.userId || selectedPost?.user_id || selectedPost?.handle || ""); setFollowing((prev) => ({ ...prev, [id]: !prev[id] })); }} onReport={() => show("Report submitted for review.")} onBlock={() => show("Blocking requires the moderation service.")} show={show} />;
   } else if (selectedDeskItem) {
     body = <DeskDetailScreen s={s} C={C} system={selectedDeskItem.system} item={selectedDeskItem} onBack={() => setSelectedDeskItem(null)} show={show} />;
   } else if (tab === "home") {
