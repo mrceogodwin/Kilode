@@ -70,6 +70,7 @@ function formatTime(ms: number) {
 
 export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSource, openNowPlaying, onNowPlayingOpened }: Props) {
   const [tab, setTab] = useState<Tab>("discover");
+  const [activeChart, setActiveChart] = useState<"50" | "100">("50");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
@@ -737,10 +738,38 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
       {tab === "charts" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Top charts</Text>
+            <Text style={s.sectionTitle}>Kilode Top {activeChart}</Text>
           </View>
-          <Text style={[s.meta, s.padH, { marginBottom: 8 }]}>
-            {usingPreviewCatalogue ? "Sample chart preview · these are not verified live rankings or play counts." : "Chart figures require verified stream and play-count data."}
+          <View style={[s.padH, { flexDirection: "row", gap: 8, marginBottom: 12 }]}>
+            {(["50", "100"] as const).map((chartSize) => {
+              const selected = activeChart === chartSize;
+              return (
+                <TouchableOpacity
+                  key={chartSize}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={`Show Kilode Top ${chartSize}`}
+                  onPress={() => setActiveChart(chartSize)}
+                  style={{
+                    flex: 1,
+                    minHeight: 42,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: selected ? (C.accent || "#D4AF37") : (C.border || "#2A2A30"),
+                    backgroundColor: selected ? (C.accentSoft || "#332A16") : (C.elevated || "#18181C"),
+                  }}
+                >
+                  <Text style={{ color: selected ? (C.accent || "#E5C158") : (C.text2 || "#9A9A9E"), fontWeight: "800" }}>Top {chartSize}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={[s.meta, s.padH, { marginBottom: 12 }]}>
+            {usingPreviewCatalogue
+              ? "Preview only: 5 illustrative entries are shown, not a complete Top 50/Top 100 chart. Rankings and play counts are not live."
+              : `Top ${activeChart} selected. Verified chart rankings must come from the connected chart-data service; these five entries remain illustrative until that feed is available.`}
           </Text>
           {CHARTS.map((c) => {
             const match = tracks.find(
@@ -754,9 +783,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
                 <View style={s.flex}>
                   <Text style={s.roomName}>{c.title}</Text>
-                  <Text style={s.meta}>
-                    {c.artist} · {c.plays} plays
-                  </Text>
+                  <Text style={s.meta}>{c.artist} · Sample entry</Text>
                 </View>
                 <Ionicons name="play-circle-outline" size={28} color={C.accent} />
               </TouchableOpacity>
