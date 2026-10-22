@@ -532,6 +532,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           {(() => {
             const q = searchQuery.trim().toLowerCase();
             const results = q ? tracks.filter((t: any) => [t.title, t.artist, t.genre, t.album].some((v) => String(v || "").toLowerCase().includes(q))) : [];
+            const artistResults = q ? ARTISTS.filter((a) => [a.name, a.meta].some((v) => String(v || "").toLowerCase().includes(q))) : [];
+            const genreResults = q ? GENRES.filter((g) => g.toLowerCase().includes(q)) : [];
             if (!q) return (
               <View style={s.padH}>
                 <View style={s.sectionHead}><Text style={s.sectionTitle}>Explore Kilode Music</Text></View>
@@ -545,12 +547,38 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 </View>
               </View>
             );
-            if (!results.length) return (
+            if (!results.length && !artistResults.length && !genreResults.length) return (
               <View style={s.padH}>
                 <EmptyState title="No matches yet" body="Try another song, artist or genre." textColor={C.text} mutedColor={C.text2} accentColor={C.accent} icon="search-outline" />
               </View>
             );
-            return results.map((t: any, i: number) => (
+            return (
+              <>
+                {artistResults.map((a) => (
+                  <TouchableOpacity key={"artist-" + a.id} style={[s.roomRow, s.padH]} onPress={() => setActiveArtist(a)} accessibilityRole="button" accessibilityLabel={"Open artist " + a.name}>
+                    <View style={[s.roomAv, { backgroundColor: a.color, width: 46, height: 46, borderRadius: 23 }]}>
+                      <Text style={[s.roomAvText, { color: "#fff" }]}>{a.name.slice(0, 1)}</Text>
+                    </View>
+                    <View style={[s.flex, { marginLeft: 12 }]}>
+                      <Text style={s.roomName}>{a.name}</Text>
+                      <Text style={s.meta}>{a.meta} · Artist</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={C.text3} />
+                  </TouchableOpacity>
+                ))}
+                {genreResults.map((g) => (
+                  <TouchableOpacity key={"genre-" + g} style={[s.roomRow, s.padH]} onPress={() => setActiveGenre(g)} accessibilityRole="button" accessibilityLabel={"Browse " + g}>
+                    <View style={[s.roomAv, { backgroundColor: C.elevated }]}>
+                      <Ionicons name="disc-outline" size={19} color={C.accent} />
+                    </View>
+                    <View style={[s.flex, { marginLeft: 12 }]}>
+                      <Text style={s.roomName}>{g}</Text>
+                      <Text style={s.meta}>Genre · {tracks.filter((t: any) => String(t.genre || "").toLowerCase() === g.toLowerCase()).length} tracks</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={C.text3} />
+                  </TouchableOpacity>
+                ))}
+                {results.map((t: any, i: number) => (
               <TouchableOpacity key={String(t.id)} style={[s.roomRow, s.padH]} onPress={() => selectTrack(t)} onLongPress={() => playQueue(results, i)} accessibilityRole="button">
                 <View style={{ width: 46, height: 46, borderRadius: 11, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
                   <Ionicons name="musical-note" size={20} color="#FFFFFF" />
