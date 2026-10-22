@@ -13,7 +13,49 @@ import {
   Animated,
   Easing,
 } from "react-native";
+import { Video, ResizeMode } from "expo-av";
 import { ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
+
+const AUTH_BACKGROUND_VIDEOS = [
+  "https://videos.pexels.com/video-files/4540336/4540336-hd_1920_1080_25fps.mp4",
+  "https://videos.pexels.com/video-files/36743112/36743112-hd_1080_1920_25fps.mp4",
+  "https://videos.pexels.com/video-files/30328849/30328849-hd_1920_1080_25fps.mp4",
+];
+
+function AuthVideoBackdrop({ scale }: { scale: Animated.Value }) {
+  const [videoIndex, setVideoIndex] = useState(0);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const nextVideo = () => {
+    setVideoIndex((index) => (index + 1) % AUTH_BACKGROUND_VIDEOS.length);
+    setVideoFailed(false);
+  };
+
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Animated.View style={[styles.bgPlate, { transform: [{ scale }] }]}>
+        <View style={styles.warmBlob} />
+        <View style={styles.goldBlob} />
+        <View style={styles.amberBlob} />
+      </Animated.View>
+      {!videoFailed ? (
+        <Video
+          key={AUTH_BACKGROUND_VIDEOS[videoIndex]}
+          source={{ uri: AUTH_BACKGROUND_VIDEOS[videoIndex] }}
+          style={StyleSheet.absoluteFill}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping={false}
+          isMuted
+          onPlaybackStatusUpdate={(status) => {
+            if (status.isLoaded && status.didJustFinish) nextVideo();
+          }}
+          onError={nextVideo}
+        />
+      ) : null}
+      <View style={styles.veil} />
+    </View>
+  );
+}
 
 type Props = {
   isDark: boolean;
@@ -58,14 +100,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
     return (
       <SafeAreaView style={styles.root}>
         <StatusBar barStyle="light-content" />
-        <View style={StyleSheet.absoluteFill}>
-          <Animated.View style={[styles.bgPlate, { transform: [{ scale }] }]}>
-            <View style={styles.warmBlob} />
-            <View style={styles.goldBlob} />
-            <View style={styles.amberBlob} />
-          </Animated.View>
-          <View style={styles.veil} />
-        </View>
+        <AuthVideoBackdrop scale={scale} />
         <View style={styles.welcomeContent}>
           <View style={styles.welcomeMark}>
             <Text style={styles.welcomeWordmark}>KILODE<Text style={styles.welcomeAccent}>!</Text></Text>
@@ -92,14 +127,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" />
-      <View style={StyleSheet.absoluteFill}>
-        <Animated.View style={[styles.bgPlate, { transform: [{ scale }] }]}>
-          <View style={styles.warmBlob} />
-          <View style={styles.goldBlob} />
-          <View style={styles.amberBlob} />
-        </Animated.View>
-        <View style={styles.veil} />
-      </View>
+      <AuthVideoBackdrop scale={scale} />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
