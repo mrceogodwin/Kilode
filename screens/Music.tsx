@@ -149,10 +149,10 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Previous track"
+              disabled={!canPrev}
               onPress={async () => {
                 const r = await playPreviousInQueue();
                 if (!r.ok && r.message) show(r.message);
-                else if (player.queue[player.index - 1]) setActiveTrack(player.queue[Math.max(0, player.index - 1)]);
               }}
               style={{ opacity: canPrev ? 1 : 0.35 }}
             >
@@ -184,6 +184,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Next track"
+              disabled={!canNext}
               onPress={async () => {
                 const r = await playNextInQueue();
                 if (!r.ok && r.message) show(r.message);
