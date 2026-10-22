@@ -16,7 +16,7 @@ Status legend:
 | Socials | PARTIALLY IMPLEMENTED | Composer, post actions and comments UI exist; likes/follows/join states include local behavior; live persistence is not verified |
 | Creators | SOCIALS SECTION | Creator discovery belongs inside Socials; not a separate top-level system or account kind |
 | Communities | SOCIALS SECTION | Community discovery belongs inside Socials; joining/persistence is not verified live |
-| Music | UI ONLY / SEED | Track catalogue is seeded; real audio streaming and release upload/payment workflows are not verified |
+| Music | PARTIALLY IMPLEMENTED | Discover / Charts / Artists / Library / Genres; queue player (next/prev); saved + recent via AsyncStorage; seed tracks include sample audio for offline playback. Live catalogue/streaming API and artist upload/monetisation not connected |
 | Artist upload monetisation | DOCUMENTED, NOT IMPLEMENTED | Release-credit/subscription architecture documented in `docs/ARTIST_UPLOADS_MONETISATION.md` |
 | Push Link | NOT IMPLEMENTED | Paid promotion lifecycle, checkout, review, activation and reporting are not connected |
 | Events | UI ONLY / SEED | Desk exists; live event creation/RSVP persistence is not verified |
@@ -49,3 +49,11 @@ Status legend:
 - Do not treat seeded content, local toggles, or UI placeholders as live backend functionality.
 - Account workspace shortcuts are convenience navigation only. The backend must independently enforce permissions, ownership, quotas and paid entitlements.
 - Run typecheck, account-capability invariants, Expo Doctor and iOS bundle export against the exact commit. Separately verify physical-device behavior, EAS/TestFlight, backend and payments before marking those items complete.
+
+## Music system notes (2026-10-22)
+
+- `lib/musicLibrary.ts` — saved + recently played (AsyncStorage)
+- `lib/musicPlayer.ts` — expo-av, queue, next/prev, dual-signature subscribe
+- `screens/Music.tsx` — Discover / Charts / Artists / Library / Genres + track/artist/genre detail
+- Seed `TRACKS` include public sample audio URLs so playback works offline
+- Live music API and artist release monetisation remain out of scope until dedicated backend is ready
