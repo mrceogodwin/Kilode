@@ -1,14 +1,13 @@
-import React, { Suspense, lazy } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import KilodeRoot from "./KilodeRoot";
 
 /**
- * Web-only startup guard. Load KilodeRoot lazily so import-time errors are caught
- * by this boundary. Native App.tsx is intentionally untouched.
+ * Web-only render guard. Use a static import for KilodeRoot because this Expo
+ * web export is a single Metro bundle; a lazy dynamic import can request a
+ * module that was not registered in the shipped bundle.
+ * Native App.tsx is intentionally untouched.
  */
-const KilodeRoot = lazy(() =>
-  import("./KilodeRoot").then((module) => ({ default: module.default }))
-);
-
 class WebPreviewBoundary extends React.Component<
   { children: React.ReactNode },
   { error: Error | null }
@@ -51,22 +50,10 @@ class WebPreviewBoundary extends React.Component<
   }
 }
 
-function StartupFallback() {
-  return (
-    <View style={styles.root}>
-      <Text style={styles.brand}>KILODE<Text style={styles.accent}>!</Text></Text>
-      <ActivityIndicator color="#D4AF37" size="large" style={{ marginTop: 24 }} />
-      <Text style={styles.copy}>Opening your Kilode preview…</Text>
-    </View>
-  );
-}
-
 export default function App() {
   return (
     <WebPreviewBoundary>
-      <Suspense fallback={<StartupFallback />}>
-        <KilodeRoot />
-      </Suspense>
+      <KilodeRoot />
     </WebPreviewBoundary>
   );
 }
