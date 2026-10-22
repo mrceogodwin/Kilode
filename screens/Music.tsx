@@ -13,6 +13,7 @@ import {
   playMusicTrack,
   playNextInQueue,
   playPreviousInQueue,
+  toggleMusicPlayback,
   subscribeMusicPlayer,
   type MusicPlayerState,
 } from "../lib/musicPlayer";
@@ -194,8 +195,32 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             </Text>
           </TouchableOpacity>
 
+          <View style={s.sectionHead}>
+            <Text style={s.sectionTitle}>Up next</Text>
+            <Text style={s.meta}>{queue.length} tracks</Text>
+          </View>
+          {queue.length ? queue.slice(Math.max(0, player.index + 1), Math.max(0, player.index + 1) + 6).map((t: any, i: number) => (
+            <TouchableOpacity
+              key={String(t.id) + "-queue"}
+              style={s.roomRow}
+              onPress={() => playQueue(queue, Math.max(0, player.index + 1) + i)}
+              accessibilityRole="button"
+              accessibilityLabel={"Play next " + t.title}
+            >
+              <View style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="musical-note" size={18} color="#FFFFFF" />
+              </View>
+              <View style={[s.flex, { marginLeft: 12 }]}>
+                <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                <Text style={s.meta} numberOfLines={1}>{t.artist || "Kilode artist"}</Text>
+              </View>
+              <Ionicons name="play-circle-outline" size={23} color={C.accent} />
+            </TouchableOpacity>
+          )) : (
+            <Text style={[s.sub, { marginTop: 4 }]}>Start a track to build your listening queue.</Text>
+          )}
           <Text style={[s.meta, { marginTop: 16 }]}>
-            Playback uses sample audio in preview mode. Live catalogue streaming requires the dedicated music API.
+            {usingPreviewCatalogue ? "Preview catalogue · sample tracks, not a live catalogue." : "Live catalogue · playback requires a valid audio stream URL."}
           </Text>
         </View>
       </ScrollView>
