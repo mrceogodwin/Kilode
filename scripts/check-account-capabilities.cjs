@@ -23,7 +23,12 @@ assert.deepEqual([...capabilityIds].sort(), [...kindIds].sort(), "Every public a
 assert.match(capabilitiesSource, /socials:\s*true/, "Socials participation must remain a shared capability");
 assert.match(capabilitiesSource, /not an authorization boundary/i, "Client capabilities must remain documented as navigation hints, not security enforcement");
 
-// Guard against accidental role-to-workspace regressions, not merely missing keys.
+const capabilityNames = [
+  "mediaAuthoring", "musicReleaseManagement", "cinemaManagement",
+  "advertisingCampaigns", "businessWorkspace", "jobDiscovery",
+  "jobManagement", "marketplaceSelling", "rentalListingManagement",
+  "advancedCreatorTools",
+];
 const expectedCapabilities = {
   member: ["jobDiscovery"],
   artist: ["musicReleaseManagement", "advancedCreatorTools"],
@@ -36,12 +41,16 @@ const expectedCapabilities = {
   renter: ["rentalListingManagement"],
   brand: ["advertisingCampaigns", "businessWorkspace", "advancedCreatorTools"],
 };
+
 for (const [kind, expected] of Object.entries(expectedCapabilities)) {
   const entry = capabilityBlock[1].match(new RegExp("^  " + kind + ": \\{([\\s\\S]*?)^  \\}", "m"));
   assert.ok(entry, kind + " must have a capability entry");
-  for (const capability of expected) {
-    assert.match(entry[1], new RegExp("\\b" + capability + ":\\s*true\\b"), kind + " must retain " + capability);
-  }
+  const actual = capabilityNames.filter((name) => new RegExp("\\b" + name + ":\\s*true\\b").test(entry[1]));
+  assert.deepEqual(actual.sort(), [...expected].sort(), kind + " must have exactly the approved native workspace capabilities");
+  assert.match(entry[1], /\.\.\.DEFAULT_CAPABILITIES/, kind + " must inherit safe defaults");
 }
 
-console.log("Account capability invariants passed: 10 unique kinds, full map coverage, safe fallback, Socials boundaries, and expected workspace capabilities.");
+assert.match(capabilitiesSource, /return CAPABILITIES_BY_KIND\[asAccountKind\(kind\)\]/, "Malformed account kinds must resolve through the safe fallback");
+assert.match(capabilitiesSource, /socials:\s*true/, "Every account kind must retain the shared Socials baseline");
+
+console.log("Account capability invariants passed: exactly ten unique kinds, complete one-to-one mapping, exact role capabilities, safe fallback, and shared Socials access.");
