@@ -6,6 +6,7 @@ import { EmptyState } from "../components/ui/EmptyState";
 import {
   getSavedTracks,
   getRecentTracks,
+  clearRecentTracks,
   toggleSavedTrack,
   getMusicPlaylists,
   createMusicPlaylist,
@@ -1053,7 +1054,33 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           )}
 
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Recently played</Text>
+            <View style={s.flex}>
+              <Text style={s.sectionTitle}>Recently played</Text>
+              <Text style={s.meta}>{recent.length} tracks</Text>
+            </View>
+            {recent.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => Alert.alert(
+                  "Clear listening history?",
+                  "Recently played tracks will be removed from this device.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Clear", style: "destructive", onPress: () => {
+                      void clearRecentTracks().then(() => {
+                        setRecent([]);
+                        show("Listening history cleared.");
+                      }).catch((e: any) => show(e?.message || "Could not clear listening history."));
+                    } },
+                  ],
+                )}
+                accessibilityRole="button"
+                accessibilityLabel="Clear recently played history"
+                style={s.chip}
+              >
+                <Ionicons name="trash-outline" size={14} color={C.text2} />
+                <Text style={[s.chipText, { marginLeft: 5 }]}>Clear history</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
           {recent.length === 0 ? (
             <Text style={[s.sub, s.padH]}>Play a track and it will show up here.</Text>
