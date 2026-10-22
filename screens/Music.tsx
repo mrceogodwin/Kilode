@@ -10,6 +10,7 @@ type Props = {
   onBack: () => void;
   show: (m: string) => void;
   tracks?: any[];
+  tracksSource?: "live" | "mock" | "error";
   onPlay: (track: any) => Promise<void> | void;
 };
 
@@ -27,13 +28,14 @@ const ARTISTS = [
   { id: "a3", name: "Ayo Blue", meta: "R&B · Abuja", color: "#2563EB" },
 ];
 
-export function MusicScreen({ s, C, onBack, show, onPlay, tracks: remoteTracks }: Props) {
+export function MusicScreen({ s, C, onBack, show, onPlay, tracks: remoteTracks, tracksSource }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
-  // Prefer tracks returned by the dedicated API. The bundled catalogue remains a clearly marked preview fallback.
-  const tracks = remoteTracks?.length ? remoteTracks : TRACKS || [];
-  const usingPreviewCatalogue = !remoteTracks?.length;
+  // Only trust the API catalogue when the request actually succeeded. The API client may return bundled data on failure.
+  const hasLiveTracks = tracksSource === "live";
+  const tracks = hasLiveTracks ? (remoteTracks || []) : TRACKS || [];
+  const usingPreviewCatalogue = !hasLiveTracks;
 
   const selectTrack = (t: any) => {
     setActiveArtist(null);
