@@ -1042,14 +1042,29 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             </Text>
           ) : (
             saved.map((t, i) => (
-              <TouchableOpacity key={trackRenderKey(t, i, "saved")} style={s.roomRow} onPress={() => selectTrack(t)}>
-                <Ionicons name="heart" size={18} color={C.danger} />
-                <View style={[s.flex, { marginLeft: 12 }]}>
-                  <Text style={s.roomName}>{t.title}</Text>
-                  <Text style={s.meta}>{t.artist}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={C.text3} />
-              </TouchableOpacity>
+              <View key={trackRenderKey(t, i, "saved")} style={s.roomRow}>
+                <TouchableOpacity
+                  style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+                  onPress={() => selectTrack(t)}
+                  accessibilityRole="button"
+                  accessibilityLabel={"Play " + t.title}
+                >
+                  <Ionicons name="heart" size={18} color={C.danger} />
+                  <View style={[s.flex, { marginLeft: 12 }]}>
+                    <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                    <Text style={s.meta} numberOfLines={1}>{t.artist || "Kilode artist"}</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => onToggleSave(t)}
+                  accessibilityRole="button"
+                  accessibilityLabel={"Remove " + t.title + " from saved tracks"}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={{ padding: 8 }}
+                >
+                  <Ionicons name="heart-dislike-outline" size={19} color={C.danger} />
+                </TouchableOpacity>
+              </View>
             ))
           )}
 
