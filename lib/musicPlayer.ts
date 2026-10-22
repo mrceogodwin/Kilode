@@ -24,6 +24,7 @@ let positionMillis = 0;
 let durationMillis = 0;
 let shuffle = false;
 let repeat: RepeatMode = "off";
+let handlingTrackFinish = false;
 const listeners = new Set<Listener>();
 
 function getState(): MusicPlayerState {
@@ -179,6 +180,7 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
       shouldDuckAndroid: true,
     });
 
+    let createdSoundForRepeat: Audio.Sound | null = null;
     const created = await Audio.Sound.createAsync(
       { uri },
       { shouldPlay: true },
@@ -187,12 +189,28 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
           playing = status.isPlaying;
           positionMillis = status.positionMillis || 0;
           durationMillis = status.durationMillis || durationMillis;
-          if (status.didJustFinish) {
+          if (status.didJustFinish && !handlingTrackFinish) {
+            handlingTrackFinish = true;
             playing = false;
             if (repeat === "one") {
-              void seekMusicTo(0).then(() => toggleMusicPlayback());
+              // Restart directly; a seek/toggle chain can race repeated finish callbacks.
+              void (async () => {
+                try {
+                  if (createdSoundForRepeat) {
+                    await createdSoundForRepeat.setPositionAsync(0);
+                    await createdSoundForRepeat.playAsync();
+                    playing = true;
+                    positionMillis = 0;
+                  }
+                } catch {
+                  playing = false;
+                } finally {
+                  handlingTrackFinish = false;
+                  publish();
+                }
+              })();
             } else {
-              void playNextInQueue();
+              void playNextInQueue().finally(() => { handlingTrackFinish = false; });
             }
           }
           publish();
@@ -204,6 +222,8 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
     );
 
     sound = created.sound;
+    createdSoundForRepeat = created.sound;
+    handlingTrackFinish = false;
     currentTrack = track;
     playing = created.status.isLoaded ? !!created.status.isPlaying : false;
     positionMillis = created.status.isLoaded ? created.status.positionMillis || 0 : 0;
