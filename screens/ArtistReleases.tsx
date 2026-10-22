@@ -15,7 +15,9 @@ import {
   updateReleaseDraft,
   deleteReleaseDraft,
   rightsDeclarationText,
+  RELEASE_TYPES,
   type ArtistReleaseDraft,
+  type ReleaseType,
 } from "../lib/artistReleases";
 import { EmptyState } from "../components/ui/EmptyState";
 
@@ -31,6 +33,12 @@ type Props = {
 
 const GENRE_OPTIONS = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion", "Hip-Hop", "Gospel", "Other"];
 
+function typeLabel(t: ReleaseType | undefined): string {
+  if (t === "ep") return "EP";
+  if (t === "album") return "Album";
+  return "Single";
+}
+
 export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialCompose }: Props) {
   const [drafts, setDrafts] = useState<ArtistReleaseDraft[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +47,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
   const [title, setTitle] = useState("");
   const [artistName, setArtistName] = useState(sessionName || "");
   const [genre, setGenre] = useState("Afrobeats");
+  const [releaseType, setReleaseType] = useState<ReleaseType>("single");
   const [notes, setNotes] = useState("");
   const [rights, setRights] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -62,6 +71,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
       setTitle("");
       setArtistName(sessionName || "");
       setGenre("Afrobeats");
+      setReleaseType("single");
       setNotes("");
       setRights(false);
     }
@@ -72,6 +82,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
     setTitle("");
     setArtistName(sessionName || "");
     setGenre("Afrobeats");
+    setReleaseType("single");
     setNotes("");
     setRights(false);
   };
@@ -86,6 +97,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
     setTitle(d.title);
     setArtistName(d.artistName);
     setGenre(d.genre || "Afrobeats");
+    setReleaseType(d.releaseType || "single");
     setNotes(d.notes || "");
     setRights(!!d.rightsAcknowledged);
     setComposing(true);
@@ -99,6 +111,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         artistName,
         genre,
         notes,
+        releaseType,
         rightsAcknowledged: rights,
       });
       setSaving(false);
@@ -113,6 +126,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         artistName,
         genre,
         notes,
+        releaseType,
         rightsAcknowledged: rights,
       });
       setSaving(false);
@@ -156,6 +170,24 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
             Metadata only for now. Audio upload and server submit need the dedicated music API.
           </Text>
 
+          <Text style={[s.meta, { marginTop: 20, marginBottom: 8, fontWeight: "700" }]}>Release type</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {RELEASE_TYPES.map((rt) => (
+              <TouchableOpacity
+                key={rt.id}
+                style={[s.chip, releaseType === rt.id && s.chipOn]}
+                onPress={() => setReleaseType(rt.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: releaseType === rt.id }}
+              >
+                <Text style={[s.chipText, releaseType === rt.id && s.chipTextOn]}>{rt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={[s.meta, { marginTop: 6, lineHeight: 18 }]}>
+            {RELEASE_TYPES.find((r) => r.id === releaseType)?.hint}. EP/Album multi-track upload is not built yet — this labels the draft for later.
+          </Text>
+
           <Text style={[s.meta, { marginTop: 20, marginBottom: 6, fontWeight: "700" }]}>Title</Text>
           <TextInput
             style={{
@@ -167,7 +199,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
               borderColor: C.border,
               fontSize: 16,
             }}
-            placeholder="Track title"
+            placeholder={releaseType === "single" ? "Track title" : "Release / project title"}
             placeholderTextColor={C.text3}
             value={title}
             onChangeText={setTitle}
@@ -326,7 +358,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         }}
       >
         <Text style={[s.meta, { lineHeight: 18 }]}>
-          This is the artist release workspace. Drafts are stored on-device only. Upload sessions, review, credits, and publish require the dedicated Kilode music API.
+          Artist release workspace. Choose Single, EP, or Album when drafting. Multi-track upload, review, credits, and publish need the dedicated music API — see docs/ARTIST_UPLOADS_MONETISATION.md.
         </Text>
       </View>
 
@@ -339,7 +371,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
       ) : drafts.length === 0 ? (
         <EmptyState
           title="No drafts yet"
-          body="Create a release draft with title, artist, genre, and rights confirmation."
+          body="Create a release draft with type, title, artist, genre, and rights confirmation."
           textColor={C.text}
           mutedColor={C.text2}
           accentColor={C.accent}
@@ -354,7 +386,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
             <View style={[s.flex, { marginLeft: 12 }]}>
               <Text style={s.roomName}>{d.title}</Text>
               <Text style={s.meta}>
-                {d.artistName} · {d.genre}
+                {typeLabel(d.releaseType)} · {d.artistName} · {d.genre}
               </Text>
               <Text style={[s.meta, { marginTop: 4 }]}>
                 Local draft · {new Date(d.updatedAt).toLocaleDateString()} · tap to edit
