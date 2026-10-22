@@ -544,10 +544,10 @@ function KilodeApp() {
     return (<SafeAreaView style={[s.root, s.center, { backgroundColor: C.bg }]}><ActivityIndicator color={C.accent} size="large" /><Text style={[s.sub, { marginTop: 12 }]}>Loading Kilode…</Text></SafeAreaView>);
   }
   if (session && !launchIntroDone) {
-    return (<AuthScreen isDark={isDark} C={C} hasSession onContinue={() => setLaunchIntroDone(true)} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
+    return (<AuthScreen isDark={isDark} C={C} hasSession onContinue={() => setLaunchIntroDone(true)} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); setLaunchIntroDone(true); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
   }
   if (!session) {
-    return (<AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
+    return (<AuthScreen isDark={isDark} C={C} onSignIn={signIn} onSignUp={signUp} onGuest={() => { signInGuest("Guest"); setLaunchIntroDone(true); show("Guest mode"); }} onGoogle={() => show("Google sign-in isn't connected yet.")} show={show} />);
   }
 
   const deviceSession = isDeviceSession(session as any);
