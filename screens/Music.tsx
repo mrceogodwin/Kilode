@@ -152,6 +152,10 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <TouchableOpacity
               style={[s.primaryBtn, { paddingHorizontal: 28, minWidth: 120, justifyContent: "center" }]}
               onPress={async () => {
+                if (String(player.track?.id) === String(activeTrack.id)) {
+                  await toggleMusicPlayback();
+                  return;
+                }
                 const list = tracks;
                 const idx = list.findIndex((x: any) => String(x.id) === String(activeTrack.id));
                 await playQueue(list, idx >= 0 ? idx : 0);
