@@ -21,6 +21,7 @@ import {
   type ReleaseType,
 } from "../lib/artistReleases";
 import { EmptyState } from "../components/ui/EmptyState";
+import { ArtistPlanCreditsScreen } from "./ArtistPlanCredits";
 
 type Props = {
   s: any;
@@ -44,6 +45,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
   const [drafts, setDrafts] = useState<ArtistReleaseDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [composing, setComposing] = useState(!!initialCompose);
+  const [showPlanCredits, setShowPlanCredits] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [artistName, setArtistName] = useState(sessionName || "");
@@ -67,10 +69,10 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
     void refresh();
   }, [refresh]);
 
-  // If parent requests compose mode after mount (e.g. Create → Track), honour it once.
   useEffect(() => {
     if (initialCompose) {
       setComposing(true);
+      setShowPlanCredits(false);
       setEditingId(null);
       setTitle("");
       setArtistName(sessionName || "");
@@ -97,6 +99,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
 
   const openNew = () => {
     resetForm();
+    setShowPlanCredits(false);
     setComposing(true);
   };
 
@@ -110,6 +113,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
     setLocalAudioUri(d.localAudioUri || null);
     setLocalAudioName(d.localAudioName || null);
     setRights(!!d.rightsAcknowledged);
+    setShowPlanCredits(false);
     setComposing(true);
   };
 
@@ -192,6 +196,10 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
     }
     await refresh();
   };
+
+  if (showPlanCredits) {
+    return <ArtistPlanCreditsScreen s={s} C={C} onBack={() => setShowPlanCredits(false)} />;
+  }
 
   if (composing) {
     return (
@@ -439,10 +447,18 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         </View>
       </View>
 
-      <View style={[s.padH, { marginTop: 8 }]}>
-        <TouchableOpacity style={s.primaryBtn} onPress={openNew}>
+      <View style={[s.padH, { marginTop: 8, flexDirection: "row", gap: 10 }]}>
+        <TouchableOpacity style={[s.primaryBtn, { flex: 1 }]} onPress={openNew}>
           <Ionicons name="add" size={18} color="#fff" />
           <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>New draft</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[s.ghostBtn, { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }]}
+          onPress={() => setShowPlanCredits(true)}
+          accessibilityRole="button"
+        >
+          <Ionicons name="wallet-outline" size={18} color={C.text} />
+          <Text style={s.ghostBtnText}>Plan</Text>
         </TouchableOpacity>
       </View>
 
@@ -458,7 +474,7 @@ export function ArtistReleasesScreen({ s, C, sessionName, onBack, show, initialC
         }}
       >
         <Text style={[s.meta, { lineHeight: 18 }]}>
-          Artist release workspace. Single / EP / Album + optional local audio. Upload sessions, review, credits, and publish need the dedicated music API.
+          Artist release workspace. Single / EP / Album + optional local audio. Open Plan for how credits and Push Link will work when the music API is live.
         </Text>
       </View>
 
