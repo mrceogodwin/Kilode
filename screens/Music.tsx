@@ -1101,14 +1101,29 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <Text style={[s.sub, s.padH]}>Play a track and it will show up here.</Text>
           ) : (
             recent.map((t, i) => (
-              <TouchableOpacity key={trackRenderKey(t, i, "recent-row")} style={s.roomRow} onPress={() => { void playQueue(recent, i); }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
-                <Ionicons name="time-outline" size={18} color={C.accent} />
-                <View style={[s.flex, { marginLeft: 12 }]}>
-                  <Text style={s.roomName}>{t.title}</Text>
-                  <Text style={s.meta}>{t.artist}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={C.text3} />
-              </TouchableOpacity>
+              <View key={trackRenderKey(t, i, "recent-row")} style={s.roomRow}>
+                <TouchableOpacity
+                  style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+                  onPress={() => { void playQueue(recent, i); }}
+                  accessibilityRole="button"
+                  accessibilityLabel={"Play " + t.title}
+                >
+                  <Ionicons name="time-outline" size={18} color={C.accent} />
+                  <View style={[s.flex, { marginLeft: 12 }]}>
+                    <Text style={s.roomName}>{t.title}</Text>
+                    <Text style={s.meta}>{t.artist}</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { void onToggleSave(t); }}
+                  accessibilityRole="button"
+                  accessibilityLabel={(isSaved(t) ? "Remove " : "Save ") + t.title + (isSaved(t) ? " from saved tracks" : " to saved tracks")}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={{ padding: 8 }}
+                >
+                  <Ionicons name={isSaved(t) ? "heart" : "heart-outline"} size={19} color={isSaved(t) ? C.danger : C.text2} />
+                </TouchableOpacity>
+              </View>
             ))
           )}
         </>
