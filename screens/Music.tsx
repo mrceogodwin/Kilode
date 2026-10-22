@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
-import { loadSavedTracks, loadRecentTracks, toggleSavedTrack, loadMusicPlaylists, createMusicPlaylist, deleteMusicPlaylist, addTrackToMusicPlaylist, type LibraryTrack, type MusicPlaylist } from "../lib/musicLibrary";
+import { loadSavedTracks, loadRecentTracks, toggleSavedTrack, loadMusicPlaylists, createMusicPlaylist, renameMusicPlaylist, deleteMusicPlaylist, addTrackToMusicPlaylist, type LibraryTrack, type MusicPlaylist } from "../lib/musicLibrary";
 import { setMusicQueue } from "../lib/musicPlayer";
 
 type Props = {
@@ -46,6 +46,7 @@ export function MusicScreen({
   const [savedIds, setSavedIds] = useState<Record<string, boolean>>({});
   const [playlists, setPlaylists] = useState<MusicPlaylist[]>([]);
   const [playlistName, setPlaylistName] = useState("");
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
 
   const hasLiveTracks = tracksSource === "live";
@@ -134,10 +135,18 @@ export function MusicScreen({
   };
 
   const createPlaylist = async () => {
-    const name = playlistName.trim(); if (!name) { show("Enter a playlist name first."); return; }
-    const next = await createMusicPlaylist(name); const created = next.find((p) => p.name.toLowerCase() === name.toLowerCase());
-    setPlaylists(next); if (created) setSelectedPlaylistId(created.id); setPlaylistName("");
-    show(created ? "Playlist created on this device." : "A playlist with that name already exists.");
+    const name = playlistName.trim();
+    if (!name) { show("Enter a playlist name first."); return; }
+    try {
+      const next = editingPlaylistId ? await renameMusicPlaylist(editingPlaylistId, name) : await createMusicPlaylist(name);
+      const created = next.find((p) => p.name.toLowerCase() === name.toLowerCase());
+      setPlaylists(next);
+      if (editingPlaylistId) setSelectedPlaylistId(editingPlaylistId);
+      else if (created) setSelectedPlaylistId(created.id);
+      setPlaylistName("");
+      setEditingPlaylistId(null);
+      show(editingPlaylistId ? "Playlist renamed." : created ? "Playlist created on this device." : "A playlist with that name already exists.");
+    } catch (e: any) { show(e?.message || "Could not save playlist."); }
   };
   const addToSelectedPlaylist = async (track: any) => {
     if (!selectedPlaylistId) { show("Create or select a playlist first."); return; }
@@ -268,17 +277,17 @@ export function MusicScreen({
       {tab === "Library" && (
         <>
           <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-            <Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>Your playlists</Text>
+            <Text style={{ color: C.text, fontSize: 16, fontWeight: "800" }}>{editingPlaylistId ? "Rename playlist" : "Your playlists"}</Text>
             <Text style={{ color: C.text3, fontSize: 11, marginTop: 4 }}>Playlists are stored on this device for now.</Text>
             <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
               <TextInput value={playlistName} onChangeText={setPlaylistName} placeholder="New playlist name" placeholderTextColor={C.text3} returnKeyType="done" onSubmitEditing={() => void createPlaylist()} style={{ flex: 1, color: C.text, backgroundColor: C.elevated, borderColor: C.border, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13 }} />
-              <TouchableOpacity onPress={() => void createPlaylist()} style={{ paddingHorizontal: 14, borderRadius: 10, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" }}><Ionicons name="add" size={20} color="#111" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => void createPlaylist()} accessibilityRole="button" accessibilityLabel={editingPlaylistId ? "Save playlist name" : "Create playlist"} style={{ paddingHorizontal: 14, borderRadius: 10, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" }}><Ionicons name={editingPlaylistId ? "checkmark" : "add"} size={20} color="#111" /></TouchableOpacity>
             </View>
           </View>
           {playlists.length === 0 ? <Text style={{ color: C.text3, fontSize: 12, marginHorizontal: 16, marginTop: 10 }}>Create a playlist, then add tracks from the list below.</Text> : playlists.map((p) => (
             <View key={p.id} style={{ marginHorizontal: 16, marginTop: 10, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: selectedPlaylistId === p.id ? C.accent : C.border, backgroundColor: selectedPlaylistId === p.id ? C.accent + "12" : C.card, flexDirection: "row", alignItems: "center", gap: 10 }}>
               <TouchableOpacity onPress={() => setSelectedPlaylistId(p.id)} style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}><Ionicons name="musical-notes" size={18} color={C.accent} /><View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: "700" }}>{p.name}</Text><Text style={{ color: C.text3, fontSize: 11, marginTop: 2 }}>{p.tracks.length} tracks · {selectedPlaylistId === p.id ? "Selected" : "Tap to select"}</Text></View></TouchableOpacity>
-              <TouchableOpacity onPress={() => { void deleteMusicPlaylist(p.id).then((next) => { setPlaylists(next); setSelectedPlaylistId(next[0]?.id || null); }); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}><Ionicons name="trash-outline" size={17} color={C.text3} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => { setEditingPlaylistId(p.id); setPlaylistName(p.name); setSelectedPlaylistId(p.id); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel={"Rename " + p.name} style={{ padding: 5 }}><Ionicons name="pencil-outline" size={16} color={C.text2} /></TouchableOpacity><TouchableOpacity onPress={() => { void deleteMusicPlaylist(p.id).then((next) => { setPlaylists(next); setSelectedPlaylistId(next[0]?.id || null); if (editingPlaylistId === p.id) { setEditingPlaylistId(null); setPlaylistName(""); } }); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityRole="button" accessibilityLabel={"Delete " + p.name} style={{ padding: 5 }}><Ionicons name="trash-outline" size={17} color={C.text3} /></TouchableOpacity>
             </View>
           ))}
           {selectedPlaylistId ? <View style={{ paddingHorizontal: 16, marginTop: 12 }}><Text style={{ color: C.text2, fontSize: 12 }}>Selected playlist: {playlists.find((p) => p.id === selectedPlaylistId)?.name || "None"}. Tap the plus beside a track to add it.</Text></View> : null}
