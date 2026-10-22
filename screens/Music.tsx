@@ -1148,7 +1148,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               <TouchableOpacity
                 onPress={() => toggleMusicShuffle()}
                 accessibilityRole="button"
-                accessibilityLabel="Toggle queue shuffle"
+                accessibilityLabel={player.shuffle ? "Turn queue shuffle off" : "Turn queue shuffle on"}
+                accessibilityState={{ selected: player.shuffle }}
                 style={[s.chip, player.shuffle && s.chipOn, { paddingHorizontal: 10 }]}
               >
                 <Ionicons name="shuffle" size={16} color={player.shuffle ? C.accent : C.text2} />
@@ -1156,7 +1157,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               <TouchableOpacity
                 onPress={() => cycleMusicRepeat()}
                 accessibilityRole="button"
-                accessibilityLabel="Change queue repeat mode"
+                accessibilityLabel={"Repeat mode: " + (player.repeat === "one" ? "one track" : player.repeat === "all" ? "all tracks" : "off") + ". Change repeat mode"}
+                accessibilityState={{ selected: player.repeat !== "off" }}
                 style={[s.chip, player.repeat !== "off" && s.chipOn, { paddingHorizontal: 10 }]}
               >
                 <Ionicons name={player.repeat === "one" ? "repeat" : "repeat"} size={16} color={player.repeat !== "off" ? C.accent : C.text2} />
