@@ -28,7 +28,7 @@ type Props = {
   show: (m: string) => void;
 };
 
-export function AuthScreen({ onSignIn, onSignUp, show }: Props) {
+export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   // Open directly on sign-in: no pre-auth video splash or incorrect wordmark.
   const [mode, setMode] = useState<"kind" | "in" | "up">("in");
   const [handle, setHandle] = useState("");
@@ -112,6 +112,14 @@ export function AuthScreen({ onSignIn, onSignUp, show }: Props) {
             }}
           >
             <Text style={styles.ctaText}>Continue</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.guestBtn}
+            onPress={onGuest}
+            accessibilityRole="button"
+            accessibilityLabel="Continue as Guest"
+          >
+            <Text style={styles.guestText}>Continue as Guest</Text>
           </TouchableOpacity>
           </View>
         </ScrollView>
@@ -219,6 +227,14 @@ export function AuthScreen({ onSignIn, onSignUp, show }: Props) {
               {mode === "up" ? "Already have an account? " : "New here? "}
               <Text style={styles.loginLink}>{mode === "up" ? "Log In" : "Get Started"}</Text>
             </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.guestBtn}
+            onPress={onGuest}
+            accessibilityRole="button"
+            accessibilityLabel="Continue as Guest"
+          >
+            <Text style={styles.guestText}>Continue as Guest</Text>
           </TouchableOpacity>
           </View>
         </ScrollView>
