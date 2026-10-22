@@ -124,12 +124,16 @@ export function AuthScreen({ onSignIn, onSignUp, show }: Props) {
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.formPad} keyboardShouldPersistTaps="handled"><View style={styles.formCard}>
-          <TouchableOpacity
-            onPress={() => setMode(mode === "up" ? "kind" : "in")}
-            style={{ marginBottom: 16 }}
-          >
-            <Text style={{ color: ACCENT, fontWeight: "600" }}>‹ Back</Text>
-          </TouchableOpacity>
+          {mode === "up" ? (
+            <TouchableOpacity
+              onPress={() => setMode("kind")}
+              style={{ marginBottom: 16 }}
+              accessibilityRole="button"
+              accessibilityLabel="Back to account type"
+            >
+              <Text style={{ color: ACCENT, fontWeight: "600" }}>‹ Back</Text>
+            </TouchableOpacity>
+          ) : null}
           <Text style={styles.formTitle}>{mode === "up" ? "Create account" : "Welcome back"}</Text>
           <Text style={styles.formSub}>
             {mode === "up"
