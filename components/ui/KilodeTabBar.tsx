@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-export type TabId = "home" | "socials" | "activity" | "myspace";
+export type TabId = "home" | "socials" | "music" | "more";
 
 type Props = {
   active: string;
@@ -19,9 +19,9 @@ const TABS: {
   iconOn: keyof typeof Ionicons.glyphMap;
 }[] = [
   { id: "home", label: "Home", icon: "home-outline", iconOn: "home" },
-  { id: "socials", label: "Socials", icon: "people-outline", iconOn: "people" },
-  { id: "activity", label: "Activity", icon: "notifications-outline", iconOn: "notifications" },
-  { id: "myspace", label: "My Space", icon: "person-outline", iconOn: "person" },
+  { id: "socials", label: "Social", icon: "people-outline", iconOn: "people" },
+  { id: "music", label: "Music", icon: "musical-notes-outline", iconOn: "musical-notes" },
+  { id: "more", label: "More", icon: "grid-outline", iconOn: "grid" },
 ];
 
 /** Dock respects Kilode palette — green accent by default */
@@ -32,9 +32,9 @@ export function KilodeTabBar({
   isDark = true,
   accent = "#22C55E",
 }: Props) {
-  const bg = isDark ? "#0A0A0A" : "#FFFFFF";
-  const muted = isDark ? "#737373" : "#A1A1AA";
-  const border = isDark ? "#2A2A2A" : "#E4E4E7";
+  const bg = isDark ? "#18181C" : "#FFFFFF";
+  const muted = isDark ? "#9A9A9E" : "#77777D";
+  const border = isDark ? "#2A2A30" : "#E4E4E7";
 
   return (
     <View style={[styles.dock, { backgroundColor: bg, borderTopColor: border }]}>
@@ -48,9 +48,9 @@ export function KilodeTabBar({
         );
       })}
 
-      <TouchableOpacity accessibilityLabel="Create" style={styles.plusWrap} onPress={onCreate} activeOpacity={0.9}>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Create" style={styles.plusWrap} onPress={onCreate} activeOpacity={0.9}>
         <View style={[styles.plus, { backgroundColor: accent, borderColor: bg }]}>
-          <Ionicons name="add" size={28} color="#fff" />
+          <Ionicons name="add" size={28} color="#18181C" />
         </View>
       </TouchableOpacity>
 
@@ -76,13 +76,13 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 18 : 10,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  item: { alignItems: "center", minWidth: 60, gap: 2 },
+  item: { alignItems: "center", flex: 1, minWidth: 0, gap: 2 },
   label: { fontSize: 10, fontWeight: "600" },
-  plusWrap: { marginTop: -18 },
+  plusWrap: { flex: 1, alignItems: "center", marginTop: -15 },
   plus: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,
