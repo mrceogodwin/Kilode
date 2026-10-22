@@ -11,6 +11,8 @@ import {
 } from "../lib/musicLibrary";
 import {
   playMusicTrack,
+  getMusicQueue,
+  setMusicQueue,
   playNextInQueue,
   playPreviousInQueue,
   subscribeMusicPlayer,
@@ -67,7 +69,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
 
   useEffect(() => {
     void refreshLibrary();
-    const unsub = subscribeMusicPlayer((state) => setPlayer(state));
+    const unsub = subscribeMusicPlayer((track, playing) => { const queueState = getMusicQueue(); setPlayer({ track, playing, queue: queueState.queue, index: queueState.index }); });
     return () => {
       unsub();
     };
@@ -78,7 +80,8 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const playQueue = async (list: any[], startIndex: number) => {
     const track = list[startIndex];
     if (!track) return;
-    const result = await playMusicTrack(track, { queue: list, index: startIndex });
+    setMusicQueue(list, startIndex);
+    const result = await playMusicTrack(track);
     if (!result.ok) show(result.message || "Playback unavailable.");
     else {
       setActiveTrack(track);
