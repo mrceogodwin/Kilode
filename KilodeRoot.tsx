@@ -321,6 +321,16 @@ function KilodeApp() {
             .filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || "")))
             .filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))
             .filter((t: any, index: number, list: any[]) => list.findIndex((candidate: any) => String(candidate.handle || candidate.name) === String(t.handle || t.name)) === index)
+            .length === 0 ? (
+              <View style={[s.postCard, { marginHorizontal: 16, paddingVertical: 20, alignItems: "center" }]}>
+                <Text style={s.postName}>Creators are getting ready</Text>
+                <Text style={[s.sub, { textAlign: "center", marginTop: 6 }]}>New artist, writer and creator profiles will appear here as they become available.</Text>
+              </View>
+            ) : null}
+          {takes
+            .filter((t: any) => /artist|writer|creator|brand|publisher/i.test(String(t.role || "")))
+            .filter((t: any) => !blocked.includes(String(t.handle || "")) && !blocked.includes(String(t.name || "")))
+            .filter((t: any, index: number, list: any[]) => list.findIndex((candidate: any) => String(candidate.handle || candidate.name) === String(t.handle || t.name)) === index)
             .map((t: any) => (
               <View key={String(t.handle || t.name)} style={[s.postCard, { paddingVertical: 13 }]}>
                 <View style={s.postTop}>
@@ -354,6 +364,12 @@ function KilodeApp() {
             <Text style={s.sectionTitle}>Communities</Text>
             <Text style={s.sub}>Join conversations around interests, culture and work.</Text>
           </View>
+          {rooms.length === 0 ? (
+            <View style={[s.postCard, { marginHorizontal: 16, paddingVertical: 20, alignItems: "center" }]}>
+              <Text style={s.postName}>No communities to show yet</Text>
+              <Text style={[s.sub, { textAlign: "center", marginTop: 6 }]}>Check back soon to discover conversations around your interests.</Text>
+            </View>
+          ) : null}
           {rooms.map((room: any) => (
             <View key={room.id} style={[s.roomRow, { marginHorizontal: 16, marginBottom: 10 }]}>
               <View style={s.postAv}><Text style={s.avatarText}>{room.av || String(room.name || "K").slice(0, 2).toUpperCase()}</Text></View>
