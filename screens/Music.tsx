@@ -9,7 +9,8 @@ type Props = {
   C: any;
   onBack: () => void;
   show: (m: string) => void;
-  onPlay: (track: any) => void;
+  tracks?: any[];
+  onPlay: (track: any) => Promise<void> | void;
 };
 
 const CHARTS = [
@@ -26,11 +27,13 @@ const ARTISTS = [
   { id: "a3", name: "Ayo Blue", meta: "R&B · Abuja", color: "#2563EB" },
 ];
 
-export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
+export function MusicScreen({ s, C, onBack, show, onPlay, tracks: remoteTracks }: Props) {
   const [tab, setTab] = useState<"new" | "charts" | "artists">("new");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
-  const tracks = TRACKS || [];
+  // Prefer tracks returned by the dedicated API. The bundled catalogue remains a clearly marked preview fallback.
+  const tracks = remoteTracks?.length ? remoteTracks : TRACKS || [];
+  const usingPreviewCatalogue = !remoteTracks?.length;
 
   const selectTrack = (t: any) => {
     setActiveArtist(null);
@@ -49,12 +52,12 @@ export function MusicScreen({ s, C, onBack, show, onPlay }: Props) {
           </View>
           <Text style={s.h1}>{activeTrack.title}</Text>
           <Text style={[s.sub, { marginTop: 6 }]}>{activeTrack.artist || "Kilode artist"}</Text>
-          <Text style={[s.meta, { marginTop: 14 }]}>Track details · preview catalogue</Text>
-          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={() => { onPlay(activeTrack); show("Track selected. Streaming audio is not connected yet."); }}>
+          <Text style={[s.meta, { marginTop: 14 }]}>{usingPreviewCatalogue ? "Preview catalogue · live tracks unavailable" : "Track details · connected catalogue"}</Text>
+          <TouchableOpacity style={[s.primaryBtn, { marginTop: 22 }]} onPress={async () => { await onPlay(activeTrack); }}>
             <Ionicons name="play" size={17} color="#fff" />
-            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Select track</Text>
+            <Text style={[s.primaryBtnText, { marginLeft: 8 }]}>Play track</Text>
           </TouchableOpacity>
-          <Text style={[s.meta, { marginTop: 12 }]}>Selecting a track updates the in-app player bar; it does not start audio until a streaming source is connected.</Text>
+          <Text style={[s.meta, { marginTop: 12 }]}>Playback starts only when this track has a valid audio URL. Preview tracks without audio cannot be played.</Text>
         </View>
       </ScrollView>
     );
