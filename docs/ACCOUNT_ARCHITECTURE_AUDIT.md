@@ -39,6 +39,12 @@ Before connecting capabilities to screens, verify:
 - all ten IDs remain in sync between registration, persisted profile parsing, capability map, and server schema;
 - account-type changes cannot bypass limits or access another account's private data.
 
+## Confirmed registration persistence gap
+
+The native signup handler receives the selected `kind`, but the current `lib/auth.tsx` signup request sends only email, password, and display name to `/api/auth/sign-up/email`. The selected kind is then attached to the local client session. That means this repository does **not** prove the chosen account kind is stored in the trusted user record or returned consistently on another device.
+
+Do not patch this by assuming the remote auth provider accepts arbitrary fields. Before live registration is enabled, the dedicated backend must explicitly validate and persist the approved account kind in its user schema, return it in the authenticated user/session response, and enforce role permissions server-side. Add integration tests proving each of the ten kinds survives signup, sign-in, app restart, and account/profile reload. Until then, the registration kind is a local client choice, not a verified server-side role.
+
 ## Account-specific gaps to resolve
 
 - **member:** retain useful free core participation; avoid presenting job discovery as the only non-social capability.
