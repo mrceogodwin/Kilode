@@ -1,0 +1,45 @@
+name: Kilode native checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kilode-native-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-checks:
+    name: TypeScript and Expo configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout native app
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: TypeScript check
+        run: npm run typecheck
+
+      - name: Account capability regression check
+        run: npm run check:account-capabilities
+
+      - name: Validate Expo app configuration
+        run: npx expo config --type public --json > /tmp/kilode-expo-config.json
+
+      - name: Verify native app identifiers
+        run: |
+          node -e 'const c=JSON.parse(require("node:fs").readFileSync("/tmp/kilode-expo-config.json", "utf8")); if (c.ios?.bundleIdentifier !== "ng.kilode.app") { console.error("Unexpected iOS bundle identifier"); process.exit(1); } if (c.android?.package !== "ng.kilode.app") { console.error("Unexpected Android package"); process.exit(1); } console.log("Native bundle identifiers verified.");'
