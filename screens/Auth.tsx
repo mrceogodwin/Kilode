@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Modal,
   Animated,
   Easing,
 } from "react-native";
@@ -81,6 +82,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind>("member");
+  const [accountPickerOpen, setAccountPickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -157,21 +159,79 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 
             {mode === "up" ? (
               <>
-                <Text style={styles.kindLabel}>Account type</Text>
-                <View style={styles.kindGrid}>
-                  {ACCOUNT_KINDS.map((k) => (
+                <Text style={styles.kindLabel}>ACCOUNT TYPE</Text>
+                <TouchableOpacity
+                  style={styles.kindChooser}
+                  onPress={() => setAccountPickerOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Account type: ${ACCOUNT_KINDS.find((item) => item.id === kind)?.label}. Change account type`}
+                >
+                  <View style={styles.kindChooserCopy}>
+                    <Text style={styles.kindChooserTitle}>{ACCOUNT_KINDS.find((item) => item.id === kind)?.label}</Text>
+                    <Text style={styles.kindChooserHint} numberOfLines={2}>
+                      {ACCOUNT_KINDS.find((item) => item.id === kind)?.hint}
+                    </Text>
+                  </View>
+                  <Text style={styles.kindChooserAction}>Change⌄</Text>
+                </TouchableOpacity>
+                <Modal
+                  visible={accountPickerOpen}
+                  transparent
+                  animationType="slide"
+                  onRequestClose={() => setAccountPickerOpen(false)}
+                  statusBarTranslucent
+                >
+                  <View style={styles.pickerBackdrop}>
                     <TouchableOpacity
-                      key={k.id}
-                      style={[styles.kindCell, kind === k.id && styles.kindCellOn]}
-                      onPress={() => setKind(k.id)}
-                    >
-                      <Text style={[styles.kindTitle, kind === k.id && styles.kindTitleOn]}>{k.label}</Text>
-                      <Text style={styles.kindHint} numberOfLines={2}>
-                        {k.hint}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                      style={styles.pickerDismiss}
+                      activeOpacity={1}
+                      onPress={() => setAccountPickerOpen(false)}
+                      accessibilityLabel="Close account type picker"
+                    />
+                    <View style={styles.pickerSheet}>
+                      <View style={styles.pickerHandle} />
+                      <View style={styles.pickerHeader}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.pickerTitle}>Choose your space</Text>
+                          <Text style={styles.pickerSubtitle}>Pick the role that fits what you do on Kilode.</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => setAccountPickerOpen(false)} style={styles.pickerClose}>
+                          <Text style={styles.pickerCloseText}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <ScrollView
+                        style={styles.pickerList}
+                        contentContainerStyle={styles.pickerListContent}
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                      >
+                        {ACCOUNT_KINDS.map((item) => (
+                          <TouchableOpacity
+                            key={item.id}
+                            style={[styles.pickerOption, kind === item.id && styles.pickerOptionOn]}
+                            onPress={() => {
+                              setKind(item.id);
+                              setAccountPickerOpen(false);
+                            }}
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected: kind === item.id }}
+                          >
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.pickerOptionTitle, kind === item.id && styles.pickerOptionTitleOn]}>{item.label}</Text>
+                              <Text style={styles.pickerOptionHint}>{item.hint}</Text>
+                            </View>
+                            <View style={[styles.pickerRadio, kind === item.id && styles.pickerRadioOn]}>
+                              {kind === item.id ? <View style={styles.pickerRadioDot} /> : null}
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                      <TouchableOpacity style={styles.pickerDone} onPress={() => setAccountPickerOpen(false)}>
+                        <Text style={styles.pickerDoneText}>Done</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </Modal>
                 <TextInput
                   style={styles.field}
                   placeholder="Display name (optional)"
@@ -324,7 +384,33 @@ const styles = StyleSheet.create({
   tabTextOn: { color: "#F4F4F5" },
   title: { fontSize: 20, fontWeight: "700", color: "#F4F4F5", letterSpacing: -0.3 },
   hint: { fontSize: 13, color: "#A1A1AA", marginTop: 4, marginBottom: 16, lineHeight: 18 },
-  kindLabel: { fontSize: 12, fontWeight: "700", color: "#A1A1AA", marginBottom: 8 },
+  kindLabel: { fontSize: 11, fontWeight: "800", color: "#A1A1AA", marginBottom: 8, letterSpacing: 1.1 },
+  kindChooser: { minHeight: 68, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12, borderRadius: 15, borderWidth: 1, borderColor: "#D4AF37", backgroundColor: "rgba(212,175,55,0.08)" },
+  kindChooserCopy: { flex: 1, paddingRight: 12 },
+  kindChooserTitle: { color: "#F4F4F5", fontSize: 14, fontWeight: "800" },
+  kindChooserHint: { color: "#A1A1AA", fontSize: 11, lineHeight: 15, marginTop: 4 },
+  kindChooserAction: { color: "#E5C158", fontSize: 12, fontWeight: "800" },
+  pickerBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.64)" },
+  pickerDismiss: { flex: 1 },
+  pickerSheet: { maxHeight: "78%", minHeight: "48%", backgroundColor: "#18181C", borderTopLeftRadius: 26, borderTopRightRadius: 26, borderWidth: 1, borderColor: "#2A2A30", paddingTop: 10, paddingBottom: Platform.OS === "ios" ? 26 : 18, paddingHorizontal: 18 },
+  pickerHandle: { width: 38, height: 4, borderRadius: 4, backgroundColor: "#52525B", alignSelf: "center", marginBottom: 18 },
+  pickerHeader: { flexDirection: "row", alignItems: "flex-start", marginBottom: 14 },
+  pickerTitle: { color: "#FFFFFF", fontSize: 20, fontWeight: "800", letterSpacing: -0.4 },
+  pickerSubtitle: { color: "#A1A1AA", fontSize: 12, lineHeight: 17, marginTop: 5, paddingRight: 8 },
+  pickerClose: { width: 32, height: 32, alignItems: "center", justifyContent: "center", borderRadius: 16, backgroundColor: "#2A2A30" },
+  pickerCloseText: { color: "#D4D4D8", fontSize: 14, fontWeight: "700" },
+  pickerList: { flexShrink: 1 },
+  pickerListContent: { paddingBottom: 8, gap: 8 },
+  pickerOption: { minHeight: 64, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, borderWidth: 1, borderColor: "#2A2A30", backgroundColor: "#111114" },
+  pickerOptionOn: { borderColor: "#D4AF37", backgroundColor: "rgba(212,175,55,0.09)" },
+  pickerOptionTitle: { color: "#F4F4F5", fontSize: 13, fontWeight: "700" },
+  pickerOptionTitleOn: { color: "#E5C158" },
+  pickerOptionHint: { color: "#A1A1AA", fontSize: 11, lineHeight: 15, marginTop: 3 },
+  pickerRadio: { width: 20, height: 20, borderRadius: 10, borderWidth: 1.5, borderColor: "#52525B", alignItems: "center", justifyContent: "center" },
+  pickerRadioOn: { borderColor: "#D4AF37" },
+  pickerRadioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#D4AF37" },
+  pickerDone: { marginTop: 10, borderRadius: 14, paddingVertical: 14, alignItems: "center", backgroundColor: "#D4AF37" },
+  pickerDoneText: { color: "#0D0D10", fontSize: 14, fontWeight: "800" },
   kindGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
   kindCell: {
     width: "48%",
