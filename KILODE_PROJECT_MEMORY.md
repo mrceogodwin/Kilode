@@ -74,7 +74,7 @@ Bundle ID: `ng.kilode.app`
 
 ## Shared library rate limiting — 2026-10-23
 - Added `backend/schema/003_shared_library_rate_limits.sql`. An authenticated-only SECURITY DEFINER RPC derives the caller from `auth.uid()`, permits only hardcoded `library_read` / `library_write` scopes, and stores per-user minute counters in a table inaccessible to direct anon/authenticated DML.
-- The library handler calls that RPC with the caller's JWT after token validation. It returns 429 when the account's shared quota is exhausted and fails closed with 503 if the limiter is unavailable.
+- The library handler calls that RPC with the caller's JWT after token validation. It returns 429 when the account's shared quota is exhausted and fails closed with 503 if the limiter is unavailable. Route tests cover quota denial and verify that data calls stop before reaching PostgREST.
 - Public catalogue/charts/health endpoints remain protected only by the best-effort per-runtime guard. A shared IP/edge limiter for those endpoints is still a production prerequisite. The SQL migration has not yet been applied to a live database; backend remains undeployed.
 
 ## Every future session

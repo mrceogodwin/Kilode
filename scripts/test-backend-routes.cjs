@@ -335,5 +335,27 @@ test("library rejects repeated track IDs in playlist reorder before the RPC", as
     body: { action: "reorder_playlist_tracks", playlistId: "00000000-0000-4000-8000-000000000003", trackIds: [duplicate, duplicate] }
   }, res);
   assert.equal(res.statusCode, 400);
-  assert.equal(callCount, 1);
+  assert.equal(callCount, 2);
+});
+
+test("library returns 429 when the shared database quota is exhausted", async () => {
+  const calls = [];
+  const { default: handler } = loadTs("backend/api/mobile/library.ts", {
+    env: envWithSupabase(),
+    fetchImpl: async (url) => {
+      calls.push(String(url));
+      if (String(url).endsWith("/auth/v1/user")) return { ok: true, json: async () => ({ id: "user-1" }) };
+      if (String(url).endsWith("/rpc/consume_kilode_library_rate_limit")) return { ok: true, json: async () => false };
+      throw new Error("The data API must not be called after a shared quota denial");
+    }
+  });
+  const res = makeResponse();
+  await handler({
+    method: "GET",
+    headers: { authorization: "Bearer valid-test-token", "x-forwarded-for": "192.0.2.24" },
+    query: { resource: "saved" }
+  }, res);
+  assert.equal(res.statusCode, 429);
+  assert.equal(res.headers["retry-after"], "60");
+  assert.equal(calls.length, 2);
 });
