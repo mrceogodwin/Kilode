@@ -76,23 +76,36 @@ function trackIdentity(track: any): string {
   return title && artist ? `metadata:${title}::${artist}` : "";
 }
 
+// Serialize saved-library read/modify/write operations. UI-level tap guards prevent
+// duplicate taps on one row; this queue also protects concurrent saves from separate
+// screens so two quick saves cannot overwrite each other's AsyncStorage updates.
+let savedMutationQueue: Promise<void> = Promise.resolve();
+
+function serializeSavedMutation<T>(operation: () => Promise<T>): Promise<T> {
+  const result = savedMutationQueue.then(operation, operation);
+  savedMutationQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
 export async function toggleSavedTrack(track: any): Promise<{ saved: boolean; list: LibraryTrack[] }> {
-  const list = await getSavedTracks();
-  const normalized = normalize(track);
-  const id = trackIdentity(track);
-  if (!id) throw new Error("This track needs a title and artist before it can be saved.");
-  const idx = list.findIndex((t) => trackIdentity(t) === id);
-  let next: LibraryTrack[];
-  let saved: boolean;
-  if (idx >= 0) {
-    next = list.filter((_, i) => i !== idx);
-    saved = false;
-  } else {
-    next = [normalized, ...list.filter((t) => trackIdentity(t) !== id)];
-    saved = true;
-  }
-  await writeList(SAVED_KEY, next);
-  return { saved, list: next };
+  return serializeSavedMutation(async () => {
+    const list = await getSavedTracks();
+    const normalized = normalize(track);
+    const id = trackIdentity(track);
+    if (!id) throw new Error("This track needs a title and artist before it can be saved.");
+    const idx = list.findIndex((t) => trackIdentity(t) === id);
+    let next: LibraryTrack[];
+    let saved: boolean;
+    if (idx >= 0) {
+      next = list.filter((_, i) => i !== idx);
+      saved = false;
+    } else {
+      next = [normalized, ...list.filter((t) => trackIdentity(t) !== id)];
+      saved = true;
+    }
+    await writeList(SAVED_KEY, next);
+    return { saved, list: next };
+  });
 }
 
 // Serialize recent-history mutations so rapid track changes and Clear History
