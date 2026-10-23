@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
@@ -181,13 +181,24 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     setActiveTrack(t);
   };
 
+  const savingTrackKeys = useRef(new Set<string>());
+
   const onToggleSave = async (track: any) => {
+    const trackKey = track?.id != null
+      ? String(track.id)
+      : `${String(track?.title || "").trim().toLocaleLowerCase()}::${String(track?.artist || "").trim().toLocaleLowerCase()}`;
+    if (!trackKey || trackKey === "::" || savingTrackKeys.current.has(trackKey)) return;
+
+    // Prevent rapid repeated taps from racing AsyncStorage read/modify/write cycles.
+    savingTrackKeys.current.add(trackKey);
     try {
       const { saved: nowSaved } = await toggleSavedTrack(track);
       await refreshLibrary();
       show(nowSaved ? `Saved · ${track.title}` : `Removed · ${track.title}`);
     } catch (error: any) {
       show(error?.message || "Couldn't update your music library. Please try again.");
+    } finally {
+      savingTrackKeys.current.delete(trackKey);
     }
   };
 
