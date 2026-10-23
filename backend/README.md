@@ -39,6 +39,10 @@ No production values are checked into Git. Missing environment values must yield
 - Apply `schema/002_playlist_mutations.sql` after `schema/001_music_core.sql` to install the ownership-checked, RLS-respecting reorder RPC and playlist `updated_at` trigger. Reordering temporarily moves positions outside the current range before assigning the requested 0-based order, avoiding conflicts with the playlist-position unique constraint.
 - These handlers are covered by the Node route regression suite. The SQL migration still needs to be applied and verified on the dedicated Supabase project before production use.
 
+## Verified chart period behavior
+
+The chart route first identifies the newest verified period for the requested chart, then queries entries for exactly that `period_start` and `period_end`. Ranks are ordered ascending within that period; it never fills a sparse latest chart by appending older-period entries. With no verified period, the response is a successful empty result with null period dates.
+
 ## Music data rules
 
 - No fabricated chart positions or play counts. Chart records must include a source, period, rank, and verification timestamp.

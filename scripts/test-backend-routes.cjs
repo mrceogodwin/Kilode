@@ -104,8 +104,8 @@ test("charts reject unsupported chart names before fetching", async () => {
   assert.match(res.payload.error, /top_50 or top_100/);
 });
 
-test("charts request only verified, published tracks and map the response contract", async () => {
-  let requestedUrl = "";
+test("charts return entries from the newest verified period only", async () => {
+  const requestedUrls = [];
   const { default: handler } = loadTs("backend/api/mobile/charts.ts", {
     env: {
       ...envWithSupabase(),
@@ -118,7 +118,20 @@ test("charts request only verified, published tracks and map the response contra
         assert.equal(command[0], "EVAL");
         return { ok: true, json: async () => ({ result: [1, 59000] }) };
       }
-      requestedUrl = String(url);
+
+      requestedUrls.push(String(url));
+      const parsed = new URL(String(url));
+      if (parsed.searchParams.get("select") === "period_start,period_end,track:music_tracks!inner(id)") {
+        return {
+          ok: true,
+          json: async () => [{
+            period_start: "2026-10-01",
+            period_end: "2026-10-31",
+            track: { id: "00000000-0000-4000-8000-000000000001" }
+          }]
+        };
+      }
+
       return {
         ok: true,
         json: async () => [{
@@ -147,12 +160,44 @@ test("charts request only verified, published tracks and map the response contra
   assert.equal(res.statusCode, 200);
   assert.equal(res.headers["cache-control"], "private, no-store");
   assert.equal(res.payload.source, "live");
+  assert.equal(res.payload.periodStart, "2026-10-01");
+  assert.equal(res.payload.periodEnd, "2026-10-31");
   assert.equal(res.payload.entries.length, 1);
   assert.equal(res.payload.entries[0].track.artist, "Test artist");
-  const parsed = new URL(requestedUrl);
-  assert.equal(parsed.searchParams.get("verified_at"), "not.is.null");
-  assert.equal(parsed.searchParams.get("track.rights_status"), "eq.verified");
-  assert.equal(parsed.searchParams.get("track.is_published"), "eq.true");
+  assert.equal(requestedUrls.length, 2);
+
+  const periodQuery = new URL(requestedUrls[0]);
+  assert.equal(periodQuery.searchParams.get("order"), "period_start.desc,period_end.desc,verified_at.desc");
+  assert.equal(periodQuery.searchParams.get("verified_at"), "not.is.null");
+
+  const entriesQuery = new URL(requestedUrls[1]);
+  assert.equal(entriesQuery.searchParams.get("period_start"), "eq.2026-10-01");
+  assert.equal(entriesQuery.searchParams.get("period_end"), "eq.2026-10-31");
+  assert.equal(entriesQuery.searchParams.get("order"), "rank.asc,verified_at.desc");
+  assert.equal(entriesQuery.searchParams.get("limit"), "50");
+  assert.equal(entriesQuery.searchParams.get("track.rights_status"), "eq.verified");
+  assert.equal(entriesQuery.searchParams.get("track.is_published"), "eq.true");
+});
+
+test("charts return an honest empty result when no verified period exists", async () => {
+  const { default: handler } = loadTs("backend/api/mobile/charts.ts", {
+    env: {
+      ...envWithSupabase(),
+      UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "test-upstash-token"
+    },
+    fetchImpl: async (url) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      return { ok: true, json: async () => [] };
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "GET", query: { chart: "top_100" }, headers: { "x-forwarded-for": "192.0.2.25" } }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.chart, "top_100");
+  assert.equal(res.payload.periodStart, null);
+  assert.equal(res.payload.periodEnd, null);
+  assert.deepEqual(res.payload.entries, []);
 });
 
 test("health reports unconfigured when Supabase settings are absent", async () => {
