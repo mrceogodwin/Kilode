@@ -114,5 +114,11 @@ Bundle ID: `ng.kilode.app`
 - Added `schema/004_kilode_user_profiles.sql`: unique lowercase username, display name and one of the ten approved account kinds; RLS exposes only the caller's own profile and blocks direct profile writes. An `auth.users` trigger creates the profile transactionally.
 - Native client now uses real email plus username. Added `/api/auth/recover` with shared IP throttling and a configured HTTPS or `kilode://auth/recovery` callback; the sign-in screen offers “Forgot password?” and returns an enumeration-safe generic confirmation. Also added `/api/auth/reset-password` to update a password using only the short-lived token presented in the recovery link, plus tests for success and invalid-token rejection. Completing deep-link capture and reset UI remains the next native step. Live email delivery/profile-trigger behavior still requires a dedicated Supabase/Upstash preview; Vercel project creation remains blocked by 403 permission failure.
 
+
+## Recovery deep link and password reset completion — 2026-10-23
+- Added native React Native Linking capture for only `kilode://auth/recovery` links whose `type=recovery` and `access_token` are present in query or fragment. Recovery token stays in component memory; it is not persisted as a normal authenticated session or logged.
+- Added a reset screen with new/confirm password fields, token-bound `/api/auth/reset-password` submission, validation, and a sign-in return after success. Auth provider only submits the supplied short-lived recovery token and never saves it as a session.
+- Backend reset route and unit tests are already committed; this native deep-link completion now needs TypeScript/Expo/JS bundle CI verification. Actual email delivery and redirect allowlisting still require the blocked dedicated backend preview.
+
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.

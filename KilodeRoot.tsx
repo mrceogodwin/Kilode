@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
-  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Share, Animated, Dimensions,
+  useColorScheme, TextInput, ActivityIndicator, RefreshControl, Share, Animated, Dimensions, Linking,
 } from "react-native";
 import { palettes, makeStyles } from "./themeStyles";
 import { DESKS, CREATE, LISTINGS } from "./data";
@@ -29,7 +29,7 @@ import { JobDraftsScreen } from "./screens/JobDrafts";
 import { MarketDraftsScreen } from "./screens/MarketDrafts";
 
 function KilodeApp() {
-  const { session, loading: authLoading, signIn, signUp, requestPasswordReset, signInGuest, signOut } = useAuth();
+  const { session, loading: authLoading, signIn, signUp, requestPasswordReset, completePasswordReset, signInGuest, signOut } = useAuth();
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
@@ -55,6 +55,7 @@ function KilodeApp() {
   const [composeText, setComposeText] = useState("");
   const [posting, setPosting] = useState(false);
   const [toast, setToast] = useState("");
+  const [recoveryAccessToken, setRecoveryAccessToken] = useState<string | null>(null);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [boot, setBoot] = useState(true);
@@ -86,6 +87,35 @@ function KilodeApp() {
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const show = (m: string) => { setToast(m); setTimeout(() => setToast(""), 1800); };
+
+  const handleIncomingRecoveryLink = useCallback((url: string) => {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "kilode:" || parsed.hostname !== "auth" || parsed.pathname !== "/recovery") return;
+      const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ""));
+      const token = parsed.searchParams.get("access_token") || fragment.get("access_token");
+      const type = parsed.searchParams.get("type") || fragment.get("type");
+      if (type === "recovery" && token && token.length >= 20 && token.length <= 16_384) {
+        setRecoveryAccessToken(token);
+      }
+    } catch {
+      // Ignore malformed/non-Kilode links; never log or persist recovery tokens.
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void Linking.getInitialURL().then((url) => {
+      if (active && url) handleIncomingRecoveryLink(url);
+    }).catch(() => {});
+    const subscription = Linking.addEventListener("url", ({ url }) => handleIncomingRecoveryLink(url));
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, [handleIncomingRecoveryLink]);
+
+
   const go = (t: string) => {
     setTab(t);
     setMoreOpen(false);
@@ -149,7 +179,7 @@ function KilodeApp() {
     );
   }
 
-  if (!session) {
+  if (!session || recoveryAccessToken) {
     return (
       <AuthScreen
         isDark={isDark}
@@ -157,6 +187,15 @@ function KilodeApp() {
         onSignIn={signIn}
         onSignUp={signUp}
         onPasswordReset={requestPasswordReset}
+        recoveryToken={recoveryAccessToken}
+        onPasswordUpdate={async (token, password) => {
+          const result = await completePasswordReset(token, password);
+          if (result.ok) {
+            setRecoveryAccessToken(null);
+            signOut();
+          }
+          return result;
+        }}
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
         show={show}
       />

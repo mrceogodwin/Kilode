@@ -73,20 +73,32 @@ type Props = {
   onSignIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
   onSignUp: (email: string, username: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
   onPasswordReset: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  recoveryToken?: string | null;
+  onPasswordUpdate: (token: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   onGuest: () => void;
   show: (m: string) => void;
 };
 
-export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, onGuest, show }: Props) {
-  const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
+export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, recoveryToken, onPasswordUpdate, onGuest, show }: Props) {
+  const [mode, setMode] = useState<"welcome" | "in" | "up" | "reset">(recoveryToken ? "reset" : "welcome");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind>("member");
   const [accountPickerOpen, setAccountPickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (recoveryToken) {
+      setMode("reset");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    }
+  }, [recoveryToken]);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -145,18 +157,20 @@ export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, onGuest, show 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
-            <View style={styles.tabs}>
-              <TouchableOpacity style={[styles.tab, mode === "in" && styles.tabOn]} onPress={() => setMode("in")}>
-                <Text style={[styles.tabText, mode === "in" && styles.tabTextOn]}>Sign in</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.tab, mode === "up" && styles.tabOn]} onPress={() => setMode("up")}>
-                <Text style={[styles.tabText, mode === "up" && styles.tabTextOn]}>Create account</Text>
-              </TouchableOpacity>
-            </View>
+            {mode !== "reset" ? (
+              <View style={styles.tabs}>
+                <TouchableOpacity style={[styles.tab, mode === "in" && styles.tabOn]} onPress={() => setMode("in")}>
+                  <Text style={[styles.tabText, mode === "in" && styles.tabTextOn]}>Sign in</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.tab, mode === "up" && styles.tabOn]} onPress={() => setMode("up")}>
+                  <Text style={[styles.tabText, mode === "up" && styles.tabTextOn]}>Create account</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
 
-            <Text style={styles.title}>{mode === "in" ? "Welcome back" : "Join Kilode"}</Text>
+            <Text style={styles.title}>{mode === "in" ? "Welcome back" : mode === "reset" ? "Reset your password" : "Join Kilode"}</Text>
             <Text style={styles.hint}>
-              {mode === "in" ? "Sign in with your email and password" : "Choose account type · email, username + password"}
+              {mode === "in" ? "Sign in with your email and password" : mode === "reset" ? "Choose a new password for your account." : "Choose account type · email, username + password"}
             </Text>
 
             {mode === "up" ? (
@@ -254,25 +268,54 @@ export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, onGuest, show 
               </>
             ) : null}
 
-            <TextInput
-              style={styles.field}
-              placeholder="Email address"
-              placeholderTextColor="#71717A"
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              textContentType="emailAddress"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              style={styles.field}
-              placeholder={mode === "up" ? "Password (8+)" : "Password"}
-              placeholderTextColor="#71717A"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+            {mode !== "reset" ? (
+              <TextInput
+                style={styles.field}
+                placeholder="Email address"
+                placeholderTextColor="#71717A"
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                value={email}
+                onChangeText={setEmail}
+              />
+            ) : null}
+            {mode === "reset" ? (
+              <>
+                <TextInput
+                  style={styles.field}
+                  placeholder="New password (8+ characters)"
+                  placeholderTextColor="#71717A"
+                  secureTextEntry
+                  autoComplete="new-password"
+                  textContentType="newPassword"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+                <TextInput
+                  style={styles.field}
+                  placeholder="Confirm new password"
+                  placeholderTextColor="#71717A"
+                  secureTextEntry
+                  autoComplete="new-password"
+                  textContentType="newPassword"
+                  value={confirmNewPassword}
+                  onChangeText={setConfirmNewPassword}
+                />
+              </>
+            ) : (
+              <TextInput
+                style={styles.field}
+                placeholder={mode === "up" ? "Password (8+)" : "Password"}
+                placeholderTextColor="#71717A"
+                secureTextEntry
+                autoComplete={mode === "up" ? "new-password" : "current-password"}
+                textContentType={mode === "up" ? "newPassword" : "password"}
+                value={password}
+                onChangeText={setPassword}
+              />
+            )}
 
             {mode === "in" ? (
               <TouchableOpacity
@@ -304,14 +347,34 @@ export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, onGuest, show 
                 if (busy) return;
                 setBusy(true);
                 try {
-                  const r = mode === "up"
-                    ? await onSignUp(email, username, password, kind, name || undefined)
-                    : await onSignIn(email, password);
-                  if (!r.ok) show(r.error || "Authentication failed");
-                  else if (r.requiresConfirmation) {
-                    show("Check your email for the confirmation link, then sign in.");
-                    setMode("in");
-                  } else show(mode === "up" ? `Welcome · ${kind}` : "Welcome");
+                  if (mode === "reset") {
+                    if (!recoveryToken) {
+                      show("This recovery link is invalid or expired. Request a new one.");
+                    } else if (newPassword.length < 8 || newPassword.length > 72) {
+                      show("Password must be between 8 and 72 characters.");
+                    } else if (newPassword !== confirmNewPassword) {
+                      show("The passwords do not match.");
+                    } else {
+                      const result = await onPasswordUpdate(recoveryToken, newPassword);
+                      if (!result.ok) show(result.error || "Password could not be updated.");
+                      else {
+                        show("Password updated. Sign in with your new password.");
+                        setPassword("");
+                        setNewPassword("");
+                        setConfirmNewPassword("");
+                        setMode("in");
+                      }
+                    }
+                  } else {
+                    const result = mode === "up"
+                      ? await onSignUp(email, username, password, kind, name || undefined)
+                      : await onSignIn(email, password);
+                    if (!result.ok) show(result.error || "Authentication failed");
+                    else if (result.requiresConfirmation) {
+                      show("Check your email for the confirmation link, then sign in.");
+                      setMode("in");
+                    } else show(mode === "up" ? `Welcome · ${kind}` : "Welcome");
+                  }
                 } catch {
                   show("Kilode could not complete authentication. Please try again.");
                 } finally {
@@ -320,26 +383,34 @@ export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, onGuest, show 
               }}
             >
               <Text style={styles.primaryText}>
-                {busy ? "…" : mode === "in" ? "Sign in" : "Create account"}
+                {busy ? "…" : mode === "in" ? "Sign in" : mode === "reset" ? "Update password" : "Create account"}
               </Text>
             </TouchableOpacity>
 
-            <View style={styles.switchRow}>
-              <Text style={styles.switchMuted}>
-                {mode === "in" ? "New here?" : "Already have an account?"}
-              </Text>
-              <TouchableOpacity onPress={() => setMode(mode === "in" ? "up" : "in")}>
-                <Text style={styles.switchLink}>
-                  {mode === "in" ? "Create account" : "Sign in"}
-                </Text>
+            {mode === "reset" ? (
+              <TouchableOpacity style={{ alignSelf: "center", paddingVertical: 14 }} onPress={() => setMode("in")}>
+                <Text style={styles.switchLink}>Back to sign in</Text>
               </TouchableOpacity>
-            </View>
+            ) : (
+              <>
+                <View style={styles.switchRow}>
+                  <Text style={styles.switchMuted}>
+                    {mode === "in" ? "New here?" : "Already have an account?"}
+                  </Text>
+                  <TouchableOpacity onPress={() => setMode(mode === "in" ? "up" : "in")}>
+                    <Text style={styles.switchLink}>
+                      {mode === "in" ? "Create account" : "Sign in"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-            <Text style={styles.legal}>By continuing you agree to Kilode Terms & Privacy</Text>
+                <Text style={styles.legal}>By continuing you agree to Kilode Terms & Privacy</Text>
 
-            <TouchableOpacity style={styles.guest} onPress={onGuest}>
-              <Text style={styles.guestText}>Continue as guest</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.guest} onPress={onGuest}>
+                  <Text style={styles.guestText}>Continue as guest</Text>
+                </TouchableOpacity>
+              </>
+            )}
             </View>
         </ScrollView>
       </KeyboardAvoidingView>

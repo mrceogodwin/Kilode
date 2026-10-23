@@ -22,6 +22,7 @@ type AuthCtx = {
   signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signUp: (email: string, username: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
   requestPasswordReset: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  completePasswordReset: (token: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => void;
 };
 
@@ -248,6 +249,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const completePasswordReset = useCallback(async (token: string, password: string) => {
+    if (typeof token !== "string" || token.length < 20 || token.length > 16_384) {
+      return { ok: false, error: "This recovery link is invalid or expired. Request a new one." };
+    }
+    if (password.length < 8 || password.length > 72) {
+      return { ok: false, error: "Password must be between 8 and 72 characters." };
+    }
+    if (!API_BASE) return { ok: false, error: "Password recovery is unavailable until Kilode's dedicated backend is connected." };
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+      let data: any = {};
+      try { data = await res.json(); } catch { /* generic fallback below */ }
+      if (!res.ok) return { ok: false, error: errorMessage(data, "Password could not be updated. Request a new recovery link.") };
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "Could not reach password update. Check your connection and try again." };
+    }
+  }, []);
+
   const signOut = useCallback(() => {
     setSession(null);
     setGuest(false);
@@ -255,8 +279,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [persist]);
 
   const value = useMemo(
-    () => ({ session, guest, loading, signInGuest, setLocalKind, signIn, signUp, requestPasswordReset, signOut }),
-    [session, guest, loading, signInGuest, setLocalKind, signIn, signUp, requestPasswordReset, signOut]
+    () => ({ session, guest, loading, signInGuest, setLocalKind, signIn, signUp, requestPasswordReset, completePasswordReset, signOut }),
+    [session, guest, loading, signInGuest, setLocalKind, signIn, signUp, requestPasswordReset, completePasswordReset, signOut]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
