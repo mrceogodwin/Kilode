@@ -255,7 +255,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         kind: asAccountKind(data.user?.kind || "member"),
       };
       sessionRef.current = s;
-      sessionRef.current = s;
       setSession(s);
       setGuest(false);
       await persist(s);
@@ -315,6 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: typeof data.user.name === "string" ? data.user.name : (displayName?.trim() || h),
         kind: asAccountKind(data.user.kind),
       };
+      sessionRef.current = s;
       setSession(s);
       setGuest(false);
       await persist(s);
