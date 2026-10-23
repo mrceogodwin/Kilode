@@ -1,3 +1,4 @@
+import { attachRedactedApiLogger } from "../_lib/redactedApiLog";
 import { enforceRequestGuards } from "../_lib/requestGuard";
 
 /**
@@ -42,6 +43,7 @@ function cleanName(value: unknown): string | null {
 }
 
 export default async function handler(req: RequestLike, res: ResponseLike) {
+  attachRedactedApiLogger(req, res, "mobile-library");
   res.setHeader("Cache-Control", "private, no-store");
   res.setHeader("Vary", "Authorization");
   res.setHeader("Content-Type", "application/json; charset=utf-8");

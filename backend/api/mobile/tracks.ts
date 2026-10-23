@@ -1,7 +1,9 @@
+import { attachRedactedApiLogger } from "../_lib/redactedApiLog";
 import { enforceSharedIpRateLimit } from "../_lib/sharedIpRateLimit";
 import { enforceRequestGuards } from "../_lib/requestGuard";
 
 export default async function handler(req: any, res: any) {
+  attachRedactedApiLogger(req, res, "mobile-tracks");
   res.setHeader("Cache-Control", "private, no-store");
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");

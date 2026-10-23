@@ -37,7 +37,7 @@ function loadTs(relativePath, options = {}) {
     AbortSignal,
     setTimeout,
     clearTimeout,
-    console,
+    console: options.console || { info: () => {}, warn: () => {}, error: () => {} },
     require: (specifier) => {
       if (specifier.startsWith(".")) {
         let dependencyPath = path.resolve(path.dirname(absolutePath), specifier);
@@ -463,4 +463,35 @@ test("public shared IP limiter fails closed when Upstash is not configured", asy
   assert.equal(allowed, false);
   assert.equal(res.statusCode, 503);
   assert.match(res.payload.error, /not configured/i);
+});
+
+
+test("API completion logs include safe metadata but redact client secrets and payloads", async () => {
+  const logLines = [];
+  const { default: handler } = loadTs("backend/api/mobile/tracks.ts", {
+    console: { info: (line) => logLines.push(String(line)), warn: () => {}, error: () => {} }
+  });
+  const res = makeResponse();
+  await handler({
+    method: "POST",
+    headers: {
+      "x-vercel-id": "iad1::request-123",
+      "x-forwarded-for": "203.0.113.123",
+      authorization: "Bearer do-not-log-this-token"
+    },
+    body: { password: "do-not-log-this-body" }
+  }, res);
+
+  assert.equal(res.statusCode, 405);
+  assert.equal(logLines.length, 1);
+  const log = JSON.parse(logLines[0]);
+  assert.equal(log.event, "api_request_complete");
+  assert.equal(log.route, "mobile-tracks");
+  assert.equal(log.method, "POST");
+  assert.equal(log.status, 405);
+  assert.equal(log.requestId, "iad1::request-123");
+  assert.equal(Number.isFinite(log.durationMs), true);
+  assert.equal(logLines[0].includes("do-not-log-this-token"), false);
+  assert.equal(logLines[0].includes("do-not-log-this-body"), false);
+  assert.equal(logLines[0].includes("203.0.113.123"), false);
 });

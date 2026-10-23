@@ -91,6 +91,11 @@ Bundle ID: `ng.kilode.app`
 - Added `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` to the backend environment template and 2 unit tests for Redis counter/429 behaviour and missing configuration. Both Upstash credentials must be set on the dedicated Vercel project before public API routes can return data.
 
 
+## Structured redacted API logs — 2026-10-23
+- Added `backend/api/_lib/redactedApiLog.ts` and attached it to health, tracks, charts, and library handlers. Completion events record only a sanitized correlation ID, fixed route, method, HTTP status, and duration.
+- The logger deliberately excludes IP addresses, raw URLs/query strings, Authorization headers/tokens, request bodies, user IDs, provider payloads, and exception messages. Logging failures are swallowed so observability cannot break an API response.
+- Regression coverage asserts the 405 completion log shape and checks that sample bearer token, body secret, and client IP do not appear.
+
 ## Verified chart period integrity — 2026-10-23
 - The charts endpoint now discovers the newest verified period, then queries only that exact `period_start` + `period_end`, ordering ranks ascending within the period. This prevents older chart-period records from filling a sparse latest Top 50/Top 100 response.
 - Response contract includes top-level `periodStart` and `periodEnd`; if no verified period exists it returns an honest empty array with null period values.
