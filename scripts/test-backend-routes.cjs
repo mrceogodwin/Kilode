@@ -186,7 +186,9 @@ test("library rejects malformed track IDs before attempting a database write", a
     env: envWithSupabase(),
     fetchImpl: async (url) => {
       called.push(String(url));
-      return { ok: true, json: async () => ({ id: "user-1" }) };
+      if (String(url).endsWith("/auth/v1/user")) return { ok: true, json: async () => ({ id: "user-1" }) };
+      if (String(url).endsWith("/rpc/consume_kilode_library_rate_limit")) return { ok: true, json: async () => true };
+      throw new Error("A malformed track ID must not reach the database write");
     }
   });
   const res = makeResponse();
@@ -196,8 +198,9 @@ test("library rejects malformed track IDs before attempting a database write", a
     body: { action: "save_track", trackId: "not-a-uuid" }
   }, res);
   assert.equal(res.statusCode, 400);
-  assert.equal(called.length, 1);
+  assert.equal(called.length, 2);
   assert.match(called[0], /\/auth\/v1\/user$/);
+  assert.match(called[1], /\/rpc\/consume_kilode_library_rate_limit$/);
 });
 
 test("library rejects oversized mutation requests before outbound calls", async () => {
@@ -252,6 +255,9 @@ test("library renames an owned playlist via PATCH with a trimmed name", async ()
       if (String(url).endsWith("/auth/v1/user")) {
         return { ok: true, json: async () => ({ id: "user-1" }) };
       }
+      if (String(url).endsWith("/rpc/consume_kilode_library_rate_limit")) {
+        return { ok: true, json: async () => true };
+      }
       return { ok: true, text: async () => JSON.stringify([{ id: "00000000-0000-4000-8000-000000000001", name: "Weekend Mix" }]) };
     }
   });
@@ -262,10 +268,11 @@ test("library renames an owned playlist via PATCH with a trimmed name", async ()
     body: { action: "rename_playlist", playlistId: "00000000-0000-4000-8000-000000000001", name: "  Weekend Mix  " }
   }, res);
   assert.equal(res.statusCode, 200);
-  assert.equal(calls.length, 2);
-  assert.match(calls[1].url, /\/rest\/v1\/music_playlists\?id=eq\./);
-  assert.equal(calls[1].init.method, "PATCH");
-  assert.deepEqual(JSON.parse(calls[1].init.body), { name: "Weekend Mix" });
+  assert.equal(calls.length, 3);
+  assert.match(calls[1].url, /\/rpc\/consume_kilode_library_rate_limit$/);
+  assert.match(calls[2].url, /\/rest\/v1\/music_playlists\?id=eq\./);
+  assert.equal(calls[2].init.method, "PATCH");
+  assert.deepEqual(JSON.parse(calls[2].init.body), { name: "Weekend Mix" });
 });
 
 test("library reorders a playlist using the atomic RPC contract", async () => {
@@ -281,6 +288,9 @@ test("library reorders a playlist using the atomic RPC contract", async () => {
       if (String(url).endsWith("/auth/v1/user")) {
         return { ok: true, json: async () => ({ id: "user-1" }) };
       }
+      if (String(url).endsWith("/rpc/consume_kilode_library_rate_limit")) {
+        return { ok: true, json: async () => true };
+      }
       return { ok: true, text: async () => "" };
     }
   });
@@ -291,14 +301,15 @@ test("library reorders a playlist using the atomic RPC contract", async () => {
     body: { action: "reorder_playlist_tracks", playlistId: "00000000-0000-4000-8000-000000000003", trackIds }
   }, res);
   assert.equal(res.statusCode, 200);
-  assert.equal(calls.length, 2);
-  assert.match(calls[1].url, /\/rest\/v1\/rpc\/reorder_music_playlist_tracks$/);
-  assert.equal(calls[1].init.method, "POST");
-  assert.deepEqual(JSON.parse(calls[1].init.body), {
+  assert.equal(calls.length, 3);
+  assert.match(calls[1].url, /\/rpc\/consume_kilode_library_rate_limit$/);
+  assert.match(calls[2].url, /\/rest\/v1\/rpc\/reorder_music_playlist_tracks$/);
+  assert.equal(calls[2].init.method, "POST");
+  assert.deepEqual(JSON.parse(calls[2].init.body), {
     p_playlist_id: "00000000-0000-4000-8000-000000000003",
     p_track_ids: trackIds
   });
-  assert.equal(calls[1].init.headers.Prefer, "return=minimal");
+  assert.equal(calls[2].init.headers.Prefer, "return=minimal");
 });
 
 test("library rejects repeated track IDs in playlist reorder before the RPC", async () => {
@@ -311,7 +322,10 @@ test("library rejects repeated track IDs in playlist reorder before the RPC", as
       if (String(url).endsWith("/auth/v1/user")) {
         return { ok: true, json: async () => ({ id: "user-1" }) };
       }
-      throw new Error("RPC must not be called for duplicate IDs");
+      if (String(url).endsWith("/rpc/consume_kilode_library_rate_limit")) {
+        return { ok: true, json: async () => true };
+      }
+      throw new Error("Playlist reorder RPC must not be called for duplicate IDs");
     }
   });
   const res = makeResponse();

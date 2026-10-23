@@ -24,6 +24,12 @@ No production values are checked into Git. Missing environment values must yield
 7. Only then mark the client source as `live`. Until then, the app must distinguish mock/preview content from live content.
 
 
+## Shared database-backed rate limiting
+
+- After validating a bearer token, the library route calls `rpc/consume_kilode_library_rate_limit` with the same caller JWT. The database function applies a shared fixed-minute quota of 120 reads or 30 writes per authenticated account across serverless instances.
+- Apply `schema/003_shared_library_rate_limits.sql` after the core and playlist migrations. The counter table is not directly readable/writable by anon or authenticated roles; the security-definer RPC uses `auth.uid()`, a fixed search path, and hardcoded allowed scopes.
+- If the shared quota service is unavailable, library requests fail closed with 503. Quota exhaustion returns 429. Public tracks/charts/health endpoints still only have their per-runtime guard; a shared IP/edge limiter remains required before production.
+
 ## Playlist mutation contract
 
 - Rename a caller-owned playlist with `PATCH /api/mobile/library` and body `{ "action": "rename_playlist", "playlistId": "<uuid>", "name": "<1–48 characters>" }`.

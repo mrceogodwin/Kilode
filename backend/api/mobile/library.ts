@@ -75,6 +75,22 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     if (!user || typeof user.id !== "string") return res.status(401).json({ ok: false, error: "Session is invalid or expired" });
 
     const method = String(req.method || "GET").toUpperCase();
+    // Apply a shared database-backed quota after validating the caller. Unlike
+    // the per-runtime IP guard, this counter survives serverless instance changes.
+    const limitScope = method === "GET" ? "library_read" : "library_write";
+    const limitResponse = await fetch(base + "/rest/v1/rpc/consume_kilode_library_rate_limit", {
+      method: "POST",
+      headers: { apikey: anonKey, Authorization: "Bearer " + token, Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ p_scope: limitScope }),
+    });
+    if (!limitResponse.ok) return res.status(503).json({ ok: false, error: "Music library protection is temporarily unavailable" });
+    let allowedBySharedLimit: unknown;
+    try { allowedBySharedLimit = await limitResponse.json(); }
+    catch { return res.status(503).json({ ok: false, error: "Music library protection is temporarily unavailable" }); }
+    if (allowedBySharedLimit !== true) {
+      res.setHeader("Retry-After", "60");
+      return res.status(429).json({ ok: false, error: "Music library request limit reached. Please try again in a minute." });
+    }
     const resource = typeof req.query?.resource === "string" ? req.query.resource : "saved";
     const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
 
