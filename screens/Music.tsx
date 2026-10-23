@@ -1203,9 +1203,12 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                     { text: "Clear", style: "destructive", onPress: () => {
                       // Invalidate pending playback/library reads immediately so an older
                       // AsyncStorage result cannot repopulate history after the user clears it.
-                      recentRefreshRequest.current += 1;
-                      void clearRecentTracks().then(() => {
-                        setRecent([]);
+                      const clearRequest = ++recentRefreshRequest.current;
+                      void clearRecentTracks().then(async () => {
+                        // Read back the serialized store instead of blindly forcing an
+                        // empty UI: a new track may have been played while Clear was pending.
+                        const latest = await getRecentTracks();
+                        if (clearRequest === recentRefreshRequest.current) setRecent(latest);
                         show("Listening history cleared.");
                       }).catch((e: any) => {
                         void refreshLibrary();
