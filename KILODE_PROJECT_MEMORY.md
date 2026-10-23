@@ -39,17 +39,22 @@ Bundle ID: `ng.kilode.app`
 - No Apple Developer membership/TestFlight or production deployment is to be implied without verified account/configuration and successful release evidence.
 
 ## Known latest verified repository state (2026-10-23)
-- Latest inspected commit: `776e42016c988b785724c3785fa5a2778ad5d42a` — `fix(music): derive genre discovery from catalogue`.
-- The two associated GitHub Actions workflows were successful:
-  - https://github.com/mrceogodwin/Kilode/actions/runs/39926420395
-  - https://github.com/mrceogodwin/Kilode/actions/runs/39926420389
+- Latest verified commit before the current backend slice: `a3a428aab8be4d41a1b2f2bafe03c5f2cc27faaf` — `feat(backend): expose verified Top 50 and Top 100 charts`; native checks and iOS validation passed:
+  - https://github.com/mrceogodwin/Kilode/actions/runs/39927130170
+  - https://github.com/mrceogodwin/Kilode/actions/runs/39927130036
+- The latest backend change adds `backend/api/mobile/library.ts` (`4c868d3231ebdb7051f427e578ab578ffd5cddb2`) for authenticated saved-track, listening-history, and playlist reads/writes. This is committed code, but its new workflow checks still need to be inspected; it is not a deployed API.
 - Recent-history fixes are on the current branch and the runs inspected for the recent serialized-history / playlist work were successful:
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904771844
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904771818
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904754691
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904754680
 - The fix commit `fe285f1c686c8cc8813dd321c32b762e2cc55f8c` added a recent-history revision signal and waits for the recent-history write before publishing playback state. It must not be treated as a failure solely because a later message said “failed”; inspect the associated workflow run/logs for the exact evidence.
-- The native client’s dedicated API is **not configured/deployed yet**. This is an explicit gap, not a feature to disguise with mocks.
+- Dedicated API status: backend code is still **not configured/deployed/connected to a production database**. `backend/api/mobile/tracks.ts`, `charts.ts`, `health.ts`, and `library.ts` are code foundations only. Do not call the endpoints live until a separate Vercel project rooted at `backend`, dedicated Supabase configuration/schema, auth and RLS, route tests, and live health checks are verified.
+- `library.ts` uses a caller Bearer token and Supabase Auth validation, then forwards the same token to PostgREST so database RLS is authoritative. Native app integration and authenticated session flow are still pending. It is not cross-device sync until wired and tested.
+
+## Progress log — 2026-10-23
+- Added the authenticated Music library route for saved tracks, recent listening history, and playlist reads/writes. It validates the Supabase session, validates identifiers/names, forwards user JWTs (not service-role credentials), uses private/no-store cache headers, and returns generic errors instead of upstream details.
+- Next backend steps, in order: verify CI on the library route; add route tests and request/rate-limit protections; complete playlist rename/reorder semantics; deploy backend separately with dedicated Supabase and apply migration; validate live health; then integrate authenticated native API calls with explicit local-vs-synced status and conflict-safe migration. Never point at legacy Kilode Nine/v2.
 
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.
