@@ -21,6 +21,7 @@ type AuthCtx = {
   setLocalKind: (kind: AccountKind) => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   signUp: (email: string, username: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
+  requestPasswordReset: (email: string) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => void;
 };
 
@@ -226,6 +227,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [persist]);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail) || normalizedEmail.length > 254) {
+      return { ok: false, error: "Enter a valid email address first." };
+    }
+    if (!API_BASE) return { ok: false, error: "Password recovery is unavailable until Kilode's dedicated backend is connected." };
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/recover`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+      let data: any = {};
+      try { data = await res.json(); } catch { /* generic fallback below */ }
+      if (!res.ok) return { ok: false, error: errorMessage(data, "Password recovery is temporarily unavailable. Try again later.") };
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "Could not reach Kilode password recovery. Check your connection and try again." };
+    }
+  }, []);
+
   const signOut = useCallback(() => {
     setSession(null);
     setGuest(false);
@@ -233,8 +255,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [persist]);
 
   const value = useMemo(
-    () => ({ session, guest, loading, signInGuest, setLocalKind, signIn, signUp, signOut }),
-    [session, guest, loading, signInGuest, setLocalKind, signIn, signUp, signOut]
+    () => ({ session, guest, loading, signInGuest, setLocalKind, signIn, signUp, requestPasswordReset, signOut }),
+    [session, guest, loading, signInGuest, setLocalKind, signIn, signUp, requestPasswordReset, signOut]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

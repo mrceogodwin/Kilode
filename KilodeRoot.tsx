@@ -29,7 +29,7 @@ import { JobDraftsScreen } from "./screens/JobDrafts";
 import { MarketDraftsScreen } from "./screens/MarketDrafts";
 
 function KilodeApp() {
-  const { session, loading: authLoading, signIn, signUp, signInGuest, signOut } = useAuth();
+  const { session, loading: authLoading, signIn, signUp, requestPasswordReset, signInGuest, signOut } = useAuth();
   const system = useColorScheme();
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "system">("dark");
   const effective = themeMode === "system" ? (system === "light" ? "light" : "dark") : themeMode;
@@ -156,6 +156,7 @@ function KilodeApp() {
         C={C}
         onSignIn={signIn}
         onSignUp={signUp}
+        onPasswordReset={requestPasswordReset}
         onGuest={() => { signInGuest("Guest"); show("Guest mode"); }}
         show={show}
       />

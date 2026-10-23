@@ -598,3 +598,49 @@ test("sign-up rejects invalid username before calling Supabase Auth", async () =
   assert.equal(res.statusCode, 400);
   assert.equal(authCalls.length, 0);
 });
+
+
+test("password recovery passes the configured app deep link and returns generic success", async () => {
+  let recoveryUrl = "";
+  let recoveryBody = null;
+  const { default: handler } = loadTs("backend/api/auth/recover.ts", {
+    env: {
+      ...envWithSupabase(),
+      KILODE_AUTH_REDIRECT_URL: "kilode://auth/recovery",
+      UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "test-upstash-token"
+    },
+    fetchImpl: async (url, init = {}) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      recoveryUrl = String(url);
+      recoveryBody = JSON.parse(init.body);
+      return { ok: true, json: async () => ({}) };
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.41" }, body: { email: "person@example.com" } }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.ok, true);
+  assert.equal(recoveryBody.email, "person@example.com");
+  assert.equal(new URL(recoveryUrl).searchParams.get("redirect_to"), "kilode://auth/recovery");
+});
+
+test("password recovery fails closed when the callback is not configured", async () => {
+  const upstreamCalls = [];
+  const { default: handler } = loadTs("backend/api/auth/recover.ts", {
+    env: {
+      ...envWithSupabase(),
+      UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "test-upstash-token"
+    },
+    fetchImpl: async (url) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      upstreamCalls.push(String(url));
+      throw new Error("Recovery must not run without a configured redirect");
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.42" }, body: { email: "person@example.com" } }, res);
+  assert.equal(res.statusCode, 503);
+  assert.equal(upstreamCalls.length, 0);
+});

@@ -30,6 +30,7 @@ for (const file of [
   "backend/api/_lib/authRoutes.ts",
   "backend/api/auth/sign-in/email.ts",
   "backend/api/auth/sign-up/email.ts",
+  "backend/api/auth/recover.ts",
   "backend/api/_lib/sharedIpRateLimit.ts",
   "backend/api/_lib/requestGuard.ts",
   "backend/.env.example"
@@ -49,4 +50,5 @@ assert.ok(publicLimiterSource.includes('redis.call("INCR"'), "shared limiter mus
 assert.ok(publicLimiterSource.includes('redis.call("PEXPIRE"'), "shared limiter must set a fixed-window TTL");
 assert.ok(publicLimiterSource.includes('"SHA-256"'), "shared limiter must hash client IPs before using them in keys");
 
+assert.ok(fs.readFileSync(path.join(root, "backend/.env.example"), "utf8").split("\n").includes("KILODE_AUTH_REDIRECT_URL="), "password-recovery callback must be documented");
 console.log("Dedicated Kilode API project configuration verified; no deployment or database readiness is implied.");

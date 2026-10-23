@@ -72,11 +72,12 @@ type Props = {
   C: any;
   onSignIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
   onSignUp: (email: string, username: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
+  onPasswordReset: (email: string) => Promise<{ ok: boolean; error?: string }>;
   onGuest: () => void;
   show: (m: string) => void;
 };
 
-export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
+export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, onGuest, show }: Props) {
   const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -272,6 +273,29 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
               value={password}
               onChangeText={setPassword}
             />
+
+            {mode === "in" ? (
+              <TouchableOpacity
+                style={{ alignSelf: "flex-end", marginTop: 6, marginBottom: 4 }}
+                accessibilityRole="button"
+                onPress={async () => {
+                  if (busy) return;
+                  setBusy(true);
+                  try {
+                    const result = await onPasswordReset(email);
+                    show(result.ok
+                      ? "If an account exists for that email, a password reset link will be sent."
+                      : (result.error || "Password recovery is temporarily unavailable."));
+                  } catch {
+                    show("Could not request a password reset. Please try again.");
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                <Text style={styles.switchLink}>Forgot password?</Text>
+              </TouchableOpacity>
+            ) : null}
 
             <TouchableOpacity
               style={[styles.primary, { opacity: busy ? 0.7 : 1 }]}

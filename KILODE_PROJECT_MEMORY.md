@@ -112,7 +112,7 @@ Bundle ID: `ng.kilode.app`
 ## Email authentication API scaffold — 2026-10-23
 - Added `/api/auth/sign-in/email` and `/api/auth/sign-up/email` handlers backed by Supabase Auth. Routes use shared IP limits, request/body guards, timeouts, sanitized errors, and redacted completion logs.
 - Added `schema/004_kilode_user_profiles.sql`: unique lowercase username, display name and one of the ten approved account kinds; RLS exposes only the caller's own profile and blocks direct profile writes. An `auth.users` trigger creates the profile transactionally.
-- The native client still needs to be switched from synthetic emails to real email plus username in the next commit. Live email delivery and profile-trigger behavior require a dedicated Supabase/Upstash preview; Vercel project creation remains blocked by 403 permission failure.
+- Native client now uses real email plus username. Added `/api/auth/recover` with shared IP throttling and a configured HTTPS or `kilode://auth/recovery` callback; the sign-in screen offers “Forgot password?” and returns an enumeration-safe generic confirmation. Two mocked recovery tests are included. Live email delivery and profile-trigger behavior require a dedicated Supabase/Upstash preview; Vercel project creation remains blocked by 403 permission failure.
 
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.
