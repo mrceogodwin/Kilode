@@ -95,18 +95,32 @@ export async function toggleSavedTrack(track: any): Promise<{ saved: boolean; li
   return { saved, list: next };
 }
 
+// Serialize recent-history mutations so rapid track changes and Clear History
+// cannot race their AsyncStorage read/modify/write cycles.
+let recentMutationQueue: Promise<void> = Promise.resolve();
+
+function serializeRecentMutation<T>(operation: () => Promise<T>): Promise<T> {
+  const result = recentMutationQueue.then(operation, operation);
+  recentMutationQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
 export async function addRecentTrack(track: any): Promise<LibraryTrack[]> {
-  const list = await getRecentTracks();
-  const normalized = normalize(track);
-  const id = trackIdentity(track);
-  if (!id) return list;
-  const next = [normalized, ...list.filter((t) => trackIdentity(t) !== id)].slice(0, MAX_RECENT);
-  await writeList(RECENT_KEY, next);
-  return next;
+  return serializeRecentMutation(async () => {
+    const list = await getRecentTracks();
+    const normalized = normalize(track);
+    const id = trackIdentity(track);
+    if (!id) return list;
+    const next = [normalized, ...list.filter((t) => trackIdentity(t) !== id)].slice(0, MAX_RECENT);
+    await writeList(RECENT_KEY, next);
+    return next;
+  });
 }
 
 export async function clearRecentTracks(): Promise<void> {
-  await writeList(RECENT_KEY, []);
+  await serializeRecentMutation(async () => {
+    await writeList(RECENT_KEY, []);
+  });
 }
 
 
