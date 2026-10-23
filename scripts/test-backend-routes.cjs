@@ -644,3 +644,51 @@ test("password recovery fails closed when the callback is not configured", async
   assert.equal(res.statusCode, 503);
   assert.equal(upstreamCalls.length, 0);
 });
+
+
+test("password update uses only the recovery token to update the password", async () => {
+  const calls = [];
+  const { default: handler } = loadTs("backend/api/auth/reset-password.ts", {
+    env: {
+      ...envWithSupabase(),
+      UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "test-upstash-token"
+    },
+    fetchImpl: async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      assert.equal(String(url), "https://kilode-test.supabase.co/auth/v1/user");
+      assert.equal(init.method, "PUT");
+      assert.equal(init.headers.Authorization, "Bearer recovery-access-token-long-enough");
+      assert.deepEqual(JSON.parse(init.body), { password: "a-brand-new-password" });
+      return { ok: true, json: async () => ({ id: "user-id" }) };
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.43" },
+    body: { token: "recovery-access-token-long-enough", password: "a-brand-new-password" } }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.ok, true);
+  assert.equal(calls.length, 2);
+});
+
+test("password update rejects invalid recovery tokens before contacting Supabase", async () => {
+  const calls = [];
+  const { default: handler } = loadTs("backend/api/auth/reset-password.ts", {
+    env: {
+      ...envWithSupabase(),
+      UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "test-upstash-token"
+    },
+    fetchImpl: async (url) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      calls.push(String(url));
+      throw new Error("Invalid recovery token must not reach Supabase");
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.44" },
+    body: { token: "bad", password: "a-brand-new-password" } }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(calls.length, 0);
+});

@@ -21,7 +21,7 @@ function cleanEmail(value: unknown): string | null {
   const email = value.trim().toLowerCase();
   return email.length <= 254 && EMAIL_RE.test(email) ? email : null;
 }
-async function begin(req: AuthRequest, res: AuthResponse, mode: "sign-in" | "sign-up" | "recover") {
+async function begin(req: AuthRequest, res: AuthResponse, mode: "sign-in" | "sign-up" | "recover" | "reset") {
   const route = "auth-" + mode;
   attachRedactedApiLogger(req, res, route);
   res.setHeader("Cache-Control", "no-store");
@@ -31,11 +31,11 @@ async function begin(req: AuthRequest, res: AuthResponse, mode: "sign-in" | "sig
     reject(res, 405, "Method not allowed");
     return null;
   }
-  if (!enforceRequestGuards(req, res, { scope: route, maxRequests: mode === "sign-in" ? 15 : mode === "sign-up" ? 8 : 6, maxBodyBytes: 8 * 1024 })) return null;
+  if (!enforceRequestGuards(req, res, { scope: route, maxRequests: mode === "sign-in" ? 15 : mode === "sign-up" ? 8 : mode === "recover" ? 6 : 10, maxBodyBytes: 8 * 1024 })) return null;
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const anonKey = process.env.SUPABASE_ANON_KEY?.trim();
   if (!base || !anonKey) { reject(res, 503, "Kilode authentication is not configured"); return null; }
-  if (!(await enforceSharedIpRateLimit(req, res, { scope: route, maxRequests: mode === "sign-in" ? 12 : mode === "sign-up" ? 5 : 3 }))) return null;
+  if (!(await enforceSharedIpRateLimit(req, res, { scope: route, maxRequests: mode === "sign-in" ? 12 : mode === "sign-up" ? 5 : mode === "recover" ? 3 : 8 }))) return null;
   const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
   return { base, anonKey, body };
 }
@@ -148,4 +148,42 @@ export async function handlePasswordRecovery(req: AuthRequest, res: AuthResponse
     // Provider 4xx responses are masked to avoid revealing whether an email is registered.
     return res.status(200).json({ ok: true });
   } catch { return reject(res, 502, "Could not reach password recovery. Try again later."); }
+}
+
+export async function handlePasswordUpdate(req: AuthRequest, res: AuthResponse) {
+  const context = await begin(req, res, "reset");
+  if (!context) return;
+  const token = context.body.token;
+  const password = context.body.password;
+  if (typeof token !== "string" || token.length < 20 || token.length > 16_384) {
+    return reject(res, 400, "The recovery link is invalid or expired. Request a new one.");
+  }
+  if (typeof password !== "string" || password.length < 8 || new TextEncoder().encode(password).byteLength > 72) {
+    return reject(res, 400, "Password must be at least 8 characters and no more than 72 UTF-8 bytes");
+  }
+
+  try {
+    const upstream = await fetch(context.base + "/auth/v1/user", {
+      method: "PUT",
+      headers: {
+        apikey: context.anonKey,
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ password }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (upstream.status === 429) {
+      res.setHeader("Retry-After", "60");
+      return reject(res, 429, "Too many password update attempts. Try again shortly.");
+    }
+    if (upstream.status === 400 || upstream.status === 401 || upstream.status === 403) {
+      return reject(res, 401, "The recovery link is invalid or expired. Request a new one.");
+    }
+    if (!upstream.ok) return reject(res, 502, "Password could not be updated. Try again later.");
+    return res.status(200).json({ ok: true });
+  } catch {
+    return reject(res, 502, "Could not reach password update. Try again later.");
+  }
 }
