@@ -46,14 +46,6 @@ type Props = {
   onPlay?: (track: any) => Promise<void> | void;
 };
 
-const CHARTS = [
-  { rank: 1, title: "Ojuelegba Nights", artist: "Simi Sola", plays: "12.4k" },
-  { rank: 2, title: "Danfo Dreams", artist: "Kemi Wave", plays: "9.1k" },
-  { rank: 3, title: "Eko Energy", artist: "Femi + Liza", plays: "7.8k" },
-  { rank: 4, title: "Water & Light", artist: "Ayo Blue", plays: "6.2k" },
-  { rank: 5, title: "Island Rain", artist: "Bola Keys", plays: "5.1k" },
-];
-
 const ARTISTS = [
   { id: "a1", name: "Simi Sola", meta: "Afrobeats · Lagos", color: "#F97316" },
   { id: "a2", name: "Kemi Wave", meta: "Amapiano · PH", color: "#7C3AED" },
@@ -905,45 +897,25 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
               );
             })}
           </View>
-          <Text style={[s.meta, s.padH, { marginBottom: 12 }]}>
-            {usingPreviewCatalogue
-              ? "Preview only: 5 illustrative entries are shown, not a complete Top 50/Top 100 chart. Rankings and play counts are not live."
-              : `Top ${activeChart} selected. Verified chart rankings must come from the connected chart-data service; these five entries remain illustrative until that feed is available.`}
-          </Text>
-          {CHARTS.map((c) => {
-            // Match both fields so a shared artist name never opens the wrong track.
-            const match = tracks.find(
-              (t: any) =>
-                String(t.title ?? "").trim().toLowerCase() === c.title.toLowerCase() &&
-                String(t.artist ?? "").trim().toLowerCase() === c.artist.toLowerCase()
-            );
-            return (
-              <TouchableOpacity
-                key={c.rank}
-                style={s.roomRow}
-                accessibilityRole="button"
-                accessibilityLabel={match ? `Play ${c.title}` : `${c.title}, illustrative chart entry only`}
-                accessibilityHint={match ? "Long press to open track details" : undefined}
-                onPress={() => {
-                  if (match) {
-                    const matchIndex = tracks.findIndex((t: any) => sameTrack(t, match));
-                    if (matchIndex >= 0) void playQueue(tracks, matchIndex);
-                    else void playQueue([match], 0);
-                  } else {
-                    show("Illustrative chart entry only. This track is not in the connected catalogue yet.");
-                  }
-                }}
-                onLongPress={() => { if (match) selectTrack(match); }}
-              >
-                <Text style={[s.roomName, { width: 28, color: C.accent }]}>{c.rank}</Text>
-                <View style={s.flex}>
-                  <Text style={s.roomName}>{c.title}</Text>
-                  <Text style={s.meta}>{c.artist} · Sample entry</Text>
-                </View>
-                <Ionicons name={match ? "play-circle-outline" : "information-circle-outline"} size={28} color={C.accent} />
-              </TouchableOpacity>
-            );
-          })}
+          <View style={[s.padH, { marginTop: 8 }]}>
+            <View style={{ borderWidth: 1, borderColor: C.border || "#2A2A30", backgroundColor: C.elevated || "#18181C", borderRadius: 16, padding: 18 }}>
+              <View style={{ width: 46, height: 46, borderRadius: 13, backgroundColor: "#332A16", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                <Ionicons name="bar-chart-outline" size={24} color={C.accent || "#E5C158"} />
+              </View>
+              <Text style={{ color: C.text || "#FFFFFF", fontSize: 16, fontWeight: "800", marginBottom: 8 }}>
+                Verified rankings are not connected yet
+              </Text>
+              <Text style={{ color: C.text2 || "#9A9A9E", fontSize: 13, lineHeight: 19 }}>
+                Kilode Top {activeChart} will list tracks in order of verified listening data when the native chart service is available. No invented song titles, ranks or play counts are shown as real.
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, paddingTop: 13, borderTopWidth: 1, borderTopColor: C.border || "#2A2A30" }}>
+                <Ionicons name="time-outline" size={16} color={C.text3 || "#9A9A9E"} />
+                <Text style={{ color: C.text3 || "#9A9A9E", fontSize: 11, marginLeft: 7 }}>
+                  {usingPreviewCatalogue ? "Preview catalogue · no live chart feed" : "Catalogue connected · chart feed still unavailable"}
+                </Text>
+              </View>
+            </View>
+          </View>
         </>
       )}
 
