@@ -42,17 +42,19 @@ Bundle ID: `ng.kilode.app`
 - Latest verified commit before the current backend slice: `a3a428aab8be4d41a1b2f2bafe03c5f2cc27faaf` — `feat(backend): expose verified Top 50 and Top 100 charts`; native checks and iOS validation passed:
   - https://github.com/mrceogodwin/Kilode/actions/runs/39927130170
   - https://github.com/mrceogodwin/Kilode/actions/runs/39927130036
-- The latest backend change adds `backend/api/mobile/library.ts` (`4c868d3231ebdb7051f427e578ab578ffd5cddb2`) for authenticated saved-track, listening-history, and playlist reads/writes. This is committed code, but its new workflow checks still need to be inspected; it is not a deployed API.
+- The authenticated Music library route (`backend/api/mobile/library.ts`, `4c868d3231ebdb7051f427e578ab578ffd5cddb2`) is committed and its native checks passed, but it remains code only—not a deployed API. Current native chart UI calls the dedicated `/api/mobile/charts?chart=top_50|top_100` contract and has explicit loading, error, timeout, and retry handling; with `API_BASE` unset it correctly reports that the dedicated API is not configured.
 - Recent-history fixes are on the current branch and the runs inspected for the recent serialized-history / playlist work were successful:
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904771844
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904771818
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904754691
   - https://github.com/mrceogodwin/Kilode/actions/runs/39904754680
-- The fix commit `fe285f1c686c8cc8813dd321c32b762e2cc55f8c` added a recent-history revision signal and waits for the recent-history write before publishing playback state. It must not be treated as a failure solely because a later message said “failed”; inspect the associated workflow run/logs for the exact evidence.
+- The fix commit `fe285f1c686c8cc8813dd321c32b762e2cc55f8c` initially failed both CI workflows because `screens/Music.tsx` did not initialize the newly required `recentHistoryRevision` field (TypeScript error at line 93). This was a real compile failure, not a cancellation. The field is now initialized in the current screen state, and later serialized-history fixes are verified by passing runs `39904771844` and `39904771818`.
 - Dedicated API status: backend code is still **not configured/deployed/connected to a production database**. `backend/api/mobile/tracks.ts`, `charts.ts`, `health.ts`, and `library.ts` are code foundations only. Do not call the endpoints live until a separate Vercel project rooted at `backend`, dedicated Supabase configuration/schema, auth and RLS, route tests, and live health checks are verified.
 - `library.ts` uses a caller Bearer token and Supabase Auth validation, then forwards the same token to PostgREST so database RLS is authoritative. Native app integration and authenticated session flow are still pending. It is not cross-device sync until wired and tested.
 
 ## Progress log — 2026-10-23
+- Current `main` head verified: `eedace2e9da9364e840d30edfdf3c239f15ce232` (`fix(music): make chart retry explicit and reliable`). Both native checks and iOS native validation passed: https://github.com/mrceogodwin/Kilode/actions/runs/39930896050 and https://github.com/mrceogodwin/Kilode/actions/runs/39930895684. The preceding chart API integration commit also passed both workflows: https://github.com/mrceogodwin/Kilode/actions/runs/39930866978 and https://github.com/mrceogodwin/Kilode/actions/runs/39930866923.
+
 - Added the authenticated Music library route for saved tracks, recent listening history, and playlist reads/writes. It validates the Supabase session, validates identifiers/names, forwards user JWTs (not service-role credentials), uses private/no-store cache headers, and returns generic errors instead of upstream details.
 - Next backend steps, in order: verify CI on the library route; add route tests and request/rate-limit protections; complete playlist rename/reorder semantics; deploy backend separately with dedicated Supabase and apply migration; validate live health; then integrate authenticated native API calls with explicit local-vs-synced status and conflict-safe migration. Never point at legacy Kilode Nine/v2.
 
