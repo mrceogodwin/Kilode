@@ -46,8 +46,6 @@ type Props = {
   onPlay?: (track: any) => Promise<void> | void;
 };
 
-const GENRES = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion"];
-
 type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres" | "queue";
 
 function trackRenderKey(track: any, index: number, prefix = "track") {
@@ -95,6 +93,11 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const hasLiveTracks = tracksSource === "live";
   const tracks = hasLiveTracks ? remoteTracks || [] : TRACKS || [];
   const usingPreviewCatalogue = !hasLiveTracks;
+  // Genre navigation reflects only genres present in the active catalogue; avoid zero-count placeholders.
+  const genres = Array.from(new Set(tracks
+    .map((track: any) => String(track?.genre || "").trim())
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))));
 
   const recentRefreshRequest = useRef(0);
 
@@ -674,13 +677,13 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             const artistResults = q
               ? catalogueArtists.filter((a: any) => [a.name, a.meta, a.genre].some((v) => String(v || "").toLowerCase().includes(q)))
               : [];
-            const genreResults = q ? GENRES.filter((g) => g.toLowerCase().includes(q)) : [];
+            const genreResults = q ? genres.filter((g) => g.toLowerCase().includes(q)) : [];
             if (!q) return (
               <View style={s.padH}>
                 <View style={s.sectionHead}><Text style={s.sectionTitle}>Explore Kilode Music</Text></View>
                 <Text style={s.sub}>Search songs, artists and genres to find your next sound.</Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
-                  {GENRES.map((g) => (
+                  {genres.map((g) => (
                     <TouchableOpacity key={g} onPress={() => { setSearchQuery(g); }} style={[s.chip, { marginBottom: 4 }]} accessibilityRole="button">
                       <Text style={s.chipText}>{g}</Text>
                     </TouchableOpacity>
@@ -809,7 +812,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <TouchableOpacity onPress={() => setTab("genres")} accessibilityRole="button"><Text style={s.link}>All genres</Text></TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chipsRow}>
-            {GENRES.map((g, i) => (
+            {genres.map((g, i) => (
               <TouchableOpacity key={g} onPress={() => setActiveGenre(g)} accessibilityRole="button" style={{ paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, backgroundColor: ["#292018", "#211D30", "#18272A", "#30221A", "#2B1D27"][i % 5], borderWidth: 1, borderColor: C.border || "#2A2A30" }}>
                 <Text style={{ color: C.text || "#FFFFFF", fontSize: 12, fontWeight: "700" }}>{g}</Text>
               </TouchableOpacity>
@@ -1345,7 +1348,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           <View style={s.sectionHead}>
             <Text style={s.sectionTitle}>Browse by genre</Text>
           </View>
-          {GENRES.map((g) => {
+          {genres.map((g) => {
             const count = tracks.filter((t: any) => String(t.genre || "").toLowerCase() === g.toLowerCase()).length;
             return (
               <TouchableOpacity key={g} style={s.roomRow} onPress={() => setActiveGenre(g)}>
