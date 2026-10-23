@@ -26,6 +26,10 @@ for (const file of [
   "backend/schema/001_music_core.sql",
   "backend/schema/002_playlist_mutations.sql",
   "backend/schema/003_shared_library_rate_limits.sql",
+  "backend/schema/004_kilode_user_profiles.sql",
+  "backend/api/_lib/authRoutes.ts",
+  "backend/api/auth/sign-in/email.ts",
+  "backend/api/auth/sign-up/email.ts",
   "backend/api/_lib/sharedIpRateLimit.ts",
   "backend/api/_lib/requestGuard.ts",
   "backend/.env.example"
