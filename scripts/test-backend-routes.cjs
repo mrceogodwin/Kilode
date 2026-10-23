@@ -506,7 +506,7 @@ test("sign-in exchanges a real email for a Supabase token and reads the server p
       if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
       if (String(url).includes("/auth/v1/token?grant_type=password")) {
         assert.equal(JSON.parse(init.body).email, "godwin@example.com");
-        return { ok: true, json: async () => ({ access_token: "access-jwt", user: { id: "00000000-0000-4000-8000-000000000001" } }) };
+        return { ok: true, json: async () => ({ access_token: "access-jwt", refresh_token: "refresh-token-test-123456789", expires_in: 3600, user: { id: "00000000-0000-4000-8000-000000000001" } }) };
       }
       if (String(url).includes("/rest/v1/kilode_user_profiles?")) {
         assert.equal(init.headers.Authorization, "Bearer access-jwt");
@@ -519,6 +519,8 @@ test("sign-in exchanges a real email for a Supabase token and reads the server p
   await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.31" }, body: { email: " Godwin@Example.com ", password: "secret-password" } }, res);
   assert.equal(res.statusCode, 200);
   assert.equal(res.payload.token, "access-jwt");
+  assert.equal(res.payload.refreshToken, "refresh-token-test-123456789");
+  assert.equal(res.payload.expiresIn, 3600);
   assert.equal(res.payload.user.username, "godwin");
   assert.equal(res.payload.user.kind, "member");
   assert.equal(calls.length, 3);
@@ -549,7 +551,7 @@ test("sign-up stores normalized username and returns authoritative profile after
       if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
       if (String(url).endsWith("/auth/v1/signup")) {
         authBody = JSON.parse(init.body);
-        return { ok: true, json: async () => ({ access_token: "signup-jwt", user: { id: "00000000-0000-4000-8000-000000000002" } }) };
+        return { ok: true, json: async () => ({ access_token: "signup-jwt", refresh_token: "signup-refresh-token-123456789", expires_in: 3600, user: { id: "00000000-0000-4000-8000-000000000002" } }) };
       }
       if (String(url).includes("/rest/v1/kilode_user_profiles?")) return { ok: true, json: async () => [{ username: "godwin_1", display_name: "Godwin", account_kind: "artist" }] };
       throw new Error("Unexpected sign-up API call");
@@ -564,6 +566,7 @@ test("sign-up stores normalized username and returns authoritative profile after
   assert.equal(authBody.data.account_kind, "artist");
   assert.equal(res.payload.user.kind, "artist");
   assert.equal(res.payload.token, "signup-jwt");
+  assert.equal(res.payload.refreshToken, "signup-refresh-token-123456789");
 });
 
 test("sign-up returns confirmation-required without minting a fake session", async () => {

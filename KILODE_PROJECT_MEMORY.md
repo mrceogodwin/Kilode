@@ -120,5 +120,10 @@ Bundle ID: `ng.kilode.app`
 - Added a reset screen with new/confirm password fields, token-bound `/api/auth/reset-password` submission, validation, and a sign-in return after success. Auth provider only submits the supplied short-lived recovery token and never saves it as a session.
 - Backend reset route and unit tests are already committed; this native deep-link completion now needs TypeScript/Expo/JS bundle CI verification. Actual email delivery and redirect allowlisting still require the blocked dedicated backend preview.
 
+
+## Client refresh-token persistence and rotation — 2026-10-23
+- The auth provider now persists the Supabase refresh token and access-token expiry with the account session, restores those fields across app launches, and calls `/api/auth/refresh` about a minute before expiry. Failed refreshes retry after 30 seconds; an explicit 401 clears the expired session, while network/server errors do not sign the user out.
+- Sign-in and sign-up success fixtures now include refresh tokens and expiry metadata; the client rejects a purported live session that contains no refresh token, avoiding a session that silently expires without renewal.
+
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.

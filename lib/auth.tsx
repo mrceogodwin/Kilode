@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE } from "./config";
 import { asAccountKind, type AccountKind } from "./accountKinds";
@@ -10,6 +10,8 @@ export type Session = {
   handle: string;
   name: string;
   kind: AccountKind;
+  refreshToken?: string;
+  expiresAt?: number;
 };
 
 type AuthCtx = {
@@ -39,6 +41,8 @@ function errorMessage(data: unknown, fallback: string): string {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const sessionRef = useRef<Session | null>(null);
+  const refreshInFlight = useRef(false);
   const [guest, setGuest] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               name: typeof parsed.name === "string" ? parsed.name : "Guest",
               kind: asAccountKind(parsed.kind),
             };
+            sessionRef.current = s;
             setSession(s);
             setGuest(true);
           } else if (
@@ -73,7 +78,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               handle: parsed.handle,
               name: parsed.name,
               kind: asAccountKind(parsed.kind),
+              refreshToken: typeof parsed.refreshToken === "string" ? parsed.refreshToken : undefined,
+              expiresAt: typeof parsed.expiresAt === "number" && Number.isFinite(parsed.expiresAt) ? parsed.expiresAt : undefined,
             };
+            sessionRef.current = s;
             setSession(s);
             setGuest(false);
           } else {
@@ -104,6 +112,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshSession = useCallback(async (expectedRefreshToken: string): Promise<"refreshed" | "retry" | "expired" | "stale"> => {
+    const current = sessionRef.current;
+    if (!current || current.token === "guest" || current.refreshToken !== expectedRefreshToken) return "stale";
+    if (!API_BASE) return "retry";
+    if (refreshInFlight.current) return "retry";
+    refreshInFlight.current = true;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ refreshToken: expectedRefreshToken }),
+      });
+      let data: any = {};
+      try { data = await res.json(); } catch { /* retry unless the server confirms the session is invalid */ }
+      if (res.status === 401) {
+        if (sessionRef.current?.refreshToken === expectedRefreshToken) {
+          sessionRef.current = null;
+          setSession(null);
+          setGuest(false);
+          await persist(null);
+        }
+        return "expired";
+      }
+      if (!res.ok) return "retry";
+      const token = data.token || data.session?.token;
+      const refreshToken = data.refreshToken || data.session?.refresh_token;
+      const user = data.user;
+      if (typeof token !== "string" || !token || token.length > 16_384 ||
+          typeof refreshToken !== "string" || !refreshToken || refreshToken.length > 16_384 ||
+          !user || typeof user.username !== "string") return "retry";
+      if (sessionRef.current?.refreshToken !== expectedRefreshToken) return "stale";
+      const expiresInRaw = Number(data.expiresIn);
+      const expiresIn = Number.isFinite(expiresInRaw) && expiresInRaw > 0 ? Math.min(expiresInRaw, 86_400) : 3600;
+      const next: Session = {
+        token,
+        refreshToken,
+        expiresAt: Date.now() + expiresIn * 1000,
+        handle: user.username,
+        name: typeof user.name === "string" ? user.name : user.username,
+        kind: asAccountKind(user.kind),
+      };
+      sessionRef.current = next;
+      setSession(next);
+      setGuest(false);
+      await persist(next);
+      return "refreshed";
+    } catch {
+      return "retry";
+    } finally {
+      refreshInFlight.current = false;
+    }
+  }, [persist]);
+
+  useEffect(() => {
+    if (!session || session.token === "guest" || !session.refreshToken || !API_BASE) return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = (delayMs: number) => {
+      if (timer) clearTimeout(timer);
+      const safeDelay = Math.min(Math.max(1000, delayMs), 2_147_000_000);
+      timer = setTimeout(async () => {
+        if (!active || !session.refreshToken) return;
+        const result = await refreshSession(session.refreshToken);
+        if (active && result === "retry") schedule(30_000);
+      }, safeDelay);
+    };
+    // Refresh a minute before expiry; a persisted legacy session without an
+    // expiry is refreshed immediately if it already has a refresh token.
+    const refreshAt = typeof session.expiresAt === "number" ? session.expiresAt - 60_000 : Date.now();
+    schedule(refreshAt - Date.now());
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [session, refreshSession]);
+
   const signInGuest = useCallback((name?: string, kind?: AccountKind) => {
     const s: Session = {
       token: "guest",
@@ -111,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: name?.trim() || "Guest",
       kind: asAccountKind(kind || "member"),
     };
+    sessionRef.current = s;
     setSession(s);
     setGuest(true);
     void persist(s);
@@ -120,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession((prev) => {
       if (!prev || prev.token !== "guest") return prev;
       const next: Session = { ...prev, kind: asAccountKind(kind) };
+      sessionRef.current = next;
       void persist(next);
       return next;
     });
@@ -153,16 +239,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { ok: false, error: errorMessage(data, "Sign-in failed. Check your details or try again later.") };
       }
       const token = data.token || data.session?.token;
-      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest" || !data.user || typeof data.user.username !== "string") {
+      const refreshToken = data.refreshToken || data.session?.refresh_token;
+      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest" || typeof refreshToken !== "string" || !refreshToken || !data.user || typeof data.user.username !== "string") {
         return { ok: false, error: "The server did not return a valid account session. Please try again later." };
       }
+      const expiresInRaw = Number(data.expiresIn);
+      const expiresIn = Number.isFinite(expiresInRaw) && expiresInRaw > 0 ? Math.min(expiresInRaw, 86_400) : 3600;
       const s: Session = {
         token,
+        refreshToken,
+        expiresAt: Date.now() + expiresIn * 1000,
         handle: data.user.username,
         name: typeof data.user.name === "string" ? data.user.name : data.user.username,
         // The authenticated server profile is authoritative; never grant a local role choice at sign-in.
         kind: asAccountKind(data.user?.kind || "member"),
       };
+      sessionRef.current = s;
+      sessionRef.current = s;
       setSession(s);
       setGuest(false);
       await persist(s);
@@ -208,11 +301,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (data.requiresConfirmation === true) return { ok: true, requiresConfirmation: true };
       const token = data.token || data.session?.token;
-      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest" || !data.user || typeof data.user.username !== "string") {
+      const refreshToken = data.refreshToken || data.session?.refresh_token;
+      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest" || typeof refreshToken !== "string" || !refreshToken || !data.user || typeof data.user.username !== "string") {
         return { ok: false, error: "The server did not return a valid account session. Please try again later." };
       }
+      const expiresInRaw = Number(data.expiresIn);
+      const expiresIn = Number.isFinite(expiresInRaw) && expiresInRaw > 0 ? Math.min(expiresInRaw, 86_400) : 3600;
       const s: Session = {
         token,
+        refreshToken,
+        expiresAt: Date.now() + expiresIn * 1000,
         handle: data.user.username,
         name: typeof data.user.name === "string" ? data.user.name : (displayName?.trim() || h),
         kind: asAccountKind(data.user.kind),
@@ -273,6 +371,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(() => {
+    sessionRef.current = null;
     setSession(null);
     setGuest(false);
     void persist(null);
