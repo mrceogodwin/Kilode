@@ -241,3 +241,85 @@ test("shared request guard measures mutation bodies in UTF-8 bytes", () => {
   assert.equal(allowed, false);
   assert.equal(res.statusCode, 413);
 });
+
+
+test("library renames an owned playlist via PATCH with a trimmed name", async () => {
+  const calls = [];
+  const { default: handler } = loadTs("backend/api/mobile/library.ts", {
+    env: envWithSupabase(),
+    fetchImpl: async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url).endsWith("/auth/v1/user")) {
+        return { ok: true, json: async () => ({ id: "user-1" }) };
+      }
+      return { ok: true, text: async () => JSON.stringify([{ id: "00000000-0000-4000-8000-000000000001", name: "Weekend Mix" }]) };
+    }
+  });
+  const res = makeResponse();
+  await handler({
+    method: "PATCH",
+    headers: { authorization: "Bearer valid-test-token", "x-forwarded-for": "192.0.2.21" },
+    body: { action: "rename_playlist", playlistId: "00000000-0000-4000-8000-000000000001", name: "  Weekend Mix  " }
+  }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls.length, 2);
+  assert.match(calls[1].url, /\/rest\/v1\/music_playlists\?id=eq\./);
+  assert.equal(calls[1].init.method, "PATCH");
+  assert.deepEqual(JSON.parse(calls[1].init.body), { name: "Weekend Mix" });
+});
+
+test("library reorders a playlist using the atomic RPC contract", async () => {
+  const calls = [];
+  const trackIds = [
+    "00000000-0000-4000-8000-000000000001",
+    "00000000-0000-4000-8000-000000000002"
+  ];
+  const { default: handler } = loadTs("backend/api/mobile/library.ts", {
+    env: envWithSupabase(),
+    fetchImpl: async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url).endsWith("/auth/v1/user")) {
+        return { ok: true, json: async () => ({ id: "user-1" }) };
+      }
+      return { ok: true, text: async () => "" };
+    }
+  });
+  const res = makeResponse();
+  await handler({
+    method: "PATCH",
+    headers: { authorization: "Bearer valid-test-token", "x-forwarded-for": "192.0.2.22" },
+    body: { action: "reorder_playlist_tracks", playlistId: "00000000-0000-4000-8000-000000000003", trackIds }
+  }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls.length, 2);
+  assert.match(calls[1].url, /\/rest\/v1\/rpc\/reorder_music_playlist_tracks$/);
+  assert.equal(calls[1].init.method, "POST");
+  assert.deepEqual(JSON.parse(calls[1].init.body), {
+    p_playlist_id: "00000000-0000-4000-8000-000000000003",
+    p_track_ids: trackIds
+  });
+  assert.equal(calls[1].init.headers.Prefer, "return=minimal");
+});
+
+test("library rejects repeated track IDs in playlist reorder before the RPC", async () => {
+  let callCount = 0;
+  const duplicate = "00000000-0000-4000-8000-000000000001";
+  const { default: handler } = loadTs("backend/api/mobile/library.ts", {
+    env: envWithSupabase(),
+    fetchImpl: async (url) => {
+      callCount += 1;
+      if (String(url).endsWith("/auth/v1/user")) {
+        return { ok: true, json: async () => ({ id: "user-1" }) };
+      }
+      throw new Error("RPC must not be called for duplicate IDs");
+    }
+  });
+  const res = makeResponse();
+  await handler({
+    method: "PATCH",
+    headers: { authorization: "Bearer valid-test-token", "x-forwarded-for": "192.0.2.23" },
+    body: { action: "reorder_playlist_tracks", playlistId: "00000000-0000-4000-8000-000000000003", trackIds: [duplicate, duplicate] }
+  }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(callCount, 1);
+});

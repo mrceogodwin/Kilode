@@ -23,6 +23,14 @@ No production values are checked into Git. Missing environment values must yield
 6. Deploy this directory as a separate Vercel project, verify health and database connectivity, then configure the native app's `EXPO_PUBLIC_API_URL` to that dedicated HTTPS host.
 7. Only then mark the client source as `live`. Until then, the app must distinguish mock/preview content from live content.
 
+
+## Playlist mutation contract
+
+- Rename a caller-owned playlist with `PATCH /api/mobile/library` and body `{ "action": "rename_playlist", "playlistId": "<uuid>", "name": "<1–48 characters>" }`.
+- Reorder all tracks with `PATCH /api/mobile/library` and body `{ "action": "reorder_playlist_tracks", "playlistId": "<uuid>", "trackIds": ["<uuid>", "..."] }`. Track IDs must be unique and must contain every track in that playlist exactly once (1–500 entries).
+- Apply `schema/002_playlist_mutations.sql` after `schema/001_music_core.sql` to install the ownership-checked, RLS-respecting reorder RPC and playlist `updated_at` trigger. Reordering temporarily moves positions outside the current range before assigning the requested 0-based order, avoiding conflicts with the playlist-position unique constraint.
+- These handlers are covered by the Node route regression suite. The SQL migration still needs to be applied and verified on the dedicated Supabase project before production use.
+
 ## Music data rules
 
 - No fabricated chart positions or play counts. Chart records must include a source, period, rank, and verification timestamp.

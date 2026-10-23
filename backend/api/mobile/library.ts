@@ -8,6 +8,7 @@ import { enforceRequestGuards } from "../_lib/requestGuard";
  *
  * GET  ?resource=saved|history|playlists
  * POST { action: save_track|record_play|create_playlist|add_playlist_track, ... }
+ * PATCH { action: rename_playlist|reorder_playlist_tracks, ... }
  * DELETE { action: unsave_track|clear_history|delete_playlist|remove_playlist_track, ... }
  */
 type RequestLike = {
@@ -44,8 +45,8 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
   res.setHeader("Cache-Control", "private, no-store");
   res.setHeader("Vary", "Authorization");
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  if (!["GET", "POST", "DELETE"].includes(String(req.method || "").toUpperCase())) {
-    res.setHeader("Allow", "GET, POST, DELETE");
+  if (!["GET", "POST", "PATCH", "DELETE"].includes(String(req.method || "").toUpperCase())) {
+    res.setHeader("Allow", "GET, POST, PATCH, DELETE");
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
@@ -125,6 +126,31 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
       path = "/rest/v1/music_playlist_tracks";
       payload = { playlist_id: playlistId, track_id: trackId, position };
       upstreamMethod = "POST";
+    } else if (method === "PATCH" && action === "rename_playlist") {
+      const playlistId = cleanId(body.playlistId);
+      const name = cleanName(body.name);
+      if (!playlistId || !name) {
+        return res.status(400).json({ ok: false, error: "Valid playlistId and a playlist name of 1–48 characters are required" });
+      }
+      path = "/rest/v1/music_playlists?id=eq." + playlistId;
+      payload = { name };
+      upstreamMethod = "PATCH";
+    } else if (method === "PATCH" && action === "reorder_playlist_tracks") {
+      const playlistId = cleanId(body.playlistId);
+      const trackIds = body.trackIds;
+      if (
+        !playlistId ||
+        !Array.isArray(trackIds) ||
+        trackIds.length < 1 ||
+        trackIds.length > 500 ||
+        !trackIds.every((trackId: unknown) => cleanId(trackId) !== null) ||
+        new Set(trackIds).size !== trackIds.length
+      ) {
+        return res.status(400).json({ ok: false, error: "A valid playlistId and 1–500 unique track IDs are required" });
+      }
+      path = "/rest/v1/rpc/reorder_music_playlist_tracks";
+      payload = { p_playlist_id: playlistId, p_track_ids: trackIds };
+      upstreamMethod = "POST";
     } else if (method === "DELETE" && action === "unsave_track") {
       const trackId = cleanId(body.trackId);
       if (!trackId) return res.status(400).json({ ok: false, error: "A valid trackId is required" });
@@ -146,7 +172,7 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
 
     const upstream = await fetch(base + path, {
       method: upstreamMethod,
-      headers: { ...headers, Prefer: method === "DELETE" ? "return=minimal" : "return=representation" },
+      headers: { ...headers, Prefer: method === "DELETE" || action === "reorder_playlist_tracks" ? "return=minimal" : "return=representation" },
       ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}),
     });
     if (!upstream.ok) {

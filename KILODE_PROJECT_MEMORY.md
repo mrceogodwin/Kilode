@@ -56,7 +56,7 @@ Bundle ID: `ng.kilode.app`
 - Prior verified chart UI commit: `eedace2e9da9364e840d30edfdf3c239f15ce232` (`fix(music): make chart retry explicit and reliable`). Both native checks and iOS native validation passed: https://github.com/mrceogodwin/Kilode/actions/runs/39930896050 and https://github.com/mrceogodwin/Kilode/actions/runs/39930895684. The preceding chart API integration commit also passed both workflows: https://github.com/mrceogodwin/Kilode/actions/runs/39930866978 and https://github.com/mrceogodwin/Kilode/actions/runs/39930866923.
 
 - Added the authenticated Music library route for saved tracks, recent listening history, and playlist reads/writes. It validates the Supabase session, validates identifiers/names, forwards user JWTs (not service-role credentials), uses private/no-store cache headers, and returns generic errors instead of upstream details.
-- Next backend steps, in order: verify CI on the library route; add route tests and request/rate-limit protections; complete playlist rename/reorder semantics; deploy backend separately with dedicated Supabase and apply migration; validate live health; then integrate authenticated native API calls with explicit local-vs-synced status and conflict-safe migration. Never point at legacy Kilode Nine/v2.
+- Next backend steps, in order: provision a shared production rate limiter; deploy the backend separately with a dedicated Supabase project and apply migrations; validate live health; then integrate authenticated native API calls with explicit local-vs-synced status and conflict-safe migration. Never point at legacy Kilode Nine/v2.
 
 ## API route testing and request guard progress — 2026-10-23
 - Baseline before this slice was `df58d5865f02e97976306998afc9e84f0fb94a03`; both native CI workflows were green on that commit.
@@ -64,6 +64,12 @@ Bundle ID: `ng.kilode.app`
 - `npm run test:backend` uses Node's built-in test runner and the installed TypeScript transpiler to exercise the actual route handlers with mocked outbound requests. Both existing CI workflows run this test suite.
 - The request counter is intentionally documented as per-runtime defense in depth only. It is not shared across serverless instances and cold starts reset it. Provision/verify a shared limiter, trusted proxy IP headers, and live infrastructure before deployment.
 - Dedicated backend remains undeployed and the native API URL must remain unset until deployment, auth/RLS and live health checks are verified.
+
+
+## Playlist backend semantics — 2026-10-23
+- Added PATCH actions to rename playlists and reorder every track in a playlist. Rename checks UUID/name length and relies on caller JWT + RLS ownership; reordering accepts 1–500 unique track UUIDs and delegates atomic order changes to a security-invoker Supabase RPC.
+- Added `backend/schema/002_playlist_mutations.sql` with an authenticated reorder function that validates ownership and exact membership before touching positions, uses a collision-free temporary position range, and updates playlist recency via a trigger. Grant is limited to authenticated callers; the function is not a service-role bypass.
+- Added three handler-level regression tests for rename payloads, reorder RPC contract, and duplicate-ID rejection. Applying and validating the SQL migration on a dedicated Supabase project is still pending; the API remains undeployed.
 
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.
