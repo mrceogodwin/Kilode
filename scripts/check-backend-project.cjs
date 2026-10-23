@@ -26,6 +26,8 @@ for (const file of [
   "backend/schema/001_music_core.sql",
   "backend/schema/002_playlist_mutations.sql",
   "backend/schema/003_shared_library_rate_limits.sql",
+  "backend/api/_lib/sharedIpRateLimit.ts",
+  "backend/api/_lib/requestGuard.ts",
   "backend/.env.example"
 ]) {
   assert.equal(exists(file), true, `required backend file is missing: ${file}`);
@@ -35,5 +37,12 @@ assert.equal(typeof nativeVercel.buildCommand, "string", "root Vercel guard must
 assert.match(nativeVercel.buildCommand, /Expo native app/i, "root Vercel project must identify itself as the Expo app");
 assert.match(nativeVercel.buildCommand, /exit 1/, "root Vercel configuration must refuse accidental native-app web deployment");
 assert.equal(backendPackage.dependencies, undefined, "current API handlers should not acquire unnecessary runtime dependencies");
+const backendEnv = fs.readFileSync(path.join(root, "backend/.env.example"), "utf8");
+assert.ok(backendEnv.split("\n").includes("UPSTASH_REDIS_REST_URL="), "Upstash REST URL must be documented");
+assert.ok(backendEnv.split("\n").includes("UPSTASH_REDIS_REST_TOKEN="), "Upstash REST token must be documented");
+const publicLimiterSource = fs.readFileSync(path.join(root, "backend/api/_lib/sharedIpRateLimit.ts"), "utf8");
+assert.ok(publicLimiterSource.includes('redis.call("INCR"'), "shared limiter must increment atomically in Redis");
+assert.ok(publicLimiterSource.includes('redis.call("PEXPIRE"'), "shared limiter must set a fixed-window TTL");
+assert.ok(publicLimiterSource.includes('"SHA-256"'), "shared limiter must hash client IPs before using them in keys");
 
 console.log("Dedicated Kilode API project configuration verified; no deployment or database readiness is implied.");

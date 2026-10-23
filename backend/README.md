@@ -8,6 +8,7 @@ This directory is designed to be the root of a separate Vercel project for the n
 
 - `SUPABASE_URL`: URL of the dedicated Kilode Supabase project.
 - `SUPABASE_ANON_KEY`: the project's public/anon API key stored as a server environment variable. Current public-read and caller-JWT routes use this key with row-level security; never put user tokens or secret keys in the mobile bundle.
+- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`: server-only credentials for atomic shared IP rate limiting on the public health, tracks, and charts routes. Public routes return 503 until these are configured; never expose the standard Redis REST token in the mobile app.
 - `SUPABASE_SERVICE_ROLE_KEY`: do not configure or use it for current routes. Any future use requires a separately reviewed server-only operation and must never be exposed through an `EXPO_PUBLIC_*` variable.
 - `KILODE_API_ENV`: `development`, `preview`, or `production`.
 
@@ -21,7 +22,7 @@ No production values are checked into Git. Missing environment values must yield
 4. Add request validation, authorization, a shared rate limiter, idempotency for writes, structured redacted logs, and automated tests. The current checked-in guard caps request bodies at 16 KiB and applies a best-effort fixed-window quota per warm runtime; serverless instances do not share this counter and cold starts reset it.
 5. Before production, replace or augment the per-runtime quota with a shared edge/database/Redis limiter and verify that the deployment provides a trusted client-IP header. The current quota is defense in depth, not a global abuse-prevention guarantee.
 6. Add the server variables from `.env.example` to the dedicated Vercel project and deploy a preview first. Verify `/api/mobile/health`, auth failure cases, shared quota enforcement, route tests, and migration state.
-7. Before production, add a shared IP/edge limiter for the unauthenticated tracks/charts endpoints; the in-memory guard alone is not a production-wide limit.
+7. Verify the Upstash-backed shared IP limiter for the public health/tracks/charts routes in preview, including 429 behavior and 503 failure-closed behavior when Redis is unavailable. The in-memory guard remains defense in depth only.
 8. Promote the tested backend and configure the native app's `EXPO_PUBLIC_API_URL` to that dedicated HTTPS host only after all live checks pass. Until then, the app must distinguish mock/preview content from live content.
 
 

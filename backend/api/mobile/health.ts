@@ -1,3 +1,4 @@
+import { enforceSharedIpRateLimit } from "../_lib/sharedIpRateLimit";
 import { enforceRequestGuards } from "../_lib/requestGuard";
 
 export default async function handler(req: any, res: any) {
@@ -10,6 +11,7 @@ export default async function handler(req: any, res: any) {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const key = process.env.SUPABASE_ANON_KEY?.trim();
   if (!base || !key) return res.status(503).json({ ok: false, service: "kilode-native-api", status: "unconfigured", database: "not_configured" });
+  if (!(await enforceSharedIpRateLimit(req, res, { scope: "health", maxRequests: 30 }))) return;
   try {
     const probe = await fetch(base + "/rest/v1/music_tracks?select=id&limit=1", {
       headers: { apikey: key, Authorization: "Bearer " + key, Accept: "application/json" }

@@ -33,6 +33,7 @@ function loadTs(relativePath, options = {}) {
     URL,
     TextEncoder,
     TextDecoder,
+    crypto: require("node:crypto").webcrypto,
     setTimeout,
     clearTimeout,
     console,
@@ -105,8 +106,17 @@ test("charts reject unsupported chart names before fetching", async () => {
 test("charts request only verified, published tracks and map the response contract", async () => {
   let requestedUrl = "";
   const { default: handler } = loadTs("backend/api/mobile/charts.ts", {
-    env: envWithSupabase(),
-    fetchImpl: async (url) => {
+    env: {
+      ...envWithSupabase(),
+      UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "test-upstash-token"
+    },
+    fetchImpl: async (url, init = {}) => {
+      if (String(url) === "https://redis-test.upstash.io") {
+        const command = JSON.parse(init.body);
+        assert.equal(command[0], "EVAL");
+        return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      }
       requestedUrl = String(url);
       return {
         ok: true,
@@ -358,4 +368,52 @@ test("library returns 429 when the shared database quota is exhausted", async ()
   assert.equal(res.statusCode, 429);
   assert.equal(res.headers["retry-after"], "60");
   assert.equal(calls.length, 2);
+});
+
+
+test("shared IP limiter uses an atomic Redis script and returns 429 across repeated requests", async () => {
+  let count = 0;
+  let capturedCommand = null;
+  const { enforceSharedIpRateLimit } = loadTs("backend/api/_lib/sharedIpRateLimit.ts", {
+    env: {
+      UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io/",
+      UPSTASH_REDIS_REST_TOKEN: "test-rest-token"
+    },
+    fetchImpl: async (url, init = {}) => {
+      assert.equal(String(url), "https://redis-test.upstash.io");
+      assert.equal(init.method, "POST");
+      assert.equal(init.headers.Authorization, "Bearer test-rest-token");
+      capturedCommand = JSON.parse(init.body);
+      count += 1;
+      return { ok: true, json: async () => ({ result: [count, 59000] }) };
+    }
+  });
+  const req = { headers: { "x-forwarded-for": "203.0.113.88" } };
+  const first = makeResponse();
+  const second = makeResponse();
+  const third = makeResponse();
+
+  assert.equal(await enforceSharedIpRateLimit(req, first, { scope: "tracks", maxRequests: 2 }), true);
+  assert.equal(await enforceSharedIpRateLimit(req, second, { scope: "tracks", maxRequests: 2 }), true);
+  assert.equal(await enforceSharedIpRateLimit(req, third, { scope: "tracks", maxRequests: 2 }), false);
+  assert.equal(third.statusCode, 429);
+  assert.equal(third.headers["retry-after"], "59");
+  assert.equal(capturedCommand[0], "EVAL");
+  assert.match(capturedCommand[1], /redis.call\("INCR"/);
+  assert.match(capturedCommand[1], /redis.call\("PEXPIRE"/);
+  assert.match(capturedCommand[3], /^kilode:public:tracks:/);
+  assert.equal(capturedCommand[3].includes("203.0.113.88"), false);
+});
+
+test("public shared IP limiter fails closed when Upstash is not configured", async () => {
+  const { enforceSharedIpRateLimit } = loadTs("backend/api/_lib/sharedIpRateLimit.ts");
+  const res = makeResponse();
+  const allowed = await enforceSharedIpRateLimit(
+    { headers: { "x-forwarded-for": "203.0.113.89" } },
+    res,
+    { scope: "charts", maxRequests: 60 }
+  );
+  assert.equal(allowed, false);
+  assert.equal(res.statusCode, 503);
+  assert.match(res.payload.error, /not configured/i);
 });

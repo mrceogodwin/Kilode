@@ -1,3 +1,4 @@
+import { enforceSharedIpRateLimit } from "../_lib/sharedIpRateLimit";
 import { enforceRequestGuards } from "../_lib/requestGuard";
 
 export default async function handler(req: any, res: any) {
@@ -14,6 +15,7 @@ export default async function handler(req: any, res: any) {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const key = process.env.SUPABASE_ANON_KEY?.trim();
   if (!base || !key) return res.status(503).json({ ok: false, error: "Verified charts are not configured" });
+  if (!(await enforceSharedIpRateLimit(req, res, { scope: "charts", maxRequests: 60 }))) return;
   const limit = chartKey === "top_50" ? 50 : 100;
   const query = new URLSearchParams({
     select: "rank,period_start,period_end,source_name,source_url,verified_at,track:music_tracks!inner(id,title,artist_name,genre,artwork_url,audio_url)",

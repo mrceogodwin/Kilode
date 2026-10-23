@@ -1,3 +1,4 @@
+import { enforceSharedIpRateLimit } from "../_lib/sharedIpRateLimit";
 import { enforceRequestGuards } from "../_lib/requestGuard";
 
 export default async function handler(req: any, res: any) {
@@ -10,6 +11,7 @@ export default async function handler(req: any, res: any) {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const key = process.env.SUPABASE_ANON_KEY?.trim();
   if (!base || !key) return res.status(503).json({ ok: false, error: "Music catalogue is not configured" });
+  if (!(await enforceSharedIpRateLimit(req, res, { scope: "tracks", maxRequests: 60 }))) return;
   try {
     const upstream = await fetch(base + "/rest/v1/music_tracks?select=id,external_id,title,artist_name,album_name,genre,artwork_url,audio_url,duration_seconds&is_published=eq.true&rights_status=eq.verified&order=artist_name.asc,title.asc&limit=200", {
       headers: { apikey: key, Authorization: "Bearer " + key, Accept: "application/json" }

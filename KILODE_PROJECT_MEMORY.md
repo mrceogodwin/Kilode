@@ -75,7 +75,7 @@ Bundle ID: `ng.kilode.app`
 ## Shared library rate limiting — 2026-10-23
 - Added `backend/schema/003_shared_library_rate_limits.sql`. An authenticated-only SECURITY DEFINER RPC derives the caller from `auth.uid()`, permits only hardcoded `library_read` / `library_write` scopes, and stores per-user minute counters in a table inaccessible to direct anon/authenticated DML.
 - The library handler calls that RPC with the caller's JWT after token validation. It returns 429 when the account's shared quota is exhausted and fails closed with 503 if the limiter is unavailable. Route tests cover quota denial and verify that data calls stop before reaching PostgREST.
-- Public catalogue/charts/health endpoints remain protected only by the best-effort per-runtime guard. A shared IP/edge limiter for those endpoints is still a production prerequisite. The SQL migration has not yet been applied to a live database; backend remains undeployed.
+- Before the public shared-IP limiter slice, catalogue/charts/health used only the best-effort per-runtime guard. The following deployment-root and public-limiter slices add dedicated project metadata; no live SQL migration has been applied and the backend remains undeployed.
 
 
 ## Dedicated backend deployment root — 2026-10-23
@@ -83,6 +83,12 @@ Bundle ID: `ng.kilode.app`
 - Added `npm run check:backend-project` to both CI workflows. It verifies the independent backend root, required API/schema/migration files, function duration cap, and the root Vercel guard that blocks accidental deployment of the Expo app as a web app.
 - Vercel context inspection found two existing projects linked to the native `mrceogodwin/Kilode` repository and no dedicated backend project in the linked-project list. No project was created and no deployment/domain/production environment was changed.
 - Backend still requires the user/team to create or reuse a separate Vercel project with root directory `backend`, configure server environment values, apply SQL migrations 001–003, and test a preview before production.
+
+
+## Shared IP limiter for public API routes — 2026-10-23
+- Added `backend/api/_lib/sharedIpRateLimit.ts`, an Upstash Redis REST limiter using an atomic Lua EVAL (`INCR` + first-hit `PEXPIRE`) and a hashed client IP key. It uses Vercel's overwritten `x-forwarded-for` header, emits rate-limit headers, returns 429 after the per-route quota, and fails closed with 503 if configuration or Redis is unavailable.
+- Health is capped at 30/minute per IP; public catalogue and charts at 60/minute per IP. The existing in-memory guard remains an additional local defense.
+- Added `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` to the backend environment template and 2 unit tests for Redis counter/429 behaviour and missing configuration. Both Upstash credentials must be set on the dedicated Vercel project before public API routes can return data.
 
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.
