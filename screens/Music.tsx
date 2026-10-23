@@ -46,14 +46,6 @@ type Props = {
   onPlay?: (track: any) => Promise<void> | void;
 };
 
-const ARTISTS = [
-  { id: "a1", name: "Simi Sola", meta: "Afrobeats · Lagos", color: "#F97316" },
-  { id: "a2", name: "Kemi Wave", meta: "Amapiano · PH", color: "#7C3AED" },
-  { id: "a3", name: "Ayo Blue", meta: "R&B · Abuja", color: "#2563EB" },
-  { id: "a4", name: "Wizkid", meta: "Afrobeats · Lagos", color: "#16A34A" },
-  { id: "a5", name: "Burna Boy", meta: "Afrobeats · PH", color: "#15803D" },
-];
-
 const GENRES = ["Afrobeats", "Amapiano", "R&B", "Highlife", "Afro-fusion"];
 
 type Tab = "discover" | "search" | "charts" | "artists" | "library" | "genres" | "queue";
@@ -401,7 +393,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
       (t: any) => String(t.artist || "").toLowerCase() === String(activeArtist.name).toLowerCase()
     );
     const pinnedTracks = artistTracks.slice(0, 3);
-    const profileTracks = artistTracks.length ? artistTracks : tracks.slice(0, 5);
+    const profileTracks = artistTracks;
     return (
       <ScrollView style={s.flex} contentContainerStyle={s.scrollPad} showsVerticalScrollIndicator={false}>
         <View style={s.padH}>
@@ -922,20 +914,61 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
       {tab === "artists" && (
         <>
           <View style={s.sectionHead}>
-            <Text style={s.sectionTitle}>Featured artists</Text>
+            <Text style={s.sectionTitle}>{usingPreviewCatalogue ? "Artists in preview catalogue" : "Artists in catalogue"}</Text>
           </View>
-          {ARTISTS.map((a) => (
-            <TouchableOpacity key={a.id} style={s.roomRow} onPress={() => setActiveArtist(a)}>
-              <View style={[s.roomAv, { backgroundColor: a.color, width: 48, height: 48, borderRadius: 24 }]}>
-                <Text style={[s.roomAvText, { color: "#fff" }]}>{a.name.slice(0, 1)}</Text>
-              </View>
-              <View style={s.flex}>
-                <Text style={s.roomName}>{a.name}</Text>
-                <Text style={s.meta}>{a.meta}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={C.text3} />
-            </TouchableOpacity>
-          ))}
+          {(() => {
+            const artists = Array.from(
+              tracks.reduce((map: Map<string, any>, track: any) => {
+                const name = String(track.artist || "").trim();
+                if (!name) return map;
+                const key = name.toLocaleLowerCase();
+                const existing = map.get(key);
+                if (existing) {
+                  existing.trackCount += 1;
+                  if (!existing.genre && track.genre) existing.genre = track.genre;
+                } else {
+                  map.set(key, {
+                    id: key,
+                    name,
+                    genre: track.genre || "",
+                    color: track.color || C.elevated,
+                    trackCount: 1,
+                  });
+                }
+                return map;
+              }, new Map<string, any>()).values()
+            );
+            if (!artists.length) {
+              return (
+                <EmptyState
+                  title="No artists in the catalogue yet"
+                  body="Artist profiles will appear when verified music catalogue data is connected."
+                  textColor={C.text}
+                  mutedColor={C.text2}
+                  accentColor={C.accent}
+                  icon="people-outline"
+                />
+              );
+            }
+            return artists.map((artist: any) => (
+              <TouchableOpacity
+                key={artist.id}
+                style={s.roomRow}
+                onPress={() => setActiveArtist(artist)}
+                accessibilityRole="button"
+                accessibilityLabel={"Open artist " + artist.name}
+              >
+                <View style={[s.roomAv, { backgroundColor: artist.color, width: 48, height: 48, borderRadius: 24 }]}>
+                  <Text style={[s.roomAvText, { color: "#fff" }]}>{artist.name.slice(0, 1)}</Text>
+                </View>
+                <View style={s.flex}>
+                  <Text style={s.roomName}>{artist.name}</Text>
+                  <Text style={s.meta}>{artist.genre ? artist.genre + " · " : ""}{artist.trackCount} track{artist.trackCount === 1 ? "" : "s"}{usingPreviewCatalogue ? " · preview" : ""}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={C.text3} />
+              </TouchableOpacity>
+            ));
+          })()}
         </>
       )}
 
