@@ -78,6 +78,13 @@ Bundle ID: `ng.kilode.app`
 - Before the public shared-IP limiter slice, catalogue/charts/health used only the best-effort per-runtime guard. The following deployment-root and public-limiter slices add dedicated project metadata; no live SQL migration has been applied and the backend remains undeployed.
 
 
+
+## Integration gates and Vercel permission block — 2026-10-23
+- Attempted to create a dedicated `kilode-native-api` Vercel project in the verified `Godwin Oriabure` team with repository `mrceogodwin/Kilode` and Root Directory `backend`. Vercel rejected project creation with 403 Forbidden. No project was created and no existing project or domain was modified. Continue repository work; do not retry the same forbidden operation.
+- Audited current client code: chart screen already calls the dedicated charts endpoint if `EXPO_PUBLIC_API_URL` is set; saved/recent/playlist data remains AsyncStorage-only. Local IDs are not guaranteed to match server UUIDs, so sync requires explicit mapping/conflict semantics.
+- Native auth expects `/api/auth/sign-in/email` and `/api/auth/sign-up/email`, which are absent in backend. Sign-in maps handle inputs to synthetic `@users.kilode.ng` emails, while sign-up currently sends no account-kind metadata. Do not improvise account recovery/verification or server-authoritative profile roles; implement a reviewed auth contract first.
+- Last verified CI before the blocked Vercel operation: commit `02de18270be71b2b1d957f62fe3e47d666a20687`, both native checks and iOS validation green.
+
 ## Dedicated backend deployment root — 2026-10-23
 - Added `backend/package.json` (private Node 24.x project), `backend/vercel.json` (API TypeScript functions capped at 15 seconds), and `backend/.env.example` containing names only, no credentials.
 - Added `npm run check:backend-project` to both CI workflows. It verifies the independent backend root, required API/schema/migration files, function duration cap, and the root Vercel guard that blocks accidental deployment of the Expo app as a web app.
