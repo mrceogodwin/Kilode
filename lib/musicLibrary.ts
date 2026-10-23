@@ -136,6 +136,12 @@ export async function clearRecentTracks(): Promise<void> {
   });
 }
 
+// Read after all already-queued history writes. This is intentionally a separate
+// API from getRecentTracks(), because addRecentTrack() reads inside the mutation queue.
+export async function getRecentTracksAfterPendingWrites(): Promise<LibraryTrack[]> {
+  return serializeRecentMutation(() => readList(RECENT_KEY));
+}
+
 
 export type MusicPlaylist = {
   id: string;
