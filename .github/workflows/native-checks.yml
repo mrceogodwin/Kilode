@@ -37,6 +37,9 @@ jobs:
       - name: Backend route regression tests
         run: npm run test:backend
 
+      - name: Backend deployment-root configuration check
+        run: npm run check:backend-project
+
       - name: Account capability regression check
         run: npm run check:account-capabilities
 

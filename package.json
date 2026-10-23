@@ -13,7 +13,8 @@
     "eas:build:android": "eas build --platform android --profile production",
     "eas:build:preview": "eas build --platform all --profile preview",
     "check:account-capabilities": "node scripts/check-account-capabilities.cjs",
-    "test:backend": "node scripts/test-backend-routes.cjs"
+    "test:backend": "node scripts/test-backend-routes.cjs",
+    "check:backend-project": "node scripts/check-backend-project.cjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",

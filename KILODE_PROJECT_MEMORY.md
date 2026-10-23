@@ -56,7 +56,7 @@ Bundle ID: `ng.kilode.app`
 - Prior verified chart UI commit: `eedace2e9da9364e840d30edfdf3c239f15ce232` (`fix(music): make chart retry explicit and reliable`). Both native checks and iOS native validation passed: https://github.com/mrceogodwin/Kilode/actions/runs/39930896050 and https://github.com/mrceogodwin/Kilode/actions/runs/39930895684. The preceding chart API integration commit also passed both workflows: https://github.com/mrceogodwin/Kilode/actions/runs/39930866978 and https://github.com/mrceogodwin/Kilode/actions/runs/39930866923.
 
 - Added the authenticated Music library route for saved tracks, recent listening history, and playlist reads/writes. It validates the Supabase session, validates identifiers/names, forwards user JWTs (not service-role credentials), uses private/no-store cache headers, and returns generic errors instead of upstream details.
-- Next backend steps, in order: deploy the backend separately with a dedicated Supabase project and apply all migrations; validate live health and quota behaviour; add a shared IP/edge limiter for public routes; then integrate authenticated native API calls with explicit local-vs-synced status and conflict-safe migration. Never point at legacy Kilode Nine/v2.
+- Next backend steps, in order: create/reuse a dedicated Vercel project with Root Directory `backend`; add server-only Supabase variables and apply migrations in order; validate preview health/auth/quota behavior; add a shared IP/edge limiter for public routes; then integrate authenticated native API calls with explicit local-vs-synced status and conflict-safe migration. Never point at legacy Kilode Nine/v2.
 
 ## API route testing and request guard progress — 2026-10-23
 - Baseline before this slice was `df58d5865f02e97976306998afc9e84f0fb94a03`; both native CI workflows were green on that commit.
@@ -76,6 +76,13 @@ Bundle ID: `ng.kilode.app`
 - Added `backend/schema/003_shared_library_rate_limits.sql`. An authenticated-only SECURITY DEFINER RPC derives the caller from `auth.uid()`, permits only hardcoded `library_read` / `library_write` scopes, and stores per-user minute counters in a table inaccessible to direct anon/authenticated DML.
 - The library handler calls that RPC with the caller's JWT after token validation. It returns 429 when the account's shared quota is exhausted and fails closed with 503 if the limiter is unavailable. Route tests cover quota denial and verify that data calls stop before reaching PostgREST.
 - Public catalogue/charts/health endpoints remain protected only by the best-effort per-runtime guard. A shared IP/edge limiter for those endpoints is still a production prerequisite. The SQL migration has not yet been applied to a live database; backend remains undeployed.
+
+
+## Dedicated backend deployment root — 2026-10-23
+- Added `backend/package.json` (private Node 24.x project), `backend/vercel.json` (API TypeScript functions capped at 15 seconds), and `backend/.env.example` containing names only, no credentials.
+- Added `npm run check:backend-project` to both CI workflows. It verifies the independent backend root, required API/schema/migration files, function duration cap, and the root Vercel guard that blocks accidental deployment of the Expo app as a web app.
+- Vercel context inspection found two existing projects linked to the native `mrceogodwin/Kilode` repository and no dedicated backend project in the linked-project list. No project was created and no deployment/domain/production environment was changed.
+- Backend still requires the user/team to create or reuse a separate Vercel project with root directory `backend`, configure server environment values, apply SQL migrations 001–003, and test a preview before production.
 
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.

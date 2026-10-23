@@ -1,8 +1,8 @@
 # Kilode Dedicated Backend Foundation
 
-**Status: scaffold and contract only — not deployed or connected to a production database.**
+**Status: deployable scaffold and API contract only — not deployed or connected to a production database.**
 
-This directory is intended to be the root of a separate Vercel project for the native Kilode app. Keep it separate from the Expo app root and from the legacy Kilode Nine/v2 site. Before linking a Vercel project, verify its Git repository and set its Root Directory to `backend`.
+This directory is designed to be the root of a separate Vercel project for the native Kilode app. The project-specific `package.json`, `vercel.json`, and `.env.example` live here; the root directory must be set to `backend`. Keep it separate from the Expo app root and from the legacy Kilode Nine/v2 site. Do not repoint either existing native-app project at this directory without verifying the target first.
 
 ## Required server environment
 
@@ -15,13 +15,14 @@ No production values are checked into Git. Missing environment values must yield
 
 ## Build sequence
 
-1. Provision a dedicated database project and apply the SQL migrations in `schema/`.
+1. Create/reuse a dedicated Vercel project with Root Directory `backend`; provision a dedicated Supabase project and apply `schema/001_music_core.sql`, `schema/002_playlist_mutations.sql`, and `schema/003_shared_library_rate_limits.sql` in that order.
 2. Implement and test authentication, profile ownership, and RLS before exposing user-specific data.
 3. Implement the versioned native routes for health, tracks, charts with source/provenance, saved tracks, recent history, playlists, and artist/release metadata.
 4. Add request validation, authorization, a shared rate limiter, idempotency for writes, structured redacted logs, and automated tests. The current checked-in guard caps request bodies at 16 KiB and applies a best-effort fixed-window quota per warm runtime; serverless instances do not share this counter and cold starts reset it.
 5. Before production, replace or augment the per-runtime quota with a shared edge/database/Redis limiter and verify that the deployment provides a trusted client-IP header. The current quota is defense in depth, not a global abuse-prevention guarantee.
-6. Deploy this directory as a separate Vercel project, verify health and database connectivity, then configure the native app's `EXPO_PUBLIC_API_URL` to that dedicated HTTPS host.
-7. Only then mark the client source as `live`. Until then, the app must distinguish mock/preview content from live content.
+6. Add the server variables from `.env.example` to the dedicated Vercel project and deploy a preview first. Verify `/api/mobile/health`, auth failure cases, shared quota enforcement, route tests, and migration state.
+7. Before production, add a shared IP/edge limiter for the unauthenticated tracks/charts endpoints; the in-memory guard alone is not a production-wide limit.
+8. Promote the tested backend and configure the native app's `EXPO_PUBLIC_API_URL` to that dedicated HTTPS host only after all live checks pass. Until then, the app must distinguish mock/preview content from live content.
 
 
 ## Shared database-backed rate limiting
