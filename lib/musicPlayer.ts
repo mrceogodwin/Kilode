@@ -11,6 +11,7 @@ export type MusicPlayerState = {
   durationMillis: number;
   shuffle: boolean;
   repeat: RepeatMode;
+  recentHistoryRevision: number;
 };
 
 type Listener = ((state: MusicPlayerState) => void) | ((track: any | null, playing: boolean) => void);
@@ -24,11 +25,12 @@ let positionMillis = 0;
 let durationMillis = 0;
 let shuffle = false;
 let repeat: RepeatMode = "off";
+let recentHistoryRevision = 0;
 let handlingTrackFinish = false;
 const listeners = new Set<Listener>();
 
 function getState(): MusicPlayerState {
-  return { track: currentTrack, playing, queue: [...queue], index, positionMillis, durationMillis, shuffle, repeat };
+  return { track: currentTrack, playing, queue: [...queue], index, positionMillis, durationMillis, shuffle, repeat, recentHistoryRevision };
 }
 
 function publish() {
@@ -279,8 +281,10 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
     playing = created.status.isLoaded ? !!created.status.isPlaying : false;
     positionMillis = created.status.isLoaded ? created.status.positionMillis || 0 : 0;
     durationMillis = created.status.isLoaded ? created.status.durationMillis || 0 : durationMillis;
-    // Local history must never turn a successful playback into an unhandled rejection.
-    void addRecentTrack(track).catch(() => {});
+    // Persist history before announcing completion so screens can refresh reliably.
+    // The revision triggers a refresh even when the same track object remains active.
+    await addRecentTrack(track).catch(() => {});
+    recentHistoryRevision += 1;
     publish();
     return { ok: true };
   } catch {
