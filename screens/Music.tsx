@@ -82,6 +82,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const [chartEntries, setChartEntries] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState<string | null>(null);
+  const [chartReloadKey, setChartReloadKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
@@ -143,7 +144,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
         if (active) setChartLoading(false);
       });
     return () => { active = false; controller.abort(); clearTimeout(timer); };
-  }, [tab, activeChart]);
+  }, [tab, activeChart, chartReloadKey]);
 
   const recentRefreshRequest = useRef(0);
 
@@ -1005,7 +1006,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                 <Text style={{ color: C.text2 || "#9A9A9E", fontSize: 13, lineHeight: 19 }}>
                   Kilode Top {activeChart} only displays rankings returned by the verified chart service. No invented song titles, ranks or play counts are shown as real.
                 </Text>
-                <TouchableOpacity accessibilityRole="button" onPress={() => { setTab("discover"); setTimeout(() => setTab("charts"), 0); }} style={{ marginTop: 14, minHeight: 40, justifyContent: "center" }}>
+                <TouchableOpacity accessibilityRole="button" onPress={() => setChartReloadKey((value) => value + 1)} style={{ marginTop: 14, minHeight: 40, justifyContent: "center" }}>
                   <Text style={{ color: C.accent || "#E5C158", fontWeight: "800" }}>Try again</Text>
                 </TouchableOpacity>
                 <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, paddingTop: 13, borderTopWidth: 1, borderTopColor: C.border || "#2A2A30" }}>
