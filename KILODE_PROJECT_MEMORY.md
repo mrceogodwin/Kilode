@@ -94,7 +94,7 @@ Bundle ID: `ng.kilode.app`
 ## Verified chart period integrity — 2026-10-23
 - The charts endpoint now discovers the newest verified period, then queries only that exact `period_start` + `period_end`, ordering ranks ascending within the period. This prevents older chart-period records from filling a sparse latest Top 50/Top 100 response.
 - Response contract includes top-level `periodStart` and `periodEnd`; if no verified period exists it returns an honest empty array with null period values.
-- Expanded regression coverage to assert the two-query period selection and the no-data case. Public chart data remains unavailable until the dedicated backend, Upstash and Supabase are configured.
+- Expanded regression coverage to assert the two-query period selection and the no-data case. The initial CI run caught a cross-realm empty-array assertion in the test, now corrected to verify array length. Public chart data remains unavailable until the dedicated backend, Upstash and Supabase are configured.
 
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.

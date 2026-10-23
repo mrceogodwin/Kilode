@@ -197,7 +197,7 @@ test("charts return an honest empty result when no verified period exists", asyn
   assert.equal(res.payload.chart, "top_100");
   assert.equal(res.payload.periodStart, null);
   assert.equal(res.payload.periodEnd, null);
-  assert.deepEqual(res.payload.entries, []);
+  assert.equal(res.payload.entries.length, 0);
 });
 
 test("health reports unconfigured when Supabase settings are absent", async () => {
