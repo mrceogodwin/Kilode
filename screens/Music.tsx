@@ -674,21 +674,42 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   </TouchableOpacity>
                 ))}
                 {results.map((t: any, i: number) => (
-              <TouchableOpacity key={trackRenderKey(t, i, "search")} style={[s.roomRow, s.padH]} onPress={() => { void playQueue(results, i); }} onLongPress={() => selectTrack(t)} accessibilityRole="button" accessibilityLabel={`Play ${t.title}`} accessibilityHint="Long press to open track details">
-                <View style={{ width: 46, height: 46, borderRadius: 11, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
-                  <Ionicons name="musical-note" size={20} color="#FFFFFF" />
-                </View>
-                <View style={[s.flex, { marginLeft: 12 }]}>
-                  <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
-                  <Text style={s.meta} numberOfLines={1}>{t.artist}{t.genre ? " · " + t.genre : ""}</Text>
-                </View>
-                <TouchableOpacity onPress={() => onToggleSave(t)} accessibilityRole="button" accessibilityLabel={isSaved(t) ? "Remove saved track" : "Save track"}>
-                  <Ionicons name={isSaved(t) ? "heart" : "heart-outline"} size={20} color={isSaved(t) ? C.danger : C.text3} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => playQueue(results, i)} style={{ marginLeft: 14 }} accessibilityRole="button" accessibilityLabel={"Play " + t.title}>
-                  <Ionicons name="play-circle" size={26} color={C.accent} />
-                </TouchableOpacity>
-              </TouchableOpacity>
+                  <View key={trackRenderKey(t, i, "search")} style={[s.roomRow, s.padH]}>
+                    <TouchableOpacity
+                      style={{ flex: 1, flexDirection: "row", alignItems: "center", minWidth: 0 }}
+                      onPress={() => { void playQueue(results, i); }}
+                      onLongPress={() => selectTrack(t)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Play ${t.title}`}
+                      accessibilityHint="Long press to open track details"
+                    >
+                      <View style={{ width: 46, height: 46, borderRadius: 11, backgroundColor: t.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
+                        <Ionicons name="musical-note" size={20} color="#FFFFFF" />
+                      </View>
+                      <View style={[s.flex, { marginLeft: 12 }]}>
+                        <Text style={s.roomName} numberOfLines={1}>{t.title}</Text>
+                        <Text style={s.meta} numberOfLines={1}>{t.artist}{t.genre ? " · " + t.genre : ""}</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => { void onToggleSave(t); }}
+                      accessibilityRole="button"
+                      accessibilityLabel={isSaved(t) ? `Remove ${t.title} from saved tracks` : `Save ${t.title} to library`}
+                      accessibilityState={{ selected: isSaved(t) }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      style={{ padding: 6 }}
+                    >
+                      <Ionicons name={isSaved(t) ? "heart" : "heart-outline"} size={20} color={isSaved(t) ? C.danger : C.text3} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => { void playQueue(results, i); }}
+                      style={{ marginLeft: 10, padding: 2 }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Play ${t.title}`}
+                    >
+                      <Ionicons name="play-circle" size={26} color={C.accent} />
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </>
             );
