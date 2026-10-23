@@ -30,7 +30,7 @@ No production values are checked into Git. Missing environment values must yield
 
 - After validating a bearer token, the library route calls `rpc/consume_kilode_library_rate_limit` with the same caller JWT. The database function applies a shared fixed-minute quota of 120 reads or 30 writes per authenticated account across serverless instances.
 - Apply `schema/003_shared_library_rate_limits.sql` after the core and playlist migrations. The counter table is not directly readable/writable by anon or authenticated roles; the security-definer RPC uses `auth.uid()`, a fixed search path, and hardcoded allowed scopes.
-- If the shared quota service is unavailable, library requests fail closed with 503. Quota exhaustion returns 429. Public tracks/charts/health endpoints still only have their per-runtime guard; a shared IP/edge limiter remains required before production.
+- If the shared quota service is unavailable, library requests fail closed with 503. Quota exhaustion returns 429. Public health/tracks/charts routes use Upstash-backed shared IP quotas (30/minute for health; 60/minute for catalogue and charts) and fail closed with 503 if Upstash is unconfigured or unavailable. Responses use `private, no-store` so CDN hits cannot bypass limits; Redis checks time out after 3 seconds.
 
 ## Playlist mutation contract
 

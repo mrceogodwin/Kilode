@@ -62,7 +62,7 @@ export async function enforceSharedIpRateLimit(
   } catch {
     return failClosed(res, 503, "Shared public-request protection is misconfigured");
   }
-  if (parsedUrl.protocol !== "https:" || parsedUrl.username || parsedUrl.password || parsedUrl.search || parsedUrl.hash) {
+  if (parsedUrl.protocol !== "https:" || parsedUrl.pathname !== "/" || parsedUrl.username || parsedUrl.password || parsedUrl.search || parsedUrl.hash) {
     return failClosed(res, 503, "Shared public-request protection is misconfigured");
   }
 
@@ -96,6 +96,7 @@ export async function enforceSharedIpRateLimit(
         Accept: "application/json",
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(3000),
       body: JSON.stringify(["EVAL", FIXED_WINDOW_SCRIPT, "1", key, String(windowMs)]),
     });
     if (!upstream.ok) return failClosed(res, 503, "Shared public-request protection is unavailable");

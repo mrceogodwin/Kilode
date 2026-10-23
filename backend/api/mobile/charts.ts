@@ -2,7 +2,7 @@ import { enforceSharedIpRateLimit } from "../_lib/sharedIpRateLimit";
 import { enforceRequestGuards } from "../_lib/requestGuard";
 
 export default async function handler(req: any, res: any) {
-  res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+  res.setHeader("Cache-Control", "private, no-store");
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ ok: false, error: "Method not allowed" });

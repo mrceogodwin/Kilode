@@ -34,6 +34,7 @@ function loadTs(relativePath, options = {}) {
     TextEncoder,
     TextDecoder,
     crypto: require("node:crypto").webcrypto,
+    AbortSignal,
     setTimeout,
     clearTimeout,
     console,
@@ -144,6 +145,7 @@ test("charts request only verified, published tracks and map the response contra
   const res = makeResponse();
   await handler({ method: "GET", query: { chart: "top_50" }, headers: { "x-forwarded-for": "192.0.2.13" } }, res);
   assert.equal(res.statusCode, 200);
+  assert.equal(res.headers["cache-control"], "private, no-store");
   assert.equal(res.payload.source, "live");
   assert.equal(res.payload.entries.length, 1);
   assert.equal(res.payload.entries[0].track.artist, "Test artist");

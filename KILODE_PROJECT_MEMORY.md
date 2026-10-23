@@ -86,7 +86,7 @@ Bundle ID: `ng.kilode.app`
 
 
 ## Shared IP limiter for public API routes — 2026-10-23
-- Added `backend/api/_lib/sharedIpRateLimit.ts`, an Upstash Redis REST limiter using an atomic Lua EVAL (`INCR` + first-hit `PEXPIRE`) and a hashed client IP key. It uses Vercel's overwritten `x-forwarded-for` header, emits rate-limit headers, returns 429 after the per-route quota, and fails closed with 503 if configuration or Redis is unavailable.
+- Added `backend/api/_lib/sharedIpRateLimit.ts`, an Upstash Redis REST limiter using an atomic Lua EVAL (`INCR` + first-hit `PEXPIRE`) and a hashed client IP key. It uses Vercel's overwritten `x-forwarded-for` header, emits rate-limit headers, returns 429 after the per-route quota, and fails closed with 503 if configuration or Redis is unavailable. Calls time out after 3 seconds and public API responses are not CDN-cacheable, so cache hits cannot bypass the limit.
 - Health is capped at 30/minute per IP; public catalogue and charts at 60/minute per IP. The existing in-memory guard remains an additional local defense.
 - Added `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` to the backend environment template and 2 unit tests for Redis counter/429 behaviour and missing configuration. Both Upstash credentials must be set on the dedicated Vercel project before public API routes can return data.
 
