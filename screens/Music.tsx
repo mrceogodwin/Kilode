@@ -1201,10 +1201,16 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                   [
                     { text: "Cancel", style: "cancel" },
                     { text: "Clear", style: "destructive", onPress: () => {
+                      // Invalidate pending playback/library reads immediately so an older
+                      // AsyncStorage result cannot repopulate history after the user clears it.
+                      recentRefreshRequest.current += 1;
                       void clearRecentTracks().then(() => {
                         setRecent([]);
                         show("Listening history cleared.");
-                      }).catch((e: any) => show(e?.message || "Could not clear listening history."));
+                      }).catch((e: any) => {
+                        void refreshLibrary();
+                        show(e?.message || "Could not clear listening history.");
+                      });
                     } },
                   ],
                 )}
