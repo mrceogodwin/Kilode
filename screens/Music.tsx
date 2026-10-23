@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, View, Text, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TRACKS } from "../data";
+import { API_BASE } from "../lib/config";
 import { EmptyState } from "../components/ui/EmptyState";
 import {
   getSavedTracks,
@@ -78,6 +79,9 @@ function formatTime(ms: number) {
 export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSource, openNowPlaying, onNowPlayingOpened }: Props) {
   const [tab, setTab] = useState<Tab>("discover");
   const [activeChart, setActiveChart] = useState<"50" | "100">("50");
+  const [chartEntries, setChartEntries] = useState<any[]>([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartError, setChartError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTrack, setActiveTrack] = useState<any | null>(null);
   const [activeArtist, setActiveArtist] = useState<any | null>(null);
@@ -98,6 +102,48 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     .map((track: any) => String(track?.genre || "").trim())
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b))));
+
+
+  useEffect(() => {
+    if (tab !== "charts") return;
+    let active = true;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    setChartLoading(true);
+    setChartError(null);
+    setChartEntries([]);
+    if (!API_BASE) {
+      setChartLoading(false);
+      setChartError("The dedicated Kilode chart API is not configured yet.");
+      clearTimeout(timer);
+      return () => { active = false; controller.abort(); };
+    }
+    void fetch(`${API_BASE}/api/mobile/charts?chart=top_${activeChart}`, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    })
+      .then(async (response) => {
+        const contentType = response.headers.get("content-type") || "";
+        if (!response.ok) throw new Error(response.status === 503 ? "Verified charts are not configured on the server yet." : `Chart service returned HTTP ${response.status}.`);
+        if (!contentType.includes("json")) throw new Error("The chart service returned an invalid response.");
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active) return;
+        const entries = Array.isArray(payload?.entries) ? payload.entries : [];
+        setChartEntries(entries.filter((entry: any) => Number.isInteger(entry?.rank) && entry?.track?.id && entry?.track?.title));
+        if (!entries.length) setChartError("No verified chart entries are available for this period yet.");
+      })
+      .catch((error) => {
+        if (!active) return;
+        setChartError(error?.name === "AbortError" ? "The chart request timed out. Try again." : (error instanceof Error ? error.message : "Could not load verified charts."));
+      })
+      .finally(() => {
+        clearTimeout(timer);
+        if (active) setChartLoading(false);
+      });
+    return () => { active = false; controller.abort(); clearTimeout(timer); };
+  }, [tab, activeChart]);
 
   const recentRefreshRequest = useRef(0);
 
@@ -923,23 +969,53 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             })}
           </View>
           <View style={[s.padH, { marginTop: 8 }]}>
-            <View style={{ borderWidth: 1, borderColor: C.border || "#2A2A30", backgroundColor: C.elevated || "#18181C", borderRadius: 16, padding: 18 }}>
-              <View style={{ width: 46, height: 46, borderRadius: 13, backgroundColor: "#332A16", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                <Ionicons name="bar-chart-outline" size={24} color={C.accent || "#E5C158"} />
+            {chartLoading ? (
+              <View style={{ padding: 24, alignItems: "center" }}>
+                <Text style={{ color: C.text2 || "#9A9A9E" }}>Loading verified rankings…</Text>
               </View>
-              <Text style={{ color: C.text || "#FFFFFF", fontSize: 16, fontWeight: "800", marginBottom: 8 }}>
-                Verified rankings are not connected yet
-              </Text>
-              <Text style={{ color: C.text2 || "#9A9A9E", fontSize: 13, lineHeight: 19 }}>
-                Kilode Top {activeChart} will list tracks in order of verified listening data when the native chart service is available. No invented song titles, ranks or play counts are shown as real.
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, paddingTop: 13, borderTopWidth: 1, borderTopColor: C.border || "#2A2A30" }}>
-                <Ionicons name="time-outline" size={16} color={C.text3 || "#9A9A9E"} />
-                <Text style={{ color: C.text3 || "#9A9A9E", fontSize: 11, marginLeft: 7 }}>
-                  {usingPreviewCatalogue ? "Preview catalogue · no live chart feed" : "Catalogue connected · chart feed still unavailable"}
+            ) : chartEntries.length > 0 ? (
+              chartEntries.map((entry: any, i: number) => {
+                const track = entry.track;
+                return (
+                  <View key={String(track.id)} style={{ minHeight: 76, flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border || "#2A2A30" }}>
+                    <Text style={{ width: 34, textAlign: "center", color: C.accent || "#E5C158", fontSize: 16, fontWeight: "900" }}>{entry.rank}</Text>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`Play ${track.title} by ${track.artist || "unknown artist"}`}
+                      onPress={() => void playQueue(chartEntries.map((item: any) => item.track), i)}
+                      style={{ flex: 1, paddingHorizontal: 10, justifyContent: "center", minHeight: 48 }}
+                    >
+                      <Text numberOfLines={1} style={{ color: C.text || "#FFFFFF", fontSize: 14, fontWeight: "800" }}>{track.title}</Text>
+                      <Text numberOfLines={1} style={{ color: C.text2 || "#9A9A9E", fontSize: 12, marginTop: 4 }}>{track.artist || "Unknown artist"}{track.genre ? " · " + track.genre : ""}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Play ${track.title}`} onPress={() => void playQueue(chartEntries.map((item: any) => item.track), i)} style={{ width: 42, height: 42, alignItems: "center", justifyContent: "center" }}>
+                      <Ionicons name="play-circle" size={26} color={C.accent || "#E5C158"} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })
+            ) : (
+              <View style={{ borderWidth: 1, borderColor: C.border || "#2A2A30", backgroundColor: C.elevated || "#18181C", borderRadius: 16, padding: 18 }}>
+                <View style={{ width: 46, height: 46, borderRadius: 13, backgroundColor: "#332A16", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                  <Ionicons name="bar-chart-outline" size={24} color={C.accent || "#E5C158"} />
+                </View>
+                <Text style={{ color: C.text || "#FFFFFF", fontSize: 16, fontWeight: "800", marginBottom: 8 }}>
+                  {chartError || "Verified rankings are not available"}
                 </Text>
+                <Text style={{ color: C.text2 || "#9A9A9E", fontSize: 13, lineHeight: 19 }}>
+                  Kilode Top {activeChart} only displays rankings returned by the verified chart service. No invented song titles, ranks or play counts are shown as real.
+                </Text>
+                <TouchableOpacity accessibilityRole="button" onPress={() => { setTab("discover"); setTimeout(() => setTab("charts"), 0); }} style={{ marginTop: 14, minHeight: 40, justifyContent: "center" }}>
+                  <Text style={{ color: C.accent || "#E5C158", fontWeight: "800" }}>Try again</Text>
+                </TouchableOpacity>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16, paddingTop: 13, borderTopWidth: 1, borderTopColor: C.border || "#2A2A30" }}>
+                  <Ionicons name="time-outline" size={16} color={C.text3 || "#9A9A9E"} />
+                  <Text style={{ color: C.text3 || "#9A9A9E", fontSize: 11, marginLeft: 7 }}>
+                    {usingPreviewCatalogue ? "Preview catalogue · chart data remains separate" : "Catalogue connected · verified chart feed required"}
+                  </Text>
+                </View>
               </View>
-            </View>
+            )}
           </View>
         </>
       )}
