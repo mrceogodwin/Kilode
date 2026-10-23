@@ -1,9 +1,12 @@
+import { enforceRequestGuards } from "../_lib/requestGuard";
+
 export default async function handler(req: any, res: any) {
   res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
+  if (!enforceRequestGuards(req, res, { scope: "mobile-charts", maxRequests: 60 })) return;
   const chartKey = String(req.query?.chart || "top_50");
   if (chartKey !== "top_50" && chartKey !== "top_100") {
     return res.status(400).json({ ok: false, error: "chart must be top_50 or top_100" });

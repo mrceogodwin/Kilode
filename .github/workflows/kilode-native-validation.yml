@@ -32,6 +32,8 @@ jobs:
 
       - name: TypeScript validation
         run: npm run typecheck
+      - name: Backend route regression tests
+        run: npm run test:backend
       - name: Account-kind and capability invariants
         run: npm run check:account-capabilities
 

@@ -53,10 +53,17 @@ Bundle ID: `ng.kilode.app`
 - `library.ts` uses a caller Bearer token and Supabase Auth validation, then forwards the same token to PostgREST so database RLS is authoritative. Native app integration and authenticated session flow are still pending. It is not cross-device sync until wired and tested.
 
 ## Progress log — 2026-10-23
-- Current `main` head verified: `eedace2e9da9364e840d30edfdf3c239f15ce232` (`fix(music): make chart retry explicit and reliable`). Both native checks and iOS native validation passed: https://github.com/mrceogodwin/Kilode/actions/runs/39930896050 and https://github.com/mrceogodwin/Kilode/actions/runs/39930895684. The preceding chart API integration commit also passed both workflows: https://github.com/mrceogodwin/Kilode/actions/runs/39930866978 and https://github.com/mrceogodwin/Kilode/actions/runs/39930866923.
+- Prior verified chart UI commit: `eedace2e9da9364e840d30edfdf3c239f15ce232` (`fix(music): make chart retry explicit and reliable`). Both native checks and iOS native validation passed: https://github.com/mrceogodwin/Kilode/actions/runs/39930896050 and https://github.com/mrceogodwin/Kilode/actions/runs/39930895684. The preceding chart API integration commit also passed both workflows: https://github.com/mrceogodwin/Kilode/actions/runs/39930866978 and https://github.com/mrceogodwin/Kilode/actions/runs/39930866923.
 
 - Added the authenticated Music library route for saved tracks, recent listening history, and playlist reads/writes. It validates the Supabase session, validates identifiers/names, forwards user JWTs (not service-role credentials), uses private/no-store cache headers, and returns generic errors instead of upstream details.
 - Next backend steps, in order: verify CI on the library route; add route tests and request/rate-limit protections; complete playlist rename/reorder semantics; deploy backend separately with dedicated Supabase and apply migration; validate live health; then integrate authenticated native API calls with explicit local-vs-synced status and conflict-safe migration. Never point at legacy Kilode Nine/v2.
+
+## API route testing and request guard progress — 2026-10-23
+- Baseline before this slice was `df58d5865f02e97976306998afc9e84f0fb94a03`; both native CI workflows were green on that commit.
+- Mobile health, tracks, charts, and library handlers now share `backend/api/_lib/requestGuard.ts`, which rejects malformed/oversized declared body lengths, caps mutation payloads at 16 KiB, and applies a best-effort fixed-window quota per runtime/client key.
+- `npm run test:backend` uses Node's built-in test runner and the installed TypeScript transpiler to exercise the actual route handlers with mocked outbound requests. Both existing CI workflows run this test suite.
+- The request counter is intentionally documented as per-runtime defense in depth only. It is not shared across serverless instances and cold starts reset it. Provision/verify a shared limiter, trusted proxy IP headers, and live infrastructure before deployment.
+- Dedicated backend remains undeployed and the native API URL must remain unset until deployment, auth/RLS and live health checks are verified.
 
 ## Every future session
 Read this file first, then inspect the current repository and latest workflow runs. Update this file when the focus, architecture, verified status, or next actions materially change. Keep a dated progress note for substantial milestones and record failures plus their fixes.

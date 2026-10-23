@@ -7,7 +7,8 @@ This directory is intended to be the root of a separate Vercel project for the n
 ## Required server environment
 
 - `SUPABASE_URL`: URL of the dedicated Kilode Supabase project.
-- `SUPABASE_SERVICE_ROLE_KEY`: server-only secret; never expose it through an `EXPO_PUBLIC_*` variable.
+- `SUPABASE_ANON_KEY`: the project's public/anon API key stored as a server environment variable. Current public-read and caller-JWT routes use this key with row-level security; never put user tokens or secret keys in the mobile bundle.
+- `SUPABASE_SERVICE_ROLE_KEY`: do not configure or use it for current routes. Any future use requires a separately reviewed server-only operation and must never be exposed through an `EXPO_PUBLIC_*` variable.
 - `KILODE_API_ENV`: `development`, `preview`, or `production`.
 
 No production values are checked into Git. Missing environment values must yield a degraded/unconfigured response, not fake success.
@@ -17,8 +18,9 @@ No production values are checked into Git. Missing environment values must yield
 1. Provision a dedicated database project and apply the SQL migrations in `schema/`.
 2. Implement and test authentication, profile ownership, and RLS before exposing user-specific data.
 3. Implement the versioned native routes for health, tracks, charts with source/provenance, saved tracks, recent history, playlists, and artist/release metadata.
-4. Add request validation, authorization, rate limiting, idempotency for writes, structured redacted logs, and automated tests.
-5. Deploy this directory as a separate Vercel project, verify health and database connectivity, then configure the native app's `EXPO_PUBLIC_API_URL` to that dedicated HTTPS host.
+4. Add request validation, authorization, a shared rate limiter, idempotency for writes, structured redacted logs, and automated tests. The current checked-in guard caps request bodies at 16 KiB and applies a best-effort fixed-window quota per warm runtime; serverless instances do not share this counter and cold starts reset it.
+5. Before production, replace or augment the per-runtime quota with a shared edge/database/Redis limiter and verify that the deployment provides a trusted client-IP header. The current quota is defense in depth, not a global abuse-prevention guarantee.
+6. Deploy this directory as a separate Vercel project, verify health and database connectivity, then configure the native app's `EXPO_PUBLIC_API_URL` to that dedicated HTTPS host.
 6. Only then mark the client source as `live`. Until then, the app must distinguish mock/preview content from live content.
 
 ## Music data rules

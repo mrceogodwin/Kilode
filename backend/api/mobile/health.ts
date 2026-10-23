@@ -1,9 +1,12 @@
+import { enforceRequestGuards } from "../_lib/requestGuard";
+
 export default async function handler(req: any, res: any) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
+  if (!enforceRequestGuards(req, res, { scope: "mobile-health", maxRequests: 30 })) return;
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const key = process.env.SUPABASE_ANON_KEY?.trim();
   if (!base || !key) return res.status(503).json({ ok: false, service: "kilode-native-api", status: "unconfigured", database: "not_configured" });

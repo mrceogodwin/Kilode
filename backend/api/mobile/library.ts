@@ -1,3 +1,5 @@
+import { enforceRequestGuards } from "../_lib/requestGuard";
+
 /**
  * Kilode native Music library API.
  *
@@ -47,6 +49,7 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
+  if (!enforceRequestGuards(req, res, { scope: "mobile-library", maxRequests: 60 })) return;
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const anonKey = process.env.SUPABASE_ANON_KEY?.trim();
   const token = bearerToken(req);

@@ -34,6 +34,9 @@ jobs:
       - name: TypeScript check
         run: npm run typecheck
 
+      - name: Backend route regression tests
+        run: npm run test:backend
+
       - name: Account capability regression check
         run: npm run check:account-capabilities
 

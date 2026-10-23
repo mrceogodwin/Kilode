@@ -1,9 +1,12 @@
+import { enforceRequestGuards } from "../_lib/requestGuard";
+
 export default async function handler(req: any, res: any) {
   res.setHeader("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
+  if (!enforceRequestGuards(req, res, { scope: "mobile-tracks", maxRequests: 60 })) return;
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const key = process.env.SUPABASE_ANON_KEY?.trim();
   if (!base || !key) return res.status(503).json({ ok: false, error: "Music catalogue is not configured" });
