@@ -50,3 +50,45 @@ Therefore production host `kilode-nine.vercel.app` cannot serve `/api/mobile/*` 
 - `listTakes` uses `optionalAuthMiddleware` (public read OK)
 - `saveTake` uses `authMiddleware` — rejects unauthenticated writes (no auth bypass)
 - POST validates non-empty body; returns 400/401/500 appropriately in route wrapper
+
+
+## Music end-to-end readiness audit (2026-10-23)
+
+Scope: review of `screens/Music.tsx`, `lib/musicPlayer.ts`, and `lib/musicLibrary.ts` on `main`, plus the latest GitHub Actions runs. This is a source/CI audit, not a physical-device manual test.
+
+### Automated verification on current HEAD
+
+HEAD: `9193580d32cc40262d35eba194c843f608be6759`
+
+- [x] TypeScript check passed: https://github.com/mrceogodwin/Kilode/actions/runs/39904771818
+- [x] Account capability regression check passed in the same workflow.
+- [x] Expo config and native bundle identifiers passed in the same workflow.
+- [x] Expo Doctor passed: https://github.com/mrceogodwin/Kilode/actions/runs/39904771844
+- [x] iOS JavaScript bundle export and artifact upload passed in the same workflow.
+
+### User-flow source review
+
+- [x] Music screen starts on Discover and provides Discover, Search, Charts, Artists, Library, Genres and Queue sections.
+- [x] Search result and catalogue rows call the shared queue/player; unavailable audio returns a visible message rather than silently switching the playing track.
+- [x] Save/unsave has a per-track tap guard and serialized storage mutations.
+- [x] Recently played writes are serialized; readers wait behind queued writes; playback publishes a history revision after the write completes.
+- [x] Clear-history flow confirms the action and waits for serialized storage before refreshing the list.
+- [x] Queue includes add, next, remove, reorder, clear-upcoming, shuffle and repeat controls in source.
+- [x] Playlist source includes create, rename, delete, add/remove track, and duplicate-name handling.
+- [x] Top 50 and Top 100 are present, and the chart view explicitly says verified chart data is not connected instead of inventing rankings.
+- [x] Empty-library / empty-artist / empty-queue states are present in source.
+
+### Not yet verified on a real iPhone
+
+- [ ] Tap through every screen and modal with real touch input.
+- [ ] Confirm audio is audible, pause/resume/seek work, and next/previous/repeat/shuffle behave during actual playback.
+- [ ] Force-close/reopen the app and confirm saved tracks, playlists and recent history persist on-device.
+- [ ] Test rapid save/unsave, rapid track changes, and clearing history while playback continues on-device.
+- [ ] Confirm VoiceOver focus, dynamic text sizing, interruptions, silent switch, lock-screen/background audio and Bluetooth route behavior.
+- [ ] Verify live catalogue/chart endpoints; verified Top 50/Top 100 rankings are not connected.
+
+### Score
+
+- **Automated native checks: 5/5 passed** on the latest commit.
+- **Source-reviewed user-flow coverage: 9/9 checks marked above.**
+- **Overall Music readiness: 7/10 (provisional).** The code and CI are healthy, but the score is capped because a real-device interaction/audio test and a live verified chart/catalogue source have not been completed. Do not interpret this as a physical iPhone test or a production-ready sign-off.
