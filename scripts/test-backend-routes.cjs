@@ -692,3 +692,49 @@ test("password update rejects invalid recovery tokens before contacting Supabase
   assert.equal(res.statusCode, 400);
   assert.equal(calls.length, 0);
 });
+
+
+test("session refresh rotates tokens and reloads the authoritative profile", async () => {
+  const urls = [];
+  const { default: handler } = loadTs("backend/api/auth/refresh.ts", {
+    env: { ...envWithSupabase(), UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io", UPSTASH_REDIS_REST_TOKEN: "test-upstash-token" },
+    fetchImpl: async (url, init = {}) => {
+      urls.push(String(url));
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      if (String(url).includes("/auth/v1/token?grant_type=refresh_token")) {
+        assert.deepEqual(JSON.parse(init.body), { refresh_token: "refresh-token-old-1234567890" });
+        return { ok: true, json: async () => ({ access_token: "access-token-new", refresh_token: "refresh-token-new-1234567890", expires_in: 3600, user: { id: "00000000-0000-4000-8000-000000000004" } }) };
+      }
+      if (String(url).includes("/rest/v1/kilode_user_profiles?")) {
+        assert.equal(init.headers.Authorization, "Bearer access-token-new");
+        return { ok: true, json: async () => [{ username: "godwin", display_name: "Godwin", account_kind: "member" }] };
+      }
+      throw new Error("Unexpected refresh request");
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.45" }, body: { refreshToken: "refresh-token-old-1234567890" } }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.token, "access-token-new");
+  assert.equal(res.payload.refreshToken, "refresh-token-new-1234567890");
+  assert.equal(res.payload.expiresIn, 3600);
+  assert.equal(res.payload.user.username, "godwin");
+  assert.equal(urls.length, 3);
+});
+
+test("session refresh rejects an expired refresh token without profile lookup", async () => {
+  const profileCalls = [];
+  const { default: handler } = loadTs("backend/api/auth/refresh.ts", {
+    env: { ...envWithSupabase(), UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io", UPSTASH_REDIS_REST_TOKEN: "test-upstash-token" },
+    fetchImpl: async (url) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      if (String(url).includes("/auth/v1/token?grant_type=refresh_token")) return { ok: false, status: 400 };
+      profileCalls.push(String(url));
+      throw new Error("Invalid refresh token must not be used for a profile query");
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.46" }, body: { refreshToken: "refresh-token-old-1234567890" } }, res);
+  assert.equal(res.statusCode, 401);
+  assert.equal(profileCalls.length, 0);
+});

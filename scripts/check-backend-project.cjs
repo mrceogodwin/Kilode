@@ -32,6 +32,7 @@ for (const file of [
   "backend/api/auth/sign-up/email.ts",
   "backend/api/auth/recover.ts",
   "backend/api/auth/reset-password.ts",
+  "backend/api/auth/refresh.ts",
   "backend/api/_lib/sharedIpRateLimit.ts",
   "backend/api/_lib/requestGuard.ts",
   "backend/.env.example"

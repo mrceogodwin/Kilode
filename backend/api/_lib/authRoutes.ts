@@ -21,7 +21,7 @@ function cleanEmail(value: unknown): string | null {
   const email = value.trim().toLowerCase();
   return email.length <= 254 && EMAIL_RE.test(email) ? email : null;
 }
-async function begin(req: AuthRequest, res: AuthResponse, mode: "sign-in" | "sign-up" | "recover" | "reset") {
+async function begin(req: AuthRequest, res: AuthResponse, mode: "sign-in" | "sign-up" | "recover" | "reset" | "refresh") {
   const route = "auth-" + mode;
   attachRedactedApiLogger(req, res, route);
   res.setHeader("Cache-Control", "no-store");
@@ -31,11 +31,11 @@ async function begin(req: AuthRequest, res: AuthResponse, mode: "sign-in" | "sig
     reject(res, 405, "Method not allowed");
     return null;
   }
-  if (!enforceRequestGuards(req, res, { scope: route, maxRequests: mode === "sign-in" ? 15 : mode === "sign-up" ? 8 : mode === "recover" ? 6 : 10, maxBodyBytes: 8 * 1024 })) return null;
+  if (!enforceRequestGuards(req, res, { scope: route, maxRequests: mode === "sign-in" ? 15 : mode === "sign-up" ? 8 : mode === "recover" ? 6 : mode === "reset" ? 10 : 20, maxBodyBytes: 8 * 1024 })) return null;
   const base = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
   const anonKey = process.env.SUPABASE_ANON_KEY?.trim();
   if (!base || !anonKey) { reject(res, 503, "Kilode authentication is not configured"); return null; }
-  if (!(await enforceSharedIpRateLimit(req, res, { scope: route, maxRequests: mode === "sign-in" ? 12 : mode === "sign-up" ? 5 : mode === "recover" ? 3 : 8 }))) return null;
+  if (!(await enforceSharedIpRateLimit(req, res, { scope: route, maxRequests: mode === "sign-in" ? 12 : mode === "sign-up" ? 5 : mode === "recover" ? 3 : mode === "reset" ? 8 : 20 }))) return null;
   const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
   return { base, anonKey, body };
 }
@@ -73,10 +73,12 @@ export async function handleEmailSignIn(req: AuthRequest, res: AuthResponse) {
     if (!upstream.ok) return reject(res, 502, "Kilode sign-in is temporarily unavailable");
     const session = await readJson(upstream);
     const token = session?.access_token;
-    if (typeof token !== "string" || !token || token.length > 16_384) return reject(res, 502, "Authentication provider returned an invalid session");
+    const refreshToken = session?.refresh_token;
+    if (typeof token !== "string" || !token || token.length > 16_384 || typeof refreshToken !== "string" || !refreshToken || refreshToken.length > 16_384) return reject(res, 502, "Authentication provider returned an invalid session");
+    const expiresIn = Number.isFinite(Number(session?.expires_in)) && Number(session.expires_in) > 0 ? Number(session.expires_in) : 3600;
     const user = await profileForUser(context.base, context.anonKey, token, session?.user?.id);
     if (!user) return reject(res, 503, "Kilode account profile is not ready. Try again later.");
-    return res.status(200).json({ ok: true, token, session: { token }, user });
+    return res.status(200).json({ ok: true, token, refreshToken, expiresIn, session: { token, refresh_token: refreshToken }, user });
   } catch { return reject(res, 502, "Could not reach Kilode sign-in. Try again later."); }
 }
 export async function handleEmailSignUp(req: AuthRequest, res: AuthResponse) {
@@ -106,10 +108,12 @@ export async function handleEmailSignUp(req: AuthRequest, res: AuthResponse) {
     const created = await readJson(upstream);
     const token = created?.access_token;
     if (typeof token !== "string" || !token) return res.status(202).json({ ok: true, requiresConfirmation: true });
-    if (token.length > 16_384) return reject(res, 502, "Authentication provider returned an invalid session");
+    const refreshToken = created?.refresh_token;
+    if (token.length > 16_384 || typeof refreshToken !== "string" || !refreshToken || refreshToken.length > 16_384) return reject(res, 502, "Authentication provider returned an invalid session");
+    const expiresIn = Number.isFinite(Number(created?.expires_in)) && Number(created.expires_in) > 0 ? Number(created.expires_in) : 3600;
     const user = await profileForUser(context.base, context.anonKey, token, created?.user?.id);
     if (!user) return reject(res, 503, "Kilode account profile is not ready. Try again later.");
-    return res.status(201).json({ ok: true, token, session: { token }, user, requiresConfirmation: false });
+    return res.status(201).json({ ok: true, token, refreshToken, expiresIn, session: { token, refresh_token: refreshToken }, user, requiresConfirmation: false });
   } catch { return reject(res, 502, "Could not reach Kilode registration. Try again later."); }
 }
 
@@ -185,5 +189,43 @@ export async function handlePasswordUpdate(req: AuthRequest, res: AuthResponse) 
     return res.status(200).json({ ok: true });
   } catch {
     return reject(res, 502, "Could not reach password update. Try again later.");
+  }
+}
+
+export async function handleSessionRefresh(req: AuthRequest, res: AuthResponse) {
+  const context = await begin(req, res, "refresh");
+  if (!context) return;
+  const refreshToken = context.body.refreshToken;
+  if (typeof refreshToken !== "string" || refreshToken.length < 20 || refreshToken.length > 16_384) {
+    return reject(res, 400, "The session cannot be refreshed. Sign in again.");
+  }
+  try {
+    const upstream = await fetch(context.base + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { apikey: context.anonKey, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (upstream.status === 429) {
+      res.setHeader("Retry-After", "60");
+      return reject(res, 429, "Too many session refresh attempts. Try again shortly.");
+    }
+    if (upstream.status === 400 || upstream.status === 401 || upstream.status === 403) {
+      return reject(res, 401, "The session has expired. Sign in again.");
+    }
+    if (!upstream.ok) return reject(res, 502, "Session refresh is temporarily unavailable");
+    const session = await readJson(upstream);
+    const token = session?.access_token;
+    const rotatedRefreshToken = session?.refresh_token;
+    if (typeof token !== "string" || !token || token.length > 16_384 ||
+        typeof rotatedRefreshToken !== "string" || !rotatedRefreshToken || rotatedRefreshToken.length > 16_384) {
+      return reject(res, 502, "Authentication provider returned an invalid session");
+    }
+    const expiresIn = Number.isFinite(Number(session?.expires_in)) && Number(session.expires_in) > 0 ? Number(session.expires_in) : 3600;
+    const user = await profileForUser(context.base, context.anonKey, token, session?.user?.id);
+    if (!user) return reject(res, 503, "Kilode account profile is not ready. Try again later.");
+    return res.status(200).json({ ok: true, token, refreshToken: rotatedRefreshToken, expiresIn, session: { token, refresh_token: rotatedRefreshToken }, user });
+  } catch {
+    return reject(res, 502, "Could not refresh Kilode session. Try again later.");
   }
 }
