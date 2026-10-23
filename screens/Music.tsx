@@ -96,11 +96,16 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const tracks = hasLiveTracks ? remoteTracks || [] : TRACKS || [];
   const usingPreviewCatalogue = !hasLiveTracks;
 
+  const recentRefreshRequest = useRef(0);
+
   const refreshLibrary = useCallback(async () => {
+    const recentRequestAtStart = recentRefreshRequest.current;
     try {
       const [sList, rList, pList] = await Promise.all([getSavedTracks(), getRecentTracks(), getMusicPlaylists()]);
       setSaved(sList);
-      setRecent(rList);
+      // A playback-triggered refresh may have started after this request. Never let
+      // an older library read overwrite the newer recent-history result.
+      if (recentRequestAtStart === recentRefreshRequest.current) setRecent(rList);
       setPlaylists(pList);
     } catch {
       // Storage errors should not become unhandled rejections during screen mount or refresh.
@@ -134,9 +139,10 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     // Playback writes recent history in the shared player; refresh the visible list on track changes.
     if (!player.track) return;
     let active = true;
+    const request = ++recentRefreshRequest.current;
     void getRecentTracks()
       .then((items) => {
-        if (active) setRecent(items);
+        if (active && request === recentRefreshRequest.current) setRecent(items);
       })
       .catch(() => {
         // Keep playback usable if local history storage is temporarily unavailable.
