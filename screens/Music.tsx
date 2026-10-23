@@ -643,7 +643,31 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
           {(() => {
             const q = searchQuery.trim().toLowerCase();
             const results = q ? tracks.filter((t: any) => [t.title, t.artist, t.genre, t.album].some((v) => String(v || "").toLowerCase().includes(q))) : [];
-            const artistResults = q ? ARTISTS.filter((a) => [a.name, a.meta].some((v) => String(v || "").toLowerCase().includes(q))) : [];
+            const catalogueArtists = Array.from(
+              tracks.reduce((map: Map<string, any>, track: any) => {
+                const name = String(track.artist || "").trim();
+                if (!name) return map;
+                const key = name.toLocaleLowerCase();
+                const existing = map.get(key);
+                if (existing) {
+                  existing.trackCount += 1;
+                  if (!existing.genre && track.genre) existing.genre = track.genre;
+                } else {
+                  map.set(key, {
+                    id: key,
+                    name,
+                    genre: track.genre || "",
+                    meta: track.genre || "Artist",
+                    color: track.color || C.elevated,
+                    trackCount: 1,
+                  });
+                }
+                return map;
+              }, new Map<string, any>()).values()
+            );
+            const artistResults = q
+              ? catalogueArtists.filter((a: any) => [a.name, a.meta, a.genre].some((v) => String(v || "").toLowerCase().includes(q)))
+              : [];
             const genreResults = q ? GENRES.filter((g) => g.toLowerCase().includes(q)) : [];
             if (!q) return (
               <View style={s.padH}>
