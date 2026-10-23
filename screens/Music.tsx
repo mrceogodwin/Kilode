@@ -90,7 +90,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const [playlistName, setPlaylistName] = useState("");
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
   const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
-  const [player, setPlayer] = useState<MusicPlayerState>({ track: null, playing: false, queue: [], index: -1, positionMillis: 0, durationMillis: 0, shuffle: false, repeat: "off" });
+  const [player, setPlayer] = useState<MusicPlayerState>({ track: null, playing: false, queue: [], index: -1, positionMillis: 0, durationMillis: 0, shuffle: false, repeat: "off", recentHistoryRevision: 0 });
 
   const hasLiveTracks = tracksSource === "live";
   const tracks = hasLiveTracks ? remoteTracks || [] : TRACKS || [];
@@ -144,7 +144,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     return () => {
       active = false;
     };
-  }, [player.track]);
+  }, [player.track, player.recentHistoryRevision]);
 
   const isSaved = (track: any) => saved.some((t) => sameTrack(t, track));
 
