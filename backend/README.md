@@ -21,7 +21,7 @@ No production values are checked into Git. Missing environment values must yield
 4. Add request validation, authorization, a shared rate limiter, idempotency for writes, structured redacted logs, and automated tests. The current checked-in guard caps request bodies at 16 KiB and applies a best-effort fixed-window quota per warm runtime; serverless instances do not share this counter and cold starts reset it.
 5. Before production, replace or augment the per-runtime quota with a shared edge/database/Redis limiter and verify that the deployment provides a trusted client-IP header. The current quota is defense in depth, not a global abuse-prevention guarantee.
 6. Deploy this directory as a separate Vercel project, verify health and database connectivity, then configure the native app's `EXPO_PUBLIC_API_URL` to that dedicated HTTPS host.
-6. Only then mark the client source as `live`. Until then, the app must distinguish mock/preview content from live content.
+7. Only then mark the client source as `live`. Until then, the app must distinguish mock/preview content from live content.
 
 ## Music data rules
 
