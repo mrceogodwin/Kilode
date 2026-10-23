@@ -11,7 +11,7 @@ on:
 
 concurrency:
   group: kilode-ios-native-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   validate-ios:
