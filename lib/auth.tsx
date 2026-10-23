@@ -19,8 +19,8 @@ type AuthCtx = {
   signInGuest: (name?: string, kind?: AccountKind) => void;
   /** Device-only kind switch for guest sessions — not server authorization */
   setLocalKind: (kind: AccountKind) => Promise<void>;
-  signIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  signUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  signUp: (email: string, username: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
   signOut: () => void;
 };
 
@@ -123,9 +123,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, [persist]);
 
-  const signIn = useCallback(async (handle: string, password: string) => {
-    const normalizedHandle = handle.trim();
-    if (normalizedHandle.length < 2) return { ok: false, error: "Enter a handle (min 2 characters)." };
+  const signIn = useCallback(async (email: string, password: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail) || normalizedEmail.length > 254) return { ok: false, error: "Enter a valid email address." };
     if (!password) return { ok: false, error: "Enter your password." };
     if (!API_BASE) {
       return { ok: false, error: "Kilode sign-in is not available yet because its dedicated backend is not connected. You can continue as a guest." };
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          email: normalizedHandle.includes("@") ? normalizedHandle : `${normalizedHandle.replace(/^@/, "")}@users.kilode.ng`,
+          email: normalizedEmail,
           password,
         }),
       });
@@ -151,13 +151,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { ok: false, error: errorMessage(data, "Sign-in failed. Check your details or try again later.") };
       }
       const token = data.token || data.session?.token;
-      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest") {
-        return { ok: false, error: "The server did not return a valid session. Please try again later." };
+      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest" || !data.user || typeof data.user.username !== "string") {
+        return { ok: false, error: "The server did not return a valid account session. Please try again later." };
       }
       const s: Session = {
         token,
-        handle: data.user?.username || data.user?.name || normalizedHandle.replace(/^@/, ""),
-        name: data.user?.name || normalizedHandle.replace(/^@/, ""),
+        handle: data.user.username,
+        name: typeof data.user.name === "string" ? data.user.name : data.user.username,
         // The authenticated server profile is authoritative; never grant a local role choice at sign-in.
         kind: asAccountKind(data.user?.kind || "member"),
       };
@@ -172,12 +172,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [persist]);
 
-  const signUp = useCallback(async (handle: string, password: string, kind: AccountKind, displayName?: string) => {
-    const h = handle.replace(/^@/, "").trim();
-    if (!/^[a-zA-Z0-9_.]{3,30}$/.test(h)) {
-      return { ok: false, error: "Username must be 3–30 letters, numbers, underscores or periods." };
-    }
-    if (password.length < 8) return { ok: false, error: "Password needs at least 8 characters." };
+  const signUp = useCallback(async (email: string, username: string, password: string, kind: AccountKind, displayName?: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const h = username.trim().replace(/^@/, "").toLowerCase();
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail) || normalizedEmail.length > 254) return { ok: false, error: "Enter a valid email address." };
+    if (!/^[a-zA-Z0-9_.]{3,30}$/.test(h)) return { ok: false, error: "Username must be 3–30 letters, numbers, underscores or periods." };
+    if (password.length < 8 || password.length > 72) return { ok: false, error: "Password must be between 8 and 72 characters." };
     if (!API_BASE) {
       return { ok: false, error: "Kilode registration is not available yet because its dedicated backend is not connected. You can continue as a guest and preview workspaces locally." };
     }
@@ -188,9 +188,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          email: `${h}@users.kilode.ng`,
+          email: normalizedEmail,
+          username: h,
           password,
           name: displayName?.trim() || h,
+          kind,
         }),
       });
       let data: any = {};
@@ -202,15 +204,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!res.ok) {
         return { ok: false, error: errorMessage(data, "Registration failed. Please try again later.") };
       }
+      if (data.requiresConfirmation === true) return { ok: true, requiresConfirmation: true };
       const token = data.token || data.session?.token;
-      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest") {
-        return { ok: false, error: "The server did not return a valid session. Please try again later." };
+      if (typeof token !== "string" || !token || token === "live" || token === "local" || token === "guest" || !data.user || typeof data.user.username !== "string") {
+        return { ok: false, error: "The server did not return a valid account session. Please try again later." };
       }
       const s: Session = {
         token,
-        handle: h,
-        name: data.user?.name || displayName?.trim() || h,
-        kind: asAccountKind(kind),
+        handle: data.user.username,
+        name: typeof data.user.name === "string" ? data.user.name : (displayName?.trim() || h),
+        kind: asAccountKind(data.user.kind),
       };
       setSession(s);
       setGuest(false);

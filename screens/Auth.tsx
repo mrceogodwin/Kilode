@@ -70,15 +70,16 @@ function AuthVideoBackdrop({ scale }: { scale: Animated.Value }) {
 type Props = {
   isDark: boolean;
   C: any;
-  onSignIn: (handle: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  onSignUp: (handle: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string }>;
+  onSignIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  onSignUp: (email: string, username: string, password: string, kind: AccountKind, displayName?: string) => Promise<{ ok: boolean; error?: string; requiresConfirmation?: boolean }>;
   onGuest: () => void;
   show: (m: string) => void;
 };
 
 export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
   const [mode, setMode] = useState<"welcome" | "in" | "up">("welcome");
-  const [handle, setHandle] = useState("");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AccountKind>("member");
@@ -154,7 +155,7 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 
             <Text style={styles.title}>{mode === "in" ? "Welcome back" : "Join Kilode"}</Text>
             <Text style={styles.hint}>
-              {mode === "in" ? "Sign in to continue" : "Choose account type · username + password"}
+              {mode === "in" ? "Sign in with your email and password" : "Choose account type · email, username + password"}
             </Text>
 
             {mode === "up" ? (
@@ -234,6 +235,16 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                 </Modal>
                 <TextInput
                   style={styles.field}
+                  placeholder="Username (3–30 characters)"
+                  placeholderTextColor="#71717A"
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  textContentType="username"
+                  value={username}
+                  onChangeText={setUsername}
+                />
+                <TextInput
+                  style={styles.field}
                   placeholder="Display name (optional)"
                   placeholderTextColor="#71717A"
                   value={name}
@@ -244,11 +255,14 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
 
             <TextInput
               style={styles.field}
-              placeholder="Username"
+              placeholder="Email address"
               placeholderTextColor="#71717A"
               autoCapitalize="none"
-              value={handle}
-              onChangeText={setHandle}
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              value={email}
+              onChangeText={setEmail}
             />
             <TextInput
               style={styles.field}
@@ -267,10 +281,13 @@ export function AuthScreen({ onSignIn, onSignUp, onGuest, show }: Props) {
                 setBusy(true);
                 try {
                   const r = mode === "up"
-                    ? await onSignUp(handle, password, kind, name || undefined)
-                    : await onSignIn(handle, password);
+                    ? await onSignUp(email, username, password, kind, name || undefined)
+                    : await onSignIn(email, password);
                   if (!r.ok) show(r.error || "Authentication failed");
-                  else show(mode === "up" ? `Welcome · ${kind}` : "Welcome");
+                  else if (r.requiresConfirmation) {
+                    show("Check your email for the confirmation link, then sign in.");
+                    setMode("in");
+                  } else show(mode === "up" ? `Welcome · ${kind}` : "Welcome");
                 } catch {
                   show("Kilode could not complete authentication. Please try again.");
                 } finally {

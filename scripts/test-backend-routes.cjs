@@ -495,3 +495,106 @@ test("API completion logs include safe metadata but redact client secrets and pa
   assert.equal(logLines[0].includes("do-not-log-this-body"), false);
   assert.equal(logLines[0].includes("203.0.113.123"), false);
 });
+
+
+test("sign-in exchanges a real email for a Supabase token and reads the server profile", async () => {
+  const calls = [];
+  const { default: handler } = loadTs("backend/api/auth/sign-in/email.ts", {
+    env: { ...envWithSupabase(), UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io", UPSTASH_REDIS_REST_TOKEN: "test-upstash-token" },
+    fetchImpl: async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      if (String(url).includes("/auth/v1/token?grant_type=password")) {
+        assert.equal(JSON.parse(init.body).email, "godwin@example.com");
+        return { ok: true, json: async () => ({ access_token: "access-jwt", user: { id: "00000000-0000-4000-8000-000000000001" } }) };
+      }
+      if (String(url).includes("/rest/v1/kilode_user_profiles?")) {
+        assert.equal(init.headers.Authorization, "Bearer access-jwt");
+        return { ok: true, json: async () => [{ username: "godwin", display_name: "Godwin", account_kind: "member" }] };
+      }
+      throw new Error("Unexpected auth API call");
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.31" }, body: { email: " Godwin@Example.com ", password: "secret-password" } }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload.token, "access-jwt");
+  assert.equal(res.payload.user.username, "godwin");
+  assert.equal(res.payload.user.kind, "member");
+  assert.equal(calls.length, 3);
+});
+
+test("sign-in masks credential failure and never queries a profile", async () => {
+  const urls = [];
+  const { default: handler } = loadTs("backend/api/auth/sign-in/email.ts", {
+    env: { ...envWithSupabase(), UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io", UPSTASH_REDIS_REST_TOKEN: "test-upstash-token" },
+    fetchImpl: async (url) => {
+      urls.push(String(url));
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      return { ok: false, status: 400, json: async () => ({ msg: "email does not exist" }) };
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.32" }, body: { email: "unknown@example.com", password: "wrong-password" } }, res);
+  assert.equal(res.statusCode, 401);
+  assert.equal(res.payload.error, "Email or password is incorrect");
+  assert.equal(urls.length, 2);
+});
+
+test("sign-up stores normalized username and returns authoritative profile after immediate confirmation", async () => {
+  let authBody;
+  const { default: handler } = loadTs("backend/api/auth/sign-up/email.ts", {
+    env: { ...envWithSupabase(), UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io", UPSTASH_REDIS_REST_TOKEN: "test-upstash-token" },
+    fetchImpl: async (url, init = {}) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      if (String(url).endsWith("/auth/v1/signup")) {
+        authBody = JSON.parse(init.body);
+        return { ok: true, json: async () => ({ access_token: "signup-jwt", user: { id: "00000000-0000-4000-8000-000000000002" } }) };
+      }
+      if (String(url).includes("/rest/v1/kilode_user_profiles?")) return { ok: true, json: async () => [{ username: "godwin_1", display_name: "Godwin", account_kind: "artist" }] };
+      throw new Error("Unexpected sign-up API call");
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.33" },
+    body: { email: "GODWIN@example.com", username: " Godwin_1 ", password: "secure-password", name: "Godwin", kind: "artist" } }, res);
+  assert.equal(res.statusCode, 201);
+  assert.equal(authBody.email, "godwin@example.com");
+  assert.equal(authBody.data.username, "godwin_1");
+  assert.equal(authBody.data.account_kind, "artist");
+  assert.equal(res.payload.user.kind, "artist");
+  assert.equal(res.payload.token, "signup-jwt");
+});
+
+test("sign-up returns confirmation-required without minting a fake session", async () => {
+  const { default: handler } = loadTs("backend/api/auth/sign-up/email.ts", {
+    env: { ...envWithSupabase(), UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io", UPSTASH_REDIS_REST_TOKEN: "test-upstash-token" },
+    fetchImpl: async (url) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      return { ok: true, json: async () => ({ user: { id: "00000000-0000-4000-8000-000000000003" } }) };
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.34" },
+    body: { email: "confirm@example.com", username: "confirm_user", password: "secure-password", kind: "member" } }, res);
+  assert.equal(res.statusCode, 202);
+  assert.equal(res.payload.requiresConfirmation, true);
+  assert.equal(res.payload.token, undefined);
+});
+
+test("sign-up rejects invalid username before calling Supabase Auth", async () => {
+  const authCalls = [];
+  const { default: handler } = loadTs("backend/api/auth/sign-up/email.ts", {
+    env: { ...envWithSupabase(), UPSTASH_REDIS_REST_URL: "https://redis-test.upstash.io", UPSTASH_REDIS_REST_TOKEN: "test-upstash-token" },
+    fetchImpl: async (url) => {
+      if (String(url) === "https://redis-test.upstash.io") return { ok: true, json: async () => ({ result: [1, 59000] }) };
+      authCalls.push(String(url));
+      throw new Error("Supabase Auth must not be called");
+    }
+  });
+  const res = makeResponse();
+  await handler({ method: "POST", headers: { "x-forwarded-for": "192.0.2.35" },
+    body: { email: "new@example.com", username: "bad username", password: "secure-password", kind: "member" } }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(authCalls.length, 0);
+});
