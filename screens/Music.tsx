@@ -479,10 +479,9 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
             <View key={trackRenderKey(t, i, "artist-track")} style={s.roomRow}>
               <TouchableOpacity
                 style={[s.flex, { flexDirection: "row", alignItems: "center", minWidth: 0 }]}
-                onPress={() => selectTrack(t)}
-                onLongPress={() => playQueue(profileTracks, i)}
+                onPress={() => { void playQueue(profileTracks, i); }}
                 accessibilityRole="button"
-                accessibilityLabel={"Open " + t.title + " by " + activeArtist.name}
+                accessibilityLabel={"Play " + t.title + " by " + activeArtist.name}
               >
                 <View style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: t.color || activeArtist.color || C.elevated, alignItems: "center", justifyContent: "center" }}>
                   <Ionicons name="musical-note" size={20} color="#fff" />
