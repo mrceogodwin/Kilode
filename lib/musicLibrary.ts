@@ -168,54 +168,75 @@ async function writeMusicPlaylists(playlists: MusicPlaylist[]): Promise<void> {
   await AsyncStorage.setItem(PLAYLISTS_KEY, JSON.stringify(playlists));
 }
 
+// Keep playlist read/modify/write operations ordered so rapid create/rename/add/remove
+// actions cannot overwrite one another with stale snapshots from AsyncStorage.
+let playlistMutationQueue: Promise<void> = Promise.resolve();
+
+function serializePlaylistMutation<T>(operation: () => Promise<T>): Promise<T> {
+  const result = playlistMutationQueue.then(operation, operation);
+  playlistMutationQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
 export async function createMusicPlaylist(name: string): Promise<MusicPlaylist[]> {
-  const clean = name.trim().slice(0, 48);
-  if (!clean) return getMusicPlaylists();
-  const playlists = await getMusicPlaylists();
-  if (playlists.some((p) => p.name.toLowerCase() === clean.toLowerCase())) {
-    throw new Error("A playlist with that name already exists.");
-  }
-  const next = [{ id: `playlist-${Date.now()}`, name: clean, tracks: [], updatedAt: Date.now() }, ...playlists];
-  await writeMusicPlaylists(next);
-  return next;
+  return serializePlaylistMutation(async () => {
+    const clean = name.trim().slice(0, 48);
+    if (!clean) return getMusicPlaylists();
+    const playlists = await getMusicPlaylists();
+    if (playlists.some((p) => p.name.toLowerCase() === clean.toLowerCase())) {
+      throw new Error("A playlist with that name already exists.");
+    }
+    const now = Date.now();
+    const next = [{ id: `playlist-${now}-${Math.random().toString(36).slice(2, 8)}`, name: clean, tracks: [], updatedAt: now }, ...playlists];
+    await writeMusicPlaylists(next);
+    return next;
+  });
 }
 
 export async function renameMusicPlaylist(id: string, name: string): Promise<MusicPlaylist[]> {
-  const clean = name.trim().slice(0, 48);
-  if (!clean) throw new Error("Enter a playlist name.");
-  const playlists = await getMusicPlaylists();
-  if (playlists.some((p) => p.id !== id && p.name.toLowerCase() === clean.toLowerCase())) {
-    throw new Error("A playlist with that name already exists.");
-  }
-  const next = playlists.map((p) => p.id === id ? { ...p, name: clean, updatedAt: Date.now() } : p);
-  await writeMusicPlaylists(next);
-  return next;
+  return serializePlaylistMutation(async () => {
+    const clean = name.trim().slice(0, 48);
+    if (!clean) throw new Error("Enter a playlist name.");
+    const playlists = await getMusicPlaylists();
+    if (playlists.some((p) => p.id !== id && p.name.toLowerCase() === clean.toLowerCase())) {
+      throw new Error("A playlist with that name already exists.");
+    }
+    const next = playlists.map((p) => p.id === id ? { ...p, name: clean, updatedAt: Date.now() } : p);
+    await writeMusicPlaylists(next);
+    return next;
+  });
 }
 
 export async function deleteMusicPlaylist(id: string): Promise<MusicPlaylist[]> {
-  const next = (await getMusicPlaylists()).filter((p) => p.id !== id);
-  await writeMusicPlaylists(next);
-  return next;
+  return serializePlaylistMutation(async () => {
+    const next = (await getMusicPlaylists()).filter((p) => p.id !== id);
+    await writeMusicPlaylists(next);
+    return next;
+  });
 }
 
 export async function addTrackToMusicPlaylist(id: string, track: any): Promise<MusicPlaylist[]> {
-  const normalized = normalize(track);
-  const identity = trackIdentity(track);
-  if (!identity) throw new Error("This track needs a title and artist before it can be added.");
-  const playlists = await getMusicPlaylists();
-  const next = playlists.map((p) => p.id !== id ? p : {
-    ...p,
-    tracks: p.tracks.some((t) => trackIdentity(t) === identity) ? p.tracks : [...p.tracks, normalized],
-    updatedAt: Date.now(),
+  return serializePlaylistMutation(async () => {
+    const normalized = normalize(track);
+    const identity = trackIdentity(track);
+    if (!identity) throw new Error("This track needs a title and artist before it can be added.");
+    const playlists = await getMusicPlaylists();
+    const next = playlists.map((p) => p.id !== id ? p : {
+      ...p,
+      tracks: p.tracks.some((t) => trackIdentity(t) === identity) ? p.tracks : [...p.tracks, normalized],
+      updatedAt: Date.now(),
+    });
+    await writeMusicPlaylists(next);
+    return next;
   });
-  await writeMusicPlaylists(next);
-  return next;
 }
 
 export async function removeTrackFromMusicPlaylist(id: string, trackId: string): Promise<MusicPlaylist[]> {
-  const next = (await getMusicPlaylists()).map((p) => p.id === id
-    ? { ...p, tracks: p.tracks.filter((t) => t.id !== String(trackId)), updatedAt: Date.now() }
-    : p);
-  await writeMusicPlaylists(next);
-  return next;
+  return serializePlaylistMutation(async () => {
+    const next = (await getMusicPlaylists()).map((p) => p.id === id
+      ? { ...p, tracks: p.tracks.filter((t) => t.id !== String(trackId)), updatedAt: Date.now() }
+      : p);
+    await writeMusicPlaylists(next);
+    return next;
+  });
 }
