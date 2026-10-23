@@ -5,7 +5,7 @@ import { TRACKS } from "../data";
 import { EmptyState } from "../components/ui/EmptyState";
 import {
   getSavedTracks,
-  getRecentTracks,
+  getRecentTracksAfterPendingWrites,
   clearRecentTracks,
   toggleSavedTrack,
   getMusicPlaylists,
@@ -101,7 +101,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
   const refreshLibrary = useCallback(async () => {
     const recentRequestAtStart = recentRefreshRequest.current;
     try {
-      const [sList, rList, pList] = await Promise.all([getSavedTracks(), getRecentTracks(), getMusicPlaylists()]);
+      const [sList, rList, pList] = await Promise.all([getSavedTracks(), getRecentTracksAfterPendingWrites(), getMusicPlaylists()]);
       setSaved(sList);
       // A playback-triggered refresh may have started after this request. Never let
       // an older library read overwrite the newer recent-history result.
@@ -140,7 +140,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
     if (!player.track) return;
     let active = true;
     const request = ++recentRefreshRequest.current;
-    void getRecentTracks()
+    void getRecentTracksAfterPendingWrites()
       .then((items) => {
         if (active && request === recentRefreshRequest.current) setRecent(items);
       })
@@ -1207,7 +1207,7 @@ export function MusicScreen({ s, C, onBack, show, tracks: remoteTracks, tracksSo
                       void clearRecentTracks().then(async () => {
                         // Read back the serialized store instead of blindly forcing an
                         // empty UI: a new track may have been played while Clear was pending.
-                        const latest = await getRecentTracks();
+                        const latest = await getRecentTracksAfterPendingWrites();
                         if (clearRequest === recentRefreshRequest.current) setRecent(latest);
                         show("Listening history cleared.");
                       }).catch((e: any) => {
