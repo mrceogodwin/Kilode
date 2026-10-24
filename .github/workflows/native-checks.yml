@@ -2,7 +2,7 @@ name: Kilode native checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, upgrade/expo-sdk-58]
   pull_request:
     branches: [main]
   workflow_dispatch:

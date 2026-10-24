@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - upgrade/expo-sdk-58
   pull_request:
     branches:
       - main
