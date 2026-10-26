@@ -17,18 +17,29 @@
     "check:backend-project": "node scripts/check-backend-project.cjs"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "1.23.1",
-    "expo": "~51.0.28",
-    "expo-av": "~14.0.7",
-    "expo-document-picker": "~12.0.2",
-    "expo-linear-gradient": "~13.0.2",
-    "expo-status-bar": "~1.12.1",
-    "react": "18.2.0",
-    "react-native": "0.74.5"
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "babel-preset-expo": "~58.0.0",
+    "expo": "~58.0.19",
+    "expo-asset": "~58.0.18",
+    "expo-audio": "~58.0.10",
+    "expo-document-picker": "~58.0.4",
+    "expo-font": "~58.0.10",
+    "expo-linear-gradient": "~58.0.3",
+    "expo-splash-screen": "~58.0.11",
+    "expo-status-bar": "~58.0.4",
+    "expo-video": "~58.0.12",
+    "react": "^19.3.0",
+    "react-native": "^0.88.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.0",
-    "@types/react": "~18.2.0",
-    "typescript": "~5.3.0"
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.3.0",
+    "typescript": "~6.0.3"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {}
+    }
   }
 }

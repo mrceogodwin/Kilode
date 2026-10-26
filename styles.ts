@@ -52,7 +52,7 @@ export const styles = StyleSheet.create({
   plusText: { color: WHITE, fontSize: 24, fontWeight: "500" },
   moreBtn: { width: 48, height: 48, borderRadius: 16, backgroundColor: BLUE, alignItems: "center", justifyContent: "center", shadowColor: BLUE, shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
   moreBtnText: { color: WHITE, fontSize: 28, fontWeight: "400", marginTop: -1 },
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
+  overlay: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.4)" },
   sheet: { backgroundColor: WHITE, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 32 },
   create: { width: "30%", backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: BORDER, borderRadius: 16, padding: 10 },
   authWrap: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", padding: 16 },

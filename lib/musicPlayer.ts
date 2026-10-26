@@ -1,7 +1,12 @@
-import { Audio, type AVPlaybackStatus } from "expo-av";
+import {
+  createAudioPlayer,
+  setAudioModeAsync,
+  type AudioPlayer,
+} from "expo-audio";
 import { addRecentTrack } from "./musicLibrary";
 
 export type RepeatMode = "off" | "all" | "one";
+
 export type MusicPlayerState = {
   track: any | null;
   playing: boolean;
@@ -14,9 +19,11 @@ export type MusicPlayerState = {
   recentHistoryRevision: number;
 };
 
-type Listener = ((state: MusicPlayerState) => void) | ((track: any | null, playing: boolean) => void);
+type Listener =
+  | ((state: MusicPlayerState) => void)
+  | ((track: any | null, playing: boolean) => void);
 
-let sound: Audio.Sound | null = null;
+let sound: AudioPlayer | null = null;
 let currentTrack: any | null = null;
 let playing = false;
 let queue: any[] = [];
@@ -30,15 +37,28 @@ let handlingTrackFinish = false;
 const listeners = new Set<Listener>();
 
 function getState(): MusicPlayerState {
-  return { track: currentTrack, playing, queue: [...queue], index, positionMillis, durationMillis, shuffle, repeat, recentHistoryRevision };
+  return {
+    track: currentTrack,
+    playing,
+    queue: [...queue],
+    index,
+    positionMillis,
+    durationMillis,
+    shuffle,
+    repeat,
+    recentHistoryRevision,
+  };
 }
 
 function publish() {
   const state = getState();
   listeners.forEach((listener) => {
     try {
-      if (listener.length >= 2) (listener as (track: any | null, playing: boolean) => void)(state.track, state.playing);
-      else (listener as (state: MusicPlayerState) => void)(state);
+      if (listener.length >= 2) {
+        (listener as (track: any | null, playing: boolean) => void)(state.track, state.playing);
+      } else {
+        (listener as (state: MusicPlayerState) => void)(state);
+      }
     } catch {
       // Listener failures must not interrupt audio playback.
     }
@@ -48,8 +68,11 @@ function publish() {
 export function subscribeMusicPlayer(listener: Listener) {
   listeners.add(listener);
   try {
-    if (listener.length >= 2) (listener as (track: any | null, playing: boolean) => void)(currentTrack, playing);
-    else (listener as (state: MusicPlayerState) => void)(getState());
+    if (listener.length >= 2) {
+      (listener as (track: any | null, playing: boolean) => void)(currentTrack, playing);
+    } else {
+      (listener as (state: MusicPlayerState) => void)(getState());
+    }
   } catch {}
   return () => listeners.delete(listener);
 }
@@ -69,7 +92,6 @@ export function addTracksToQueue(tracks: any[]) {
   const additions = (Array.isArray(tracks) ? tracks : [tracks]).filter(Boolean);
   const existing = new Set(queue.map((t) => t?.id != null ? String(t.id) : null).filter((id): id is string => id !== null));
   additions.forEach((track) => {
-    // Tracks without IDs cannot be safely deduplicated; do not collapse them all into "undefined".
     const id = track?.id != null ? String(track.id) : null;
     if (id === null || !existing.has(id)) {
       queue.push(track);
@@ -85,42 +107,30 @@ export function playTrackNext(track: any) {
   const targetId = track?.id == null ? null : String(track.id);
   const currentTrackInQueue = index >= 0 && index < queue.length ? queue[index] : null;
   const currentId = currentTrackInQueue?.id == null ? null : String(currentTrackInQueue.id);
-  if (
-    currentTrackInQueue &&
-    (targetId !== null ? currentId === targetId : currentTrackInQueue === track)
-  ) {
+  if (currentTrackInQueue && (targetId !== null ? currentId === targetId : currentTrackInQueue === track)) {
     publish();
     return;
   }
-  // Only deduplicate tracks with real IDs. String(undefined) would otherwise
-  // collapse unrelated metadata-only entries into one queue item.
   if (targetId !== null) {
     queue = queue.filter((item) => item?.id == null || String(item.id) !== targetId);
   }
-  index = currentTrackInQueue
-    ? queue.findIndex((item) =>
-        item === currentTrackInQueue ||
-        (currentId !== null && item?.id != null && String(item.id) === currentId)
-      )
+  const currentPosition = currentTrackInQueue
+    ? queue.findIndex((item) => item === currentTrackInQueue || (currentId !== null && item?.id != null && String(item.id) === currentId))
     : -1;
-  const insertAt = index >= 0 ? index + 1 : 0;
+  const insertAt = currentPosition >= 0 ? currentPosition + 1 : 0;
   queue.splice(insertAt, 0, track);
-  if (index < 0) index = 0;
+  index = currentPosition >= 0 ? currentPosition : 0;
   publish();
 }
 
 export function removeQueuedTrack(trackIndex: number) {
-  if (trackIndex < 0 || trackIndex >= queue.length) return;
-  // The active sound is not replaced by this operation. Protect its queue entry
-  // so the visible current index cannot silently point at a different track.
-  if (trackIndex === index) return;
+  if (trackIndex < 0 || trackIndex >= queue.length || trackIndex === index) return;
   queue.splice(trackIndex, 1);
   if (trackIndex < index) index -= 1;
   publish();
 }
 
 export function clearUpcomingTracks() {
-  // Keep the selected/current item so clearing upcoming tracks never interrupts playback.
   if (index >= 0 && index < queue.length) {
     queue = [queue[index]];
     index = 0;
@@ -154,13 +164,14 @@ export function cycleMusicRepeat() {
 }
 
 export async function seekMusicTo(position: number): Promise<boolean> {
-  if (!sound) return false;
+  const player = sound;
+  if (!player || !player.isLoaded) return false;
   try {
-    const status = await sound.getStatusAsync();
-    if (!status.isLoaded) return false;
-    const max = status.durationMillis || durationMillis;
-    await sound.setPositionAsync(Math.max(0, Math.min(Math.round(position), max || Math.round(position))));
-    positionMillis = Math.max(0, Math.min(Math.round(position), max || Math.round(position)));
+    const max = player.duration * 1000 || durationMillis;
+    const target = Math.max(0, Math.min(Math.round(position), max || Math.round(position)));
+    await player.seekTo(target / 1000);
+    if (sound !== player) return false;
+    positionMillis = target;
     publish();
     return true;
   } catch {
@@ -169,8 +180,6 @@ export async function seekMusicTo(position: number): Promise<boolean> {
 }
 
 export async function playMusicTrack(track: any, options?: { queue?: any[]; index?: number }): Promise<{ ok: boolean; message?: string }> {
-  // Reject non-playable entries before changing queue/index state. Otherwise a failed
-  // chart/sample tap can silently move the queue away from the track that is playing.
   const uri = getAudioUrl(track);
   if (!uri) {
     publish();
@@ -185,11 +194,7 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
     index = 0;
   } else {
     const trackId = track?.id == null ? null : String(track.id);
-    const existing = queue.findIndex((t) =>
-      trackId !== null
-        ? t?.id != null && String(t.id) === trackId
-        : t === track
-    );
+    const existing = queue.findIndex((t) => trackId !== null ? t?.id != null && String(t.id) === trackId : t === track);
     if (existing >= 0) index = existing;
     else {
       queue = [...queue.slice(0, index + 1), track, ...queue.slice(index + 1)];
@@ -198,101 +203,88 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
   }
 
   try {
-    const sameTrack = currentTrack && (
-      track?.id != null && currentTrack?.id != null
-        ? String(currentTrack.id) === String(track.id)
-        : currentTrack === track
-    );
+    const sameTrack = currentTrack && (track?.id != null && currentTrack?.id != null
+      ? String(currentTrack.id) === String(track.id)
+      : currentTrack === track);
+
     if (sound && sameTrack) {
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded && status.isPlaying) {
-        await sound.pauseAsync();
-        playing = false;
-      } else if (status.isLoaded) {
-        if (status.didJustFinish) await sound.setPositionAsync(0);
-        await sound.playAsync();
-        playing = true;
-      } else {
-        await sound.unloadAsync();
-        sound = null;
-      }
-      if (sound) {
+      const player = sound;
+      if (player.isLoaded) {
+        if (player.playing) {
+          player.pause();
+          playing = false;
+        } else {
+          if (player.duration > 0 && player.currentTime >= player.duration) await player.seekTo(0);
+          if (sound !== player) return { ok: false };
+          player.play();
+          playing = true;
+        }
         publish();
         return { ok: true };
       }
+      player.remove();
+      sound = null;
     }
 
-    if (sound) await sound.unloadAsync();
+    if (sound) sound.remove();
     sound = null;
     positionMillis = 0;
     durationMillis = Number(track?.durationMillis) || 0;
+    handlingTrackFinish = false;
 
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      shouldDuckAndroid: true,
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: "duckOthers",
     });
 
-    let createdSoundForRepeat: Audio.Sound | null = null;
-    const created = await Audio.Sound.createAsync(
-      { uri },
-      { shouldPlay: true },
-      (status: AVPlaybackStatus) => {
-        if (status.isLoaded) {
-          playing = status.isPlaying;
-          positionMillis = status.positionMillis || 0;
-          durationMillis = status.durationMillis || durationMillis;
-          if (status.didJustFinish && !handlingTrackFinish) {
-            handlingTrackFinish = true;
+    const player = createAudioPlayer({ uri }, { updateInterval: 250 });
+    sound = player;
+    currentTrack = track;
+    playing = false;
+
+    player.addListener("playbackStatusUpdate", (status) => {
+      if (sound !== player) return;
+      playing = status.playing;
+      positionMillis = Math.max(0, Math.round(status.currentTime * 1000));
+      durationMillis = status.duration ? Math.round(status.duration * 1000) : durationMillis;
+
+      if (status.error) {
+        playing = false;
+        publish();
+        return;
+      }
+
+      if (status.didJustFinish && !handlingTrackFinish) {
+        handlingTrackFinish = true;
+        playing = false;
+        if (repeat === "one") {
+          void player.seekTo(0).then(() => {
+            if (sound !== player) return;
+            player.play();
+            playing = true;
+            positionMillis = 0;
+          }).catch(() => {
             playing = false;
-            if (repeat === "one") {
-              // Restart directly; a seek/toggle chain can race repeated finish callbacks.
-              void (async () => {
-                try {
-                  if (createdSoundForRepeat) {
-                    await createdSoundForRepeat.setPositionAsync(0);
-                    await createdSoundForRepeat.playAsync();
-                    playing = true;
-                    positionMillis = 0;
-                  }
-                } catch {
-                  playing = false;
-                } finally {
-                  handlingTrackFinish = false;
-                  publish();
-                }
-              })();
-            } else {
-              void playNextInQueue().finally(() => { handlingTrackFinish = false; });
-            }
-          }
-          publish();
-        } else if (status.error) {
-          playing = false;
-          publish();
+          }).finally(() => {
+            handlingTrackFinish = false;
+            publish();
+          });
+        } else {
+          void playNextInQueue().finally(() => { handlingTrackFinish = false; });
         }
       }
-    );
+      publish();
+    });
 
-    sound = created.sound;
-    createdSoundForRepeat = created.sound;
-    handlingTrackFinish = false;
-    currentTrack = track;
-    playing = created.status.isLoaded ? !!created.status.isPlaying : false;
-    positionMillis = created.status.isLoaded ? created.status.positionMillis || 0 : 0;
-    durationMillis = created.status.isLoaded ? created.status.durationMillis || 0 : durationMillis;
-    // Persist history before announcing completion so screens can refresh reliably.
-    // The revision triggers a refresh even when the same track object remains active.
+    player.play();
+    playing = true;
     await addRecentTrack(track).catch(() => {});
     recentHistoryRevision += 1;
     publish();
     return { ok: true };
   } catch {
-    // A failed load must not leave the UI claiming that the previous track is
-    // active after its sound has already been unloaded.
-    try {
-      if (sound) await sound.unloadAsync();
-    } catch {}
+    if (sound) sound.remove();
     sound = null;
     currentTrack = null;
     playing = false;
@@ -304,16 +296,16 @@ export async function playMusicTrack(track: any, options?: { queue?: any[]; inde
 }
 
 export async function toggleMusicPlayback(): Promise<void> {
-  if (!sound) return;
+  const player = sound;
+  if (!player || !player.isLoaded) return;
   try {
-    const status = await sound.getStatusAsync();
-    if (!status.isLoaded) return;
-    if (status.isPlaying) {
-      await sound.pauseAsync();
+    if (player.playing) {
+      player.pause();
       playing = false;
     } else {
-      if (status.didJustFinish) await sound.setPositionAsync(0);
-      await sound.playAsync();
+      if (player.duration > 0 && player.currentTime >= player.duration) await player.seekTo(0);
+      if (sound !== player) return;
+      player.play();
       playing = true;
     }
     publish();
@@ -324,21 +316,18 @@ export async function toggleMusicPlayback(): Promise<void> {
 }
 
 export async function stopMusicPlayback(): Promise<void> {
-  try {
-    if (sound) await sound.unloadAsync();
-  } finally {
-    sound = null;
-    currentTrack = null;
-    playing = false;
-    positionMillis = 0;
-    durationMillis = 0;
-    publish();
-  }
+  if (sound) sound.remove();
+  sound = null;
+  currentTrack = null;
+  playing = false;
+  positionMillis = 0;
+  durationMillis = 0;
+  handlingTrackFinish = false;
+  publish();
 }
 
 export async function playNextInQueue(): Promise<{ ok: boolean; message?: string }> {
   if (queue.length === 0 || index < 0) return { ok: false, message: "No queue." };
-
   let candidates: number[] = [];
   if (shuffle && queue.length > 1) {
     candidates = queue.map((_, i) => i).filter((i) => i !== index);
@@ -346,16 +335,8 @@ export async function playNextInQueue(): Promise<{ ok: boolean; message?: string
     candidates = queue.map((_, i) => i).filter((i) => i > index);
     if (repeat === "all") candidates.push(...queue.map((_, i) => i).filter((i) => i <= index));
   }
-
-  // Do not advance the visible queue index onto an entry that cannot play.
-  // Search forward for the next playable track, preserving the current index
-  // if the remaining queue contains only metadata/sample entries.
-  const playableCandidates = candidates.filter((i) => !!getAudioUrl(queue[i]));
-  // Shuffle must choose among playable candidates rather than always taking the
-  // lowest queue index; otherwise the shuffle control has no effect on Next.
-  const nextIndex = playableCandidates.length
-    ? playableCandidates[shuffle ? Math.floor(Math.random() * playableCandidates.length) : 0]
-    : undefined;
+  const playable = candidates.filter((i) => !!getAudioUrl(queue[i]));
+  const nextIndex = playable.length ? playable[shuffle ? Math.floor(Math.random() * playable.length) : 0] : undefined;
   if (nextIndex === undefined) {
     if (!candidates.length) {
       playing = false;
@@ -364,13 +345,10 @@ export async function playNextInQueue(): Promise<{ ok: boolean; message?: string
     }
     return { ok: false, message: "No playable audio source is available in the remaining queue." };
   }
-
   const previousIndex = index;
   index = nextIndex;
   const result = await playMusicTrack(queue[index], { queue, index });
   if (!result.ok) {
-    // A URL can be syntactically valid but fail to load. Keep the queue cursor
-    // stable so a failed Next tap does not silently skip the current entry.
     index = previousIndex;
     publish();
   }
@@ -380,16 +358,14 @@ export async function playNextInQueue(): Promise<{ ok: boolean; message?: string
 export async function playPreviousInQueue(): Promise<{ ok: boolean; message?: string }> {
   if (queue.length === 0 || index < 0) return { ok: false, message: "No queue." };
   if (positionMillis > 3000) return (await seekMusicTo(0)) ? { ok: true } : { ok: false, message: "Could not restart track." };
-
   const candidates = queue.map((_, i) => i).filter((i) => i < index).reverse();
   if (repeat === "all") candidates.push(...queue.map((_, i) => i).filter((i) => i >= index).reverse());
-  const prevIndex = candidates.find((i) => !!getAudioUrl(queue[i]));
-  if (prevIndex === undefined) {
+  const previous = candidates.find((i) => !!getAudioUrl(queue[i]));
+  if (previous === undefined) {
     return { ok: false, message: candidates.length ? "No playable audio source is available earlier in the queue." : "Start of queue." };
   }
-
   const previousIndex = index;
-  index = prevIndex;
+  index = previous;
   const result = await playMusicTrack(queue[index], { queue, index });
   if (!result.ok) {
     index = previousIndex;
