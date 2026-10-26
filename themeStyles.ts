@@ -445,7 +445,7 @@ export function makeStyles(C: Palette, isDark: boolean) {
     playerBtn: { fontSize: 16, color: C.text2, padding: 6 },
 
     modalRoot: { flex: 1, justifyContent: "flex-end" },
-    scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
+    scrim: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.5)" },
     sheet: {
       backgroundColor: C.card,
       borderTopLeftRadius: 20,

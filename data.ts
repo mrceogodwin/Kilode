@@ -199,7 +199,7 @@ export const ROOMS = [
 
 /**
  * Seed catalogue with publicly reachable sample audio (SoundHelix demos).
- * These exist so expo-av playback works in preview / localOnly mode.
+ * These exist so expo-audio playback works in preview / localOnly mode.
  * Real artist audio will come from the dedicated music API later.
  */
 export const TRACKS = [

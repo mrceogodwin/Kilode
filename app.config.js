@@ -1,11 +1,24 @@
-/**
- * Expo dynamic config.
- * Intended Expo account: https://expo.dev/accounts/mudino
- * projectId is written by `eas init` after you run `eas login` as mudino.
- */
 module.exports = ({ config }) => ({
   ...config,
   owner: config.owner || "mudino",
+
+  plugins: [
+    ...(config.plugins || []),
+    [
+      "expo-audio",
+      {
+        enableBackgroundPlayback: true,
+      },
+    ],
+    [
+      "expo-splash-screen",
+      {
+        backgroundColor: "#0B0B0F",
+      },
+    ],
+    "expo-video",
+  ],
+
   extra: {
     ...(config.extra || {}),
     eas: {

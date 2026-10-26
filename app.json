@@ -8,10 +8,7 @@
     "userInterfaceStyle": "automatic",
     "scheme": "kilode",
     "platforms": ["ios", "android"],
-    "splash": {
-      "backgroundColor": "#0B0B0F",
-      "resizeMode": "contain"
-    },
+
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "ng.kilode.app",

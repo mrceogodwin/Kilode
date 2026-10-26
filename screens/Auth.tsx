@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import { useEventListener } from "expo";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { ACCOUNT_KINDS, type AccountKind } from "../lib/accountKinds";
 
 const AUTH_BACKGROUND_VIDEOS = [
@@ -23,22 +24,64 @@ const AUTH_BACKGROUND_VIDEOS = [
   "https://videos.pexels.com/video-files/30328849/30328849-hd_1920_1080_25fps.mp4",
 ];
 
+
 function AuthVideoBackdrop({ scale }: { scale: Animated.Value }) {
   const [videoIndex, setVideoIndex] = useState(0);
   const [videoFailed, setVideoFailed] = useState(false);
   const failedVideos = useRef(0);
-  const nextVideo = () => {
+  const failedIndex = useRef<number | null>(null);
+  const loadedVideoIndex = useRef(0);
+
+  const player = useVideoPlayer(AUTH_BACKGROUND_VIDEOS[0], (videoPlayer) => {
+    videoPlayer.muted = true;
+    videoPlayer.loop = false;
+    videoPlayer.play();
+  });
+
+  const nextVideo = useCallback(() => {
     failedVideos.current = 0;
+    failedIndex.current = null;
     setVideoIndex((index) => (index + 1) % AUTH_BACKGROUND_VIDEOS.length);
-  };
-  const handleVideoError = () => {
+  }, []);
+
+  const handleVideoError = useCallback(() => {
+    if (failedIndex.current === videoIndex) return;
+    failedIndex.current = videoIndex;
     failedVideos.current += 1;
+
     if (failedVideos.current >= AUTH_BACKGROUND_VIDEOS.length) {
       setVideoFailed(true);
       return;
     }
+
     setVideoIndex((index) => (index + 1) % AUTH_BACKGROUND_VIDEOS.length);
-  };
+  }, [videoIndex]);
+
+  useEventListener(player, "playToEnd", nextVideo);
+
+  useEventListener(player, "statusChange", ({ status }) => {
+    if (status === "error") handleVideoError();
+  });
+
+  useEffect(() => {
+    if (loadedVideoIndex.current === videoIndex) return;
+
+    loadedVideoIndex.current = videoIndex;
+    let active = true;
+
+    void player
+      .replaceAsync(AUTH_BACKGROUND_VIDEOS[videoIndex])
+      .then(() => {
+        if (active) player.play();
+      })
+      .catch(() => {
+        if (active) handleVideoError();
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [handleVideoError, player, videoIndex]);
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -47,21 +90,16 @@ function AuthVideoBackdrop({ scale }: { scale: Animated.Value }) {
         <View style={styles.goldBlob} />
         <View style={styles.amberBlob} />
       </Animated.View>
+
       {!videoFailed ? (
-        <Video
-          key={AUTH_BACKGROUND_VIDEOS[videoIndex]}
-          source={{ uri: AUTH_BACKGROUND_VIDEOS[videoIndex] }}
+        <VideoView
+          player={player}
           style={StyleSheet.absoluteFill}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          isLooping={false}
-          isMuted
-          onPlaybackStatusUpdate={(status) => {
-            if (status.isLoaded && status.didJustFinish) nextVideo();
-          }}
-          onError={handleVideoError}
+          contentFit="cover"
+          nativeControls={false}
         />
       ) : null}
+
       <View style={styles.veil} />
     </View>
   );
@@ -420,7 +458,7 @@ export function AuthScreen({ onSignIn, onSignUp, onPasswordReset, recoveryToken,
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#0A0A0C" },
-  bgPlate: { ...StyleSheet.absoluteFillObject, backgroundColor: "#120e0a" },
+  bgPlate: { ...StyleSheet.absoluteFill, backgroundColor: "#120e0a" },
   warmBlob: {
     position: "absolute",
     top: 40,
@@ -451,7 +489,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#8F6D24",
     opacity: 0.10,
   },
-  veil: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,10,12,0.5)" },
+  veil: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(10,10,12,0.5)" },
   welcomeContent: { flex: 1, justifyContent: "space-between", paddingHorizontal: 24, paddingTop: 52, paddingBottom: 28 },
   welcomeMark: { alignItems: "center", paddingTop: 28 },
   welcomeWordmark: { color: "#FFFFFF", fontSize: 25, fontWeight: "900", letterSpacing: 4 },
